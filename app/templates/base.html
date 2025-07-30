@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}گرمابسرد{% endblock %}</title>
+
+  <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}" sizes="32x32" type="image/png" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#166534">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      scroll-behavior: smooth;
+    }
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 40;
+      background-color: #16a34a;
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: background-color 0.3s;
+    }
+    .fab:hover {
+      background-color: #15803d;
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+
+    <!-- لوگو -->
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
+      <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
+        <i class="fas fa-seedling animate-pulse"></i>
+      </span>
+      <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+    </a>
+
+    <!-- جستجو و فیلتر موقعیت -->
+    <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
+      <div class="relative">
+        <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
+          class="w-full pl-12 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
+        <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-base pointer-events-none"></i>
+        <button id="locationToggle" type="button"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
+          <i class="fas fa-map-marker-alt"></i>
+        </button>
+      </div>
+
+      <!-- منوی موقعیت -->
+      <div id="locationMenu"
+        class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
+        <div class="text-gray-700 dark:text-white font-bold px-4 py-3 border-b dark:border-gray-600">📍 انتخاب موقعیت:</div>
+        {% for loc in ["", "دشت اول", "دشت دوم", "کنار جاده", "نزدیک جاده اصلی", "بالادست رودخانه"] %}
+        <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}"
+          data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- آیکون پروفایل کاربر -->
+    {% if session.get('user_phone') %}
+    <a href="{{ url_for('main.profile') }}"
+      class="text-green-700 dark:text-green-400 text-2xl hover:text-green-800 transition-all" title="ناحیه کاربری">
+      <i class="fas fa-user-circle"></i>
+    </a>
+    {% endif %}
+
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <main class="flex-1 py-6 px-4">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="max-w-4xl mx-auto mb-4">
+      {% for msg in messages %}
+      <div class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-4 py-2 rounded-lg mb-2 text-sm shadow">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Floating Action Button -->
+  <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
+    <i class="fas fa-plus text-xl"></i>
+  </a>
+
+  <!-- Scripts -->
+  {% block scripts %}{% endblock %}
+  <script>
+    const html = document.documentElement;
+    const toggleDarkMode = document.getElementById("toggleDarkMode");
+    if (localStorage.getItem("theme") === "dark") html.classList.add("dark");
+    else html.classList.remove("dark");
+
+    toggleDarkMode?.addEventListener("click", () => {
+      html.classList.toggle("dark");
+      localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+    });
+
+    const searchInput = document.getElementById("searchInput");
+    const cards = document.querySelectorAll(".land-card");
+    let currentLocation = "";
+    function applyFilters(locationFilter = "") {
+      const searchValue = searchInput?.value?.trim().toLowerCase() || "";
+      cards.forEach(card => {
+        const title = card.querySelector("h3")?.textContent?.toLowerCase() || "";
+        const location = card.getAttribute("data-location");
+        const matchSearch = title.includes(searchValue);
+        const matchLocation = !locationFilter || location === locationFilter;
+        card.style.display = (matchSearch && matchLocation) ? "block" : "none";
+      });
+    }
+    searchInput?.addEventListener("input", () => applyFilters(currentLocation));
+
+    const locationToggle = document.getElementById("locationToggle");
+    const locationMenu = document.getElementById("locationMenu");
+    locationToggle?.addEventListener("click", () => locationMenu.classList.toggle("hidden"));
+    locationMenu?.querySelectorAll("[data-location]").forEach(item => {
+      item.addEventListener("click", () => {
+        currentLocation = item.getAttribute("data-location");
+        locationMenu.classList.add("hidden");
+        applyFilters(currentLocation);
+      });
+    });
+  </script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
+          .then(reg => console.log('✅ ServiceWorker ثبت شد:', reg.scope))
+          .catch(err => console.log('❌ خطا در ثبت ServiceWorker:', err));
+      });
+    }
+  </script>
+</body>
+</html>

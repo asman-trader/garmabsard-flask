@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}لیست زمین‌ها | املاک آسمان گرمابسرد{% endblock %}
+
+{% block content %}
+<main class="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landList">
+  {% for land in lands %}
+  <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-xl transition-transform hover:scale-[1.02] duration-300 overflow-hidden land-card"
+    data-location="{{ land.location }}" data-code="{{ land.code }}" data-title="{{ land.title }}"
+    data-size="{{ land.size }}" data-price="{{ land.price_total }}"
+    data-image="{{ land.images[0] if land.images else '' }}">
+
+    <!-- ❤️ علاقه‌مندی -->
+    <button type="button" class="absolute top-2 left-2 z-10 favorite-btn" data-code="{{ land.code }}" aria-label="افزودن به علاقه‌مندی‌ها">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        class="w-7 h-7 text-gray-400 hover:text-red-500 transition-colors duration-300">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M5.121 19.071C3.25 17.2 2 15.278 2 12.889 2 9.651 4.686 7 8 7c1.657 0 3.157.744 4 1.91C13.843 7.744 15.343 7 17 7c3.314 0 6 2.651 6 5.889 0 2.389-1.25 4.311-3.121 6.182l-7.071 7.071-7.071-7.071z" />
+      </svg>
+    </button>
+
+    <a href="{{ url_for('main.land_detail', code=land.code) }}">
+      {% if land.images and land.images[0] %}
+      <img src="{{ url_for('main.uploaded_file', filename=land.images[0]) }}"
+           alt="تصویر زمین {{ land.title }}"
+           loading="lazy"
+           class="w-full h-48 object-cover rounded-t-2xl">
+      {% else %}
+      <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">بدون تصویر</div>
+      {% endif %}
+    </a>
+
+    <div class="p-4">
+      <a href="{{ url_for('main.land_detail', code=land.code) }}">
+        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 hover:underline truncate">{{ land.title }}</h3>
+      </a>
+      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+        📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر | 📍 {{ land.location or "?" }}
+      </p>
+      <p class="text-sm text-gray-800 dark:text-gray-200 font-semibold mt-3">
+        💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+      </p>
+    </div>
+  </div>
+  {% endfor %}
+</main>
+
+<!-- ❤️ اسکریپت علاقه‌مندی‌ها -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    let favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+
+    const allLands = [];
+    document.querySelectorAll(".land-card").forEach(card => {
+      allLands.push({
+        code: card.dataset.code,
+        title: card.dataset.title,
+        size: parseInt(card.dataset.size) || null,
+        price_total: parseInt(card.dataset.price) || null,
+        location: card.dataset.location,
+        images: card.dataset.image ? [card.dataset.image] : []
+      });
+    });
+    localStorage.setItem("allLandsData", JSON.stringify(allLands));
+
+    document.querySelectorAll(".favorite-btn").forEach(btn => {
+      const code = btn.dataset.code.toString();
+      const svg = btn.querySelector("svg");
+
+      function updateHeart() {
+        if (favorites.includes(code)) {
+          svg.classList.remove("text-gray-400");
+          svg.classList.add("text-red-500");
+        } else {
+          svg.classList.remove("text-red-500");
+          svg.classList.add("text-gray-400");
+        }
+      }
+
+      updateHeart();
+
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        const index = favorites.indexOf(code);
+        if (index > -1) {
+          favorites.splice(index, 1);
+        } else {
+          favorites.push(code);
+        }
+        localStorage.setItem("favoriteLands", JSON.stringify(favorites));
+        updateHeart();
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>پنل مدیریت | املاک آسمان گرمابسرد</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex">
+
+  <!-- سایدبار -->
+  <aside class="w-64 bg-white shadow h-screen p-4 fixed right-0 top-0">
+    <h2 class="text-xl font-bold text-green-700 mb-6">پنل مدیریت</h2>
+    <nav class="flex flex-col gap-4 text-gray-700">
+      <a href="{{ url_for('admin_panel') }}" class="hover:text-green-600">📋 لیست آگهی‌ها</a>
+      <a href="#uploadForm" class="hover:text-green-600">➕ افزودن آگهی</a>
+      <a href="{{ url_for('admin_logout') }}" class="hover:text-red-600">🚪 خروج</a>
+    </nav>
+  </aside>
+
+  <!-- محتوای اصلی -->
+  <main class="flex-1 mr-64 p-6">
+    <h1 class="text-2xl font-bold mb-6 text-green-700">مدیریت آگهی‌ها</h1>
+
+    <!-- لیست آگهی‌ها -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      {% for land in lands %}
+      <div class="bg-white rounded shadow p-4">
+        {% if land.image %}
+        <img src="{{ url_for('static', filename=land.image.replace('static/', '').replace('\\', '/')) }}" class="w-full h-40 object-cover rounded mb-2">
+        {% endif %}
+        <h3 class="font-semibold text-lg">{{ land.title }}</h3>
+        <p class="text-sm text-gray-600">{{ land.size }} متر - {{ land.location }}</p>
+        <p class="text-xs text-gray-500">کد: {{ land.code }}</p>
+        <div class="flex justify-between mt-3">
+          <form method="POST" action="{{ url_for('delete_land', index=loop.index0) }}">
+            <button type="submit" class="text-red-600 text-sm">🗑 حذف</button>
+          </form>
+          <a href="{{ url_for('edit_land', index=loop.index0) }}" class="text-blue-600 text-sm">✏️ ویرایش</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- فرم افزودن آگهی -->
+    <div id="uploadForm" class="bg-white p-6 rounded shadow">
+      <h2 class="text-xl font-bold mb-4 text-green-700">افزودن آگهی جدید</h2>
+      <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <input type="text" name="title" placeholder="عنوان" class="w-full p-2 border rounded" required>
+        <input type="text" name="size" placeholder="متراژ (مثلاً 500)" class="w-full p-2 border rounded" required>
+        <input type="text" name="location" placeholder="موقعیت (مثلاً دشت اول)" class="w-full p-2 border rounded" required>
+        <input type="text" name="code" placeholder="کد آگهی (مثلاً GM123)" class="w-full p-2 border rounded" required>
+        <input type="file" name="image" class="w-full">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">ثبت آگهی</button>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>

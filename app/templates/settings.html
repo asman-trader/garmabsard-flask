@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}تنظیمات حساب | گرمابسرد{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow mt-6 sm:mt-10">
+
+  <h2 class="text-xl sm:text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
+    ⚙️ تنظیمات حساب کاربری
+  </h2>
+
+  {% if user %}
+  <form method="post" action="{{ url_for('main.settings') }}" class="space-y-6">
+
+    <!-- شماره موبایل -->
+    <div>
+      <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">شماره موبایل (غیرقابل تغییر)</label>
+      <input type="text" value="{{ user.phone }}" disabled
+             class="w-full border rounded px-3 py-2 bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-400 dark:border-slate-600" />
+    </div>
+
+    <!-- نام -->
+    <div>
+      <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">نام</label>
+      <input type="text" name="first_name" value="{{ user.first_name or '' }}" required
+             class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+    </div>
+
+    <!-- نام خانوادگی -->
+    <div>
+      <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">نام خانوادگی</label>
+      <input type="text" name="last_name" value="{{ user.last_name or '' }}"
+             class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+    </div>
+
+    <!-- استان -->
+    <div>
+      <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">استان</label>
+      <select name="province" id="province-select" onchange="loadCities()" required
+              class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        <option value="">انتخاب کنید...</option>
+        <option value="تهران" {{ 'selected' if user.province == 'تهران' else '' }}>تهران</option>
+        <option value="البرز" {{ 'selected' if user.province == 'البرز' else '' }}>البرز</option>
+        <option value="مازندران" {{ 'selected' if user.province == 'مازندران' else '' }}>مازندران</option>
+        <!-- استان‌های دیگر -->
+      </select>
+    </div>
+
+    <!-- شهر -->
+    <div>
+      <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">شهر</label>
+      <select name="city" id="city-select" required
+              class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        {% if user.city %}
+          <option value="{{ user.city }}" selected>{{ user.city }}</option>
+        {% else %}
+          <option value="">ابتدا استان را انتخاب کنید</option>
+        {% endif %}
+      </select>
+    </div>
+
+    <!-- تغییر رمز عبور -->
+    <div class="border-t pt-4 dark:border-slate-600">
+      <label class="block text-sm mb-2 text-gray-600 dark:text-gray-300">تغییر رمز عبور (اختیاری)</label>
+      <input type="password" name="new_password" placeholder="رمز جدید"
+             class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+    </div>
+
+    <!-- ذخیره -->
+    <div class="pt-2">
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow text-sm w-full">
+        💾 ذخیره تغییرات
+      </button>
+    </div>
+
+  </form>
+  {% else %}
+  <div class="text-red-600 mt-6">خطا: اطلاعات کاربر یافت نشد.</div>
+  {% endif %}
+
+</div>
+
+<!-- JS بارگذاری شهرها -->
+<script>
+  const cities = {
+    'تهران': ['تهران', 'دماوند', 'ورامین', 'اسلام‌شهر'],
+    'البرز': ['کرج', 'نظرآباد', 'طالقان'],
+    'مازندران': ['ساری', 'آمل', 'بابل', 'چالوس']
+  };
+
+  function loadCities() {
+    const province = document.getElementById('province-select').value;
+    const citySelect = document.getElementById('city-select');
+    citySelect.innerHTML = '';
+    if (province in cities) {
+      cities[province].forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+    } else {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'ابتدا استان را انتخاب کنید';
+      citySelect.appendChild(option);
+    }
+  }
+
+  // بارگذاری خودکار اگر استان انتخاب شده
+  window.addEventListener('DOMContentLoaded', () => {
+    const selectedProvince = document.getElementById('province-select').value;
+    if (selectedProvince) loadCities();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}مرحله سوم: نوع ثبت آگهی{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6">
+  <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">انتخاب نوع ثبت آگهی</h2>
+  <form method="POST">
+    <div class="space-y-4">
+      <div class="border rounded-lg p-4 hover:border-blue-500 transition">
+        <label class="flex items-center space-x-3 cursor-pointer">
+          <input type="radio" name="ad_type" value="site" class="accent-blue-600" required>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">درج در سایت</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-300">آگهی شما در سایت برای عموم قابل نمایش خواهد بود. (رایگان)</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="border rounded-lg p-4 hover:border-blue-500 transition">
+        <label class="flex items-center space-x-3 cursor-pointer">
+          <input type="radio" name="ad_type" value="broadcast" class="accent-blue-600" required>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">ارسال به مشاوران املاک منطقه</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-300">آگهی شما به صورت اختصاصی برای مشاورین املاک منطقه ارسال می‌شود. (رایگان)</p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-lg transition">
+      ثبت نهایی آگهی
+    </button>
+  </form>
+</div>
+{% endblock %}

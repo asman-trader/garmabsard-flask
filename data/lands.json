@@ -1,0 +1,37 @@
+[
+  {
+    "title": "320متر زمین ویلایی دشت اول گرمابسرد ",
+    "size": "320",
+    "location": "دشت اول",
+    "code": "20250722142702",
+    "category": "باغ",
+    "document_type": "قولنامه",
+    "description": "320متر زمین ویلایی دشت اول گرمابسرد 3333",
+    "features": [
+      "آب",
+      "برق",
+      "درخت",
+      "دیوارکشی"
+    ],
+    "price_total": "320000000",
+    "price_per_meter": "1000000",
+    "images": [
+      "uploads/20250722153308_ChatGPT_Image_Jul_19_2025_10_52_34_PM.png"
+    ],
+    "status": "approved",
+    "created_at": "2025-07-22"
+  },
+  {
+    "code": "20250730113036",
+    "title": "1",
+    "location": "دشت دوم",
+    "size": "1",
+    "images": [
+      "20250730113036__Screenshot_2025-07-30_101330.png"
+    ],
+    "created_at": "2025-07-30 11:30:38",
+    "owner": "09121471301",
+    "status": "approved",
+    "ad_type": "site"
+  }
+]

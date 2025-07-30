@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}ویرایش آگهی{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 shadow rounded-lg mt-6">
+  <h1 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-6 flex items-center gap-2">
+    <i class="fas fa-pen-to-square"></i> ویرایش آگهی
+  </h1>
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-5">
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">تصاویر</label>
+      <label class="w-full cursor-pointer flex items-center justify-center border-dashed border-2 border-green-500 rounded p-4 text-green-700 hover:bg-green-50 dark:hover:bg-green-900">
+        <i class="fas fa-upload text-xl mr-2"></i> افزودن تصویر
+        <input type="file" name="images" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
+      </label>
+      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden">در حال آپلود تصاویر...</div>
+      <div id="progress-container" class="w-full h-2 bg-gray-200 rounded overflow-hidden hidden mt-2">
+        <div id="progress-bar" class="h-full bg-green-500" style="width: 0%;"></div>
+      </div>
+      <div id="preview-container" class="grid grid-cols-3 gap-2 mt-4">
+        {% for img in land.images %}
+          <img src="{{ url_for('static', filename=img) }}" class="w-full h-28 object-cover rounded border">
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی</label>
+      <input type="text" name="title" value="{{ land.title }}" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">متراژ (متر مربع)</label>
+      <input type="text" id="size" name="size" value="{{ land.size | int | string }}" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">موقعیت</label>
+      <select name="location" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option disabled>انتخاب کنید...</option>
+        <option value="دشت اول" {% if land.location == 'دشت اول' %}selected{% endif %}>دشت اول</option>
+        <option value="دشت دوم" {% if land.location == 'دشت دوم' %}selected{% endif %}>دشت دوم</option>
+        <option value="نزدیک جاده اصلی" {% if land.location == 'نزدیک جاده اصلی' %}selected{% endif %}>نزدیک جاده اصلی</option>
+        <option value="بالادست رودخانه" {% if land.location == 'بالادست رودخانه' %}selected{% endif %}>بالادست رودخانه</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">دسته‌بندی ملک</label>
+      <select name="category" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option disabled>انتخاب کنید...</option>
+        <option value="زمین کشاورزی" {% if land.category == 'زمین کشاورزی' %}selected{% endif %}>زمین کشاورزی</option>
+        <option value="باغ" {% if land.category == 'باغ' %}selected{% endif %}>باغ</option>
+        <option value="زمین مسکونی" {% if land.category == 'زمین مسکونی' %}selected{% endif %}>زمین مسکونی</option>
+        <option value="ویلا" {% if land.category == 'ویلا' %}selected{% endif %}>ویلا</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع سند</label>
+      <select name="document_type" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option disabled>انتخاب نوع سند</option>
+        <option value="سند مادر" {% if land.document_type == 'سند مادر' %}selected{% endif %}>سند مادر</option>
+        <option value="قولنامه" {% if land.document_type == 'قولنامه' %}selected{% endif %}>قولنامه</option>
+        <option value="بنچاق" {% if land.document_type == 'بنچاق' %}selected{% endif %}>بنچاق</option>
+        <option value="کد رهگیری‌دار" {% if land.document_type == 'کد رهگیری‌دار' %}selected{% endif %}>کد رهگیری‌دار</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">امکانات</label>
+      <div class="grid grid-cols-2 gap-2">
+        {% for f in ['آب', 'برق', 'درخت', 'دیوارکشی'] %}
+          <label><input type="checkbox" name="features" value="{{ f }}" class="mr-1"
+            {% if f in land.features %}checked{% endif %}> {{ f }}</label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت کل (تومان)</label>
+      <input type="text" id="price_total" name="price_total" value="{{ land.price_total }}" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت متری (محاسبه‌شده)</label>
+      <input type="text" id="price_per_meter" name="price_per_meter" value="{{ land.price_per_meter }}" readonly class="w-full border rounded px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">توضیحات</label>
+      <textarea name="description" rows="4" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">{{ land.description }}</textarea>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <a href="{{ url_for('admin.dashboard') }}" class="text-gray-600 dark:text-gray-300 hover:underline">← بازگشت</a>
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-lg">
+        <i class="fas fa-save"></i> ذخیره تغییرات
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  {{ self.script() }}
+</script>
+{% endblock %}
+
+{% block script %}
+<script>
+  function previewImages(event) {
+    const files = event.target.files;
+    const container = document.getElementById('preview-container');
+    const uploadStatus = document.getElementById('upload-status');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+
+    container.innerHTML = '';
+    if (files.length > 10) {
+      alert('حداکثر ۱۰ تصویر مجاز است.');
+      event.target.value = '';
+      return;
+    }
+
+    uploadStatus.classList.remove('hidden');
+    progressContainer.classList.remove('hidden');
+
+    let loaded = 0;
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative';
+
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'w-full h-28 object-cover rounded border';
+
+        const check = document.createElement('div');
+        check.className = 'absolute top-1 left-1 bg-green-600 text-white text-xs px-1.5 py-0.5 rounded-full';
+        check.innerHTML = '<i class="fas fa-check"></i>';
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(check);
+        container.appendChild(wrapper);
+
+        loaded++;
+        const percent = Math.round((loaded / files.length) * 100);
+        progressBar.style.width = percent + '%';
+
+        if (loaded === files.length) {
+          uploadStatus.innerText = 'همه تصاویر بارگذاری شدند';
+        }
+      }
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const sizeInput = document.getElementById('size');
+  const totalPriceInput = document.getElementById('price_total');
+  const pricePerMeterInput = document.getElementById('price_per_meter');
+
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+  }
+
+  function parseNumber(str) {
+    if (!str) return 0;
+    return Number(
+      str
+        .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+        .replace(/[^\d.]/g, '')
+    );
+  }
+
+  function formatInputField(input) {
+    const raw = parseNumber(input.value);
+    if (!isNaN(raw)) {
+      input.value = formatNumber(raw);
+    } else {
+      input.value = '';
+    }
+  }
+
+  function calculatePricePerMeter() {
+    const size = parseNumber(sizeInput.value);
+    const total = parseNumber(totalPriceInput.value);
+    if (size > 0 && total > 0) {
+      const perMeter = Math.floor(total / size);
+      pricePerMeterInput.value = formatNumber(perMeter);
+    } else {
+      pricePerMeterInput.value = '';
+    }
+  }
+
+  sizeInput.addEventListener('input', () => {
+    formatInputField(sizeInput);
+    calculatePricePerMeter();
+  });
+
+  totalPriceInput.addEventListener('input', () => {
+    formatInputField(totalPriceInput);
+    calculatePricePerMeter();
+  });
+
+  document.querySelector('form').addEventListener('submit', function () {
+    sizeInput.value = parseNumber(sizeInput.value);
+    totalPriceInput.value = parseNumber(totalPriceInput.value);
+    pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
+  });
+</script>
+{% endblock %}

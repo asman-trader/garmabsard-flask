@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}ثبت آگهی جدید{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 shadow rounded-lg mt-6">
+  <h1 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-6 flex items-center gap-2">
+    <i class="fas fa-plus-circle"></i> ثبت آگهی جدید
+  </h1>
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-5">
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">تصاویر</label>
+      <label class="w-full cursor-pointer flex items-center justify-center border-dashed border-2 border-green-500 rounded p-4 text-green-700 hover:bg-green-50 dark:hover:bg-green-900">
+        <i class="fas fa-upload text-xl mr-2"></i> افزودن تصویر
+        <input type="file" name="images" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
+      </label>
+      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden">در حال آپلود تصاویر...</div>
+      <div id="progress-container" class="w-full h-2 bg-gray-200 rounded overflow-hidden hidden mt-2">
+        <div id="progress-bar" class="h-full bg-green-500" style="width: 0%;"></div>
+      </div>
+      <div id="preview-container" class="grid grid-cols-3 gap-2 mt-4"></div>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی</label>
+      <input type="text" name="title" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">متراژ (متر مربع)</label>
+      <input type="text" id="size" name="size" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">موقعیت</label>
+      <select name="location" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option value="" disabled selected>انتخاب کنید...</option>
+        <option value="دشت اول">دشت اول</option>
+        <option value="دشت دوم">دشت دوم</option>
+        <option value="نزدیک جاده اصلی">نزدیک جاده اصلی</option>
+        <option value="بالادست رودخانه">بالادست رودخانه</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">دسته‌بندی ملک</label>
+      <select name="category" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option value="" disabled selected>انتخاب کنید...</option>
+        <option value="زمین کشاورزی">زمین کشاورزی</option>
+        <option value="باغ">باغ</option>
+        <option value="زمین مسکونی">زمین مسکونی</option>
+        <option value="ویلا">ویلا</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع سند</label>
+      <select name="document_type" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+        <option value="" disabled selected>انتخاب نوع سند</option>
+        <option value="سند مادر">سند مادر</option>
+        <option value="قولنامه">قولنامه</option>
+        <option value="بنچاق">بنچاق</option>
+        <option value="کد رهگیری‌دار">کد رهگیری‌دار</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">امکانات</label>
+      <div class="grid grid-cols-2 gap-2">
+        <label><input type="checkbox" name="features" value="آب" class="mr-1"> آب</label>
+        <label><input type="checkbox" name="features" value="برق" class="mr-1"> برق</label>
+        <label><input type="checkbox" name="features" value="درخت" class="mr-1"> درخت</label>
+        <label><input type="checkbox" name="features" value="دیوارکشی" class="mr-1"> دیوارکشی</label>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت کل (تومان)</label>
+      <input type="text" id="price_total" name="price_total" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت متری (محاسبه‌شده)</label>
+      <input type="text" id="price_per_meter" name="price_per_meter" readonly class="w-full border rounded px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
+    </div>
+
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">توضیحات</label>
+      <textarea name="description" rows="4" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <a href="{{ url_for('main.index') }}" class="text-gray-600 dark:text-gray-300 hover:underline">← بازگشت</a>
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-lg">
+        <i class="fas fa-arrow-left"></i> ادامه مرحله بعد
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  function previewImages(event) {
+    const files = event.target.files;
+    const container = document.getElementById('preview-container');
+    const uploadStatus = document.getElementById('upload-status');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+
+    container.innerHTML = '';
+    if (files.length > 10) {
+      alert('حداکثر ۱۰ تصویر مجاز است.');
+      event.target.value = '';
+      return;
+    }
+
+    uploadStatus.classList.remove('hidden');
+    progressContainer.classList.remove('hidden');
+
+    let loaded = 0;
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative';
+
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'w-full h-28 object-cover rounded border';
+
+        const check = document.createElement('div');
+        check.className = 'absolute top-1 left-1 bg-green-600 text-white text-xs px-1.5 py-0.5 rounded-full';
+        check.innerHTML = '<i class="fas fa-check"></i>';
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(check);
+        container.appendChild(wrapper);
+
+        loaded++;
+        const percent = Math.round((loaded / files.length) * 100);
+        progressBar.style.width = percent + '%';
+
+        if (loaded === files.length) {
+          uploadStatus.innerText = 'همه تصاویر بارگذاری شدند';
+        }
+      }
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const sizeInput = document.getElementById('size');
+  const totalPriceInput = document.getElementById('price_total');
+  const pricePerMeterInput = document.getElementById('price_per_meter');
+
+  function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+  }
+
+  function parseNumber(str) {
+    if (!str) return 0;
+    return Number(
+      str
+        .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+        .replace(/[^\d.]/g, '')
+    );
+  }
+
+  function formatInputField(input) {
+    const raw = parseNumber(input.value);
+    if (!isNaN(raw)) {
+      input.value = formatNumber(raw);
+    } else {
+      input.value = '';
+    }
+  }
+
+  function calculatePricePerMeter() {
+    const size = parseNumber(sizeInput.value);
+    const total = parseNumber(totalPriceInput.value);
+    if (size > 0 && total > 0) {
+      const perMeter = Math.floor(total / size);
+      pricePerMeterInput.value = formatNumber(perMeter);
+    } else {
+      pricePerMeterInput.value = '';
+    }
+  }
+
+  sizeInput.addEventListener('input', () => {
+    formatInputField(sizeInput);
+    calculatePricePerMeter();
+  });
+
+  totalPriceInput.addEventListener('input', () => {
+    formatInputField(totalPriceInput);
+    calculatePricePerMeter();
+  });
+
+  document.querySelector('form').addEventListener('submit', function () {
+    sizeInput.value = parseNumber(sizeInput.value);
+    totalPriceInput.value = parseNumber(totalPriceInput.value);
+    pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
+  });
+</script>
+{% endblock %}

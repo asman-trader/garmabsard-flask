@@ -1,0 +1,40 @@
+<!-- admin/partials/sidebar.html - منوی کناری پنل مدیریت -->
+<aside class="w-64 fixed top-0 right-0 h-full bg-white dark:bg-gray-800 shadow-lg p-4 transform transition-transform duration-300 z-20"
+       :class="{ 'translate-x-0': sidebarOpen, 'translate-x-full': !sidebarOpen }" x-cloak>
+
+  <!-- هدر منو -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
+      <i class="fas fa-cog"></i> مدیریت
+    </h2>
+    <button @click="sidebarOpen = false" class="text-gray-500 hover:text-red-500">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- لینک‌های منو -->
+  <nav class="space-y-4">
+    <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold">
+      <i class="fas fa-chart-line"></i> داشبورد
+    </a>
+    <a href="{{ url_for('admin.lands') }}" class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
+      <i class="fas fa-layer-group"></i> مدیریت زمین‌ها
+    </a>
+    <a href="{{ url_for('admin.pending_lands') }}" class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
+      <i class="fas fa-clock"></i> آگهی‌های در انتظار
+    </a>
+    <a href="{{ url_for('admin.add_land') }}" class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
+      <i class="fas fa-plus-circle"></i> ثبت ملک جدید
+    </a>
+    <a href="{{ url_for('admin.consults') }}" class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
+      <i class="fas fa-user-headset"></i> درخواست مشاوره
+    </a>
+    <a href="{{ url_for('admin.settings') }}" class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
+      <i class="fas fa-sliders-h"></i> تنظیمات سایت
+    </a>
+    <a href="{{ url_for('admin.logout') }}" class="flex items-center gap-2 text-red-500 hover:text-red-700 mt-10">
+      <i class="fas fa-sign-out-alt"></i> خروج
+    </a>
+  </nav>
+
+</aside>
