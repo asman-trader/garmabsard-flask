@@ -47,6 +47,7 @@ touch tmp/restart.txt
 -----------------------
 ترمینال - سی پنل
 شما به‌صورت کامل به مخزن متصل هستید و از این به بعد با هر بار اجرای:
+source /home/garmabs2/virtualenv/myapp/3.11/bin/activate && cd /home/garmabs2/myapp
 
 git pull origin main
 ----------------------------
