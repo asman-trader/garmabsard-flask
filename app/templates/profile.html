@@ -4,6 +4,32 @@
 {% block title %}ناحیه کاربری | گرمابسرد{% endblock %}
 
 {% block content %}
+
+  <!-- هدر -->
+<header class="bg-white dark:bg-slate-800 shadow p-4 sticky top-0 z-30">
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+
+    <!-- دکمه برگشت موبایل -->
+    <a href="{{ url_for('main.index') }}" class="sm:hidden text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 text-xl">
+      <i class="fas fa-arrow-right"></i>
+    </a>
+
+    <!-- فضای خالی جای لوگو حذف‌شده -->
+    <div></div>
+
+    <!-- دکمه بازگشت دسکتاپ -->
+    <a href="{{ url_for('main.index') }}" class="text-sm text-blue-600 hover:underline hidden sm:inline dark:text-blue-400">
+      ← بازگشت به لیست زمین‌ها
+    </a>
+
+    </div>
+
+  </div>
+</header>
+
+
+
+
 <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow mt-4 sm:mt-8">
 
   <h2 class="text-xl sm:text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
@@ -47,12 +73,7 @@
     </a>
   </div>
 
-  <!-- دکمه بازگشت -->
-  <div class="mt-8">
-    <a href="{{ url_for('main.index') }}"
-       class="block text-center text-sm text-green-700 dark:text-green-400 hover:underline">
-      ← بازگشت به صفحه اصلی
-    </a>
+ 
   </div>
 
   {% else %}
