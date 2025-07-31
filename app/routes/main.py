@@ -50,12 +50,13 @@ def parse_datetime_safe(date_str):
         except ValueError:
             return datetime(1970, 1, 1)
 
-# ✅ نمایش فایل‌های آپلود شده از data/uploads
+# نمایش فایل‌های آپلود شده
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     folder = os.path.join(current_app.root_path, 'data', 'uploads')
     return send_from_directory(folder, filename)
 
+# صفحه اصلی سایت - لیست زمین‌های تأییدشده
 @main_bp.route('/')
 def index():
     lands = load_json(current_app.config['LANDS_FILE'])
@@ -138,13 +139,20 @@ def add_land():
         title = request.form.get('title')
         location = request.form.get('location')
         size = request.form.get('size')
+        price_total = request.form.get('price_total') or None
         images = request.files.getlist('images')
 
         if not title or not location or not size:
             flash("همه فیلدها الزامی هستند.")
             return redirect(url_for('main.add_land'))
 
-        session['land_temp'] = {'title': title, 'location': location, 'size': size}
+        session['land_temp'] = {
+            'title': title,
+            'location': location,
+            'size': size,
+            'price_total': int(price_total) if price_total else None
+        }
+
         code = datetime.now().strftime('%Y%m%d%H%M%S')
         folder = os.path.join(current_app.root_path, 'data', 'uploads')
         os.makedirs(folder, exist_ok=True)
@@ -198,17 +206,21 @@ def finalize_land():
 
     status = 'approved' if approval_method == 'auto' else 'pending'
     lands = load_json(current_app.config['LANDS_FILE'])
-    lands.append({
+
+    new_land = {
         'code': session['land_code'],
         'title': session['land_temp']['title'],
         'location': session['land_temp']['location'],
         'size': session['land_temp']['size'],
+        'price_total': session['land_temp'].get('price_total'),
         'images': session['land_images'],
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'owner': session.get('user_phone'),
         'status': status,
         'ad_type': session['land_ad_type']
-    })
+    }
+
+    lands.append(new_land)
     save_json(current_app.config['LANDS_FILE'], lands)
     for key in required:
         session.pop(key, None)
@@ -260,7 +272,8 @@ def edit_land(code):
         land.update({
             'title': request.form.get('title'),
             'location': request.form.get('location'),
-            'size': request.form.get('size')
+            'size': request.form.get('size'),
+            'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None
         })
 
         images = request.files.getlist('images')

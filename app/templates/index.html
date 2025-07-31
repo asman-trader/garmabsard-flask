@@ -6,12 +6,12 @@
 <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landList">
   {% for land in lands %}
   <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-xl transition-transform hover:scale-[1.02] duration-300 overflow-hidden land-card"
-    data-location="{{ land.location }}" data-code="{{ land.code }}" data-title="{{ land.title }}"
-    data-size="{{ land.size }}" data-price="{{ land.price_total }}"
-    data-image="{{ land.images[0] if land.images else '' }}">
+    data-location="{{ land.get('location') }}" data-code="{{ land.get('code') }}" data-title="{{ land.get('title') }}"
+    data-size="{{ land.get('size') }}" data-price="{{ land.get('price_total') }}"
+    data-image="{{ land.get('images')[0] if land.get('images') else '' }}">
 
     <!-- ❤️ علاقه‌مندی -->
-    <button type="button" class="absolute top-2 left-2 z-10 favorite-btn" data-code="{{ land.code }}" aria-label="افزودن به علاقه‌مندی‌ها">
+    <button type="button" class="absolute top-2 left-2 z-10 favorite-btn" data-code="{{ land.get('code') }}" aria-label="افزودن به علاقه‌مندی‌ها">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
         class="w-7 h-7 text-gray-400 hover:text-red-500 transition-colors duration-300">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -19,10 +19,10 @@
       </svg>
     </button>
 
-    <a href="{{ url_for('main.land_detail', code=land.code) }}">
-      {% if land.images and land.images[0] %}
-      <img src="{{ url_for('main.uploaded_file', filename=land.images[0]) }}"
-           alt="تصویر زمین {{ land.title }}"
+    <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
+      {% if land.get('images') and land.get('images')[0] %}
+      <img src="{{ url_for('main.uploaded_file', filename=land.get('images')[0]) }}"
+           alt="تصویر زمین {{ land.get('title') }}"
            loading="lazy"
            class="w-full h-48 object-cover rounded-t-2xl">
       {% else %}
@@ -31,14 +31,18 @@
     </a>
 
     <div class="p-4">
-      <a href="{{ url_for('main.land_detail', code=land.code) }}">
-        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 hover:underline truncate">{{ land.title }}</h3>
+      <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
+        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 hover:underline truncate">{{ land.get('title') }}</h3>
       </a>
       <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-        📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر | 📍 {{ land.location or "?" }}
+        📏 {{ "{:,}".format(land.get('size') | int) if land.get('size') is not none else "?" }} متر | 📍 {{ land.get('location') or "?" }}
       </p>
       <p class="text-sm text-gray-800 dark:text-gray-200 font-semibold mt-3">
-        💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+        {% if land.get('price_total') is not none %}
+          💰 {{ "{:,}".format(land.get('price_total') | int) }} تومان
+        {% else %}
+          💰 نامشخص
+        {% endif %}
       </p>
     </div>
   </div>

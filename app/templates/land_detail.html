@@ -41,32 +41,45 @@
 
   <!-- هدر -->
   <header class="bg-white dark:bg-slate-800 shadow p-4 sticky top-0 z-30">
-    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-      <div class="text-xl text-green-700 dark:text-green-400">🏡</div>
-      <a href="{{ url_for('main.index') }}" class="text-sm text-blue-600 hover:underline hidden sm:inline dark:text-blue-400">
-        ← بازگشت به لیست زمین‌ها
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+
+    <!-- دکمه برگشت موبایل -->
+    <a href="{{ url_for('main.index') }}" class="sm:hidden text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 text-xl">
+      <i class="fas fa-arrow-right"></i>
+    </a>
+
+    <!-- لوگو -->
+    <div class="text-xl text-green-700 dark:text-green-400">🏡</div>
+
+    <!-- دکمه بازگشت دسکتاپ -->
+    <a href="{{ url_for('main.index') }}" class="text-sm text-blue-600 hover:underline hidden sm:inline dark:text-blue-400">
+      ← بازگشت به لیست زمین‌ها
+    </a>
+
+    <!-- دکمه علاقه‌مندی و رفتن به لیست -->
+    <div class="flex items-center gap-4">
+      <button id="fav-toggle" onclick="toggleFavorite('{{ land.code }}')" class="text-xs px-3 py-1 rounded-full border shadow bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-600 transition whitespace-nowrap">
+        ❤️ افزودن به علاقه‌مندی‌ها
+      </button>
+      <a href="{{ url_for('main.favorites') }}" class="relative group" aria-label="علاقه‌مندی‌ها">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+             class="w-7 h-7 text-gray-500 dark:text-gray-300 group-hover:text-red-500 transition">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36
+                  2 12.28 2 8.5 2 5.42
+                  4.42 3 7.5 3c1.74 0
+                  3.41.81 4.5 2.09C13.09
+                  3.81 14.76 3 16.5
+                  3 19.58 3 22 5.42 22
+                  8.5c0 3.78-3.4 6.86-8.55
+                  11.54L12 21.35z"/>
+        </svg>
+        <span id="fav-count" class="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5 py-0.5 hidden">0</span>
       </a>
-      <div class="flex items-center gap-4">
-        <button id="fav-toggle" onclick="toggleFavorite('{{ land.code }}')" class="text-xs px-3 py-1 rounded-full border shadow bg-white dark:bg-slate-700 dark:text-white dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-600 transition whitespace-nowrap">
-          ❤️ افزودن به علاقه‌مندی‌ها
-        </button>
-        <a href="{{ url_for('main.favorites') }}" class="relative group" aria-label="علاقه‌مندی‌ها">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-               class="w-7 h-7 text-gray-500 dark:text-gray-300 group-hover:text-red-500 transition">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36
-                    2 12.28 2 8.5 2 5.42
-                    4.42 3 7.5 3c1.74 0
-                    3.41.81 4.5 2.09C13.09
-                    3.81 14.76 3 16.5
-                    3 19.58 3 22 5.42 22
-                    8.5c0 3.78-3.4 6.86-8.55
-                    11.54L12 21.35z"/>
-          </svg>
-          <span id="fav-count" class="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5 py-0.5 hidden">0</span>
-        </a>
-      </div>
     </div>
-  </header>
+
+  </div>
+</header>
+
 
   <!-- محتوای اصلی -->
   <main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-6 pb-32 dark:bg-slate-800">
