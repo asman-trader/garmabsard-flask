@@ -44,51 +44,52 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
 
   <!-- Header -->
+  {% if not hide_header %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
-  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
 
-    <!-- لوگو -->
-    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
-      <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
-        <i class="fas fa-seedling animate-pulse"></i>
-      </span>
-      <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
-    </a>
+      <!-- لوگو -->
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
+        <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
+          <i class="fas fa-seedling animate-pulse"></i>
+        </span>
+        <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+      </a>
 
-    <!-- جستجو و فیلتر موقعیت -->
-    <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
-      <div class="relative">
-        <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
-          class="w-full pl-12 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
-        <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-base pointer-events-none"></i>
-        <button id="locationToggle" type="button"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
-          <i class="fas fa-map-marker-alt"></i>
-        </button>
+      <!-- جستجو و فیلتر موقعیت -->
+      <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
+        <div class="relative">
+          <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
+            class="w-full pl-12 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
+          <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-base pointer-events-none"></i>
+          <button id="locationToggle" type="button"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
+            <i class="fas fa-map-marker-alt"></i>
+          </button>
+        </div>
+
+        <!-- منوی موقعیت -->
+        <div id="locationMenu"
+          class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
+          <div class="text-gray-700 dark:text-white font-bold px-4 py-3 border-b dark:border-gray-600">📍 انتخاب موقعیت:</div>
+          {% for loc in ["", "دشت اول", "دشت دوم", "کنار جاده", "نزدیک جاده اصلی", "بالادست رودخانه"] %}
+          <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}"
+            data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
+          {% endfor %}
+        </div>
       </div>
 
-      <!-- منوی موقعیت -->
-      <div id="locationMenu"
-        class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
-        <div class="text-gray-700 dark:text-white font-bold px-4 py-3 border-b dark:border-gray-600">📍 انتخاب موقعیت:</div>
-        {% for loc in ["", "دشت اول", "دشت دوم", "کنار جاده", "نزدیک جاده اصلی", "بالادست رودخانه"] %}
-        <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}"
-          data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
-        {% endfor %}
-      </div>
+      <!-- آیکون پروفایل کاربر -->
+      {% if session.get('user_phone') %}
+      <a href="{{ url_for('main.profile') }}"
+        class="text-green-700 dark:text-green-400 text-2xl hover:text-green-800 transition-all" title="ناحیه کاربری">
+        <i class="fas fa-user-circle"></i>
+      </a>
+      {% endif %}
+
     </div>
-
-    <!-- آیکون پروفایل کاربر -->
-    {% if session.get('user_phone') %}
-    <a href="{{ url_for('main.profile') }}"
-      class="text-green-700 dark:text-green-400 text-2xl hover:text-green-800 transition-all" title="ناحیه کاربری">
-      <i class="fas fa-user-circle"></i>
-    </a>
-    {% endif %}
-
-  </div>
-</header>
-
+  </header>
+  {% endif %}
 
   <!-- Main Content -->
   <main class="flex-1 py-6 px-4">
@@ -105,9 +106,11 @@
   </main>
 
   <!-- Floating Action Button -->
+  {% if not hide_header %}
   <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
     <i class="fas fa-plus text-xl"></i>
   </a>
+  {% endif %}
 
   <!-- Scripts -->
   {% block scripts %}{% endblock %}
