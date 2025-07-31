@@ -12,7 +12,19 @@ if errorlevel 1 (
     exit /b
 )
 
-:: Read current version from file
+:: Pull latest changes from remote to avoid conflicts
+git pull --no-rebase --quiet
+
+:: Check if there is any change to commit
+git add .
+git diff --cached --quiet
+if %errorlevel%==0 (
+    echo Nothing to commit. Working directory is clean.
+    pause
+    exit /b
+)
+
+:: Read version
 set version=0
 if exist version.txt (
     set /p version=<version.txt
@@ -20,21 +32,12 @@ if exist version.txt (
 
 :: Increase version number
 set /a version+=1
-
-:: Save new version
 echo %version%>version.txt
 
 :: Commit message
 set msg=Auto commit version v%version%
 
-:: Show status
-echo --------------------------
-echo Git status before commit:
-git status
-echo --------------------------
-
 :: Commit and push
-git add .
 git commit -m "%msg%"
 git push origin main
 
