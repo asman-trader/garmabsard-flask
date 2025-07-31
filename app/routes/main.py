@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, send_from_directory
-import os, json, random, requests
+import os, json, random, requests, subprocess
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
@@ -50,19 +50,29 @@ def parse_datetime_safe(date_str):
         except ValueError:
             return datetime(1970, 1, 1)
 
+# وب‌هوک گیت برای pull خودکار
+@main_bp.route('/git-webhook', methods=['POST'])
+def git_webhook():
+    try:
+        repo_path = os.path.abspath('.')
+        subprocess.run(['git', '-C', repo_path, 'pull'], check=True)
+        return '✅ کد جدید دریافت شد.', 200
+    except Exception as e:
+        return f'❌ خطا در Pull: {str(e)}', 500
+
 # نمایش فایل‌های آپلود شده
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     folder = os.path.join(current_app.root_path, 'data', 'uploads')
     return send_from_directory(folder, filename)
 
-# صفحه اصلی سایت - لیست زمین‌های تأییدشده
+# صفحه اصلی سایت
 @main_bp.route('/')
 def index():
     lands = load_json(current_app.config['LANDS_FILE'])
     approved = [l for l in lands if l.get('status') == 'approved']
-    approved_sorted = sorted(approved, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
-    return render_template('index.html', lands=approved_sorted, now=datetime.now())
+    sorted_lands = sorted(approved, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+    return render_template('index.html', lands=sorted_lands, now=datetime.now())
 
 @main_bp.route('/land/<code>')
 def land_detail(code):
@@ -103,6 +113,7 @@ def send_otp():
 def verify_otp():
     code = request.form.get('otp_code')
     phone = request.form.get('phone')
+
     if not code or not phone:
         flash("اطلاعات ناقص است.")
         return redirect(url_for('main.send_otp'))
@@ -115,6 +126,7 @@ def verify_otp():
             save_json(current_app.config['USERS_FILE'], users)
         flash("✅ ورود موفقیت‌آمیز بود.")
         return redirect(session.pop('next', None) or url_for('main.index'))
+
     flash("❌ کد واردشده نادرست است.")
     return redirect(url_for('main.send_otp'))
 
@@ -146,26 +158,22 @@ def add_land():
             flash("همه فیلدها الزامی هستند.")
             return redirect(url_for('main.add_land'))
 
-        session['land_temp'] = {
-            'title': title,
-            'location': location,
-            'size': size,
-            'price_total': int(price_total) if price_total else None
-        }
-
         code = datetime.now().strftime('%Y%m%d%H%M%S')
-        folder = os.path.join(current_app.root_path, 'data', 'uploads')
-        os.makedirs(folder, exist_ok=True)
+        upload_dir = os.path.join(current_app.root_path, 'data', 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        image_names = []
 
-        saved = []
         for img in images:
             if img and img.filename:
                 fname = f"{code}__{secure_filename(img.filename)}"
-                path = os.path.join(folder, fname)
-                img.save(path)
-                saved.append(fname)
+                img.save(os.path.join(upload_dir, fname))
+                image_names.append(fname)
 
-        session.update({'land_images': saved, 'land_code': code})
+        session.update({
+            'land_code': code,
+            'land_temp': {'title': title, 'location': location, 'size': size, 'price_total': int(price_total) if price_total else None},
+            'land_images': image_names
+        })
         return redirect(url_for('main.add_land_step3'))
 
     return render_template('add_land.html')
@@ -190,16 +198,16 @@ def add_land_step3():
 
 @main_bp.route('/lands/finalize')
 def finalize_land():
-    required = ['land_temp', 'land_images', 'land_code', 'land_ad_type']
-    if not all(k in session for k in required):
+    keys = ['land_code', 'land_temp', 'land_images', 'land_ad_type']
+    if not all(k in session for k in keys):
         flash("اطلاعات ناقص است.")
         return redirect(url_for('main.add_land'))
 
     approval_method = 'manual'
-    settings_path = current_app.config['SETTINGS_FILE']
-    if os.path.exists(settings_path):
+    settings_file = current_app.config['SETTINGS_FILE']
+    if os.path.exists(settings_file):
         try:
-            with open(settings_path, 'r', encoding='utf-8') as f:
+            with open(settings_file, 'r', encoding='utf-8') as f:
                 approval_method = json.load(f).get('approval_method', 'manual')
         except:
             pass
@@ -212,7 +220,7 @@ def finalize_land():
         'title': session['land_temp']['title'],
         'location': session['land_temp']['location'],
         'size': session['land_temp']['size'],
-        'price_total': session['land_temp'].get('price_total'),
+        'price_total': session['land_temp']['price_total'],
         'images': session['land_images'],
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'owner': session.get('user_phone'),
@@ -222,10 +230,12 @@ def finalize_land():
 
     lands.append(new_land)
     save_json(current_app.config['LANDS_FILE'], lands)
-    for key in required:
-        session.pop(key, None)
 
-    flash("✅ آگهی شما با موفقیت ثبت شد." + (" به صورت خودکار منتشر شد." if status == "approved" else " و در انتظار تأیید قرار گرفت."))
+    for k in keys:
+        session.pop(k, None)
+
+    msg = "✅ آگهی شما با موفقیت ثبت شد." + (" به صورت خودکار منتشر شد." if status == 'approved' else " و در انتظار تأیید قرار گرفت.")
+    flash(msg)
     return redirect(url_for('main.my_lands'))
 
 @main_bp.route('/my-lands')
@@ -246,9 +256,8 @@ def profile():
         session['next'] = url_for('main.profile')
         return redirect(url_for('main.send_otp'))
 
-    user_phone = session['user_phone']
     users = load_json(current_app.config['USERS_FILE'])
-    user = next((u for u in users if u.get('phone') == user_phone), None)
+    user = next((u for u in users if u.get('phone') == session['user_phone']), None)
     return render_template('profile.html', user=user)
 
 @main_bp.route('/favorites')
@@ -265,14 +274,14 @@ def edit_land(code):
     lands = load_json(current_app.config['LANDS_FILE'])
     land = next((l for l in lands if l.get('code') == code and l.get('owner') == session['user_phone']), None)
     if not land:
-        flash("آگهی موردنظر پیدا نشد.")
+        flash("آگهی پیدا نشد.")
         return redirect(url_for('main.my_lands'))
 
     if request.method == 'POST':
         land.update({
             'title': request.form.get('title'),
             'location': request.form.get('location'),
-            'size': request.form.get('size'),
+            'size': request.form.get(' '),
             'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None
         })
 
@@ -305,9 +314,9 @@ def delete_land(code):
     new_lands = [l for l in lands if not (l.get('code') == code and l.get('owner') == session['user_phone'])]
 
     if len(new_lands) == len(lands):
-        flash("❌ آگهی موردنظر پیدا نشد یا متعلق به شما نیست.")
+        flash("❌ آگهی پیدا نشد یا متعلق به شما نیست.")
     else:
         save_json(current_app.config['LANDS_FILE'], new_lands)
-        flash("🗑️ آگهی با موفقیت حذف شد.")
+        flash("🗑️ آگهی حذف شد.")
 
     return redirect(url_for('main.my_lands'))
