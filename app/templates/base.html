@@ -48,6 +48,9 @@
     #advancedFilters.active {
       display: block;
     }
+    #locationMenu.active {
+      display: block !important;
+    }
   </style>
   {% block head %}{% endblock %}
 </head>
@@ -139,6 +142,12 @@
     const filters = document.getElementById("advancedFilters");
     toggleBtn?.addEventListener("click", () => {
       filters?.classList.toggle("active");
+    });
+
+    const locationToggle = document.getElementById("locationToggle");
+    const locationMenu = document.getElementById("locationMenu");
+    locationToggle?.addEventListener("click", () => {
+      locationMenu?.classList.toggle("active");
     });
   </script>
 </body>
