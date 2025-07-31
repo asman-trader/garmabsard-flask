@@ -37,6 +37,17 @@
     .fab:hover {
       background-color: #15803d;
     }
+    #advancedFilters {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      z-index: 30;
+      display: none;
+    }
+    #advancedFilters.active {
+      display: block;
+    }
   </style>
   {% block head %}{% endblock %}
 </head>
@@ -57,11 +68,15 @@
       <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
         <div class="relative">
           <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
-            class="w-full pl-12 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
+            class="w-full pl-12 pr-10 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
           <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-base pointer-events-none"></i>
           <button id="locationToggle" type="button"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
+            class="absolute left-10 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
             <i class="fas fa-map-marker-alt"></i>
+          </button>
+          <button id="toggleFilters" type="button"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
+            <i class="fas fa-sliders-h"></i>
           </button>
         </div>
 
@@ -72,11 +87,7 @@
           {% endfor %}
         </div>
 
-        <div class="text-left mt-2">
-          <button onclick="toggleAdvancedFilters()" class="text-sm text-green-600 hover:underline">🔍 فیلتر پیشرفته</button>
-        </div>
-
-        <div id="advancedFilters" class="mt-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow hidden">
+        <div id="advancedFilters" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">متراژ از</label>
@@ -113,15 +124,6 @@
   {% endif %}
 
   <main class="flex-1 py-6 px-4">
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="max-w-4xl mx-auto mb-4">
-      {% for msg in messages %}
-      <div class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-4 py-2 rounded-lg mb-2 text-sm shadow">{{ msg }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
     {% block content %}{% endblock %}
   </main>
 
@@ -133,75 +135,11 @@
 
   {% block scripts %}{% endblock %}
   <script>
-    const html = document.documentElement;
-    const toggleDarkMode = document.getElementById("toggleDarkMode");
-    if (localStorage.getItem("theme") === "dark") html.classList.add("dark");
-    else html.classList.remove("dark");
-
-    toggleDarkMode?.addEventListener("click", () => {
-      html.classList.toggle("dark");
-      localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+    const toggleBtn = document.getElementById("toggleFilters");
+    const filters = document.getElementById("advancedFilters");
+    toggleBtn?.addEventListener("click", () => {
+      filters?.classList.toggle("active");
     });
-
-    const searchInput = document.getElementById("searchInput");
-    const cards = document.querySelectorAll(".land-card");
-    let currentLocation = "";
-
-    function applyFilters(locationFilter = currentLocation) {
-      const searchValue = searchInput?.value?.trim().toLowerCase() || "";
-      const sizeFrom = parseInt(document.getElementById("sizeFrom")?.value) || 0;
-      const sizeTo = parseInt(document.getElementById("sizeTo")?.value) || Infinity;
-      const priceFrom = parseInt(document.getElementById("priceFrom")?.value) || 0;
-      const priceTo = parseInt(document.getElementById("priceTo")?.value) || Infinity;
-
-      cards.forEach(card => {
-        const title = card.querySelector("h3")?.textContent?.toLowerCase() || "";
-        const location = card.getAttribute("data-location");
-        const size = parseInt(card.getAttribute("data-size")) || 0;
-        const price = parseInt(card.getAttribute("data-price")) || 0;
-
-        const matchSearch = title.includes(searchValue);
-        const matchLocation = !locationFilter || location === locationFilter;
-        const matchSize = size >= sizeFrom && size <= sizeTo;
-        const matchPrice = price >= priceFrom && price <= priceTo;
-
-        card.style.display = (matchSearch && matchLocation && matchSize && matchPrice) ? "block" : "none";
-      });
-    }
-
-    function resetFilters() {
-      document.getElementById("sizeFrom").value = "";
-      document.getElementById("sizeTo").value = "";
-      document.getElementById("priceFrom").value = "";
-      document.getElementById("priceTo").value = "";
-      applyFilters();
-    }
-
-    searchInput?.addEventListener("input", () => applyFilters(currentLocation));
-    const locationToggle = document.getElementById("locationToggle");
-    const locationMenu = document.getElementById("locationMenu");
-    locationToggle?.addEventListener("click", () => locationMenu.classList.toggle("hidden"));
-    locationMenu?.querySelectorAll("[data-location]").forEach(item => {
-      item.addEventListener("click", () => {
-        currentLocation = item.getAttribute("data-location");
-        locationMenu.classList.add("hidden");
-        applyFilters(currentLocation);
-      });
-    });
-
-    function toggleAdvancedFilters() {
-      document.getElementById("advancedFilters")?.classList.toggle("hidden");
-    }
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
-          .then(reg => console.log('✅ ServiceWorker ثبت شد:', reg.scope))
-          .catch(err => console.log('❌ خطا در ثبت ServiceWorker:', err));
-      });
-    }
   </script>
 </body>
 </html>
