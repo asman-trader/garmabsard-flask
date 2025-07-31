@@ -1,26 +1,31 @@
 @echo off
 setlocal
 
+:: Project directory
 cd /d "C:\Users\Aseman\OneDrive\Desktop\py-code\G"
 
+:: Check if Git is installed
 git --version >nul 2>&1
-IF ERRORLEVEL 1 (
-    echo Git is not installed or not in PATH.
+if errorlevel 1 (
+    echo Git is not installed or not added to PATH.
     pause
     exit /b
 )
 
+:: Show git status
 echo --------------------------
-echo Project status:
+echo Current project status:
 git status
 echo --------------------------
 
-set /p msg=Enter your commit message: 
+:: Get commit message from user
+set /p msg=Enter your commit message:
 
+:: Apply changes
 git add .
 git commit -m "%msg%"
 git push origin main
 
 echo --------------------------
-echo ? Successfully pushed to GitHub.
+echo ✅ Changes successfully pushed to garmabsard-flask repository.
 pause
