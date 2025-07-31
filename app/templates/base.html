@@ -43,12 +43,10 @@
 
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
 
-  <!-- Header -->
   {% if not hide_header %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
 
-      <!-- لوگو -->
       <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
         <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
           <i class="fas fa-seedling animate-pulse"></i>
@@ -56,7 +54,6 @@
         <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
       </a>
 
-      <!-- جستجو و فیلتر موقعیت -->
       <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
         <div class="relative">
           <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
@@ -68,21 +65,45 @@
           </button>
         </div>
 
-        <!-- منوی موقعیت -->
-        <div id="locationMenu"
-          class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
+        <div id="locationMenu" class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
           <div class="text-gray-700 dark:text-white font-bold px-4 py-3 border-b dark:border-gray-600">📍 انتخاب موقعیت:</div>
           {% for loc in ["", "دشت اول", "دشت دوم", "کنار جاده", "نزدیک جاده اصلی", "بالادست رودخانه"] %}
-          <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}"
-            data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
+          <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}" data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
           {% endfor %}
+        </div>
+
+        <div class="text-left mt-2">
+          <button onclick="toggleAdvancedFilters()" class="text-sm text-green-600 hover:underline">🔍 فیلتر پیشرفته</button>
+        </div>
+
+        <div id="advancedFilters" class="mt-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">متراژ از</label>
+              <input type="number" id="sizeFrom" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">متراژ تا</label>
+              <input type="number" id="sizeTo" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">قیمت از</label>
+              <input type="number" id="priceFrom" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">قیمت تا</label>
+              <input type="number" id="priceTo" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" />
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="applyFilters()" class="bg-green-600 text-white px-4 py-2 rounded">اعمال فیلتر</button>
+            <button onclick="resetFilters()" class="bg-gray-400 text-white px-4 py-2 rounded">حذف فیلتر</button>
+          </div>
         </div>
       </div>
 
-      <!-- آیکون پروفایل کاربر -->
       {% if session.get('user_phone') %}
-      <a href="{{ url_for('main.profile') }}"
-        class="text-green-700 dark:text-green-400 text-2xl hover:text-green-800 transition-all" title="ناحیه کاربری">
+      <a href="{{ url_for('main.profile') }}" class="text-green-700 dark:text-green-400 text-2xl hover:text-green-800 transition-all" title="ناحیه کاربری">
         <i class="fas fa-user-circle"></i>
       </a>
       {% endif %}
@@ -91,7 +112,6 @@
   </header>
   {% endif %}
 
-  <!-- Main Content -->
   <main class="flex-1 py-6 px-4">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -105,14 +125,12 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Floating Action Button -->
   {% if not hide_header %}
   <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
     <i class="fas fa-plus text-xl"></i>
   </a>
   {% endif %}
 
-  <!-- Scripts -->
   {% block scripts %}{% endblock %}
   <script>
     const html = document.documentElement;
@@ -128,18 +146,38 @@
     const searchInput = document.getElementById("searchInput");
     const cards = document.querySelectorAll(".land-card");
     let currentLocation = "";
-    function applyFilters(locationFilter = "") {
+
+    function applyFilters(locationFilter = currentLocation) {
       const searchValue = searchInput?.value?.trim().toLowerCase() || "";
+      const sizeFrom = parseInt(document.getElementById("sizeFrom")?.value) || 0;
+      const sizeTo = parseInt(document.getElementById("sizeTo")?.value) || Infinity;
+      const priceFrom = parseInt(document.getElementById("priceFrom")?.value) || 0;
+      const priceTo = parseInt(document.getElementById("priceTo")?.value) || Infinity;
+
       cards.forEach(card => {
         const title = card.querySelector("h3")?.textContent?.toLowerCase() || "";
         const location = card.getAttribute("data-location");
+        const size = parseInt(card.getAttribute("data-size")) || 0;
+        const price = parseInt(card.getAttribute("data-price")) || 0;
+
         const matchSearch = title.includes(searchValue);
         const matchLocation = !locationFilter || location === locationFilter;
-        card.style.display = (matchSearch && matchLocation) ? "block" : "none";
+        const matchSize = size >= sizeFrom && size <= sizeTo;
+        const matchPrice = price >= priceFrom && price <= priceTo;
+
+        card.style.display = (matchSearch && matchLocation && matchSize && matchPrice) ? "block" : "none";
       });
     }
-    searchInput?.addEventListener("input", () => applyFilters(currentLocation));
 
+    function resetFilters() {
+      document.getElementById("sizeFrom").value = "";
+      document.getElementById("sizeTo").value = "";
+      document.getElementById("priceFrom").value = "";
+      document.getElementById("priceTo").value = "";
+      applyFilters();
+    }
+
+    searchInput?.addEventListener("input", () => applyFilters(currentLocation));
     const locationToggle = document.getElementById("locationToggle");
     const locationMenu = document.getElementById("locationMenu");
     locationToggle?.addEventListener("click", () => locationMenu.classList.toggle("hidden"));
@@ -150,9 +188,12 @@
         applyFilters(currentLocation);
       });
     });
+
+    function toggleAdvancedFilters() {
+      document.getElementById("advancedFilters")?.classList.toggle("hidden");
+    }
   </script>
 
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
