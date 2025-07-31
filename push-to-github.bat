@@ -1,30 +1,26 @@
 @echo off
 setlocal
 
-:: ÊäÙíã ãÓíÑ Ñæå (ÍÊãÇğ åãíä ãÓíÑ Ñæ äåÏÇÑ íÇ ÊÛííÑ ÈÏå Èå æÔå ÎæÏÊ)
 cd /d "C:\Users\Aseman\OneDrive\Desktop\py-code\G"
 
-:: ÈÑÑÓí Çíä˜å git äÕÈ åÓÊ íÇ äå
 git --version >nul 2>&1
 IF ERRORLEVEL 1 (
-    echo Git äÕÈ äíÓÊ íÇ ÏÑ ãÓíÑ PATH äíÓÊ.
+    echo Git is not installed or not in PATH.
     pause
     exit /b
 )
 
-:: äãÇíÔ æÖÚíÊ
 echo --------------------------
-echo æÖÚíÊ İÚáí Ñæå:
+echo Project status:
 git status
 echo --------------------------
 
-:: ÏÑíÇİÊ íÇã ˜ÇãíÊ
-set /p msg=áØİÇğ íÇã ÊÛííÑÇÊ ÑÇ æÇÑÏ ˜ä:
+set /p msg=Enter your commit message: 
 
 git add .
 git commit -m "%msg%"
 git push origin main
 
 echo --------------------------
-echo ? ÊÛííÑÇÊ ÈÇ ãæİŞíÊ ÇÑÓÇá ÔÏ.
+echo ? Successfully pushed to GitHub.
 pause
