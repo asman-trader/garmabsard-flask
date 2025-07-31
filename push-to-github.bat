@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 :: Project directory
 cd /d "C:\Users\Aseman\OneDrive\Desktop\py-code\G"
@@ -12,20 +12,32 @@ if errorlevel 1 (
     exit /b
 )
 
-:: Show git status
+:: Read current version from file
+set version=0
+if exist version.txt (
+    set /p version=<version.txt
+)
+
+:: Increase version number
+set /a version+=1
+
+:: Save new version
+echo %version%>version.txt
+
+:: Commit message
+set msg=Auto commit version v%version%
+
+:: Show status
 echo --------------------------
-echo Current project status:
+echo Git status before commit:
 git status
 echo --------------------------
 
-:: Get commit message from user
-set /p msg=Enter your commit message:
-
-:: Apply changes
+:: Commit and push
 git add .
 git commit -m "%msg%"
 git push origin main
 
 echo --------------------------
-echo ✅ Changes successfully pushed to garmabsard-flask repository.
+echo ✅ %msg% has been pushed to garmabsard-flask repository.
 pause
