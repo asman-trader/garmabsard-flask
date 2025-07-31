@@ -320,3 +320,33 @@ def delete_land(code):
         flash("🗑️ آگهی حذف شد.")
 
     return redirect(url_for('main.my_lands'))
+
+@main_bp.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if 'user_phone' not in session:
+        flash("برای ورود به تنظیمات وارد شوید.")
+        session['next'] = url_for('main.settings')
+        return redirect(url_for('main.send_otp'))
+
+    users = load_json(current_app.config['USERS_FILE'])
+    phone = session['user_phone']
+    user = next((u for u in users if u.get('phone') == phone), None)
+
+    if not user:
+        flash("کاربر یافت نشد.")
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        user['name'] = request.form.get('name', '').strip()
+        user['lastname'] = request.form.get('lastname', '').strip()
+        user['province'] = request.form.get('province', '').strip()
+        user['city'] = request.form.get('city', '').strip()
+        new_password = request.form.get('password', '').strip()
+        if new_password:
+            user['password'] = new_password
+
+        save_json(current_app.config['USERS_FILE'], users)
+        flash("✅ تنظیمات با موفقیت ذخیره شد.")
+        return redirect(url_for('main.settings'))
+
+    return render_template('settings.html', user=user)

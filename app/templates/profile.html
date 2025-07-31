@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% set hide_header = True %}
 
 {% block title %}ناحیه کاربری | گرمابسرد{% endblock %}
 
@@ -36,13 +37,21 @@
       <i class="fas fa-sign-out-alt text-2xl mb-2"></i>
       خروج
     </a>
-    <a href="#" class="flex flex-col items-center justify-center bg-gray-600 hover:bg-gray-700 text-white py-4 rounded-xl shadow transition">
+    <a href="{{ url_for('main.settings') }}" class="flex flex-col items-center justify-center bg-gray-600 hover:bg-gray-700 text-white py-4 rounded-xl shadow transition">
       <i class="fas fa-cog text-2xl mb-2"></i>
       تنظیمات
     </a>
     <a href="{{ url_for('main.favorites') }}" class="flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700 text-white py-4 rounded-xl shadow transition">
       <i class="fas fa-heart text-2xl mb-2"></i>
       علاقه‌مندی‌ها
+    </a>
+  </div>
+
+  <!-- دکمه بازگشت -->
+  <div class="mt-8">
+    <a href="{{ url_for('main.index') }}"
+       class="block text-center text-sm text-green-700 dark:text-green-400 hover:underline">
+      ← بازگشت به صفحه اصلی
     </a>
   </div>
 

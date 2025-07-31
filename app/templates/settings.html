@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% set hide_header = True %}
 
 {% block title %}تنظیمات حساب | گرمابسرد{% endblock %}
 
@@ -78,6 +79,14 @@
   <div class="text-red-600 mt-6">خطا: اطلاعات کاربر یافت نشد.</div>
   {% endif %}
 
+  <!-- دکمه بازگشت -->
+  <div class="mt-6">
+    <a href="{{ url_for('main.index') }}"
+       class="block text-center text-sm text-green-700 dark:text-green-400 hover:underline">
+      ← بازگشت به صفحه اصلی
+    </a>
+  </div>
+
 </div>
 
 <!-- JS بارگذاری شهرها -->
@@ -107,7 +116,6 @@
     }
   }
 
-  // بارگذاری خودکار اگر استان انتخاب شده
   window.addEventListener('DOMContentLoaded', () => {
     const selectedProvince = document.getElementById('province-select').value;
     if (selectedProvince) loadCities();
