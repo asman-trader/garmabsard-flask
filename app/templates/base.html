@@ -149,6 +149,16 @@
     locationToggle?.addEventListener("click", () => {
       locationMenu?.classList.toggle("active");
     });
+
+    // بستن منوهای باز با کلیک بیرون
+    window.addEventListener("click", (e) => {
+      if (!e.target.closest("#locationMenu") && !e.target.closest("#locationToggle")) {
+        locationMenu?.classList.remove("active");
+      }
+      if (!e.target.closest("#advancedFilters") && !e.target.closest("#toggleFilters")) {
+        filters?.classList.remove("active");
+      }
+    });
   </script>
 </body>
 </html>
