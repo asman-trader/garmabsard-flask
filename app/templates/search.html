@@ -1,14 +1,62 @@
 {% extends "base.html" %}
-{% block title %}جستجو{% endblock %}
+{% block title %}جستجوی پیشرفته زمین{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto mt-8">
-  <form method="GET" action="{{ url_for('main.search_results') }}">
-    <div class="relative">
-      <input type="text" name="q" autofocus placeholder="جستجو بر اساس عنوان یا موقعیت..."
-        class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white shadow focus:outline-none focus:ring-2 focus:ring-green-600">
-      <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-lg">
-        <i class="fas fa-search"></i>
+<div class="max-w-3xl mx-auto mt-10 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+  <h1 class="text-xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
+    🔎 جستجوی پیشرفته زمین
+  </h1>
+
+  <form method="get" action="{{ url_for('main.search_results') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <!-- عبارت جستجو -->
+    <div class="col-span-2">
+      <label for="q" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">کلمه کلیدی</label>
+      <div class="relative">
+        <input type="text" id="q" name="q"
+               class="w-full pl-10 pr-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+               placeholder="مثلاً: دشت اول، سنددار، کنار خیابان..." required>
+        <span class="absolute left-3 top-2.5 text-gray-400 dark:text-gray-300">🔤</span>
+      </div>
+    </div>
+
+    <!-- حداقل قیمت -->
+    <div>
+      <label for="min_price" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">حداقل قیمت</label>
+      <input type="number" id="min_price" name="min_price" min="0"
+             class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+             placeholder="مثلاً ۱۰۰ میلیون">
+    </div>
+
+    <!-- حداکثر قیمت -->
+    <div>
+      <label for="max_price" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">حداکثر قیمت</label>
+      <input type="number" id="max_price" name="max_price" min="0"
+             class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+             placeholder="مثلاً ۵۰۰ میلیون">
+    </div>
+
+    <!-- حداقل متراژ -->
+    <div>
+      <label for="min_size" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">حداقل متراژ</label>
+      <input type="number" id="min_size" name="min_size" min="0"
+             class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+             placeholder="مثلاً ۲۵۰">
+    </div>
+
+    <!-- حداکثر متراژ -->
+    <div>
+      <label for="max_size" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">حداکثر متراژ</label>
+      <input type="number" id="max_size" name="max_size" min="0"
+             class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+             placeholder="مثلاً ۱۵۰۰">
+    </div>
+
+    <!-- دکمه جستجو -->
+    <div class="col-span-2">
+      <button type="submit"
+              class="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 transition text-white font-bold py-2.5 rounded-lg shadow-md">
+        جستجو کن ✨
       </button>
     </div>
   </form>
