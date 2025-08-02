@@ -53,31 +53,37 @@
 
   {% if not hide_header %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
-  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+
+    <!-- لوگو و نام سایت -->
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
       <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
         <i class="fas fa-seedling animate-pulse"></i>
       </span>
-      <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+      <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
     </a>
 
-    <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm shadow">
-      <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
-    </a>
-
+    <!-- آیکون‌ها در یک ردیف -->
     <div class="flex items-center gap-4">
+
+      <!-- دکمه ثبت آگهی فقط در دسکتاپ -->
+      <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm shadow">
+        <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
+      </a>
+
       <!-- آیکون جستجو -->
       <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800 transition-all">
         <i class="fas fa-search"></i>
       </a>
 
-      <!-- آیکون منو برای موبایل -->
+      <!-- آیکون منو فقط در موبایل -->
       <button id="menuToggle" class="sm:hidden text-2xl text-green-600 dark:text-green-400">
         <i class="fas fa-bars"></i>
       </button>
     </div>
   </div>
 </header>
+
 
   {% endif %}
 
