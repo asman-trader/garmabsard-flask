@@ -139,9 +139,10 @@
   </a>
   {% endif %}
 
-  <!-- منوی کشویی سمت راست با طراحی مدرن و آیکون‌های جدید -->
+<!-- منوی کشویی سمت راست با طراحی مدرن و آیکون‌های جدید -->
 <div id="sideMenu"
   class="fixed top-0 right-0 w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out border-l dark:border-gray-700">
+
   <!-- هدر منو -->
   <div class="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700">
     <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
@@ -155,11 +156,11 @@
 
   <!-- آیتم‌های منو -->
   <div class="p-4 space-y-3 text-gray-800 dark:text-gray-100 text-sm font-medium">
+    <a href="{{ url_for('main.submit_ad') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
+      <i class="fas fa-plus-circle text-green-600 dark:text-green-400"></i> ثبت آگهی رایگان
+    </a>
     <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
       <i class="fas fa-home text-green-600 dark:text-green-400"></i> خانه
-    </a>
-    <a href="{{ url_for('main.submit_ad') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-      <i class="fas fa-plus-circle text-green-600 dark:text-green-400"></i> ثبت آگهی
     </a>
 
     {% if session.get('user_phone') %}
@@ -172,9 +173,6 @@
     </a>
     <a href="{{ url_for('main.my_lands') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
       <i class="fas fa-list text-green-600 dark:text-green-400"></i> آگهی‌های من
-    </a>
-    <a href="{{ url_for('main.add_land') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-      <i class="fas fa-upload text-green-600 dark:text-green-400"></i> ثبت آگهی جدید
     </a>
     <a href="{{ url_for('main.favorites') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
       <i class="fas fa-heart text-green-600 dark:text-green-400"></i> علاقه‌مندی‌ها
@@ -192,6 +190,8 @@
     {% endif %}
   </div>
 </div>
+
+
 
 
   {% block scripts %}{% endblock %}
