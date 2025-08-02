@@ -84,12 +84,12 @@
   <h2 class="text-xl sm:text-2xl font-bold text-green-700 mb-4 dark:text-green-400">{{ land.title }}</h2>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-6 dark:text-gray-300">
-    <p>📏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٬") if land.size else "نامشخص" }} متر</p>
-    <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
+    <p>📏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٫") if land.size else "نامشخص" }} متر</p>
+    <p>📍 <strong>موقیت:</strong> {{ land.location or "نامشخص" }}</p>
     <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-    <p>🏷️ <strong>کد آگهی:</strong> {{ land.code }}</p>
-    <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٬") if land.price_total else "نامشخص" }} تومان</p>
-    <p>📐 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٬") if land.price_per_meter else "نامشخص" }} تومان</p>
+    <p>🏧 <strong>کد آگهی:</strong> {{ land.code }}</p>
+    <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٫") if land.price_total else "نامشخص" }} تومان</p>
+    <p>📊 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٫") if land.price_per_meter else "نامشخص" }} تومان</p>
   </div>
 
   {% if land.features %}
