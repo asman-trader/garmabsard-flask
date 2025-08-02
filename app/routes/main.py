@@ -50,7 +50,10 @@ def parse_datetime_safe(date_str):
         except ValueError:
             return datetime(1970, 1, 1)
 
-# وب‌هوک گیت برای pull خودکار
+def load_ads():
+    return load_json(current_app.config['LANDS_FILE'])
+
+# وب‌هوک برای Pull اتوماتیک
 @main_bp.route('/git-webhook', methods=['POST'])
 def git_webhook():
     try:
@@ -60,16 +63,10 @@ def git_webhook():
     except Exception as e:
         return f'❌ خطا در Pull: {str(e)}', 500
 
-# نمایش فایل‌های آپلود شده
-@main_bp.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    folder = os.path.join(current_app.root_path, 'data', 'uploads')
-    return send_from_directory(folder, filename)
-
 # صفحه اصلی سایت
 @main_bp.route('/')
 def index():
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
     approved = [l for l in lands if l.get('status') == 'approved']
     sorted_lands = sorted(approved, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
     return render_template('index.html', lands=sorted_lands, now=datetime.now())
@@ -80,6 +77,11 @@ def land_detail(code):
     if not land:
         return "زمین پیدا نشد", 404
     return render_template('land_detail.html', land=land, now=datetime.now())
+
+@main_bp.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    folder = os.path.join(current_app.root_path, 'data', 'uploads')
+    return send_from_directory(folder, filename)
 
 @main_bp.route('/consult/<code>', methods=['POST'])
 def consult(code):
@@ -102,7 +104,6 @@ def send_otp():
         if not phone:
             flash("شماره موبایل الزامی است.")
             return redirect(url_for('main.send_otp'))
-
         code = str(random.randint(10000, 99999))
         session.update({'otp_code': code, 'otp_phone': phone})
         send_sms_code(phone, code)
@@ -113,7 +114,6 @@ def send_otp():
 def verify_otp():
     code = request.form.get('otp_code')
     phone = request.form.get('phone')
-
     if not code or not phone:
         flash("اطلاعات ناقص است.")
         return redirect(url_for('main.send_otp'))
@@ -126,7 +126,6 @@ def verify_otp():
             save_json(current_app.config['USERS_FILE'], users)
         flash("✅ ورود موفقیت‌آمیز بود.")
         return redirect(session.pop('next', None) or url_for('main.index'))
-
     flash("❌ کد واردشده نادرست است.")
     return redirect(url_for('main.send_otp'))
 
@@ -213,7 +212,7 @@ def finalize_land():
             pass
 
     status = 'approved' if approval_method == 'auto' else 'pending'
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
 
     new_land = {
         'code': session['land_code'],
@@ -245,7 +244,7 @@ def my_lands():
         session['next'] = url_for('main.my_lands')
         return redirect(url_for('main.send_otp'))
 
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
     user_lands = [l for l in lands if l.get('owner') == session['user_phone']]
     return render_template('my_lands.html', lands=user_lands)
 
@@ -271,7 +270,7 @@ def edit_land(code):
         session['next'] = url_for('main.edit_land', code=code)
         return redirect(url_for('main.send_otp'))
 
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
     land = next((l for l in lands if l.get('code') == code and l.get('owner') == session['user_phone']), None)
     if not land:
         flash("آگهی پیدا نشد.")
@@ -281,7 +280,7 @@ def edit_land(code):
         land.update({
             'title': request.form.get('title'),
             'location': request.form.get('location'),
-            'size': request.form.get(' '),
+            'size': request.form.get('size'),
             'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None
         })
 
@@ -310,7 +309,7 @@ def delete_land(code):
         flash("برای حذف آگهی وارد شوید.")
         return redirect(url_for('main.send_otp'))
 
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
     new_lands = [l for l in lands if not (l.get('code') == code and l.get('owner') == session['user_phone'])]
 
     if len(new_lands) == len(lands):
@@ -350,3 +349,20 @@ def settings():
         return redirect(url_for('main.settings'))
 
     return render_template('settings.html', user=user)
+
+@main_bp.route('/search')
+def search_page():
+    return render_template('search.html')
+
+@main_bp.route('/search-results')
+def search_results():
+    query = request.args.get('q', '').strip()
+    all_ads = load_ads()
+    results = []
+    for ad in all_ads:
+        if ad.get('status') == 'approved' and (
+            query in ad.get('title', '') or query in ad.get('location', '')
+        ):
+            results.append(ad)
+    results = sorted(results, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+    return render_template('search_results.html', results=results, query=query)

@@ -53,59 +53,32 @@
 
   {% if not hide_header %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
-        <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
-          <i class="fas fa-seedling animate-pulse"></i>
-        </span>
-        <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 w-full sm:w-auto">
+      <span class="bg-green-600 hover:bg-green-700 transition-all text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
+        <i class="fas fa-seedling animate-pulse"></i>
+      </span>
+      <span class="text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+    </a>
+
+    <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm shadow">
+      <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
+    </a>
+
+    <div class="flex items-center gap-4">
+      <!-- آیکون جستجو -->
+      <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800 transition-all">
+        <i class="fas fa-search"></i>
       </a>
 
-      <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm shadow">
-        <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
-      </a>
-
+      <!-- آیکون منو برای موبایل -->
       <button id="menuToggle" class="sm:hidden text-2xl text-green-600 dark:text-green-400">
         <i class="fas fa-bars"></i>
       </button>
-
-      <div class="relative flex-1 sm:flex-initial w-full sm:w-1/2">
-        <div class="relative">
-          <input id="searchInput" type="text" placeholder="جستجو بر اساس عنوان یا موقعیت..."
-            class="w-full pl-12 pr-10 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all" />
-          <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-green-600 text-base pointer-events-none"></i>
-          <button id="locationToggle" type="button"
-            class="absolute left-10 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
-            <i class="fas fa-map-marker-alt"></i>
-          </button>
-          <button id="toggleFilters" type="button"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg hover:text-green-800 transition-all">
-            <i class="fas fa-sliders-h"></i>
-          </button>
-        </div>
-
-        <div id="locationMenu" class="absolute left-0 top-full mt-2 w-full sm:w-60 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl hidden z-20 animate-fade-in-down">
-          <div class="text-gray-700 dark:text-white font-bold px-4 py-3 border-b dark:border-gray-600">📍 انتخاب موقعیت:</div>
-          {% for loc in ["", "دشت اول", "دشت دوم", "کنار جاده", "نزدیک جاده اصلی", "بالادست رودخانه"] %}
-          <div class="px-4 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800 {{ 'text-green-700 font-bold dark:text-green-400' if loc else 'text-gray-700 dark:text-white' }}" data-location="{{ loc }}">{{ loc or 'همه موقعیت‌ها' }}</div>
-          {% endfor %}
-        </div>
-
-        <div id="advancedFilters" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div><label class="block text-sm mb-1">متراژ از</label><input type="number" id="sizeFrom" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" /></div>
-            <div><label class="block text-sm mb-1">متراژ تا</label><input type="number" id="sizeTo" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" /></div>
-            <div><label class="block text-sm mb-1">قیمت از</label><input type="number" id="priceFrom" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" /></div>
-            <div><label class="block text-sm mb-1">قیمت تا</label><input type="number" id="priceTo" class="w-full px-3 py-2 rounded border dark:bg-gray-700 dark:text-white" /></div>
-          </div>
-          <div class="flex gap-3">
-            <button onclick="applyFilters()" class="bg-green-600 text-white px-4 py-2 rounded">اعمال فیلتر</button>
-            <button onclick="resetFilters()" class="bg-gray-400 text-white px-4 py-2 rounded">حذف فیلتر</button>
-          </div>
-        </div>
-      </div>
     </div>
-  </header>
+  </div>
+</header>
+
   {% endif %}
 
   <main class="flex-1 py-6 px-4 transition-all duration-300">

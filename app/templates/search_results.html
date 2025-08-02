@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}نتایج جستجو{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-6">
+  <h2 class="text-xl font-bold mb-4">نتایج برای "{{ query }}":</h2>
+  {% if results %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for ad in results %}
+      <a href="{{ url_for('main.show_ad', ad_id=ad.id) }}" class="block border rounded-lg p-4 hover:shadow bg-white dark:bg-gray-800 dark:border-gray-700 transition">
+        <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-white">{{ ad.title }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">{{ ad.location }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">متراژ: {{ ad.size }} متر</p>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 dark:text-gray-300">هیچ نتیجه‌ای یافت نشد.</p>
+  {% endif %}
+</div>
+{% endblock %}
