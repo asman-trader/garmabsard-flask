@@ -34,7 +34,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-slate-900 dark:text-slate-100">
 
-<!-- هدر -->
 <header class="bg-white dark:bg-slate-800 shadow p-4 sticky top-0 z-30">
   <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
     <a href="{{ url_for('main.index') }}" class="sm:hidden text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 text-xl">
@@ -53,8 +52,7 @@
   </div>
 </header>
 
-<!-- محتوای اصلی -->
-<main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-6 pb-32 dark:bg-slate-800">
+<main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-4 sm:p-6 pb-28 dark:bg-slate-800">
   {% if land.images %}
   <div class="mb-6">
     <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow">
@@ -84,10 +82,10 @@
   <h2 class="text-xl sm:text-2xl font-bold text-green-700 mb-4 dark:text-green-400">{{ land.title }}</h2>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-6 dark:text-gray-300">
-    <p>📏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٫") if land.size else "نامشخص" }} متر</p>
+    <p>🌏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٫") if land.size else "نامشخص" }} متر</p>
     <p>📍 <strong>موقیت:</strong> {{ land.location or "نامشخص" }}</p>
     <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-    <p>🏧 <strong>کد آگهی:</strong> {{ land.code }}</p>
+    <p>🏮 <strong>کد آگهی:</strong> {{ land.code }}</p>
     <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٫") if land.price_total else "نامشخص" }} تومان</p>
     <p>📊 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٫") if land.price_per_meter else "نامشخص" }} تومان</p>
   </div>
@@ -115,36 +113,10 @@
   </div>
 </main>
 
-<!-- نوار تماس موبایل -->
 <div class="fixed bottom-0 inset-x-0 z-50 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
     <a href="tel:{{ land.owner }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
     <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 دریافت مشاوره</button>
-  </div>
-</div>
-
-<!-- فرم مشاوره -->
-<div id="popupForm" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center">
-  <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">📩 درخواست مشاوره در مورد این زمین</h3>
-    <form method="post" action="{{ url_for('main.consult', code=land.code) }}" class="space-y-4">
-      <div>
-        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">نام شما</label>
-        <input type="text" name="name" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-      </div>
-      <div>
-        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">شماره تماس</label>
-        <input type="tel" name="phone" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-      </div>
-      <div>
-        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">پیام شما</label>
-        <textarea name="message" rows="3" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
-      </div>
-      <div class="flex justify-between">
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm">ارسال</button>
-        <button type="button" onclick="closePopup()" class="text-gray-500 hover:text-red-500 text-sm">انصراف</button>
-      </div>
-    </form>
   </div>
 </div>
 
