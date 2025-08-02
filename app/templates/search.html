@@ -1,58 +1,66 @@
 {% extends "base.html" %}
-{% block title %}جستجوی زمین{% endblock %}
+{% block title %}جستجوی زمین - سریع و هوشمند{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto mt-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow">
+<div class="max-w-xl mx-auto px-4 mt-10">
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-5 space-y-6">
 
-  <!-- 🔍 جستجو سریع -->
-  <form method="get" action="{{ url_for('main.search_results') }}" class="space-y-4" id="search-form">
-    <input type="text" name="q" placeholder="مثلاً دشت اول، دوبر، قولنامه..."
-           class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
-           value="{{ request.args.get('q', '') }}" oninput="storeSearchQuery(this.value)">
+    <!-- عنوان -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-800 dark:text-white"><i class="fas fa-search-location text-green-600"></i> جستجوی سریع</h2>
+      <button onclick="clearAllFilters()" class="text-xs text-red-500 hover:text-red-700">پاکسازی همه فیلترها</button>
+    </div>
 
-    <button type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition">
-      🔍 جستجو کن
-    </button>
-
-    <!-- 📁 فیلترهای بیشتر -->
-    <details class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mt-4">
-      <summary class="cursor-pointer text-sm font-medium text-gray-800 dark:text-white">
-        فیلترهای پیشرفته ⬇️
-      </summary>
-      <div class="mt-4 space-y-3 text-sm text-gray-800 dark:text-white">
-        <div class="flex gap-2">
-          <input type="number" name="min_price" placeholder="حداقل قیمت"
-                 class="w-1/2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white"
-                 value="{{ request.args.get('min_price', '') }}">
-          <input type="number" name="max_price" placeholder="حداکثر قیمت"
-                 class="w-1/2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white"
-                 value="{{ request.args.get('max_price', '') }}">
-        </div>
-
-        <div class="flex gap-2">
-          <input type="number" name="min_size" placeholder="حداقل متراژ"
-                 class="w-1/2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white"
-                 value="{{ request.args.get('min_size', '') }}">
-          <input type="number" name="max_size" placeholder="حداکثر متراژ"
-                 class="w-1/2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white"
-                 value="{{ request.args.get('max_size', '') }}">
-        </div>
+    <!-- فرم -->
+    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="space-y-4">
+      <!-- فیلد جستجو -->
+      <div class="relative">
+        <input type="text" name="q" id="searchInput"
+               class="w-full py-3 px-4 text-sm rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+               placeholder="مثلاً دشت اول یا زمین جنوبی..." value="{{ request.args.get('q', '') }}" oninput="storeSearchQuery(this.value)">
+        <i class="fas fa-search absolute right-4 top-3.5 text-gray-400 dark:text-gray-300"></i>
       </div>
-    </details>
-  </form>
-</div>
 
-<!-- 🕓 جستجوهای اخیر -->
-<div class="max-w-2xl mx-auto mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl shadow text-sm">
-  <h2 class="font-semibold text-gray-700 dark:text-white mb-2">🕓 جستجوهای اخیر</h2>
-  <ul id="search-history" class="text-gray-600 dark:text-gray-300 space-y-1"></ul>
+      <!-- فیلترهای پیشرفته -->
+      <details class="group">
+        <summary class="cursor-pointer text-sm bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+          ⚙️ فیلترهای بیشتر (قیمت و متراژ)
+        </summary>
+        <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
+          <input type="number" name="min_price" placeholder="حداقل قیمت" value="{{ request.args.get('min_price', '') }}"
+                 class="w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-600 dark:text-white">
+          <input type="number" name="max_price" placeholder="حداکثر قیمت" value="{{ request.args.get('max_price', '') }}"
+                 class="w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-600 dark:text-white">
+          <input type="number" name="min_size" placeholder="حداقل متراژ" value="{{ request.args.get('min_size', '') }}"
+                 class="w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-600 dark:text-white">
+          <input type="number" name="max_size" placeholder="حداکثر متراژ" value="{{ request.args.get('max_size', '') }}"
+                 class="w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-600 dark:text-white">
+        </div>
+      </details>
+
+      <!-- دکمه جستجو -->
+      <button type="submit"
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all duration-200 hover:scale-[1.01] shadow-md">
+        🔍 جستجو کن
+      </button>
+    </form>
+
+    <!-- جستجوهای اخیر -->
+    <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg mt-4">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-sm font-semibold text-gray-800 dark:text-white">🕓 جستجوهای اخیر</span>
+        <button onclick="clearAllHistory()" class="text-xs text-red-500 hover:text-red-700">🗑️ حذف همه</button>
+      </div>
+      <div id="search-history" class="flex flex-wrap gap-2 text-sm"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ذخیره عبارت جستجو در localStorage
+// ذخیره جستجو
 function storeSearchQuery(q) {
-  if (!q.trim()) return;
+  q = q.trim();
+  if (!q) return;
   let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
   if (!history.includes(q)) {
     history.unshift(q);
@@ -62,15 +70,46 @@ function storeSearchQuery(q) {
   }
 }
 
-// نمایش تاریخچه
+// حذف تکی
+function deleteHistoryItem(index) {
+  let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+  history.splice(index, 1);
+  localStorage.setItem('searchHistory', JSON.stringify(history));
+  renderSearchHistory();
+}
+
+// حذف همه
+function clearAllHistory() {
+  localStorage.removeItem('searchHistory');
+  renderSearchHistory();
+}
+
+// کلیک روی سابقه
+function selectHistoryItem(q) {
+  document.getElementById('searchInput').value = q;
+  document.getElementById('search-form').submit();
+}
+
+// پاک کردن فیلترها
+function clearAllFilters() {
+  document.querySelectorAll('#search-form input').forEach(input => input.value = '');
+}
+
+// نمایش لیست
 function renderSearchHistory() {
   const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-  const ul = document.getElementById('search-history');
-  ul.innerHTML = '';
-  history.forEach(item => {
-    ul.innerHTML += `<li class="border-b pb-1 cursor-pointer hover:text-blue-600"
-                      onclick="document.querySelector('input[name=q]').value='${item}'">
-                      🔹 ${item}</li>`;
+  const container = document.getElementById('search-history');
+  container.innerHTML = '';
+  if (history.length === 0) {
+    container.innerHTML = '<span class="text-gray-400 text-xs">هیچ جستجویی ثبت نشده.</span>';
+    return;
+  }
+  history.forEach((item, index) => {
+    container.innerHTML += `
+      <span class="bg-green-100 dark:bg-green-700 text-green-800 dark:text-white px-3 py-1 rounded-full flex items-center gap-2">
+        <span class="cursor-pointer hover:underline" onclick="selectHistoryItem('${item}')">${item}</span>
+        <button onclick="deleteHistoryItem(${index})" class="text-red-500 hover:text-red-700 text-xs">&times;</button>
+      </span>`;
   });
 }
 renderSearchHistory();
