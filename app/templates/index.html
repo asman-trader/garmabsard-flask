@@ -4,84 +4,72 @@
 {% block content %}
 <main class="max-w-6xl mx-auto px-3 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landList">
   {% for land in lands %}
-  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden land-card"
-       data-code="{{ land.get('code') }}" data-title="{{ land.get('title') }}"
-       data-size="{{ land.get('size') }}" data-price="{{ land.get('price_total') }}"
-       data-location="{{ land.get('location') }}" data-image="{{ land.get('images')[0] if land.get('images') else '' }}">
+    {% set images = land.get('images') or [] %}
+    {% set img = images[0] if images else None %}
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden land-card relative"
+         data-code="{{ land.code }}" data-title="{{ land.title }}"
+         data-size="{{ land.size }}" data-price="{{ land.price_total }}"
+         data-location="{{ land.location }}" data-image="{{ img or '' }}">
 
-    <!-- ❤️ علاقه‌مندی -->
-    <button type="button" class="absolute m-2 z-10 favorite-btn" data-code="{{ land.get('code') }}">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400 hover:text-red-500 transition-colors duration-200"
-           fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5.121 19.071C3.25 17.2 2 15.278 2 12.889 2 9.651 4.686 7 8 7c1.657 0 3.157.744 4 1.91C13.843 7.744 15.343 7 17 7c3.314 0 6 2.651 6 5.889 0 2.389-1.25 4.311-3.121 6.182l-7.071 7.071-7.071-7.071z" />
-      </svg>
-    </button>
+      <!-- دکمه علاقه‌مندی -->
+      <button type="button" class="absolute m-2 z-10 favorite-btn" data-code="{{ land.code }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400 hover:text-red-500 transition"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5.121 19.071C3.25 17.2 2 15.278 2 12.889 2 9.651 4.686 7 8 7c1.657 0 3.157.744 4 1.91C13.843 7.744 15.343 7 17 7c3.314 0 6 2.651 6 5.889 0 2.389-1.25 4.311-3.121 6.182l-7.071 7.071-7.071-7.071z" />
+        </svg>
+      </button>
 
-    <!-- لینک کلیک‌پذیر -->
-    <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
-      {% if land.get('images') and land.get('images')[0] %}
-      <picture>
-        <source srcset="{{ url_for('main.uploaded_file', filename=land.get('images')[0]|replace('.jpg', '.webp')|replace('.png', '.webp')) }}" type="image/webp">
-        <img
-          src="{{ url_for('main.uploaded_file', filename=land.get('images')[0]) }}"
-          alt="زمین {{ land.get('title') }}"
-          loading="lazy"
-          width="400" height="176"
-          class="w-full h-44 object-cover" />
-      </picture>
-      {% else %}
-      <div class="w-full h-44 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm">بدون تصویر</div>
-      {% endif %}
-    </a>
-
-    <div class="p-3">
-      <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
-        <h3 class="text-base font-semibold text-green-700 dark:text-green-400 truncate">{{ land.get('title') }}</h3>
-      </a>
-      <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
-        📍 {{ land.get('location') or "?" }} | 📏 {{ "{:,}".format(land.get('size') | int) if land.get('size') else "?" }} متر
-      </p>
-      <p class="text-sm font-bold text-gray-800 dark:text-gray-100 mt-2">
-        💰 {% if land.get('price_total') %}{{ "{:,}".format(land.get('price_total') | int) }} تومان{% else %}نامشخص{% endif %}
-      </p>
-    </div>
+      <!-- تصویر -->
+<a href="{{ url_for('main.land_detail', code=land.code) }}">
+  {% if img %}
+  <img src="{{ url_for('main.uploaded_file', filename=img) }}"
+       alt="زمین {{ land.title }}"
+       loading="lazy" width="400" height="176"
+       class="w-full h-44 object-cover" />
+  {% else %}
+  <div class="w-full h-44 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm">
+    بدون تصویر
   </div>
+  {% endif %}
+</a>
+
+
+      <!-- مشخصات -->
+      <div class="p-3">
+        <a href="{{ url_for('main.land_detail', code=land.code) }}">
+          <h3 class="text-base font-semibold text-green-700 dark:text-green-400 truncate">{{ land.title }}</h3>
+        </a>
+        <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
+          📍 {{ land.location or "?" }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر
+        </p>
+        <p class="text-sm font-bold text-gray-800 dark:text-gray-100 mt-2">
+          💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+        </p>
+      </div>
+    </div>
   {% endfor %}
 </main>
 
-<!-- اسکریپت علاقه‌مندی‌ها -->
+<!-- اسکریپت علاقه‌مندی -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
 
-    const cards = document.querySelectorAll(".land-card");
-    const allLands = [];
-
-    cards.forEach(card => {
-      allLands.push({
-        code: card.dataset.code,
-        title: card.dataset.title,
-        size: parseInt(card.dataset.size) || null,
-        price_total: parseInt(card.dataset.price) || null,
-        location: card.dataset.location,
-        images: card.dataset.image ? [card.dataset.image] : []
-      });
-
+    document.querySelectorAll(".land-card").forEach(card => {
+      const code = card.dataset.code;
       const btn = card.querySelector(".favorite-btn");
       const svg = btn.querySelector("svg");
-      const code = card.dataset.code;
 
-      function updateHeart() {
+      const updateHeart = () => {
         svg.classList.toggle("text-red-500", favorites.includes(code));
         svg.classList.toggle("text-gray-400", !favorites.includes(code));
-      }
+      };
 
       updateHeart();
 
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", e => {
         e.preventDefault();
-        e.stopPropagation();
         const i = favorites.indexOf(code);
         if (i > -1) favorites.splice(i, 1);
         else favorites.push(code);
@@ -89,8 +77,6 @@
         updateHeart();
       });
     });
-
-    localStorage.setItem("allLandsData", JSON.stringify(allLands));
   });
 </script>
 {% endblock %}
