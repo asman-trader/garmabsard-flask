@@ -1,61 +1,58 @@
 {% extends "base.html" %}
-
 {% block title %}لیست زمین‌ها | املاک آسمان گرمابسرد{% endblock %}
 
 {% block content %}
-<main class="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landList">
+<main class="max-w-6xl mx-auto px-3 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landList">
   {% for land in lands %}
-  <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-xl transition-transform hover:scale-[1.02] duration-300 overflow-hidden land-card"
-    data-location="{{ land.get('location') }}" data-code="{{ land.get('code') }}" data-title="{{ land.get('title') }}"
-    data-size="{{ land.get('size') }}" data-price="{{ land.get('price_total') }}"
-    data-image="{{ land.get('images')[0] if land.get('images') else '' }}">
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden land-card"
+       data-code="{{ land.get('code') }}" data-title="{{ land.get('title') }}"
+       data-size="{{ land.get('size') }}" data-price="{{ land.get('price_total') }}"
+       data-location="{{ land.get('location') }}" data-image="{{ land.get('images')[0] if land.get('images') else '' }}">
 
     <!-- ❤️ علاقه‌مندی -->
-    <button type="button" class="absolute top-2 left-2 z-10 favorite-btn" data-code="{{ land.get('code') }}" aria-label="افزودن به علاقه‌مندی‌ها">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        class="w-7 h-7 text-gray-400 hover:text-red-500 transition-colors duration-300">
+    <button type="button" class="absolute m-2 z-10 favorite-btn" data-code="{{ land.get('code') }}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400 hover:text-red-500 transition-colors duration-200"
+           fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M5.121 19.071C3.25 17.2 2 15.278 2 12.889 2 9.651 4.686 7 8 7c1.657 0 3.157.744 4 1.91C13.843 7.744 15.343 7 17 7c3.314 0 6 2.651 6 5.889 0 2.389-1.25 4.311-3.121 6.182l-7.071 7.071-7.071-7.071z" />
+              d="M5.121 19.071C3.25 17.2 2 15.278 2 12.889 2 9.651 4.686 7 8 7c1.657 0 3.157.744 4 1.91C13.843 7.744 15.343 7 17 7c3.314 0 6 2.651 6 5.889 0 2.389-1.25 4.311-3.121 6.182l-7.071 7.071-7.071-7.071z" />
       </svg>
     </button>
 
+    <!-- لینک کلیک‌پذیر -->
     <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
       {% if land.get('images') and land.get('images')[0] %}
       <img src="{{ url_for('main.uploaded_file', filename=land.get('images')[0]) }}"
-           alt="تصویر زمین {{ land.get('title') }}"
-           loading="lazy"
-           class="w-full h-48 object-cover rounded-t-2xl">
+           alt="زمین {{ land.get('title') }}"
+           loading="lazy" class="w-full h-44 object-cover">
       {% else %}
-      <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">بدون تصویر</div>
+      <div class="w-full h-44 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm">بدون تصویر</div>
       {% endif %}
     </a>
 
-    <div class="p-4">
+    <div class="p-3">
       <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
-        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 hover:underline truncate">{{ land.get('title') }}</h3>
+        <h3 class="text-base font-semibold text-green-700 dark:text-green-400 truncate">{{ land.get('title') }}</h3>
       </a>
-      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-        📏 {{ "{:,}".format(land.get('size') | int) if land.get('size') is not none else "?" }} متر | 📍 {{ land.get('location') or "?" }}
+      <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">
+        📍 {{ land.get('location') or "?" }} | 📏 {{ "{:,}".format(land.get('size') | int) if land.get('size') else "?" }} متر
       </p>
-      <p class="text-sm text-gray-800 dark:text-gray-200 font-semibold mt-3">
-        {% if land.get('price_total') is not none %}
-          💰 {{ "{:,}".format(land.get('price_total') | int) }} تومان
-        {% else %}
-          💰 نامشخص
-        {% endif %}
+      <p class="text-sm font-bold text-gray-800 dark:text-gray-100 mt-2">
+        💰 {% if land.get('price_total') %}{{ "{:,}".format(land.get('price_total') | int) }} تومان{% else %}نامشخص{% endif %}
       </p>
     </div>
   </div>
   {% endfor %}
 </main>
 
-<!-- ❤️ اسکریپت علاقه‌مندی‌ها -->
+<!-- اسکریپت علاقه‌مندی‌ها -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    let favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+  document.addEventListener("DOMContentLoaded", () => {
+    const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
 
+    const cards = document.querySelectorAll(".land-card");
     const allLands = [];
-    document.querySelectorAll(".land-card").forEach(card => {
+
+    cards.forEach(card => {
       allLands.push({
         code: card.dataset.code,
         title: card.dataset.title,
@@ -64,38 +61,30 @@
         location: card.dataset.location,
         images: card.dataset.image ? [card.dataset.image] : []
       });
-    });
-    localStorage.setItem("allLandsData", JSON.stringify(allLands));
 
-    document.querySelectorAll(".favorite-btn").forEach(btn => {
-      const code = btn.dataset.code.toString();
+      const btn = card.querySelector(".favorite-btn");
       const svg = btn.querySelector("svg");
+      const code = card.dataset.code;
 
       function updateHeart() {
-        if (favorites.includes(code)) {
-          svg.classList.remove("text-gray-400");
-          svg.classList.add("text-red-500");
-        } else {
-          svg.classList.remove("text-red-500");
-          svg.classList.add("text-gray-400");
-        }
+        svg.classList.toggle("text-red-500", favorites.includes(code));
+        svg.classList.toggle("text-gray-400", !favorites.includes(code));
       }
 
       updateHeart();
 
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
-        const index = favorites.indexOf(code);
-        if (index > -1) {
-          favorites.splice(index, 1);
-        } else {
-          favorites.push(code);
-        }
+        e.stopPropagation();
+        const i = favorites.indexOf(code);
+        if (i > -1) favorites.splice(i, 1);
+        else favorites.push(code);
         localStorage.setItem("favoriteLands", JSON.stringify(favorites));
         updateHeart();
       });
     });
+
+    localStorage.setItem("allLandsData", JSON.stringify(allLands));
   });
 </script>
 {% endblock %}
