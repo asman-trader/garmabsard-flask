@@ -10,12 +10,10 @@ def git_webhook():
         return '❌ Unsupported event', 400
 
     try:
-        # مسیر واقعی پروژه روی سرور
-        project_path = '/home/garmabs2/myapp'
+        # مسیر پروژه خودت رو اینجا وارد کن
+        project_path = '/path/to/your/project'
 
-        # اجرای git pull
         subprocess.Popen(['git', '-C', project_path, 'pull'])
-        return '✅ Git pull triggered successfully.', 200
-
+        return '✅ Git pull triggered', 200
     except Exception as e:
-        return f'❌ Error during git pull: {str(e)}', 500
+        return f'❌ Error: {str(e)}', 500
