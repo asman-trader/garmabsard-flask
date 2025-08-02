@@ -21,9 +21,15 @@
     <!-- لینک کلیک‌پذیر -->
     <a href="{{ url_for('main.land_detail', code=land.get('code')) }}">
       {% if land.get('images') and land.get('images')[0] %}
-      <img src="{{ url_for('main.uploaded_file', filename=land.get('images')[0]) }}"
-           alt="زمین {{ land.get('title') }}"
-           loading="lazy" class="w-full h-44 object-cover">
+      <picture>
+        <source srcset="{{ url_for('main.uploaded_file', filename=land.get('images')[0]|replace('.jpg', '.webp')|replace('.png', '.webp')) }}" type="image/webp">
+        <img
+          src="{{ url_for('main.uploaded_file', filename=land.get('images')[0]) }}"
+          alt="زمین {{ land.get('title') }}"
+          loading="lazy"
+          width="400" height="176"
+          class="w-full h-44 object-cover" />
+      </picture>
       {% else %}
       <div class="w-full h-44 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-sm">بدون تصویر</div>
       {% endif %}
