@@ -34,197 +34,158 @@
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-slate-900 dark:text-slate-100">
 
-
-  <!-- هدر -->
+<!-- هدر -->
 <header class="bg-white dark:bg-slate-800 shadow p-4 sticky top-0 z-30">
   <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-
-    <!-- دکمه برگشت موبایل -->
     <a href="{{ url_for('main.index') }}" class="sm:hidden text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 text-xl">
       <i class="fas fa-arrow-right"></i>
     </a>
-
-    <!-- فضای خالی جای لوگو حذف‌شده -->
     <div></div>
-
-    <!-- دکمه بازگشت دسکتاپ -->
     <a href="{{ url_for('main.index') }}" class="text-sm text-blue-600 hover:underline hidden sm:inline dark:text-blue-400">
       ← بازگشت به لیست زمین‌ها
     </a>
-
-    <!-- آیکون علاقه‌مندی -->
     <div class="relative group">
       <a href="{{ url_for('main.favorites') }}" aria-label="علاقه‌مندی‌ها">
         <i class="fas fa-heart text-xl text-red-500 hover:text-red-600 transition"></i>
         <span id="fav-count" class="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5 py-0.5 hidden">0</span>
       </a>
     </div>
-
   </div>
 </header>
 
-
-
-  <!-- محتوای اصلی -->
-  <main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-6 pb-32 dark:bg-slate-800">
-    {% if land.images %}
-    <div class="mb-6">
-      <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow">
-        <div class="swiper-wrapper">
-          {% for img in land.images %}
-          <div class="swiper-slide">
-            <img src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}" alt="تصویر {{ loop.index }}"
-                 onclick="openFullscreen(this.src)"
-                 class="w-full h-64 sm:h-96 object-cover cursor-zoom-in">
-          </div>
-          {% endfor %}
+<!-- محتوای اصلی -->
+<main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-6 pb-32 dark:bg-slate-800">
+  {% if land.images %}
+  <div class="mb-6">
+    <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow">
+      <div class="swiper-wrapper">
+        {% for img in land.images %}
+        <div class="swiper-slide">
+          <img src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}" alt="تصویر {{ loop.index }}"
+               onclick="openFullscreen(this.src)"
+               class="w-full h-64 sm:h-96 object-cover cursor-zoom-in">
         </div>
-        <div class="swiper-button-next text-white"></div>
-        <div class="swiper-button-prev text-white"></div>
-        <div class="swiper-pagination text-white"></div>
-      </div>
-    </div>
-    <div id="fullscreenOverlay" class="fullscreen-overlay" onclick="closeFullscreen()">
-      <img id="fullscreenImage" src="" alt="تمام صفحه">
-    </div>
-    {% endif %}
-
-    <h2 class="text-xl sm:text-2xl font-bold text-green-700 mb-4 dark:text-green-400">{{ land.title }}</h2>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-6 dark:text-gray-300">
-      <p>📏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٬") if land.size else "نامشخص" }} متر</p>
-      <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
-      <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-      <p>🏷️ <strong>کد آگهی:</strong> {{ land.code }}</p>
-      <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٬") if land.price_total else "نامشخص" }} تومان</p>
-      <p>📐 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٬") if land.price_per_meter else "نامشخص" }} تومان</p>
-    </div>
-
-    {% if land.features %}
-    <div class="mb-6">
-      <p class="font-semibold text-gray-800 mb-2 dark:text-gray-100">امکانات:</p>
-      <div class="flex flex-wrap gap-2">
-        {% for feature in land.features %}
-        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-green-900 dark:text-green-200">
-          <i class="fas fa-check-circle ml-1"></i>{{ feature }}
-        </span>
         {% endfor %}
       </div>
-    </div>
-    {% endif %}
-
-    {% if land.description %}
-    <div class="mt-6 whitespace-pre-line text-gray-700 leading-relaxed border-t pt-4 dark:text-gray-300 dark:border-slate-600">
-      {{ land.description }}
-    </div>
-    {% endif %}
-
-    <div class="mt-10 hidden sm:flex gap-4">
-      <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
-      <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 درخواست مشاوره</button>
-    </div>
-  </main>
-
-  <!-- نوار تماس موبایل -->
-  <div class="fixed bottom-0 inset-x-0 z-50 sm:hidden">
-    <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
-      <a href="tel:{{ land.owner }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
-      <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 دریافت مشاوره</button>
+      <div class="swiper-button-next text-white"></div>
+      <div class="swiper-button-prev text-white"></div>
+      <div class="swiper-pagination text-white"></div>
     </div>
   </div>
+  <div id="fullscreenOverlay" class="fullscreen-overlay" onclick="closeFullscreen()">
+    <img id="fullscreenImage" src="" alt="تمام صفحه">
+  </div>
+  {% endif %}
 
-  <!-- فرم مشاوره -->
-  <div id="popupForm" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-      <h3 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">📩 درخواست مشاوره در مورد این زمین</h3>
-      <form method="post" action="{{ url_for('main.consult', code=land.code) }}" class="space-y-4">
-        <div>
-          <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">نام شما</label>
-          <input type="text" name="name" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">شماره تماس</label>
-          <input type="tel" name="phone" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">پیام شما</label>
-          <textarea name="message" rows="3" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
-        </div>
-        <div class="flex justify-between">
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm">ارسال</button>
-          <button type="button" onclick="closePopup()" class="text-gray-500 hover:text-red-500 text-sm">انصراف</button>
-        </div>
-      </form>
-    </div>
+  <h2 class="text-xl sm:text-2xl font-bold text-green-700 mb-4 dark:text-green-400">{{ land.title }}</h2>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-6 dark:text-gray-300">
+    <p>📏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٬") if land.size else "نامشخص" }} متر</p>
+    <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
+    <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
+    <p>🏷️ <strong>کد آگهی:</strong> {{ land.code }}</p>
+    <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٬") if land.price_total else "نامشخص" }} تومان</p>
+    <p>📐 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٬") if land.price_per_meter else "نامشخص" }} تومان</p>
   </div>
 
-  <!-- اسکریپت‌ها -->
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script>
-    const swiper = new Swiper('.swiper', {
-      loop: true,
-      pagination: { el: '.swiper-pagination', clickable: true },
-      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-      spaceBetween: 10, centeredSlides: true,
-    });
+  {% if land.features %}
+  <div class="mb-6">
+    <p class="font-semibold text-gray-800 mb-2 dark:text-gray-100">امکانات:</p>
+    <div class="flex flex-wrap gap-2">
+      {% for feature in land.features %}
+      <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-green-900 dark:text-green-200">
+        <i class="fas fa-check-circle ml-1"></i>{{ feature }}
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
-    function openFullscreen(src) {
-      document.getElementById('fullscreenImage').src = src;
-      document.getElementById('fullscreenOverlay').style.display = 'flex';
-    }
-    function closeFullscreen() {
-      document.getElementById('fullscreenOverlay').style.display = 'none';
-    }
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    function openPopup() {
-      document.getElementById('popupForm').classList.remove('hidden');
-      document.getElementById('popupForm').classList.add('flex');
-    }
-    function closePopup() {
-      document.getElementById('popupForm').classList.add('hidden');
-      document.getElementById('popupForm').classList.remove('flex');
-    }
+  <div class="mt-6 whitespace-pre-line text-gray-700 leading-relaxed border-t pt-4 dark:text-gray-300 dark:border-slate-600">
+    {{ land.description or "توضیحاتی برای این آگهی ثبت نشده است." }}
+  </div>
 
-    function updateFavoriteCount() {
-      const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
-      const countEl = document.getElementById("fav-count");
-      if (countEl) {
-        if (favs.length > 0) {
-          countEl.textContent = favs.length;
-          countEl.classList.remove("hidden");
-        } else {
-          countEl.classList.add("hidden");
-        }
-      }
-    }
+  <div class="mt-10 hidden sm:flex gap-4">
+    <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
+    <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 درخواست مشاوره</button>
+  </div>
+</main>
 
-    function toggleFavorite(code) {
-      let favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
-      const index = favs.indexOf(code);
-      const btn = document.getElementById("fav-toggle");
+<!-- نوار تماس موبایل -->
+<div class="fixed bottom-0 inset-x-0 z-50 sm:hidden">
+  <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
+    <a href="tel:{{ land.owner }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
+    <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 دریافت مشاوره</button>
+  </div>
+</div>
 
-      if (index === -1) {
-        favs.push(code);
-        btn.textContent = "💔 حذف از علاقه‌مندی‌ها";
+<!-- فرم مشاوره -->
+<div id="popupForm" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center">
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">📩 درخواست مشاوره در مورد این زمین</h3>
+    <form method="post" action="{{ url_for('main.consult', code=land.code) }}" class="space-y-4">
+      <div>
+        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">نام شما</label>
+        <input type="text" name="name" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      </div>
+      <div>
+        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">شماره تماس</label>
+        <input type="tel" name="phone" required class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      </div>
+      <div>
+        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">پیام شما</label>
+        <textarea name="message" rows="3" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+      </div>
+      <div class="flex justify-between">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm">ارسال</button>
+        <button type="button" onclick="closePopup()" class="text-gray-500 hover:text-red-500 text-sm">انصراف</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- اسکریپت‌ها -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+  const swiper = new Swiper('.swiper', {
+    loop: true,
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+    spaceBetween: 10, centeredSlides: true,
+  });
+
+  function openFullscreen(src) {
+    document.getElementById('fullscreenImage').src = src;
+    document.getElementById('fullscreenOverlay').style.display = 'flex';
+  }
+  function closeFullscreen() {
+    document.getElementById('fullscreenOverlay').style.display = 'none';
+  }
+  function openPopup() {
+    document.getElementById('popupForm').classList.remove('hidden');
+    document.getElementById('popupForm').classList.add('flex');
+  }
+  function closePopup() {
+    document.getElementById('popupForm').classList.add('hidden');
+    document.getElementById('popupForm').classList.remove('flex');
+  }
+
+  function updateFavoriteCount() {
+    const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+    const countEl = document.getElementById("fav-count");
+    if (countEl) {
+      if (favs.length > 0) {
+        countEl.textContent = favs.length;
+        countEl.classList.remove("hidden");
       } else {
-        favs.splice(index, 1);
-        btn.textContent = "❤️ افزودن به علاقه‌مندی‌ها";
+        countEl.classList.add("hidden");
       }
-
-      localStorage.setItem("favoriteLands", JSON.stringify(favs));
-      updateFavoriteCount();
     }
+  }
 
-    document.addEventListener("DOMContentLoaded", function () {
-      updateFavoriteCount();
-      const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
-      const btn = document.getElementById("fav-toggle");
-      if (btn && favs.includes("{{ land.code }}")) {
-        btn.textContent = "💔 حذف از علاقه‌مندی‌ها";
-      }
-    });
-  </script>
+  document.addEventListener("DOMContentLoaded", function () {
+    updateFavoriteCount();
+  });
+</script>
 </body>
 </html>
