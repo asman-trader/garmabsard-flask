@@ -151,6 +151,7 @@ def add_land():
         location = request.form.get('location')
         size = request.form.get('size')
         price_total = request.form.get('price_total') or None
+        description = request.form.get('description')  # ✅ دریافت توضیحات
         images = request.files.getlist('images')
 
         if not title or not location or not size:
@@ -170,12 +171,19 @@ def add_land():
 
         session.update({
             'land_code': code,
-            'land_temp': {'title': title, 'location': location, 'size': size, 'price_total': int(price_total) if price_total else None},
+            'land_temp': {
+                'title': title,
+                'location': location,
+                'size': size,
+                'price_total': int(price_total) if price_total else None,
+                'description': description  # ✅ ذخیره توضیحات در session
+            },
             'land_images': image_names
         })
         return redirect(url_for('main.add_land_step3'))
 
     return render_template('add_land.html')
+
 
 @main_bp.route('/lands/add/step3', methods=['GET', 'POST'])
 def add_land_step3():
@@ -220,6 +228,7 @@ def finalize_land():
         'location': session['land_temp']['location'],
         'size': session['land_temp']['size'],
         'price_total': session['land_temp']['price_total'],
+        'description': session['land_temp'].get('description'),  # ✅ درج توضیحات در آگهی
         'images': session['land_images'],
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'owner': session.get('user_phone'),
@@ -236,6 +245,7 @@ def finalize_land():
     msg = "✅ آگهی شما با موفقیت ثبت شد." + (" به صورت خودکار منتشر شد." if status == 'approved' else " و در انتظار تأیید قرار گرفت.")
     flash(msg)
     return redirect(url_for('main.my_lands'))
+
 
 @main_bp.route('/my-lands')
 def my_lands():
