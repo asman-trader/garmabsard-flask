@@ -151,7 +151,7 @@ def add_land():
         location = request.form.get('location')
         size = request.form.get('size')
         price_total = request.form.get('price_total') or None
-        description = request.form.get('description')  # ✅ دریافت توضیحات
+        description = request.form.get('description')
         images = request.files.getlist('images')
 
         if not title or not location or not size:
@@ -176,14 +176,13 @@ def add_land():
                 'location': location,
                 'size': size,
                 'price_total': int(price_total) if price_total else None,
-                'description': description  # ✅ ذخیره توضیحات در session
+                'description': description
             },
             'land_images': image_names
         })
         return redirect(url_for('main.add_land_step3'))
 
     return render_template('add_land.html')
-
 
 @main_bp.route('/lands/add/step3', methods=['GET', 'POST'])
 def add_land_step3():
@@ -228,7 +227,7 @@ def finalize_land():
         'location': session['land_temp']['location'],
         'size': session['land_temp']['size'],
         'price_total': session['land_temp']['price_total'],
-        'description': session['land_temp'].get('description'),  # ✅ درج توضیحات در آگهی
+        'description': session['land_temp'].get('description'),
         'images': session['land_images'],
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'owner': session.get('user_phone'),
@@ -245,7 +244,6 @@ def finalize_land():
     msg = "✅ آگهی شما با موفقیت ثبت شد." + (" به صورت خودکار منتشر شد." if status == 'approved' else " و در انتظار تأیید قرار گرفت.")
     flash(msg)
     return redirect(url_for('main.my_lands'))
-
 
 @main_bp.route('/my-lands')
 def my_lands():
@@ -291,7 +289,8 @@ def edit_land(code):
             'title': request.form.get('title'),
             'location': request.form.get('location'),
             'size': request.form.get('size'),
-            'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None
+            'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None,
+            'description': request.form.get('description')
         })
 
         images = request.files.getlist('images')
