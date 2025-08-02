@@ -119,50 +119,71 @@
   {% endif %}
 
   <!-- منوی کشویی سمت راست -->
-  <div id="sideMenu" class="fixed top-0 right-0 sm:translate-x-0 translate-x-full sm:block w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-50 transition-transform duration-300 ease-in-out border-l dark:border-gray-700">
-    <div class="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700">
-      <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-        <i class="fas fa-bars text-green-600 dark:text-green-400"></i> منوی کاربری
-      </div>
-      <button id="closeMenu" class="text-gray-600 dark:text-gray-300 text-xl hover:text-red-500 sm:hidden">
-        <i class="fas fa-times-circle"></i>
-      </button>
+<div id="sideMenu" class="fixed top-0 right-0 sm:translate-x-0 translate-x-full sm:block w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-50 transition-transform duration-300 ease-in-out border-l dark:border-gray-700">
+  <div class="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700">
+    <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
+      <i class="fas fa-bars text-green-600 dark:text-green-400"></i> منوی کاربری
     </div>
+    <button id="closeMenu" class="text-gray-600 dark:text-gray-300 text-xl hover:text-red-500 sm:hidden">
+      <i class="fas fa-times-circle"></i>
+    </button>
+  </div>
 
-    <div class="p-4 space-y-3 text-gray-800 dark:text-gray-100 text-sm font-medium">
-      <a href="{{ url_for('main.submit_ad') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-plus-circle text-green-600 dark:text-green-400"></i> ثبت آگهی رایگان
-      </a>
-      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-home text-green-600 dark:text-green-400"></i> خانه
-      </a>
+  <div class="p-4 space-y-3 text-gray-800 dark:text-gray-100 text-sm font-medium">
+    <a href="{{ url_for('main.submit_ad') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+      <i class="fas fa-plus-circle text-green-600 dark:text-green-400"></i> ثبت آگهی رایگان
+    </a>
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
+      <i class="fas fa-home text-green-600 dark:text-green-400"></i> خانه
+    </a>
+
+    <hr class="my-2 border-gray-300 dark:border-gray-600" />
+    <div class="flex items-center gap-2 px-2 text-xs text-gray-600 dark:text-gray-400">
+      <i class="fas fa-user-circle text-green-500"></i>
       {% if session.get('user_phone') %}
-      <hr class="my-2 border-gray-300 dark:border-gray-600" />
-      <div class="flex items-center gap-2 px-2 text-xs text-gray-600 dark:text-gray-400">
-        <i class="fas fa-user-circle text-green-500"></i> {{ session['user_phone'] }}
-      </div>
-      <a href="{{ url_for('main.profile') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-user text-green-600 dark:text-green-400"></i> ناحیه کاربری
-      </a>
-      <a href="{{ url_for('main.my_lands') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-list text-green-600 dark:text-green-400"></i> آگهی‌های من
-      </a>
-      <a href="{{ url_for('main.favorites') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-heart text-green-600 dark:text-green-400"></i> علاقه‌مندی‌ها
-      </a>
-      <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-cog text-green-600 dark:text-green-400"></i> تنظیمات
-      </a>
-      <a href="{{ url_for('main.logout') }}" class="flex items-center gap-3 p-2 rounded text-red-600 hover:bg-red-100 dark:hover:bg-red-800 transition">
-        <i class="fas fa-sign-out-alt"></i> خروج
-      </a>
+        {{ session['user_phone'] }}
       {% else %}
-      <a href="{{ url_for('main.send_otp') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-sign-in-alt text-green-600 dark:text-green-400"></i> ورود / ثبت‌نام
-      </a>
+        مهمان
       {% endif %}
     </div>
+
+    <a href="{{ url_for('main.profile') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+      <i class="fas fa-user text-green-600 dark:text-green-400"></i> ناحیه کاربری
+    </a>
+    <a href="{{ url_for('main.my_lands') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+      <i class="fas fa-list text-green-600 dark:text-green-400"></i> آگهی‌های من
+    </a>
+    <a href="{{ url_for('main.favorites') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+      <i class="fas fa-heart text-green-600 dark:text-green-400"></i> علاقه‌مندی‌ها
+    </a>
+    <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+      <i class="fas fa-cog text-green-600 dark:text-green-400"></i> تنظیمات
+    </a>
+
+    {% if session.get('user_phone') %}
+    <a href="{{ url_for('main.logout') }}" class="flex items-center gap-3 p-2 rounded text-red-600 hover:bg-red-100 dark:hover:bg-red-800 transition">
+      <i class="fas fa-sign-out-alt"></i> خروج
+    </a>
+    {% else %}
+    <a href="{{ url_for('main.send_otp') }}" class="flex items-center gap-3 p-2 rounded text-green-600 hover:bg-green-100 dark:hover:bg-green-800 transition">
+      <i class="fas fa-sign-in-alt"></i> ورود / ثبت‌نام
+    </a>
+    {% endif %}
   </div>
+</div>
+
+<script>
+  const isLoggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
+  document.querySelectorAll('.require-login').forEach(item => {
+    item.addEventListener('click', function (e) {
+      if (!isLoggedIn) {
+        e.preventDefault();
+        window.location.href = "{{ url_for('main.send_otp') }}";
+      }
+    });
+  });
+</script>
+
 
   {% block scripts %}{% endblock %}
   <script>
