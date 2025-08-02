@@ -61,9 +61,13 @@
       <div class="swiper-wrapper">
         {% for img in land.images %}
         <div class="swiper-slide">
-          <img src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}" alt="تصویر {{ loop.index }}"
-               onclick="openFullscreen(this.src)"
-               class="w-full h-64 sm:h-96 object-cover cursor-zoom-in">
+          <img
+            src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}"
+            data-full="{{ url_for('main.uploaded_file', filename='full/' + img.split('/')[-1]) }}"
+            alt="تصویر {{ loop.index }}"
+            class="w-full h-64 sm:h-96 object-cover cursor-zoom-in"
+            loading="lazy"
+            onclick="openFullscreen(this.dataset.full)" />
         </div>
         {% endfor %}
       </div>
@@ -155,7 +159,9 @@
   });
 
   function openFullscreen(src) {
-    document.getElementById('fullscreenImage').src = src;
+    const img = document.getElementById('fullscreenImage');
+    img.src = '';
+    img.src = src;
     document.getElementById('fullscreenOverlay').style.display = 'flex';
   }
   function closeFullscreen() {
@@ -169,7 +175,6 @@
     document.getElementById('popupForm').classList.add('hidden');
     document.getElementById('popupForm').classList.remove('flex');
   }
-
   function updateFavoriteCount() {
     const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
     const countEl = document.getElementById("fav-count");
@@ -182,7 +187,6 @@
       }
     }
   }
-
   document.addEventListener("DOMContentLoaded", function () {
     updateFavoriteCount();
   });
