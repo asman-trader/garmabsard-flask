@@ -1,12 +1,17 @@
 <!-- categories_nav.html -->
 <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[64px] z-20 overflow-x-auto whitespace-nowrap no-scrollbar">
-  <div class="max-w-7xl mx-auto px-4 py-3 flex gap-4 text-sm sm:text-base font-medium">
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition">همه آگهی‌ها</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">زمین مسکونی</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">باغ</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">ویلا</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">سنددار</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">دارای آب و برق</a>
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition">قیمت مناسب</a>
+  <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm md:text-base font-medium">
+    {% set categories = ["همه آگهی‌ها", "زمین مسکونی", "باغ", "ویلا", "سنددار", "دارای آب و برق", "قیمت مناسب"] %}
+    {% for cat in categories %}
+    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full
+      {% if loop.first %}
+        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+      {% else %}
+        bg-gray-100 dark:bg-gray-700
+      {% endif %}
+      hover:bg-green-200 dark:hover:bg-green-800 transition">
+      {{ cat }}
+    </a>
+    {% endfor %}
   </div>
 </nav>
