@@ -1,17 +1,18 @@
-<!-- categories_nav.html -->
 <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[64px] z-20 overflow-x-auto whitespace-nowrap no-scrollbar">
   <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm md:text-base font-medium">
     {% set categories = ["همه آگهی‌ها", "زمین مسکونی", "باغ", "ویلا", "سنددار", "دارای آب و برق", "قیمت مناسب"] %}
     {% for cat in categories %}
-    <a href="#" class="flex-shrink-0 px-4 py-1 rounded-full
-      {% if loop.first %}
-        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-      {% else %}
-        bg-gray-100 dark:bg-gray-700
-      {% endif %}
-      hover:bg-green-200 dark:hover:bg-green-800 transition">
-      {{ cat }}
-    </a>
+      {% set filter_key = cat if cat != "همه آگهی‌ها" else "" %}
+      <a href="{{ url_for('main.search_page') }}{% if filter_key %}?category={{ filter_key | urlencode }}{% endif %}"
+         class="flex-shrink-0 px-4 py-1 rounded-full
+         {% if category == cat or (not category and cat == 'همه آگهی‌ها') %}
+           bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+         {% else %}
+           bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
+         {% endif %}
+         hover:bg-green-200 dark:hover:bg-green-800 transition">
+        {{ cat }}
+      </a>
     {% endfor %}
   </div>
 </nav>

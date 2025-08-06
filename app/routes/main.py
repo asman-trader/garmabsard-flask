@@ -361,7 +361,16 @@ def settings():
 
 @main_bp.route('/search')
 def search_page():
-    return render_template('search.html')
+    category = request.args.get('category')  # این مقدار از URL گرفته میشه
+
+    # همه آگهی‌ها رو لود کن
+    ads = load_ads()  # این تابع رو باید خودت نوشته باشی برای خواندن فایل json یا دیتابیس
+
+    # اگر دسته خاصی انتخاب شده، فیلتر کن
+    if category:
+        ads = [ad for ad in ads if ad.get('category') == category]
+
+    return render_template('search_results.html', ads=ads, category=category)
 
 @main_bp.route('/search-results')
 def search_results():
@@ -375,3 +384,6 @@ def search_results():
             results.append(ad)
     results = sorted(results, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
     return render_template('search_results.html', results=results, query=query)
+
+
+
