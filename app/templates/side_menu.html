@@ -1,85 +1,89 @@
-<!-- side_menu.html -->
-<div id="sideMenu"
-     class="fixed top-0 right-0 w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-50 transition-transform duration-300 ease-in-out
-            border-l dark:border-gray-700 sm:translate-x-0 translate-x-full sm:block">
+{# side_menu.html - compact & clean architecture #}
+{# ---------- Jinja Macro: Menu Item ---------- #}
+{% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
+  <a href="{{ href }}"
+     class="group flex items-center gap-3 p-2 rounded-lg transition
+            hover:bg-green-100 dark:hover:bg-green-800
+            focus:outline-none focus:ring-2 focus:ring-green-500
+            {{ 'require-login' if require_login else '' }}">
+    <i class="fas {{ icon }} text-green-600 dark:text-green-400"></i>
+    <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ text }}</span>
+    {% if badge and badge|int > 0 %}
+      <span class="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-2 text-[11px] rounded-full
+                   bg-red-500 text-white">{{ badge }}</span>
+    {% endif %}
+  </a>
+{%- endmacro %}
 
-  <!-- هدر سایدبار -->
-  <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-    <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-      <i class="fas fa-bars text-green-600 dark:text-green-400"></i> منوی کاربری
+{# ---------- Sidebar Container ---------- #}
+<aside id="sideMenu"
+       class="fixed top-0 right-0 z-50 w-72 h-full
+              translate-x-full sm:translate-x-0
+              bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700
+              shadow-xl transition-transform duration-300 ease-in-out">
+
+  {# Header #}
+  <header class="sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur
+                 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
+        <i class="fas fa-bars text-green-600 dark:text-green-400"></i>
+        <span>منوی کاربری</span>
+      </div>
+      <button id="closeMenu"
+              class="sm:hidden text-xl text-gray-600 dark:text-gray-300 hover:text-red-500"
+              aria-label="بستن منو">
+        <i class="fas fa-times-circle"></i>
+      </button>
     </div>
-    <button id="closeMenu" class="text-gray-600 dark:text-gray-300 text-xl hover:text-red-500 sm:hidden">
-      <i class="fas fa-times-circle"></i>
-    </button>
-  </div>
+  </header>
 
-  <!-- آیتم‌های منو -->
-  <div class="p-4 space-y-3 text-gray-800 dark:text-gray-100 text-sm font-medium">
+  {# Body #}
+  <div class="p-4 space-y-3">
 
-    <a href="{{ url_for('main.submit_ad') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-      <i class="fas fa-plus-circle text-green-600 dark:text-green-400"></i> ثبت آگهی رایگان
-    </a>
+    {# Actions #}
+    {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
+    {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
 
-    <a href="{{ url_for('main.index') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition">
-      <i class="fas fa-home text-green-600 dark:text-green-400"></i> خانه
-    </a>
+    {# Notifications with dynamic badge #}
+    {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
 
-    <!-- 🔔 اعلان‌ها -->
-<a href="{{ url_for('main.notifications') }}"
-   class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-  <i class="fas fa-bell text-green-600 dark:text-green-400"></i>
-  اعلان‌ها
-  {% if notif_count and notif_count > 0 %}
-    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ notif_count }}</span>
-  {% endif %}
-</a>
+    <hr class="my-2 border-gray-300 dark:border-gray-700" />
 
-
-    <hr class="my-2 border-gray-300 dark:border-gray-600" />
-
-    <!-- اطلاعات کاربر -->
+    {# User mini-card #}
     <div class="flex items-center gap-2 px-2 text-xs text-gray-600 dark:text-gray-400">
-      <i class="fas fa-user-circle text-green-500"></i>
-      {% if session.get('user_phone') %}
-        {{ session['user_phone'] }}
-      {% else %}
-        مهمان
-      {% endif %}
+      <i class="fas fa-user-circle text-green-600 dark:text-green-400"></i>
+      <span>
+        {% if session.get('user_phone') %}
+          {{ session['user_phone'] }}
+        {% else %}
+          مهمان
+        {% endif %}
+      </span>
     </div>
 
-    <a href="{{ url_for('main.profile') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-      <i class="fas fa-user text-green-600 dark:text-green-400"></i> ناحیه کاربری
-    </a>
+    {# Account & Lists #}
+    {{ MenuItem(url_for('main.profile'), 'fa-user', 'ناحیه کاربری', True) }}
+    {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
+    {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
+    {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
 
-    <a href="{{ url_for('main.my_lands') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-      <i class="fas fa-list text-green-600 dark:text-green-400"></i> آگهی‌های من
-    </a>
-
-    <a href="{{ url_for('main.favorites') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-      <i class="fas fa-heart text-green-600 dark:text-green-400"></i> علاقه‌مندی‌ها
-    </a>
-
-    <a href="{{ url_for('main.settings') }}"
-       class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
-      <i class="fas fa-cog text-green-600 dark:text-green-400"></i> تنظیمات
-    </a>
-
+    {# Auth #}
     {% if session.get('user_phone') %}
       <a href="{{ url_for('main.logout') }}"
-         class="flex items-center gap-3 p-2 rounded text-red-600 hover:bg-red-100 dark:hover:bg-red-800 transition">
-        <i class="fas fa-sign-out-alt"></i> خروج
+         class="flex items-center gap-3 p-2 rounded-lg transition
+                text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="text-sm font-medium">خروج</span>
       </a>
     {% else %}
       <a href="{{ url_for('main.send_otp') }}"
-         class="flex items-center gap-3 p-2 rounded text-green-600 hover:bg-green-100 dark:hover:bg-green-800 transition">
-        <i class="fas fa-sign-in-alt"></i> ورود / ثبت‌نام
+         class="flex items-center gap-3 p-2 rounded-lg transition
+                text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
+        <i class="fas fa-sign-in-alt"></i>
+        <span class="text-sm font-medium">ورود / ثبت‌نام</span>
       </a>
     {% endif %}
 
   </div>
-</div>
+</aside>
