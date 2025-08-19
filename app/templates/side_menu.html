@@ -1,109 +1,237 @@
-{# side_menu.html - compact & clean architecture with user header #}
+{# side_menu.html - Mobile-first, compact & clean #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
-     class="group flex items-center gap-3 p-2 rounded-lg transition
-            hover:bg-green-100 dark:hover:bg-green-800
-            focus:outline-none focus:ring-2 focus:ring-green-500
-            {{ 'require-login' if require_login else '' }}">
-    <i class="fas {{ icon }} text-green-600 dark:text-green-400"></i>
-    <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ text }}</span>
+     class="group flex items-center gap-3 p-3 rounded-xl transition
+            hover:bg-green-100 dark:hover:bg-green-800 active:scale-[0.98]
+            {{ 'require-login' if require_login else '' }}"
+     data-require-login="{{ '1' if require_login else '0' }}">
+    <i class="fas {{ icon }} text-lg text-green-600 dark:text-green-400"></i>
+    <span class="text-[15px] font-medium text-gray-800 dark:text-gray-100">{{ text }}</span>
     {% if badge and badge|int > 0 %}
-      <span class="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-2 text-[11px] rounded-full
+      <span class="ms-auto inline-flex items-center justify-center min-w-5 h-5 px-2 text-[11px] rounded-full
                    bg-red-500 text-white">{{ badge }}</span>
     {% endif %}
   </a>
 {%- endmacro %}
 
+<!-- Overlay برای موبایل -->
+<div id="menuOverlay"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-200 sm:hidden"></div>
+
 <aside id="sideMenu"
-       class="fixed top-0 right-0 z-50 w-72 h-full
-              translate-x-full sm:translate-x-0
+       class="fixed top-0 right-0 z-50 h-full w-[88vw] max-w-80
+              translate-x-full sm:translate-x-0 sm:w-72
               bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700
-              shadow-xl transition-transform duration-300 ease-in-out">
+              shadow-2xl transition-transform duration-250 ease-out will-change-transform">
 
-{# Header: clickable user info + quick menu #}
-<header class="sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur
-               border-b border-gray-200 dark:border-gray-700 px-4 py-4">
-  <div class="flex items-center justify-between">
+  {# Header: user chip + quick menu #}
+  <header class="sticky top-0 px-3 py-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur
+                 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between">
 
-    {# User clickable link #}
-    <a href="{{ url_for('main.profile') if session.get('user_phone') else url_for('main.send_otp') }}"
-       class="flex items-center gap-2 text-base font-bold text-gray-800 dark:text-white
-              hover:text-green-700 dark:hover:text-green-300 transition"
-       title="{{ 'رفتن به پروفایل' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
-      <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-xl"></i>
-      {% if session.get('user_phone') %}
-        {{ session['user_phone'] }}
-      {% else %}
-        مهمان
-      {% endif %}
-    </a>
-
-    <div class="flex items-center gap-2">
-      {# Quick menu (3 dots) #}
-      <div class="relative group">
-        <button class="p-2 text-gray-600 dark:text-gray-300 hover:text-green-600"
-                aria-label="منوی سریع">
-          <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div class="absolute left-0 mt-2 w-36 hidden group-hover:block
-                    bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                    rounded-lg shadow-lg overflow-hidden z-50">
-          <a href="{{ url_for('main.settings') }}"
-             class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <i class="fas fa-cog"></i> تنظیمات
-          </a>
+      <!-- User link (phone or guest) -->
+      <a href="{{ url_for('main.profile') if session.get('user_phone') else url_for('main.send_otp') }}"
+         class="flex items-center gap-2 text-[15px] font-bold text-gray-800 dark:text-white
+                hover:text-green-700 dark:hover:text-green-300 transition"
+         title="{{ 'رفتن به پروفایل' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
+        <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
+        <span class="truncate max-w-[44vw] sm:max-w-[120px]">
           {% if session.get('user_phone') %}
-            <a href="{{ url_for('main.logout') }}"
-               class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-700">
-              <i class="fas fa-sign-out-alt"></i> خروج
-            </a>
+            {{ session['user_phone'] }}
           {% else %}
-            <a href="{{ url_for('main.send_otp') }}"
-               class="flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-700">
-              <i class="fas fa-sign-in-alt"></i> ورود / ثبت‌نام
-            </a>
+            مهمان
           {% endif %}
-        </div>
-      </div>
+        </span>
+      </a>
 
-      {# Close button #}
-      <button id="closeMenu"
-              class="sm:hidden text-xl text-gray-600 dark:text-gray-300 hover:text-red-500"
-              aria-label="بستن منو">
-        <i class="fas fa-times-circle"></i>
+      <div class="flex items-center gap-1">
+        <!-- Quick menu -->
+        <div class="relative">
+          <button id="quickMenuBtn"
+                  class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label="منوی سریع" aria-expanded="false" aria-controls="quickMenu">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <div id="quickMenu"
+               class="absolute left-0 mt-2 w-40 hidden
+                      bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                      rounded-xl shadow-xl overflow-hidden z-50">
+            <a href="{{ url_for('main.settings') }}"
+               class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <i class="fas fa-cog"></i> تنظیمات
+            </a>
+            {% if session.get('user_phone') %}
+              <a href="{{ url_for('main.logout') }}"
+                 class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-700">
+                <i class="fas fa-sign-out-alt"></i> خروج
+              </a>
+            {% else %}
+              <a href="{{ url_for('main.send_otp') }}"
+                 class="flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-700">
+                <i class="fas fa-sign-in-alt"></i> ورود / ثبت‌نام
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Close (mobile) -->
+        <button id="closeMenu"
+                class="sm:hidden ms-1 p-2 rounded-lg text-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="بستن منو">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div class="p-3 space-y-2">
+
+    <!-- Primary actions -->
+    <div class="space-y-2">
+      {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
+      {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
+      {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
+    </div>
+
+    <hr class="border-gray-200 dark:border-gray-700 my-2">
+
+    <!-- User bundle (without 'ناحیه کاربری') -->
+    <div class="space-y-2">
+      {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
+      {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
+      {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
+    </div>
+
+    <!-- Auth button -->
+    <div class="pt-2">
+      {% if session.get('user_phone') %}
+        <a href="{{ url_for('main.logout') }}"
+           class="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
+          <i class="fas fa-sign-out-alt"></i>
+          <span class="text-[15px] font-medium">خروج</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('main.send_otp') }}"
+           class="flex items-center gap-3 p-3 rounded-xl text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
+          <i class="fas fa-sign-in-alt"></i>
+          <span class="text-[15px] font-medium">ورود / ثبت‌نام</span>
+        </a>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Bottom quick actions (mobile UX) -->
+  <footer class="sticky bottom-0 p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-t border-gray-200 dark:border-gray-700 sm:hidden">
+    <div class="grid grid-cols-3 gap-2 text-center">
+      <a href="tel:+989121234567" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800">
+        <i class="fas fa-phone"></i>
+        <span class="block text-xs mt-1">تماس</span>
+      </a>
+      <a href="https://wa.me/989121234567" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800">
+        <i class="fab fa-whatsapp"></i>
+        <span class="block text-xs mt-1">واتساپ</span>
+      </a>
+      <button id="shareSite" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800">
+        <i class="fas fa-share-alt"></i>
+        <span class="block text-xs mt-1">اشتراک</span>
       </button>
     </div>
-  </div>
-</header>
-
-{# Body #}
-<div class="p-4 space-y-3">
-
-  {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
-  {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
-  {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
-
-  <hr class="my-2 border-gray-300 dark:border-gray-700" />
-
-  {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
-  {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
-  {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
-
-  {% if session.get('user_phone') %}
-    <a href="{{ url_for('main.logout') }}"
-       class="flex items-center gap-3 p-2 rounded-lg transition
-              text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
-      <i class="fas fa-sign-out-alt"></i>
-      <span class="text-sm font-medium">خروج</span>
-    </a>
-  {% else %}
-    <a href="{{ url_for('main.send_otp') }}"
-       class="flex items-center gap-3 p-2 rounded-lg transition
-              text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
-      <i class="fas fa-sign-in-alt"></i>
-      <span class="text-sm font-medium">ورود / ثبت‌نام</span>
-    </a>
-  {% endif %}
-
-</div>
+  </footer>
 </aside>
+
+<script>
+  (function () {
+    const sideMenu   = document.getElementById('sideMenu');
+    const overlay    = document.getElementById('menuOverlay');
+    const closeBtn   = document.getElementById('closeMenu');
+    const quickBtn   = document.getElementById('quickMenuBtn');
+    const quickMenu  = document.getElementById('quickMenu');
+    const shareBtn   = document.getElementById('shareSite');
+
+    // Helpers
+    const isOpen = () => sideMenu.classList.contains('!translate-x-0');
+    const open = () => {
+      sideMenu.classList.add('!translate-x-0');
+      overlay.classList.remove('pointer-events-none');
+      overlay.classList.add('opacity-100');
+      document.body.style.overflow = 'hidden';
+    };
+    const close = () => {
+      sideMenu.classList.remove('!translate-x-0');
+      overlay.classList.add('pointer-events-none');
+      overlay.classList.remove('opacity-100');
+      document.body.style.overflow = '';
+      hideQuick();
+    };
+    const toggleQuick = () => {
+      const show = quickMenu.classList.contains('hidden');
+      quickMenu.classList.toggle('hidden', !show);
+      quickBtn.setAttribute('aria-expanded', String(show));
+    };
+    const hideQuick = () => {
+      quickMenu.classList.add('hidden');
+      quickBtn.setAttribute('aria-expanded', 'false');
+    };
+
+    // Expose open function (اگر از هدر روی دکمه منو کلیک می‌کنی)
+    window.openSideMenu = open;
+
+    // Overlay/Close
+    overlay?.addEventListener('click', close);
+    closeBtn?.addEventListener('click', close);
+
+    // Quick menu
+    quickBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleQuick();
+    });
+    document.addEventListener('click', (e) => {
+      if (!quickMenu.contains(e.target) && e.target !== quickBtn) hideQuick();
+    });
+
+    // ESC to close (mobile keyboards)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) close();
+    });
+
+    // Swipe to close (لمسی)
+    let startX = null;
+    sideMenu.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
+    sideMenu.addEventListener('touchmove', (e) => {
+      if (startX === null) return;
+      const delta = e.touches[0].clientX - startX;
+      // کشیدن به راست در منوی راست به چپ برای بستن
+      if (delta > 50) { startX = null; close(); }
+    }, {passive:true});
+    sideMenu.addEventListener('touchend', () => { startX = null; });
+
+    // Require-login guard
+    document.querySelectorAll('#sideMenu a.require-login').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
+        if (!loggedIn) {
+          e.preventDefault();
+          window.location.href = "{{ url_for('main.send_otp') }}";
+        }
+      });
+    });
+
+    // Web Share (fallback copy)
+    shareBtn?.addEventListener('click', async () => {
+      const shareData = {
+        title: 'املاک آسمان گرمابسرد',
+        text: 'زمین‌های آینده‌دار در گرمابسرد دماوند',
+        url: window.location.origin
+      };
+      try {
+        if (navigator.share) await navigator.share(shareData);
+        else {
+          await navigator.clipboard.writeText(shareData.url);
+          alert('لینک کپی شد ✅');
+        }
+      } catch (_) {}
+    });
+  })();
+</script>
