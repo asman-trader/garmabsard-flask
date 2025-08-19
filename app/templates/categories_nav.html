@@ -4,7 +4,7 @@
   <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 sm:gap-3 md:gap-4
               text-xs sm:text-sm md:text-base font-medium">
 
-    {# نگاشت: کلید فنی ↔︎ برچسب نمایشی #}
+    {# نگاشت کلید فنی ↔︎ عنوان فارسی #}
     {% set cat_map = {
       "": "همه آگهی‌ها",
       "residential_land": "زمین مسکونی",
@@ -15,10 +15,8 @@
       "good_price": "قیمت مناسب"
     } %}
 
-    {# دستهٔ فعال از URL (اگر نباشد، حالت «همه» فعال است) #}
+    {# گرفتن دسته فعال از URL #}
     {% set active_key = request.args.get('category', '') %}
-
-    {# پارامترهای دیگر جستجو (مثل q، sort، page) حفظ می‌شود #}
     {% set base_args = request.args.to_dict() %}
 
     {% for key, label in cat_map.items() %}
@@ -26,7 +24,6 @@
       {% if key %}
         {% set _ = args.update({'category': key}) %}
       {% else %}
-        {# برای «همه»، پارامتر category حذف شود تا URL تمیز بماند #}
         {% set _ = args.pop('category', None) %}
       {% endif %}
 
@@ -45,7 +42,6 @@
 </nav>
 
 <style>
-  /* حذف اسکرول‌بار افقی در مرورگرهای مختلف (بدون تأثیر روی اسکرول) */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
