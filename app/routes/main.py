@@ -6,7 +6,19 @@ from werkzeug.utils import secure_filename
 main_bp = Blueprint('main', __name__)
 SMS_API_KEY = "cwDc9dmxkF4c1avGDTBFnlRPyJQkxk2TVhpZCj6ShGrVx9y4"
 
-# ابزارهای کمکی
+# ---------------- دسته‌بندی‌ها: کلید ↔ برچسب ----------------
+CATEGORY_MAP = {
+    "": "همه آگهی‌ها",
+    "residential_land": "زمین مسکونی",
+    "garden": "باغ",
+    "villa": "ویلا",
+    "titled": "سنددار",
+    "with_utilities": "دارای آب و برق",
+    "good_price": "قیمت مناسب"
+}
+CATEGORY_KEYS = set(CATEGORY_MAP.keys()) - {""}
+
+# ---------------- ابزارهای کمکی ----------------
 def load_json(path):
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
@@ -37,23 +49,23 @@ def send_sms_code(phone, code):
         "parameters": [{"name": "code", "value": code}]
     }
     try:
-        requests.post(url, headers=headers, json=data)
+        requests.post(url, headers=headers, json=data, timeout=10)
     except Exception as e:
         print("❌ خطا در ارسال پیامک:", e)
 
 def parse_datetime_safe(date_str):
     try:
         return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    except ValueError:
+    except Exception:
         try:
             return datetime.strptime(date_str, '%Y-%m-%d')
-        except ValueError:
+        except Exception:
             return datetime(1970, 1, 1)
 
 def load_ads():
     return load_json(current_app.config['LANDS_FILE'])
 
-# وب‌هوک برای Pull اتوماتیک
+# ---------------- وب‌هوک Pull اتوماتیک ----------------
 @main_bp.route('/git-webhook', methods=['POST'])
 def git_webhook():
     try:
@@ -63,26 +75,29 @@ def git_webhook():
     except Exception as e:
         return f'❌ خطا در Pull: {str(e)}', 500
 
-# صفحه اصلی سایت
+# ---------------- صفحه اصلی ----------------
 @main_bp.route('/')
 def index():
     lands = load_ads()
     approved = [l for l in lands if l.get('status') == 'approved']
     sorted_lands = sorted(approved, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
-    return render_template('index.html', lands=sorted_lands, now=datetime.now())
+    return render_template('index.html', lands=sorted_lands, now=datetime.now(), CATEGORY_MAP=CATEGORY_MAP)
 
+# ---------------- جزئیات آگهی ----------------
 @main_bp.route('/land/<code>')
 def land_detail(code):
     land = get_land_by_code(code)
     if not land:
         return "زمین پیدا نشد", 404
-    return render_template('land_detail.html', land=land, now=datetime.now())
+    return render_template('land_detail.html', land=land, now=datetime.now(), CATEGORY_MAP=CATEGORY_MAP)
 
+# ---------------- سرو فایل‌های آپلود ----------------
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     folder = os.path.join(current_app.root_path, 'data', 'uploads')
     return send_from_directory(folder, filename)
 
+# ---------------- ثبت درخواست مشاوره ----------------
 @main_bp.route('/consult/<code>', methods=['POST'])
 def consult(code):
     consults = load_json(current_app.config['CONSULTS_FILE'])
@@ -97,6 +112,7 @@ def consult(code):
     flash("✅ درخواست مشاوره ثبت شد.")
     return redirect(url_for('main.land_detail', code=code))
 
+# ---------------- ورود با OTP ----------------
 @main_bp.route('/login', methods=['GET', 'POST'])
 def send_otp():
     if request.method == 'POST':
@@ -135,6 +151,7 @@ def logout():
     flash("از حساب خارج شدید.")
     return redirect(url_for('main.index'))
 
+# ---------------- ثبت آگهی (مرحله 1 + 2) ----------------
 @main_bp.route('/submit-ad', methods=['GET', 'POST'])
 def submit_ad():
     return redirect(url_for('main.add_land'))
@@ -152,6 +169,11 @@ def add_land():
         size = request.form.get('size')
         price_total = request.form.get('price_total') or None
         description = request.form.get('description')
+        category = request.form.get('category', '').strip()
+        if category and category not in CATEGORY_KEYS:
+            # اگر مقدار نادرست آمد، نادیده بگیر
+            category = ""
+
         images = request.files.getlist('images')
 
         if not title or not location or not size:
@@ -176,14 +198,17 @@ def add_land():
                 'location': location,
                 'size': size,
                 'price_total': int(price_total) if price_total else None,
-                'description': description
+                'description': description,
+                'category': category  # ممکن است خالی باشد
             },
             'land_images': image_names
         })
         return redirect(url_for('main.add_land_step3'))
 
-    return render_template('add_land.html')
+    # برای فرم: CATEGORY_MAP را بده تا در Select استفاده شود
+    return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP)
 
+# ---------------- ثبت آگهی (مرحله 3: انتخاب نوع) ----------------
 @main_bp.route('/lands/add/step3', methods=['GET', 'POST'])
 def add_land_step3():
     if 'user_phone' not in session:
@@ -202,6 +227,7 @@ def add_land_step3():
 
     return render_template('add_land_step3.html')
 
+# ---------------- نهایی‌سازی ثبت آگهی ----------------
 @main_bp.route('/lands/finalize')
 def finalize_land():
     keys = ['land_code', 'land_temp', 'land_images', 'land_ad_type']
@@ -215,24 +241,26 @@ def finalize_land():
         try:
             with open(settings_file, 'r', encoding='utf-8') as f:
                 approval_method = json.load(f).get('approval_method', 'manual')
-        except:
+        except Exception:
             pass
 
     status = 'approved' if approval_method == 'auto' else 'pending'
     lands = load_ads()
 
+    lt = session['land_temp']
     new_land = {
         'code': session['land_code'],
-        'title': session['land_temp']['title'],
-        'location': session['land_temp']['location'],
-        'size': session['land_temp']['size'],
-        'price_total': session['land_temp']['price_total'],
-        'description': session['land_temp'].get('description'),
+        'title': lt['title'],
+        'location': lt['location'],
+        'size': lt['size'],
+        'price_total': lt['price_total'],
+        'description': lt.get('description'),
         'images': session['land_images'],
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'owner': session.get('user_phone'),
         'status': status,
-        'ad_type': session['land_ad_type']
+        'ad_type': session['land_ad_type'],
+        'category': lt.get('category', '')  # ممکن است خالی باشد
     }
 
     lands.append(new_land)
@@ -245,6 +273,7 @@ def finalize_land():
     flash(msg)
     return redirect(url_for('main.my_lands'))
 
+# ---------------- آگهی‌های من ----------------
 @main_bp.route('/my-lands')
 def my_lands():
     if 'user_phone' not in session:
@@ -254,8 +283,10 @@ def my_lands():
 
     lands = load_ads()
     user_lands = [l for l in lands if l.get('owner') == session['user_phone']]
-    return render_template('my_lands.html', lands=user_lands)
+    # نمایش همه وضعیت‌ها برای صاحب آگهی
+    return render_template('my_lands.html', lands=user_lands, CATEGORY_MAP=CATEGORY_MAP)
 
+# ---------------- پروفایل ----------------
 @main_bp.route('/profile')
 def profile():
     if 'user_phone' not in session:
@@ -267,10 +298,12 @@ def profile():
     user = next((u for u in users if u.get('phone') == session['user_phone']), None)
     return render_template('profile.html', user=user)
 
+# ---------------- علاقه‌مندی‌ها (کلاینت‌ساید) ----------------
 @main_bp.route('/favorites')
 def favorites():
     return render_template('favorites.html')
 
+# ---------------- ویرایش آگهی ----------------
 @main_bp.route('/lands/edit/<code>', methods=['GET', 'POST'])
 def edit_land(code):
     if 'user_phone' not in session:
@@ -285,12 +318,17 @@ def edit_land(code):
         return redirect(url_for('main.my_lands'))
 
     if request.method == 'POST':
+        category = request.form.get('category', '').strip()
+        if category and category not in CATEGORY_KEYS:
+            category = land.get('category', '')
+
         land.update({
             'title': request.form.get('title'),
             'location': request.form.get('location'),
             'size': request.form.get('size'),
             'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None,
-            'description': request.form.get('description')
+            'description': request.form.get('description'),
+            'category': category
         })
 
         images = request.files.getlist('images')
@@ -310,8 +348,9 @@ def edit_land(code):
         flash("✅ آگهی با موفقیت ویرایش شد.")
         return redirect(url_for('main.my_lands'))
 
-    return render_template('edit_land.html', land=land)
+    return render_template('edit_land.html', land=land, CATEGORY_MAP=CATEGORY_MAP)
 
+# ---------------- حذف آگهی ----------------
 @main_bp.route('/lands/delete/<code>', methods=['POST'])
 def delete_land(code):
     if 'user_phone' not in session:
@@ -329,6 +368,7 @@ def delete_land(code):
 
     return redirect(url_for('main.my_lands'))
 
+# ---------------- تنظیمات کاربری ----------------
 @main_bp.route('/settings', methods=['GET', 'POST'])
 def settings():
     if 'user_phone' not in session:
@@ -359,31 +399,45 @@ def settings():
 
     return render_template('settings.html', user=user)
 
+# ---------------- صفحه فهرست با فیلتر دسته ----------------
 @main_bp.route('/search')
 def search_page():
-    category = request.args.get('category')  # این مقدار از URL گرفته میشه
+    # دسته‌ی فعال از URL
+    active_category = request.args.get('category', '').strip()
+    if active_category and active_category not in CATEGORY_KEYS:
+        # اگر کلید نامعتبر بود، آن را خالی کن تا «همه» شود
+        active_category = ""
 
-    # همه آگهی‌ها رو لود کن
-    ads = load_ads()  # این تابع رو باید خودت نوشته باشی برای خواندن فایل json یا دیتابیس
+    # همه آگهی‌های تایید شده
+    ads = [ad for ad in load_ads() if ad.get('status') == 'approved']
 
-    # اگر دسته خاصی انتخاب شده، فیلتر کن
-    if category:
-        ads = [ad for ad in ads if ad.get('category') == category]
+    # فیلتر بر اساس دسته (در صورت وجود)
+    if active_category:
+        ads = [ad for ad in ads if ad.get('category', '') == active_category]
 
-    return render_template('search_results.html', ads=ads, category=category)
+    # مرتب‌سازی جدیدترین اول
+    ads = sorted(ads, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
 
+    # می‌توانی پارامترهای دیگری مثل sort/page را هم در قالب هندل کنی
+    return render_template('search.html', ads=ads, category=active_category, CATEGORY_MAP=CATEGORY_MAP)
+
+# ---------------- نتایج جست‌وجوی متنی ----------------
 @main_bp.route('/search-results')
 def search_results():
-    query = request.args.get('q', '').strip()
+    query = (request.args.get('q', '') or '').strip()
+    q = query.lower()
+
     all_ads = load_ads()
+    # فقط تاییدشده‌ها
+    pool = [ad for ad in all_ads if ad.get('status') == 'approved']
+
     results = []
-    for ad in all_ads:
-        if ad.get('status') == 'approved' and (
-            query in ad.get('title', '') or query in ad.get('location', '')
-        ):
+    for ad in pool:
+        title = (ad.get('title') or '').lower()
+        loc = (ad.get('location') or '').lower()
+        desc = (ad.get('description') or '').lower()
+        if q and (q in title or q in loc or q in desc):
             results.append(ad)
+
     results = sorted(results, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
-    return render_template('search_results.html', results=results, query=query)
-
-
-
+    return render_template('search_results.html', results=results, query=query, CATEGORY_MAP=CATEGORY_MAP)
