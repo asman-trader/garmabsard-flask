@@ -76,37 +76,34 @@
   </div>
 </header>
 
+{# Body #}
+<div class="p-4 space-y-3">
 
+  {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
+  {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
+  {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
 
-  {# Body #}
-  <div class="p-4 space-y-3">
+  <hr class="my-2 border-gray-300 dark:border-gray-700" />
 
-    {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
-    {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
-    {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
+  {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
+  {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
+  {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
 
-    <hr class="my-2 border-gray-300 dark:border-gray-700" />
+  {% if session.get('user_phone') %}
+    <a href="{{ url_for('main.logout') }}"
+       class="flex items-center gap-3 p-2 rounded-lg transition
+              text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="text-sm font-medium">خروج</span>
+    </a>
+  {% else %}
+    <a href="{{ url_for('main.send_otp') }}"
+       class="flex items-center gap-3 p-2 rounded-lg transition
+              text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="text-sm font-medium">ورود / ثبت‌نام</span>
+    </a>
+  {% endif %}
 
-    {{ MenuItem(url_for('main.profile'), 'fa-user', 'ناحیه کاربری', True) }}
-    {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
-    {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
-    {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
-
-    {% if session.get('user_phone') %}
-      <a href="{{ url_for('main.logout') }}"
-         class="flex items-center gap-3 p-2 rounded-lg transition
-                text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
-        <i class="fas fa-sign-out-alt"></i>
-        <span class="text-sm font-medium">خروج</span>
-      </a>
-    {% else %}
-      <a href="{{ url_for('main.send_otp') }}"
-         class="flex items-center gap-3 p-2 rounded-lg transition
-                text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
-        <i class="fas fa-sign-in-alt"></i>
-        <span class="text-sm font-medium">ورود / ثبت‌نام</span>
-      </a>
-    {% endif %}
-
-  </div>
+</div>
 </aside>
