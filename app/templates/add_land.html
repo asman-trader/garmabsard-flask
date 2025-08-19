@@ -8,7 +8,8 @@
     <i class="fas fa-plus-circle"></i> ثبت آگهی جدید
   </h1>
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-5">
+  <form method="POST" enctype="multipart/form-data" class="space-y-5" id="adForm">
+    <!-- تصاویر -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">تصاویر</label>
       <label class="w-full cursor-pointer flex items-center justify-center border-dashed border-2 border-green-500 rounded p-4 text-green-700 hover:bg-green-50 dark:hover:bg-green-900">
@@ -22,16 +23,19 @@
       <div id="preview-container" class="grid grid-cols-3 gap-2 mt-4"></div>
     </div>
 
+    <!-- عنوان -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی</label>
       <input type="text" name="title" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
     </div>
 
+    <!-- متراژ -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">متراژ (متر مربع)</label>
       <input type="text" id="size" name="size" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
     </div>
 
+    <!-- موقعیت -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">موقعیت</label>
       <select name="location" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
@@ -43,17 +47,102 @@
       </select>
     </div>
 
+    <!-- گروه/زیرشاخه مثل تصویر -->
     <div>
-      <label class="block text-gray-700 dark:text-gray-200 mb-1">دسته‌بندی ملک</label>
-      <select name="category" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع معامله (گروه)</label>
+      <select id="category_main" name="category_main" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
         <option value="" disabled selected>انتخاب کنید...</option>
-        <option value="زمین کشاورزی">زمین کشاورزی</option>
-        <option value="باغ">باغ</option>
-        <option value="زمین مسکونی">زمین مسکونی</option>
-        <option value="ویلا">ویلا</option>
+        <option value="فروش مسکونی">فروش مسکونی</option>
+        <option value="اجاره مسکونی">اجاره مسکونی</option>
+        <option value="اجاره اداری و تجاری">اجاره اداری و تجاری</option>
+        <option value="فروش اداری و تجاری">فروش اداری و تجاری</option>
+        <option value="اجاره کوتاه‌مدت">اجاره کوتاه‌مدت</option>
+        <option value="پروژه‌های ساخت‌وساز">پروژه‌های ساخت‌وساز</option>
       </select>
     </div>
 
+    <div>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">دسته‌بندی (زیرشاخه)</label>
+      <select id="category_sub" name="category_sub" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white" disabled>
+        <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
+      </select>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">با انتخاب سریع پایین هم می‌توانید این دو فیلد را پر کنید.</p>
+    </div>
+
+    <!-- انتخاب سریع شبیه تصویر -->
+    <section class="mt-4">
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold text-gray-800 dark:text-gray-100">انتخاب سریع دسته‌بندی</h2>
+          <a href="{{ url_for('main.index') }}" class="text-xs px-2 py-1 rounded bg-gray-800 text-white dark:bg-gray-700 hover:opacity-90">
+            همهٔ آگهی‌های املاک
+          </a>
+        </div>
+
+        <!-- گرید: موبایل یک‌ستونه، دسکتاپ سه‌ستونه مثل تصویر -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- فروش مسکونی -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">فروش مسکونی</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="آپارتمان">آپارتمان</button></li>
+              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="خانه و ویلا">خانه و ویلا</button></li>
+              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="زمین و ملک کلنگی">زمین و ملک کلنگی</button></li>
+            </ul>
+          </div>
+
+          <!-- اجاره اداری و تجاری -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره اداری و تجاری</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="دفتر کار، اتاق اداری، مطب">دفتر کار، اتاق اداری، مطب</button></li>
+              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="مغازه و غرفه">مغازه و غرفه</button></li>
+              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="صنعتی، کشاورزی، تجاری">صنعتی، کشاورزی، تجاری</button></li>
+            </ul>
+          </div>
+
+          <!-- اجاره مسکونی -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره مسکونی</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="اجاره مسکونی" data-sub="آپارتمان">آپارتمان</button></li>
+              <li><button type="button" class="quick-item" data-main="اجاره مسکونی" data-sub="خانه و ویلا">خانه و ویلا</button></li>
+            </ul>
+          </div>
+
+          <!-- اجاره کوتاه‌مدت -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره کوتاه‌مدت</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="آپارتمان و سوئیت">آپارتمان و سوئیت</button></li>
+              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="ویلا و باغ">ویلا و باغ</button></li>
+              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="دفتر کار و فضای آموزشی">دفتر کار و فضای آموزشی</button></li>
+            </ul>
+          </div>
+
+          <!-- فروش اداری و تجاری -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">فروش اداری و تجاری</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="دفتر کار، اتاق اداری، مطب">دفتر کار، اتاق اداری، مطب</button></li>
+              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="مغازه و غرفه">مغازه و غرفه</button></li>
+              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="صنعتی، کشاورزی، تجاری">صنعتی، کشاورزی، تجاری</button></li>
+            </ul>
+          </div>
+
+          <!-- پروژه‌های ساخت‌وساز -->
+          <div class="rounded-lg border dark:border-gray-700 p-4">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-2">پروژه‌های ساخت‌وساز</h3>
+            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
+              <li><button type="button" class="quick-item" data-main="پروژه‌های ساخت‌وساز" data-sub="مشارکت در ساخت">مشارکت در ساخت</button></li>
+              <li><button type="button" class="quick-item" data-main="پروژه‌های ساخت‌وساز" data-sub="پیش‌فروش">پیش‌فروش</button></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- نوع سند -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع سند</label>
       <select name="document_type" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
@@ -65,6 +154,7 @@
       </select>
     </div>
 
+    <!-- امکانات -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">امکانات</label>
       <div class="grid grid-cols-2 gap-2">
@@ -75,6 +165,7 @@
       </div>
     </div>
 
+    <!-- قیمت -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت کل (تومان)</label>
       <input type="text" id="price_total" name="price_total" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
@@ -85,11 +176,13 @@
       <input type="text" id="price_per_meter" name="price_per_meter" readonly class="w-full border rounded px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
     </div>
 
+    <!-- توضیحات -->
     <div>
       <label class="block text-gray-700 dark:text-gray-200 mb-1">توضیحات</label>
       <textarea name="description" rows="4" class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
     </div>
 
+    <!-- ناوبری -->
     <div class="flex justify-between items-center">
       <a href="{{ url_for('main.index') }}" class="text-gray-600 dark:text-gray-300 hover:underline">← بازگشت</a>
       <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-lg">
@@ -100,6 +193,7 @@
 </div>
 
 <script>
+  /* ---------- پیش‌نمایش و نوار پیشرفت تصاویر ---------- */
   function previewImages(event) {
     const files = event.target.files;
     const container = document.getElementById('preview-container');
@@ -123,15 +217,12 @@
       reader.onload = e => {
         const wrapper = document.createElement('div');
         wrapper.className = 'relative';
-
         const img = document.createElement('img');
         img.src = e.target.result;
         img.className = 'w-full h-28 object-cover rounded border';
-
         const check = document.createElement('div');
         check.className = 'absolute top-1 left-1 bg-green-600 text-white text-xs px-1.5 py-0.5 rounded-full';
         check.innerHTML = '<i class="fas fa-check"></i>';
-
         wrapper.appendChild(img);
         wrapper.appendChild(check);
         container.appendChild(wrapper);
@@ -139,63 +230,83 @@
         loaded++;
         const percent = Math.round((loaded / files.length) * 100);
         progressBar.style.width = percent + '%';
-
-        if (loaded === files.length) {
-          uploadStatus.innerText = 'همه تصاویر بارگذاری شدند';
-        }
-      }
+        if (loaded === files.length) uploadStatus.innerText = 'همه تصاویر بارگذاری شدند';
+      };
       reader.readAsDataURL(file);
     });
   }
 
+  /* ---------- محاسبه قیمت متری ---------- */
   const sizeInput = document.getElementById('size');
   const totalPriceInput = document.getElementById('price_total');
   const pricePerMeterInput = document.getElementById('price_per_meter');
 
-  function formatNumber(num) {
-    return new Intl.NumberFormat('fa-IR').format(num);
-  }
-
+  function formatNumber(num) { return new Intl.NumberFormat('fa-IR').format(num); }
   function parseNumber(str) {
     if (!str) return 0;
-    return Number(
-      str
-        .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-        .replace(/[^\d.]/g, '')
-    );
+    return Number(str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d.]/g, ''));
   }
-
   function formatInputField(input) {
     const raw = parseNumber(input.value);
-    if (!isNaN(raw)) {
-      input.value = formatNumber(raw);
-    } else {
-      input.value = '';
-    }
+    input.value = isNaN(raw) ? '' : formatNumber(raw);
   }
-
   function calculatePricePerMeter() {
     const size = parseNumber(sizeInput.value);
     const total = parseNumber(totalPriceInput.value);
-    if (size > 0 && total > 0) {
-      const perMeter = Math.floor(total / size);
-      pricePerMeterInput.value = formatNumber(perMeter);
-    } else {
-      pricePerMeterInput.value = '';
-    }
+    pricePerMeterInput.value = (size > 0 && total > 0) ? formatNumber(Math.floor(total / size)) : '';
+  }
+  sizeInput.addEventListener('input', () => { formatInputField(sizeInput); calculatePricePerMeter(); });
+  totalPriceInput.addEventListener('input', () => { formatInputField(totalPriceInput); calculatePricePerMeter(); });
+
+  /* ---------- داده‌های دسته‌بندی (مثل تصویر) ---------- */
+  const categoriesMap = {
+    "فروش مسکونی": ["آپارتمان","خانه و ویلا","زمین و ملک کلنگی"],
+    "اجاره مسکونی": ["آپارتمان","خانه و ویلا"],
+    "اجاره اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
+    "فروش اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
+    "اجاره کوتاه‌مدت": ["آپارتمان و سوئیت","ویلا و باغ","دفتر کار و فضای آموزشی"],
+    "پروژه‌های ساخت‌وساز": ["مشارکت در ساخت","پیش‌فروش"]
+  };
+
+  const mainSelect = document.getElementById('category_main');
+  const subSelect  = document.getElementById('category_sub');
+
+  function fillSub(main) {
+    subSelect.innerHTML = '';
+    const def = document.createElement('option');
+    def.value = ''; def.disabled = true; def.selected = true;
+    def.textContent = 'زیرشاخه را انتخاب کنید...';
+    subSelect.appendChild(def);
+
+    (categoriesMap[main] || []).forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item; opt.textContent = item;
+      subSelect.appendChild(opt);
+    });
+    subSelect.disabled = !(categoriesMap[main] || []).length;
   }
 
-  sizeInput.addEventListener('input', () => {
-    formatInputField(sizeInput);
-    calculatePricePerMeter();
+  mainSelect.addEventListener('change', e => fillSub(e.target.value));
+
+  /* ---------- انتخاب سریع: کلیک روی کارت‌ها ---------- */
+  document.querySelectorAll('.quick-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = btn.dataset.main, s = btn.dataset.sub;
+      mainSelect.value = m;
+      fillSub(m);
+      subSelect.value = s;
+
+      // افکت انتخاب
+      document.querySelectorAll('.quick-item').forEach(b => b.classList.remove('ring','ring-green-500','rounded'));
+      btn.classList.add('ring','ring-green-500','rounded');
+
+      // اسکرول نرم به پایین روی فرم
+      subSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   });
 
-  totalPriceInput.addEventListener('input', () => {
-    formatInputField(totalPriceInput);
-    calculatePricePerMeter();
-  });
-
-  document.querySelector('form').addEventListener('submit', function () {
+  /* ---------- پاکسازی اعداد قبل از ارسال ---------- */
+  document.getElementById('adForm').addEventListener('submit', function () {
     sizeInput.value = parseNumber(sizeInput.value);
     totalPriceInput.value = parseNumber(totalPriceInput.value);
     pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
