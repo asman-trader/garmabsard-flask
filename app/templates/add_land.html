@@ -5,18 +5,6 @@
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-0 sm:p-8 shadow rounded-lg mt-0 sm:mt-6">
 
-  <!-- استپ‌پر -->
-  <div class="sticky top-0 z-10 bg-white/85 dark:bg-gray-800/85 backdrop-blur rounded-t-lg border-b dark:border-gray-700">
-    <ol class="flex items-center gap-2 overflow-x-auto p-3 text-[11px] sm:text-xs">
-      <li class="step active">۱) اطلاعات</li>
-      <li class="step">۲) دسته‌بندی</li>
-      <li class="step">۳) پیش‌نمایش</li>
-      <li class="step">۴) نوع ثبت</li>
-      <li class="step">۵) پرداخت</li>
-      <li class="step">۶) نهایی</li>
-    </ol>
-  </div>
-
   <form method="POST" enctype="multipart/form-data" class="space-y-5 p-4 sm:p-0 sm:pt-6" id="adForm">
 
     <!-- تصاویر -->
@@ -108,77 +96,6 @@
                   class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
             <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
           </select>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">یا از «انتخاب سریع» پایین استفاده کن.</p>
-        </div>
-      </div>
-
-      <!-- انتخاب سریع مثل تصویر -->
-      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mt-3">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="font-semibold text-gray-800 dark:text-gray-100 text-sm">انتخاب سریع دسته‌بندی</h2>
-          <a href="{{ url_for('main.index') }}" class="text-[11px] px-2 py-1 rounded bg-gray-800 text-white dark:bg-gray-700 hover:opacity-90">
-            همهٔ آگهی‌های املاک
-          </a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <!-- فروش مسکونی -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">فروش مسکونی</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="آپارتمان">آپارتمان</button></li>
-              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="خانه و ویلا">خانه و ویلا</button></li>
-              <li><button type="button" class="quick-item" data-main="فروش مسکونی" data-sub="زمین و ملک کلنگی">زمین و ملک کلنگی</button></li>
-            </ul>
-          </div>
-
-          <!-- اجاره اداری و تجاری -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره اداری و تجاری</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="دفتر کار، اتاق اداری، مطب">دفتر کار، اتاق اداری، مطب</button></li>
-              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="مغازه و غرفه">مغازه و غرفه</button></li>
-              <li><button type="button" class="quick-item" data-main="اجاره اداری و تجاری" data-sub="صنعتی، کشاورزی، تجاری">صنعتی، کشاورزی، تجاری</button></li>
-            </ul>
-          </div>
-
-          <!-- اجاره مسکونی -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره مسکونی</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="اجاره مسکونی" data-sub="آپارتمان">آپارتمان</button></li>
-              <li><button type="button" class="quick-item" data-main="اجاره مسکونی" data-sub="خانه و ویلا">خانه و ویلا</button></li>
-            </ul>
-          </div>
-
-          <!-- اجاره کوتاه‌مدت -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">اجاره کوتاه‌مدت</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="آپارتمان و سوئیت">آپارتمان و سوئیت</button></li>
-              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="ویلا و باغ">ویلا و باغ</button></li>
-              <li><button type="button" class="quick-item" data-main="اجاره کوتاه‌مدت" data-sub="دفتر کار و فضای آموزشی">دفتر کار و فضای آموزشی</button></li>
-            </ul>
-          </div>
-
-          <!-- فروش اداری و تجاری -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">فروش اداری و تجاری</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="دفتر کار، اتاق اداری، مطب">دفتر کار، اتاق اداری، مطب</button></li>
-              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="مغازه و غرفه">مغازه و غرفه</button></li>
-              <li><button type="button" class="quick-item" data-main="فروش اداری و تجاری" data-sub="صنعتی، کشاورزی، تجاری">صنعتی، کشاورزی، تجاری</button></li>
-            </ul>
-          </div>
-
-          <!-- پروژه‌های ساخت‌وساز -->
-          <div class="rounded-lg border dark:border-gray-700 p-4">
-            <h3 class="font-bold text-gray-900 dark:text-white mb-2">پروژه‌های ساخت‌وساز</h3>
-            <ul class="space-y-2 text-gray-700 dark:text-gray-200">
-              <li><button type="button" class="quick-item" data-main="پروژه‌های ساخت‌وساز" data-sub="مشارکت در ساخت">مشارکت در ساخت</button></li>
-              <li><button type="button" class="quick-item" data-main="پروژه‌های ساخت‌وساز" data-sub="پیش‌فروش">پیش‌فروش</button></li>
-            </ul>
-          </div>
         </div>
       </div>
     </section>
@@ -244,7 +161,6 @@ function parseNumber(str){
   return Number( String(str).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d.]/g,'') || 0 );
 }
 function numberToWordsFa(n){
-  // خلاصه و سریع برای مبالغ رایج
   if(!n) return '';
   const units=[,'هزار','میلیون','میلیارد','هزار میلیارد'];
   let i=0; while(n>=1000 && i<units.length-1){ n=Math.round(n/1000); i++; }
@@ -290,15 +206,6 @@ function fillSub(main){
   subSelect.disabled = !(categoriesMap[main]||[]).length;
 }
 mainSelect.addEventListener('change', e=>fillSub(e.target.value));
-document.querySelectorAll('.quick-item').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const m=btn.dataset.main, s=btn.dataset.sub;
-    mainSelect.value=m; fillSub(m); subSelect.value=s;
-    document.querySelectorAll('.quick-item').forEach(b=>b.classList.remove('ring','ring-green-500','rounded'));
-    btn.classList.add('ring','ring-green-500','rounded');
-    subSelect.scrollIntoView({behavior:'smooth', block:'center'});
-  });
-});
 
 /* ------------------ تصاویر: پیش‌نمایش، فشرده‌سازی، مرتب‌سازی، کاور ------------------ */
 const imagesInput = document.getElementById('imagesInput');
@@ -334,7 +241,7 @@ imagesInput.addEventListener('change', async (e)=>{
 
   let done=0;
   for(const f of files){
-    const file = await compressImage(f, 1600, 0.82); // فشرده‌سازی ملایم
+    const file = await compressImage(f, 1600, 0.82);
     const url = await fileToDataURL(file);
     imageItems.push({ id: cryptoRandom(), url, file, isCover:false });
     done++; progressBar.style.width = Math.round((done/files.length)*100)+'%';
@@ -408,7 +315,6 @@ function renderThumbs(){
     previewContainer.appendChild(d);
   });
 
-  // set order + cover index for backend
   imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
   coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
 }
@@ -444,16 +350,6 @@ let saveTimer=null;
 form.addEventListener('input', ()=>{ clearTimeout(saveTimer); saveTimer=setTimeout(saveDraft, 1000); });
 window.addEventListener('load', loadDraft);
 
-/* ------------------ انتخاب سریع: اتصال به Select ها ------------------ */
-document.querySelectorAll('.quick-item').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const m=btn.dataset.main, s=btn.dataset.sub;
-    mainSelect.value=m; fillSub(m); subSelect.value=s;
-    document.querySelectorAll('.quick-item').forEach(b=>b.classList.remove('ring','ring-green-500','rounded'));
-    btn.classList.add('ring','ring-green-500','rounded');
-  });
-});
-
 /* ------------------ توست کوچک ------------------ */
 function toast(msg){
   const t=document.createElement('div');
@@ -468,7 +364,6 @@ form.addEventListener('submit', function(){
   sizeInput.value = parseNumber(sizeInput.value);
   totalPriceInput.value = parseNumber(totalPriceInput.value);
   pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
-  // اگر هیچ کاوری تعیین نشده بود، اولی کاور شود
   if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover=true; }
   coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
 });
