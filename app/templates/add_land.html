@@ -5,57 +5,67 @@
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-0 sm:p-8 shadow rounded-lg mt-0 sm:mt-6">
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-5 p-4 sm:p-0 sm:pt-6" id="adForm">
+  <form method="POST" enctype="multipart/form-data" class="space-y-5 p-4 sm:p-0 sm:pt-6" id="adForm" novalidate>
+    {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% endif %}
 
     <!-- تصاویر -->
     <section aria-label="تصاویر">
       <label class="block text-gray-700 dark:text-gray-200 mb-1">تصاویر</label>
 
       <div class="flex items-center gap-2">
-        <label class="flex-1 cursor-pointer flex items-center justify-center border-dashed border-2 border-green-500 rounded p-3 text-green-700 hover:bg-green-50 dark:hover:bg-green-900">
-          <i class="fas fa-upload text-lg ml-2"></i> افزودن تصویر
-          <input type="file" name="images" id="imagesInput" accept="image/*" multiple class="hidden">
+        <!-- Dropzone -->
+        <label id="dropzone"
+               class="flex-1 cursor-pointer flex items-center justify-center border-dashed border-2 border-green-500 rounded p-3 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition"
+               title="تصاویر را انتخاب یا اینجا رها کنید">
+          <i class="fas fa-upload text-lg ml-2"></i>
+          افزودن تصویر
+          <input type="file" name="images" id="imagesInput" accept="image/*" multiple class="hidden" aria-label="انتخاب تصاویر">
         </label>
-        <button type="button" id="clearImages" class="px-3 py-2 text-xs border rounded hover:bg-gray-50 dark:hover:bg-gray-700">حذف همه</button>
+        <button type="button" id="clearImages" class="px-3 py-2 text-xs border rounded hover:bg-gray-50 dark:hover:bg-gray-700" aria-label="حذف همه تصاویر">حذف همه</button>
       </div>
 
-      <p class="text-[11px] text-gray-500 mt-1">حداکثر ۱۰ تصویر؛ برای تغییر ترتیب، بکشید و رها کنید. روی ⭐ تصویر کاور را مشخص کنید.</p>
+      <p class="text-[11px] text-gray-500 mt-1">حداکثر ۱۰ تصویر؛ تغییر ترتیب با کشیدن و رها کردن؛ با ⭐ تصویر کاور را مشخص کنید.</p>
 
-      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden">در حال آماده‌سازی تصاویر...</div>
-      <div id="progress-container" class="w-full h-2 bg-gray-200 rounded overflow-hidden hidden mt-2">
+      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden" role="status" aria-live="polite">در حال آماده‌سازی و آپلود تصاویر...</div>
+      <div id="progress-container" class="w-full h-2 bg-gray-200 rounded overflow-hidden hidden mt-2" aria-hidden="true">
         <div id="progress-bar" class="h-full bg-green-500" style="width: 0%;"></div>
       </div>
 
-      <div id="preview-container" class="grid grid-cols-3 gap-2 mt-3"></div>
-      <!-- ورودی پنهان برای ترتیب نهایی تصاویر -->
+      <div id="preview-container" class="grid grid-cols-3 gap-2 mt-3" aria-live="polite" aria-label="پیش‌نمایش تصاویر"></div>
+
+      <!-- فیلدهای پنهان برای بک‌اند -->
       <input type="hidden" name="images_order" id="images_order">
-      <input type="hidden" name="cover_index" id="cover_index" value="">
+      <input type="hidden" name="cover_index" id="cover_index">
+      <input type="hidden" name="uploaded_ids" id="uploaded_ids">
     </section>
 
     <!-- عنوان -->
     <section aria-label="عنوان">
-      <label class="block text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی*</label>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1" for="title">عنوان آگهی*</label>
       <input type="text" name="title" id="title" required maxlength="120"
              placeholder="مثلاً: ۵۰۰ متر باغ با درختان میوه در دشت اول"
-             class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
-      <div class="text-[11px] text-gray-500 mt-1">عنوان شفاف اعتماد ایجاد می‌کند.</div>
+             class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+             autocomplete="off" inputmode="text">
+      <div class="text-[11px] text-gray-500 mt-1">عنوان واضح و مختصر اعتماد ایجاد می‌کند.</div>
     </section>
 
     <!-- متراژ و قیمت -->
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="ابعاد و قیمت">
       <div>
-        <label class="block text-gray-700 dark:text-gray-200 mb-1">متراژ (متر مربع)*</label>
+        <label class="block text-gray-700 dark:text-gray-200 mb-1" for="size">متراژ (متر مربع)*</label>
         <input inputmode="numeric" type="text" id="size" name="size" required
-               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
       </div>
       <div>
-        <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت کل (تومان)</label>
+        <label class="block text-gray-700 dark:text-gray-200 mb-1" for="price_total">قیمت کل (تومان)</label>
         <input inputmode="numeric" type="text" id="price_total" name="price_total"
-               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
         <div id="price_words" class="text-[11px] text-gray-500 mt-1"></div>
       </div>
-      <div>
-        <label class="block text-gray-700 dark:text-gray-200 mb-1">قیمت متری (محاسبه‌شده)</label>
+      <div class="sm:col-span-2">
+        <label class="block text-gray-700 dark:text-gray-200 mb-1" for="price_per_meter">قیمت متری (محاسبه‌شده)</label>
         <input type="text" id="price_per_meter" name="price_per_meter" readonly
                class="w-full border rounded px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
       </div>
@@ -63,7 +73,7 @@
 
     <!-- موقعیت -->
     <section aria-label="موقعیت">
-      <label class="block text-gray-700 dark:text-gray-200 mb-1">موقعیت*</label>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1" for="location">موقعیت*</label>
       <select name="location" id="location" required
               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
         <option value="" disabled selected>انتخاب کنید...</option>
@@ -78,7 +88,7 @@
     <section aria-label="دسته‌بندی">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع معامله (گروه)*</label>
+          <label class="block text-gray-700 dark:text-gray-200 mb-1" for="category_main">نوع معامله (گروه)*</label>
           <select id="category_main" name="category_main" required
                   class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
             <option value="" disabled selected>انتخاب کنید...</option>
@@ -91,7 +101,7 @@
           </select>
         </div>
         <div>
-          <label class="block text-gray-700 dark:text-gray-200 mb-1">دسته‌بندی (زیرشاخه)*</label>
+          <label class="block text-gray-700 dark:text-gray-200 mb-1" for="category_sub">دسته‌بندی (زیرشاخه)*</label>
           <select id="category_sub" name="category_sub" required disabled
                   class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
             <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
@@ -102,7 +112,7 @@
 
     <!-- نوع سند -->
     <section aria-label="نوع سند">
-      <label class="block text-gray-700 dark:text-gray-200 mb-1">نوع سند</label>
+      <label class="block text-gray-700 dark:text-gray-200 mb-1" for="document_type">نوع سند</label>
       <select name="document_type" id="document_type"
               class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
         <option value="" disabled selected>انتخاب نوع سند</option>
@@ -124,41 +134,62 @@
       </div>
     </section>
 
-    <!-- توضیحات -->
-    <section aria-label="توضیحات">
-      <label class="block text-gray-700 dark:text-gray-200 mb-1">توضیحات</label>
-      <textarea name="description" id="description" rows="4"
-                placeholder="جزئیات تکمیلی مثل دسترسی‌ها، امکانات، بافت، کاربری و ..."
-                class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
-    </section>
-
-    <!-- نوار اکشن چسبان (موبایل) -->
+    <!-- اکشن‌ها -->
     <div class="h-16 sm:h-0"></div>
-    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex gap-3 sm:justify-between">
+    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-between">
       <button type="button" id="btnSaveDraft" class="px-4 py-2 rounded border">ذخیره پیش‌نویس</button>
+      <div id="formReadyHint" class="text-xs text-gray-500 hidden sm:block">وضعیت فرم: <span id="formReadyText">—</span></div>
       <div class="flex-1 hidden sm:block"></div>
       <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded border">بازگشت</a>
-      <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white">ادامه مرحله بعد</button>
+
+      <!-- دکمه همیشه فعال -->
+      <button type="submit" id="btnSubmit"
+              class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition">
+        تکمیل و ادامه
+      </button>
     </div>
   </form>
 </div>
 
+<!-- لایه فول‌اسکرین «در حال ثبت» -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 w-64 text-center">
+    <i class="fas fa-spinner fa-spin text-3xl text-green-600 mb-3"></i>
+    <p class="text-sm text-gray-700 dark:text-gray-200">در حال ثبت آگهی...</p>
+    <p class="text-[11px] text-gray-500 mt-1">لطفاً صفحه را نبندید</p>
+  </div>
+</div>
+
 <style>
-  .step{padding:.4rem .6rem;border:1px solid var(--tw-prose-borders,#e5e7eb);border-radius:999px;white-space:nowrap}
-  .step.active{border-color:#16a34a;color:#16a34a;font-weight:700}
   .thumb{position:relative}
-  .thumb .cover{position:absolute;top:.25rem;left:.25rem;background:#111827;color:#fff;font-size:10px;border-radius:999px;padding:.15rem .4rem;opacity:.85}
+  .thumb .cover{position:absolute;top:.25rem;left:.25rem;background:#111827;color:#fff;font-size:10px;border-radius:999px;padding:.15rem .4rem;opacity:.9}
   .thumb.dragging{opacity:.6;transform:scale(.98)}
   .thumb .remove{position:absolute;top:.25rem;right:.25rem;background:#ef4444;color:#fff;border-radius:999px;font-size:11px;padding:.1rem .35rem}
   .thumb .star{position:absolute;bottom:.25rem;left:.25rem;background:#f59e0b;color:#111;border-radius:999px;font-size:12px;padding:.05rem .35rem}
+  .thumb .spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);color:#fff;font-size:12px}
+  #dropzone.dragover{background:rgba(16,185,129,.08)}
 </style>
 
 <script>
-/* ------------------ ابزارهای عددی ------------------ */
+/* ------------------ تنظیمات ------------------ */
+const UPLOAD_URL = '/api/uploads/images';
+const MAX_FILES = 10;
+const MAX_FILE_SIZE_MB = 12;
+
+function getCsrf(){
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if(meta && meta.content) return meta.content;
+  const hidden = document.querySelector('input[name="csrf_token"]');
+  return hidden ? hidden.value : null;
+}
+
+/* ------------------ اعداد ------------------ */
 function formatNumber(num){ return new Intl.NumberFormat('fa-IR').format(num); }
 function parseNumber(str){
   if(!str) return 0;
-  return Number( String(str).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d.]/g,'') || 0 );
+  const persian = '۰۱۲۳۴۵۶۷۸۹';
+  const en = String(str).replace(/[۰-۹]/g, d => String(persian.indexOf(d))).replace(/[^\d]/g,'');
+  return Number(en || 0);
 }
 function numberToWordsFa(n){
   if(!n) return '';
@@ -167,23 +198,40 @@ function numberToWordsFa(n){
   return formatNumber(n)+' '+units[i]+' تومان';
 }
 
-/* ------------------ قیمت متری و به حروف ------------------ */
+/* ------------------ DOM refs ------------------ */
+const form = document.getElementById('adForm');
 const sizeInput = document.getElementById('size');
 const totalPriceInput = document.getElementById('price_total');
 const pricePerMeterInput = document.getElementById('price_per_meter');
 const priceWords = document.getElementById('price_words');
+const mainSelect = document.getElementById('category_main');
+const subSelect  = document.getElementById('category_sub');
+const imagesInput = document.getElementById('imagesInput');
+const previewContainer = document.getElementById('preview-container');
+const uploadStatus = document.getElementById('upload-status');
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+const imagesOrderInput = document.getElementById('images_order');
+const coverIndexInput = document.getElementById('cover_index');
+const uploadedIdsInput = document.getElementById('uploaded_ids');
+const clearImagesBtn = document.getElementById('clearImages');
+const submitBtn = document.getElementById('btnSubmit');
+const dropzone = document.getElementById('dropzone');
+const formReadyText = document.getElementById('formReadyText');
+const formReadyHint = document.getElementById('formReadyHint');
 
+/* ------------------ قیمت متری ------------------ */
 function recalc(){
   const s=parseNumber(sizeInput.value), t=parseNumber(totalPriceInput.value);
   sizeInput.value = s?formatNumber(s):'';
   totalPriceInput.value = t?formatNumber(t):'';
   pricePerMeterInput.value = (s>0 && t>0) ? formatNumber(Math.floor(t/s)) : '';
-  priceWords.textContent = t?('≈ '+numberToWordsFa(parseNumber(totalPriceInput.value))):'';
+  priceWords.textContent = t?('≈ '+numberToWordsFa(t)):'';
 }
 sizeInput.addEventListener('input', recalc);
 totalPriceInput.addEventListener('input', recalc);
 
-/* ------------------ دسته‌بندی‌ها ------------------ */
+/* ------------------ دسته‌بندی ------------------ */
 const categoriesMap = {
   "فروش مسکونی": ["آپارتمان","خانه و ویلا","زمین و ملک کلنگی"],
   "اجاره مسکونی": ["آپارتمان","خانه و ویلا"],
@@ -192,9 +240,7 @@ const categoriesMap = {
   "اجاره کوتاه‌مدت": ["آپارتمان و سوئیت","ویلا و باغ","دفتر کار و فضای آموزشی"],
   "پروژه‌های ساخت‌وساز": ["مشارکت در ساخت","پیش‌فروش"]
 };
-const mainSelect = document.getElementById('category_main');
-const subSelect  = document.getElementById('category_sub');
-function fillSub(main){
+function fillSub(main, setValue=null){
   subSelect.innerHTML = '';
   const def = document.createElement('option');
   def.value=''; def.disabled=true; def.selected=true; def.textContent='زیرشاخه را انتخاب کنید...';
@@ -204,68 +250,30 @@ function fillSub(main){
     subSelect.appendChild(opt);
   });
   subSelect.disabled = !(categoriesMap[main]||[]).length;
+  if(setValue && !subSelect.disabled){
+    subSelect.value = setValue;
+    if(!subSelect.value) subSelect.selectedIndex = 0;
+  }
 }
 mainSelect.addEventListener('change', e=>fillSub(e.target.value));
 
-/* ------------------ تصاویر: پیش‌نمایش، فشرده‌سازی، مرتب‌سازی، کاور ------------------ */
-const imagesInput = document.getElementById('imagesInput');
-const previewContainer = document.getElementById('preview-container');
-const uploadStatus = document.getElementById('upload-status');
-const progressContainer = document.getElementById('progress-container');
-const progressBar = document.getElementById('progress-bar');
-const imagesOrderInput = document.getElementById('images_order');
-const coverIndexInput = document.getElementById('cover_index');
-const clearImagesBtn = document.getElementById('clearImages');
-
-let imageItems = []; // {id,url,file,isCover}
-
-clearImagesBtn.addEventListener('click', ()=>{
-  imageItems = [];
-  renderThumbs();
-  imagesInput.value = '';
-  imagesOrderInput.value = '';
-  coverIndexInput.value = '';
-});
-
-imagesInput.addEventListener('change', async (e)=>{
-  const files = Array.from(e.target.files || []);
-  if(!files.length) return;
-
-  if(files.length + imageItems.length > 10){
-    alert('حداکثر ۱۰ تصویر مجاز است.');
-    return imagesInput.value='';
-  }
-
-  uploadStatus.classList.remove('hidden');
-  progressContainer.classList.remove('hidden');
-
-  let done=0;
-  for(const f of files){
-    const file = await compressImage(f, 1600, 0.82);
-    const url = await fileToDataURL(file);
-    imageItems.push({ id: cryptoRandom(), url, file, isCover:false });
-    done++; progressBar.style.width = Math.round((done/files.length)*100)+'%';
-  }
-  if(!imageItems.some(x=>x.isCover) && imageItems.length) imageItems[0].isCover=true;
-
-  renderThumbs();
-  uploadStatus.textContent='همه تصاویر آماده شدند';
-});
+/* ------------------ آپلود/پیش‌نمایش ------------------ */
+let imageItems = []; // {id,url,file,isCover, serverId, uploading}
+let totalUploads = 0, doneUploads = 0;
 
 function cryptoRandom(){ return (self.crypto||window.crypto).getRandomValues(new Uint32Array(1))[0].toString(16); }
-function fileToDataURL(file){
-  return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
-}
+function fileToDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }); }
 function compressImage(file, maxW=1600, quality=0.82){
-  return new Promise(res=>{
+  return new Promise((res,rej)=>{
     const img = new Image();
     img.onload = ()=>{
       const scale = Math.min(1, maxW/img.width);
       const c=document.createElement('canvas');
       c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=>res(new File([b],'img.jpg',{type:'image/jpeg'})),'image/jpeg',quality);
+      c.toBlob(b=> b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')),'image/jpeg',quality);
     };
+    img.onerror = ()=>rej(new Error('Invalid image'));
     img.src = URL.createObjectURL(file);
   });
 }
@@ -276,26 +284,28 @@ function renderThumbs(){
     const d=document.createElement('div');
     d.className='thumb border rounded overflow-hidden';
     d.draggable=true; d.dataset.id=it.id;
+    d.setAttribute('aria-label','تصویر '+(idx+1));
 
     const img=document.createElement('img');
-    img.src=it.url; img.className='w-full h-28 object-cover';
+    img.src=it.url; img.className='w-full h-28 object-cover'; img.loading='lazy'; img.alt='تصویر آگهی';
 
     const rm=document.createElement('button');
     rm.type='button'; rm.className='remove'; rm.innerHTML='<i class="fas fa-times"></i>';
-    rm.addEventListener('click', ()=>{ imageItems=imageItems.filter(x=>x.id!==it.id); if(it.isCover && imageItems[0]) imageItems[0].isCover=true; renderThumbs(); });
+    rm.title='حذف تصویر';
+    rm.addEventListener('click', ()=>{
+      imageItems=imageItems.filter(x=>x.id!==it.id);
+      if(it.isCover && imageItems[0]) imageItems[0].isCover=true;
+      renderThumbs(); syncHiddenInputs(); updateHintOnly();
+    });
 
     const star=document.createElement('button');
     star.type='button'; star.className='star'; star.innerHTML = it.isCover ? '⭐' : '☆';
+    star.title='انتخاب به‌عنوان کاور';
     star.addEventListener('click', ()=>{
-      imageItems.forEach(x=>x.isCover=false); it.isCover=true; renderThumbs();
+      imageItems.forEach(x=>x.isCover=false); it.isCover=true;
+      renderThumbs(); syncHiddenInputs(); updateHintOnly();
     });
 
-    if(it.isCover){
-      const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور';
-      d.appendChild(lab);
-    }
-
-    // drag events
     d.addEventListener('dragstart', ev=>{ d.classList.add('dragging'); ev.dataTransfer.setData('text/plain', it.id); });
     d.addEventListener('dragend', ()=> d.classList.remove('dragging'));
     d.addEventListener('dragover', ev=>ev.preventDefault());
@@ -308,66 +318,270 @@ function renderThumbs(){
       const toIdx=imageItems.findIndex(x=>x.id===toId);
       const [moved]=imageItems.splice(fromIdx,1);
       imageItems.splice(toIdx,0,moved);
-      renderThumbs();
+      renderThumbs(); syncHiddenInputs(); updateHintOnly();
     });
 
     d.appendChild(img); d.appendChild(rm); d.appendChild(star);
+
+    if (it.uploading) {
+      const sp=document.createElement('div');
+      sp.className='spinner';
+      sp.textContent='در حال آپلود...';
+      d.appendChild(sp);
+    }
+    if(it.isCover){
+      const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور';
+      d.appendChild(lab);
+    }
+
     previewContainer.appendChild(d);
   });
 
-  imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
-  coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
+  syncHiddenInputs();
 }
 
-/* ------------------ ذخیره خودکار پیش‌نویس ------------------ */
-const form = document.getElementById('adForm');
+function syncHiddenInputs(){
+  imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
+  coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
+  uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
+}
+
+function validateFile(f){
+  if(!f.type.startsWith('image/')){ toast('فقط فایل تصویری مجاز است'); return false; }
+  if(f.size > MAX_FILE_SIZE_MB*1024*1024){ toast('حجم هر تصویر حداکثر '+MAX_FILE_SIZE_MB+' مگابایت'); return false; }
+  return true;
+}
+
+clearImagesBtn.addEventListener('click', ()=>{
+  imageItems = []; totalUploads=0; doneUploads=0;
+  renderThumbs(); updateGlobalProgress();
+  imagesInput.value=''; uploadedIdsInput.value='';
+  updateHintOnly();
+});
+
+async function handleFiles(files){
+  const arr = Array.from(files||[]);
+  if(!arr.length) return;
+
+  if(arr.length + imageItems.length > MAX_FILES){
+    toast('حداکثر '+MAX_FILES+' تصویر مجاز است'); return;
+  }
+
+  uploadStatus.classList.remove('hidden');
+  progressContainer.classList.remove('hidden');
+
+  totalUploads += arr.length;
+  updateGlobalProgress();
+
+  const tasks = arr.map(async (f) => {
+    if(!validateFile(f)){ doneUploads++; updateGlobalProgress(); return; }
+
+    try{
+      const compressed = await compressImage(f, 1600, 0.82);
+      const url = await fileToDataURL(compressed);
+      const item = { id: cryptoRandom(), url, file: compressed, isCover:false, serverId:null, uploading:true };
+      imageItems.push(item);
+      if (!imageItems.some(x=>x.isCover)) item.isCover = true;
+      renderThumbs(); updateHintOnly();
+
+      try{
+        const serverId = await uploadOne(compressed);
+        item.serverId = serverId;
+      }catch(err){
+        console.error('Upload failed:', err);
+        toast('آپلود یک تصویر ناموفق بود');
+      }finally{
+        item.uploading = false;
+        doneUploads++;
+        renderThumbs();
+        updateGlobalProgress();
+        updateHintOnly();
+      }
+    }catch(err){
+      console.error(err);
+      doneUploads++;
+      updateGlobalProgress();
+      toast('پردازش یک تصویر ناموفق بود');
+      updateHintOnly();
+    }
+  });
+
+  await Promise.all(tasks);
+  uploadStatus.textContent = imageItems.every(x=>x.serverId) ? 'همه تصاویر آپلود شدند' : 'برخی تصاویر آپلود نشدند';
+  updateHintOnly();
+}
+
+imagesInput.addEventListener('change', (e)=>handleFiles(e.target.files));
+['dragenter','dragover'].forEach(evt=>{
+  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(evt=>{
+  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); });
+});
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  if(dt && dt.files) handleFiles(dt.files);
+});
+
+/* آپلود تک‌تصویر */
+async function uploadOne(file){
+  const fd = new FormData();
+  fd.append('file', file, 'image.jpg');
+  const csrf = getCsrf();
+  const headers = {};
+  if(csrf){
+    headers['X-CSRF-Token'] = csrf;
+    headers['X-CSRFToken']  = csrf;
+    headers['X-XSRF-TOKEN'] = csrf;
+  }
+  const resp = await fetch(UPLOAD_URL, {
+    method: 'POST',
+    headers,
+    body: fd,
+    credentials: 'same-origin'
+  });
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  const data = await resp.json();
+  return data.id || data.file_id || data.uuid || null;
+}
+
+/* Progress کلی */
+function updateGlobalProgress(){
+  const total = Math.max(totalUploads, 1);
+  const percent = Math.round((doneUploads/total)*100);
+  progressBar.style.width = percent+'%';
+  if (doneUploads>=total){
+    setTimeout(()=>{ progressContainer.classList.add('hidden'); uploadStatus.classList.add('hidden'); }, 600);
+  } else {
+    progressContainer.classList.remove('hidden');
+    uploadStatus.classList.remove('hidden');
+  }
+}
+
+/* پیش‌نویس (LocalStorage) */
 const SAVE_KEY = 'adFormDraftV1';
 function saveDraft(){
   const fd = new FormData(form);
   const obj = {};
   fd.forEach((v,k)=>{ if(k!=='images') obj[k]=v; });
-  obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover}));
+  obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
   localStorage.setItem(SAVE_KEY, JSON.stringify(obj));
   toast('پیش‌نویس ذخیره شد');
 }
 function loadDraft(){
   const raw = localStorage.getItem(SAVE_KEY); if(!raw) return;
-  const obj = JSON.parse(raw);
-  Object.entries(obj).forEach(([k,v])=>{
-    if(k==='_images_meta') return;
-    const el = form.elements[k]; if(!el) return;
-    el.value = v;
-    if(k==='category_main') fillSub(v);
-  });
-  if(obj._images_meta){
-    imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover}));
-    renderThumbs();
-  }
-  recalc();
+  try{
+    const obj = JSON.parse(raw);
+    Object.entries(obj).forEach(([k,v])=>{
+      if(k==='_images_meta') return;
+      const el = form.elements[k]; if(!el) return;
+      el.value = v;
+    });
+    if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
+    if(obj._images_meta){
+      imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
+      renderThumbs();
+    }
+    recalc();
+    updateHintOnly();
+  }catch(_){}
 }
-document.getElementById('btnSaveDraft').addEventListener('click', saveDraft);
+document.getElementById('btnSaveDraft').addEventListener('click', ()=>{ saveDraft(); updateHintOnly(); });
 let saveTimer=null;
-form.addEventListener('input', ()=>{ clearTimeout(saveTimer); saveTimer=setTimeout(saveDraft, 1000); });
-window.addEventListener('load', loadDraft);
+form.addEventListener('input', ()=>{ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ saveDraft(); updateHintOnly(); }, 800); });
 
-/* ------------------ توست کوچک ------------------ */
+/* توست */
 function toast(msg){
   const t=document.createElement('div');
   t.textContent=msg;
-  t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow';
+  t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow z-[9999]';
   document.body.appendChild(t);
   setTimeout(()=>{ t.remove(); },1800);
 }
 
-/* ------------------ پاکسازی و اعتبارسنجی قبل از ارسال ------------------ */
-form.addEventListener('submit', function(){
+/* فقط نمایش وضعیت آماده‌بودن، بدون قفل دکمه */
+function isFormReady(){
+  const titleOk = !!document.getElementById('title').value.trim();
+  const sizeOk = parseNumber(sizeInput.value) > 0;
+  const locOk  = !!document.getElementById('location').value;
+  const mainOk = !!document.getElementById('category_main').value;
+  const subOk  = !subSelect.disabled && !!subSelect.value;
+  const hasImgs = imageItems.length > 0;
+  const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
+  return titleOk && sizeOk && locOk && mainOk && subOk && hasImgs && uploadsDone;
+}
+function updateHintOnly(){
+  const ready = isFormReady();
+  if(formReadyHint){ formReadyHint.classList.remove('hidden'); }
+  if(formReadyText){ formReadyText.textContent = ready ? 'آماده ثبت' : 'ناقص'; }
+}
+window.addEventListener('load', ()=>{ loadDraft(); recalc(); updateHintOnly(); });
+
+/* ارسال با fetch + هدایت */
+form.addEventListener('submit', async function(e){
+  e.preventDefault();
+
+  // به‌جای قفل دکمه، فقط پیام می‌دهیم اگر ناقص بود
+  if(!isFormReady()){
+    toast('لطفاً فیلدهای لازم را تکمیل یا آپلود تصاویر را تکمیل کنید.');
+    updateHintOnly();
+    // همچنان اجازه می‌دیم اگر خواستید بک‌اند اعتبارسنجی کند، همین حالا ارسال شود:
+    // اگر نمی‌خواهید ارسال شود، return کنید.
+    // return;
+  }
+
+  // پاکسازی اعداد و فیلدهای مخفی
   sizeInput.value = parseNumber(sizeInput.value);
   totalPriceInput.value = parseNumber(totalPriceInput.value);
   pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
   if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover=true; }
+  imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
   coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
-});
+  uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
 
-/* ------------------ پایان اسکریپت ------------------ */
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.remove('hidden');
+  submitBtn.textContent = 'در حال ارسال...';
+
+  try{
+    const fd = new FormData(form);
+    const resp = await fetch(form.action || window.location.href, {
+      method: 'POST',
+      body: fd,
+      credentials: 'same-origin'
+    });
+
+    if(resp.redirected){
+      window.location.href = resp.url; return;
+    }
+
+    const ct = resp.headers.get('content-type') || '';
+    if(ct.includes('application/json')){
+      const data = await resp.json();
+      if(data.redirect_url){ window.location.href = data.redirect_url; return; }
+      if(data.success && data.location){ window.location.href = data.location; return; }
+      if(data.success){ toast('ثبت با موفقیت انجام شد'); setTimeout(()=>location.reload(), 900); return; }
+    }
+
+    const loc = resp.headers.get('Location') || resp.headers.get('location');
+    if(loc){ window.location.href = loc; return; }
+
+    if(resp.ok){
+      const html = await resp.text();
+      if(html && html.trim().length){
+        document.open(); document.write(html); document.close(); return;
+      }
+    }
+
+    throw new Error('ثبت ناموفق بود');
+
+  }catch(err){
+    console.error(err);
+    overlay.classList.add('hidden');
+    submitBtn.textContent = 'تکمیل و ادامه';
+    toast('خطا در ثبت آگهی. دوباره تلاش کنید.');
+  }
+});
 </script>
 {% endblock %}
