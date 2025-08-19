@@ -1,18 +1,51 @@
-<nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[64px] z-20 overflow-x-auto whitespace-nowrap no-scrollbar">
-  <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm md:text-base font-medium">
-    {% set categories = ["همه آگهی‌ها", "زمین مسکونی", "باغ", "ویلا", "سنددار", "دارای آب و برق", "قیمت مناسب"] %}
-    {% for cat in categories %}
-      {% set filter_key = cat if cat != "همه آگهی‌ها" else "" %}
-      <a href="{{ url_for('main.search_page') }}{% if filter_key %}?category={{ filter_key | urlencode }}{% endif %}"
-         class="flex-shrink-0 px-4 py-1 rounded-full
-         {% if category == cat or (not category and cat == 'همه آگهی‌ها') %}
-           bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-         {% else %}
-           bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
-         {% endif %}
-         hover:bg-green-200 dark:hover:bg-green-800 transition">
-        {{ cat }}
+{# templates/categories_nav.html #}
+<nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700
+            sticky top-[64px] z-20 overflow-x-auto whitespace-nowrap no-scrollbar">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 sm:gap-3 md:gap-4
+              text-xs sm:text-sm md:text-base font-medium">
+
+    {# نگاشت: کلید فنی ↔︎ برچسب نمایشی #}
+    {% set cat_map = {
+      "": "همه آگهی‌ها",
+      "residential_land": "زمین مسکونی",
+      "garden": "باغ",
+      "villa": "ویلا",
+      "titled": "سنددار",
+      "with_utilities": "دارای آب و برق",
+      "good_price": "قیمت مناسب"
+    } %}
+
+    {# دستهٔ فعال از URL (اگر نباشد، حالت «همه» فعال است) #}
+    {% set active_key = request.args.get('category', '') %}
+
+    {# پارامترهای دیگر جستجو (مثل q، sort، page) حفظ می‌شود #}
+    {% set base_args = request.args.to_dict() %}
+
+    {% for key, label in cat_map.items() %}
+      {% set args = base_args.copy() %}
+      {% if key %}
+        {% set _ = args.update({'category': key}) %}
+      {% else %}
+        {# برای «همه»، پارامتر category حذف شود تا URL تمیز بماند #}
+        {% set _ = args.pop('category', None) %}
+      {% endif %}
+
+      <a href="{{ url_for('main.search_page', **args) }}"
+         class="flex-shrink-0 px-4 py-1 rounded-full transition
+                {% if active_key == key %}
+                  bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                {% else %}
+                  bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                {% endif %}
+                hover:bg-green-200 dark:hover:bg-green-800">
+        {{ label }}
       </a>
     {% endfor %}
   </div>
 </nav>
+
+<style>
+  /* حذف اسکرول‌بار افقی در مرورگرهای مختلف (بدون تأثیر روی اسکرول) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
