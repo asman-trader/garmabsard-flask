@@ -1,5 +1,4 @@
-{# side_menu.html - compact & clean architecture #}
-{# ---------- Jinja Macro: Menu Item ---------- #}
+{# side_menu.html - compact & clean architecture with user header #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-2 rounded-lg transition
@@ -15,20 +14,23 @@
   </a>
 {%- endmacro %}
 
-{# ---------- Sidebar Container ---------- #}
 <aside id="sideMenu"
        class="fixed top-0 right-0 z-50 w-72 h-full
               translate-x-full sm:translate-x-0
               bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700
               shadow-xl transition-transform duration-300 ease-in-out">
 
-  {# Header #}
+  {# Header: user info instead of "منوی کاربری" #}
   <header class="sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur
                  border-b border-gray-200 dark:border-gray-700 px-4 py-4">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-        <i class="fas fa-bars text-green-600 dark:text-green-400"></i>
-        <span>منوی کاربری</span>
+      <div class="flex items-center gap-2 text-base font-bold text-gray-800 dark:text-white">
+        <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-xl"></i>
+        {% if session.get('user_phone') %}
+          {{ session['user_phone'] }}
+        {% else %}
+          مهمان
+        {% endif %}
       </div>
       <button id="closeMenu"
               class="sm:hidden text-xl text-gray-600 dark:text-gray-300 hover:text-red-500"
@@ -41,34 +43,17 @@
   {# Body #}
   <div class="p-4 space-y-3">
 
-    {# Actions #}
     {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
     {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
-
-    {# Notifications with dynamic badge #}
     {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
 
     <hr class="my-2 border-gray-300 dark:border-gray-700" />
 
-    {# User mini-card #}
-    <div class="flex items-center gap-2 px-2 text-xs text-gray-600 dark:text-gray-400">
-      <i class="fas fa-user-circle text-green-600 dark:text-green-400"></i>
-      <span>
-        {% if session.get('user_phone') %}
-          {{ session['user_phone'] }}
-        {% else %}
-          مهمان
-        {% endif %}
-      </span>
-    </div>
-
-    {# Account & Lists #}
     {{ MenuItem(url_for('main.profile'), 'fa-user', 'ناحیه کاربری', True) }}
     {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
     {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
     {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
 
-    {# Auth #}
     {% if session.get('user_phone') %}
       <a href="{{ url_for('main.logout') }}"
          class="flex items-center gap-3 p-2 rounded-lg transition
