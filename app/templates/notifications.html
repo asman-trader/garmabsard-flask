@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}اعلان‌ها | املاک آسمان گرمابسرد{% endblock %}
+
+{% block content %}
+<main class="max-w-2xl mx-auto px-4 py-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+      <i class="fas fa-bell text-green-600 dark:text-green-400"></i>
+      اعلان‌های شما
+    </h1>
+    {% if items and items|length > 0 and notif_count and notif_count > 0 %}
+    <form method="post" action="{{ url_for('main.notifications_read_all') }}">
+      <button class="px-3 py-1 text-sm rounded bg-green-600 text-white hover:bg-green-700">
+        خواندن همه
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if not items or items|length == 0 %}
+    <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300">
+      هنوز اعلانی ندارید.
+    </div>
+  {% else %}
+    <div class="space-y-3">
+      {% for n in items %}
+      <div class="p-4 rounded-xl border
+                  {% if n.read %}border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-gray-900/60{% else %}border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/20{% endif %}">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold text-gray-800 dark:text-gray-100">
+            {{ n.title or 'اعلان' }}
+          </div>
+          {% if not n.read %}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">خوانده‌نشده</span>
+          {% endif %}
+        </div>
+        {% if n.message %}
+        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{{ n.message }}</p>
+        {% endif %}
+        {% if n.created_at %}
+        <div class="mt-2 text-[12px] text-gray-500 dark:text-gray-400">
+          {{ n.created_at }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

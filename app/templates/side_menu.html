@@ -26,6 +26,17 @@
       <i class="fas fa-home text-green-600 dark:text-green-400"></i> خانه
     </a>
 
+    <!-- 🔔 اعلان‌ها -->
+<a href="{{ url_for('main.notifications') }}"
+   class="flex items-center gap-3 p-2 rounded hover:bg-green-100 dark:hover:bg-green-800 transition require-login">
+  <i class="fas fa-bell text-green-600 dark:text-green-400"></i>
+  اعلان‌ها
+  {% if notif_count and notif_count > 0 %}
+    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ notif_count }}</span>
+  {% endif %}
+</a>
+
+
     <hr class="my-2 border-gray-300 dark:border-gray-600" />
 
     <!-- اطلاعات کاربر -->

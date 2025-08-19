@@ -441,3 +441,70 @@ def search_results():
 
     results = sorted(results, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
     return render_template('search_results.html', results=results, query=query, CATEGORY_MAP=CATEGORY_MAP)
+
+
+# ---------- اعلان‌ها (Notifications) ----------
+from flask import flash
+
+def _notifications_file():
+    # اگر جایی ست‌ نکردی، به صورت پیش‌فرض فایل را در app/data/notifications.json می‌سازیم
+    default_path = os.path.join(current_app.root_path, 'data', 'notifications.json')
+    current_app.config.setdefault('NOTIFICATIONS_FILE', default_path)
+    # اگر پوشه data وجود نداشت، بساز
+    os.makedirs(os.path.dirname(current_app.config['NOTIFICATIONS_FILE']), exist_ok=True)
+    # اگر فایل وجود ندارد، یک آرایه خالی ذخیره کن
+    if not os.path.exists(current_app.config['NOTIFICATIONS_FILE']):
+        save_json(current_app.config['NOTIFICATIONS_FILE'], [])
+    return current_app.config['NOTIFICATIONS_FILE']
+
+def load_notifications():
+    return load_json(_notifications_file())
+
+def save_notifications(items):
+    save_json(_notifications_file(), items)
+
+def user_unread_notifications_count(phone):
+    if not phone:
+        return 0
+    items = load_notifications()
+    return sum(1 for n in items if n.get('to') == phone and not n.get('read'))
+
+@main_bp.app_context_processor
+def inject_notifications_count():
+    # این متغیر در همه قالب‌ها در دسترس است: notif_count
+    phone = session.get('user_phone')
+    return {'notif_count': user_unread_notifications_count(phone)}
+
+@main_bp.route('/notifications')
+def notifications():
+    phone = session.get('user_phone')
+    if not phone:
+        flash('برای دیدن اعلان‌ها ابتدا وارد شوید.', 'warning')
+        return redirect(url_for('main.send_otp'))
+
+    items = load_notifications()
+    my_items = [n for n in items if n.get('to') == phone]
+    # مرتب‌سازی نزولی بر اساس زمان ایجاد (created_at) اگر باشد، وگرنه بر اساس id/آخر لیست
+    def sort_key(n):
+        return n.get('created_at') or n.get('id') or 0
+    my_items.sort(key=sort_key, reverse=True)
+
+    return render_template('notifications.html', items=my_items)
+
+@main_bp.route('/notifications/read-all', methods=['POST'])
+def notifications_read_all():
+    phone = session.get('user_phone')
+    if not phone:
+        flash('ابتدا وارد شوید.', 'warning')
+        return redirect(url_for('main.send_otp'))
+
+    items = load_notifications()
+    changed = False
+    for n in items:
+        if n.get('to') == phone and not n.get('read'):
+            n['read'] = True
+            changed = True
+    if changed:
+        save_notifications(items)
+    flash('همه اعلان‌ها خوانده شد.', 'success')
+    return redirect(url_for('main.notifications'))
