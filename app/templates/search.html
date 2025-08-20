@@ -4,9 +4,58 @@
 {% block title %}جستجوی زمین - سریع و هوشمند{% endblock %}
 
 {% block content %}
-<!-- نوار جستجوی سرتاسری زیر هدر -->
+
+{# ====== ماکرو کارت آگهی برای جلوگیری از تکرار ====== #}
+{% macro LandCard(land) -%}
+  {% set images = land.get('images') or [] %}
+  {% set img = images[0] if images else None %}
+  <article class="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition group">
+    <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
+      <div class="relative">
+        {% if img %}
+          <img src="{{ url_for('main.uploaded_file', filename=img) }}"
+               alt="زمین {{ land.title }}"
+               class="w-full h-52 sm:h-48 object-cover group-hover:scale-[1.02] transition">
+        {% else %}
+          <div class="w-full h-52 sm:h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+            <i class="fas fa-image text-3xl"></i>
+          </div>
+        {% endif %}
+        {% if land.get('created_at') %}
+          <span class="absolute top-2 right-2 text-[11px] bg-white/90 dark:bg-gray-900/80 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-700">
+            {{ land.get('created_at') }}
+          </span>
+        {% endif %}
+      </div>
+      <div class="p-3">
+        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">{{ land.title }}</h3>
+        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+          {% if land.get('location') %}<span><i class="fas fa-map-marker-alt text-green-600"></i> {{ land.location }}</span>{% endif %}
+          {% if land.get('size') %}<span><i class="fas fa-vector-square text-green-600"></i> {{ land.size }} متر</span>{% endif %}
+        </div>
+        <div class="mt-2 font-extrabold text-green-700 dark:text-green-400 text-sm">
+          {% if land.get('price_total') %}{{ "{:,.0f}".format(land.price_total) }} تومان{% else %}قیمت توافقی{% endif %}
+        </div>
+      </div>
+    </a>
+
+    <!-- اکشن‌های سریع موبایل -->
+    <div class="absolute bottom-2 left-2 flex gap-2">
+      <button class="px-2 py-1 text-[11px] rounded-lg bg-white/90 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700">
+        <i class="far fa-heart"></i>
+      </button>
+      {% if land.get('owner') %}
+        <a href="tel:{{ land.owner }}" class="px-2 py-1 text-[11px] rounded-lg bg-green-600 text-white">
+          تماس
+        </a>
+      {% endif %}
+    </div>
+  </article>
+{%- endmacro %}
+
+<!-- نوار جستجوی سرتاسری زیر هدر (چسبان) -->
 <section class="sticky top-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-3xl mx-auto px-3 py-3">
+  <div class="max-w-6xl mx-auto px-3 py-3">
     <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex gap-2">
       <div class="relative flex-1">
         <input type="text" name="q" id="searchInput"
@@ -21,7 +70,7 @@
         <summary class="h-11 cursor-pointer select-none flex items-center px-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
           <i class="fas fa-sliders-h mr-2"></i> فیلتر
         </summary>
-        <div class="absolute left-0 mt-2 w-[92vw] sm:w-[420px] p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+        <div class="absolute left-0 mt-2 w-[92vw] sm:w-[520px] p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
           <div class="grid grid-cols-2 gap-3 text-sm">
             <input type="number" inputmode="numeric" name="min_price" placeholder="حداقل قیمت"
                    value="{{ request.args.get('min_price','') }}"
@@ -78,97 +127,93 @@
   </div>
 </section>
 
-<!-- نتایج و جدیدترین‌ها -->
+{# ========================= بدنه صفحه ========================= #}
 <main class="max-w-6xl mx-auto px-3 py-4">
-  {% set total = lands|length if lands is defined else 0 %}
-  <div class="flex items-center justify-between mb-2">
-    <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">
-      {% if request.args %}
-        نتیجه جستجو {% if total>0 %}({{ total }}){% endif %}
-      {% else %}
-        جدیدترین آگهی‌ها
+
+  {# -------- بخش نتایج جستجو (در صورت داشتن پرس‌وجو) -------- #}
+  {% set has_query = request.args.get('q') or request.args.get('min_price') or request.args.get('max_price') or request.args.get('min_size') or request.args.get('max_size') or request.args.get('sort') %}
+  {% set results = lands if lands is defined else [] %}
+  {% set results_total = results|length %}
+
+  {% if has_query %}
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">
+        نتیجه جستجو {% if results_total>0 %}({{ results_total }}){% endif %}
+      </h2>
+      {% if request.args.get('sort') %}
+        <span class="text-[11px] text-gray-500 dark:text-gray-400">مرتب‌سازی:
+          {{ 'جدیدترین' if request.args.get('sort')=='newest'
+             else 'ارزان‌ترین' if request.args.get('sort')=='price_asc'
+             else 'بزرگ‌ترین متراژ' if request.args.get('sort')=='size_desc'
+             else 'جدیدترین' }}
+        </span>
       {% endif %}
-    </h2>
-
-    <!-- نشانگر سورت انتخاب‌شده -->
-    {% if request.args.get('sort') %}
-      <span class="text-[11px] text-gray-500 dark:text-gray-400">مرتب‌سازی:
-        {{ 'جدیدترین' if request.args.get('sort')=='newest'
-           else 'ارزان‌ترین' if request.args.get('sort')=='price_asc'
-           else 'بزرگ‌ترین متراژ' if request.args.get('sort')=='size_desc'
-           else 'جدیدترین' }}
-      </span>
-    {% endif %}
-  </div>
-
-  {% if total == 0 %}
-    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-sm text-yellow-800 dark:text-yellow-200">
-      نتیجه‌ای پیدا نشد. فیلترها را سبک‌تر کن یا کلمه دیگری امتحان کن.
     </div>
-  {% endif %}
 
-  <!-- گرید کارت‌ها -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landList">
-    {% for land in lands %}
-      {% set images = land.get('images') or [] %}
-      {% set img = images[0] if images else None %}
-      <article class="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition group">
-        <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
-          <div class="relative">
-            {% if img %}
-              <img src="{{ url_for('main.uploaded_file', filename=img) }}"
-                   alt="زمین {{ land.title }}"
-                   class="w-full h-52 sm:h-48 object-cover group-hover:scale-[1.02] transition">
-            {% else %}
-              <div class="w-full h-52 sm:h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                <i class="fas fa-image text-3xl"></i>
-              </div>
-            {% endif %}
-            {% if land.get('created_at') %}
-              <span class="absolute top-2 right-2 text-[11px] bg-white/90 dark:bg-gray-900/80 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-700">
-                {{ land.get('created_at') }}
-              </span>
-            {% endif %}
-          </div>
-          <div class="p-3">
-            <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">{{ land.title }}</h3>
-            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              {% if land.get('location') %}<span><i class="fas fa-map-marker-alt text-green-600"></i> {{ land.location }}</span>{% endif %}
-              {% if land.get('size') %}<span><i class="fas fa-vector-square text-green-600"></i> {{ land.size }} متر</span>{% endif %}
-            </div>
-            <div class="mt-2 font-extrabold text-green-700 dark:text-green-400 text-sm">
-              {% if land.get('price_total') %}{{ "{:,.0f}".format(land.price_total) }} تومان{% else %}قیمت توافقی{% endif %}
-            </div>
-          </div>
-        </a>
+    {% if results_total == 0 %}
+      <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-sm text-yellow-800 dark:text-yellow-200">
+        نتیجه‌ای پیدا نشد. فیلترها را سبک‌تر کن یا کلمه دیگری امتحان کن.
+      </div>
+    {% else %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="searchResultsGrid">
+        {% for land in results %}
+          {{ LandCard(land) }}
+        {% endfor %}
+      </div>
 
-        <!-- اکشن‌های سریع موبایل -->
-        <div class="absolute bottom-2 left-2 flex gap-2">
-          <button class="px-2 py-1 text-[11px] rounded-lg bg-white/90 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700">
-            <i class="far fa-heart"></i>
-          </button>
-          {% if land.get('owner') %}
-            <a href="tel:{{ land.owner }}" class="px-2 py-1 text-[11px] rounded-lg bg-green-600 text-white">
-              تماس
-            </a>
+      {# صفحه‌بندی نتایج جستجو (اختیاری) #}
+      {% if pagination %}
+        <div class="mt-4 mb-10 flex items-center justify-center gap-2">
+          {% if pagination.prev_url %}
+            <a href="{{ pagination.prev_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">قبلی</a>
+          {% endif %}
+          <span class="text-xs text-gray-500 dark:text-gray-400">صفحه {{ pagination.page }} از {{ pagination.pages }}</span>
+          {% if pagination.next_url %}
+            <a href="{{ pagination.next_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">بعدی</a>
           {% endif %}
         </div>
-      </article>
-    {% endfor %}
+      {% endif %}
+    {% endif %}
+
+    <hr class="my-6 border-gray-200 dark:border-gray-800">
+  {% endif %}
+
+  {# --------- بخش نمایش تمامی آگهی‌ها (همیشه نمایش بده) --------- #}
+  {% set all_list = all_lands if all_lands is defined else (lands if not has_query else []) %}
+  {% set all_total = all_list|length %}
+
+  <div class="mb-2 flex items-center justify-between">
+    <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">
+      {% if has_query %}همه آگهی‌ها{% else %}جدیدترین آگهی‌ها{% endif %}
+      {% if all_total>0 %} ({{ all_total }}){% endif %}
+    </h2>
   </div>
 
-  {# صفحه‌بندی اختیاری اگر از سرور دادی #}
-  {% if pagination %}
-    <div class="mt-4 flex items-center justify-center gap-2">
-      {% if pagination.prev_url %}
-        <a href="{{ pagination.prev_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">قبلی</a>
-      {% endif %}
-      <span class="text-xs text-gray-500 dark:text-gray-400">صفحه {{ pagination.page }} از {{ pagination.pages }}</span>
-      {% if pagination.next_url %}
-        <a href="{{ pagination.next_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">بعدی</a>
-      {% endif %}
+  {% if all_total == 0 and not has_query %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-sm text-yellow-800 dark:text-yellow-200">
+      هنوز آگهی‌ای ثبت نشده است.
     </div>
+  {% else %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landListAll">
+      {% for land in all_list %}
+        {{ LandCard(land) }}
+      {% endfor %}
+    </div>
+
+    {# صفحه‌بندی همه آگهی‌ها (اختیاری) #}
+    {% if all_pagination %}
+      <div class="mt-4 flex items-center justify-center gap-2">
+        {% if all_pagination.prev_url %}
+          <a href="{{ all_pagination.prev_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">قبلی</a>
+        {% endif %}
+        <span class="text-xs text-gray-500 dark:text-gray-400">صفحه {{ all_pagination.page }} از {{ all_pagination.pages }}</span>
+        {% if all_pagination.next_url %}
+          <a href="{{ all_pagination.next_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">بعدی</a>
+        {% endif %}
+      </div>
+    {% endif %}
   {% endif %}
+
 </main>
 
 <script>
@@ -177,7 +222,6 @@ function storeSearchQuery(q) {
   q = (q || "").trim();
   if (!q) return;
   let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-  // اگر آیتم از قبل هست، ببریمش جلو
   const idx = history.indexOf(q);
   if (idx > -1) { history.splice(idx, 1); }
   history.unshift(q);
@@ -229,10 +273,8 @@ function clearAllFilters() {
   const form = document.getElementById('search-form');
   const keep = ['sort']; // اگر خواستی سورت حفظ بشه
   [...form.querySelectorAll('input[type="text"], input[type="number"]')].forEach(inp => inp.value = '');
-  // ریست select ها
   form.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
 
-  // ساخت URL فقط با پارام‌های مجاز
   const url = new URL(form.action, window.location.origin);
   keep.forEach(k => {
     const val = (new URLSearchParams(new FormData(form))).get(k);
@@ -241,4 +283,5 @@ function clearAllFilters() {
   window.location.href = url.toString();
 }
 </script>
+
 {% endblock %}
