@@ -25,14 +25,22 @@
           افزودن تصویر
           <input type="file" name="images" id="imagesInput" accept="image/*" multiple class="hidden" aria-label="انتخاب تصاویر">
         </label>
-        <button type="button" id="clearImages" class="px-3 py-2 text-xs border rounded hover:bg-gray-50 dark:hover:bg-gray-700" aria-label="حذف همه تصاویر">حذف همه</button>
+
+        <button type="button" id="clearImages"
+                class="px-3 py-2 text-xs border rounded hover:bg-gray-50 dark:hover:bg-gray-700"
+                aria-label="حذف همه تصاویر">حذف همه</button>
       </div>
 
-      <p class="text-[11px] text-gray-500 mt-1">حداکثر ۱۰ تصویر؛ تغییر ترتیب با کشیدن و رها کردن؛ با ⭐ تصویر کاور را مشخص کنید.</p>
+      <p class="text-[11px] text-gray-500 mt-1">
+        حداکثر ۱۰ تصویر؛ تغییر ترتیب با کشیدن و رها کردن؛ با ⭐ تصویر کاور را مشخص کنید.
+      </p>
 
-      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden" role="status" aria-live="polite">در حال آماده‌سازی و آپلود تصاویر...</div>
+      <div id="upload-status" class="text-sm text-green-600 mt-2 hidden" role="status" aria-live="polite">
+        در حال آماده‌سازی و آپلود تصاویر...
+      </div>
+
       <div id="progress-container" class="w-full h-2 bg-gray-200 rounded overflow-hidden hidden mt-2" aria-hidden="true">
-        <div id="progress-bar" class="h-full bg-green-500" style="width: 0%;"></div>
+        <div id="progress-bar" class="h-full bg-green-500" style="width:0%"></div>
       </div>
 
       <div id="preview-container" class="grid grid-cols-3 gap-2 mt-3" aria-live="polite" aria-label="پیش‌نمایش تصاویر"></div>
@@ -176,414 +184,413 @@
 </style>
 
 <script>
-/* ================== تنظیمات و ابزارها ================== */
-const UPLOAD_URL = '/api/uploads/images';
-const MAX_FILES = 10;
-const MAX_FILE_SIZE_MB = 12;
-
-/* CSRF */
-function getCsrf(){
-  const meta = document.querySelector('meta[name="csrf-token"]');
-  if(meta && meta.content) return meta.content;
-  const hidden = document.querySelector('input[name="csrf_token"]');
-  return hidden ? hidden.value : null;
-}
-
-/* اعداد */
-function formatNumber(num){ return new Intl.NumberFormat('fa-IR').format(num); }
-function parseNumber(str){
-  if(!str) return 0;
-  const persian = '۰۱۲۳۴۵۶۷۸۹';
-  const en = String(str).replace(/[۰-۹]/g, d => String(persian.indexOf(d))).replace(/[^\d]/g,'');
-  return Number(en || 0);
-}
-function numberToWordsFa(n){
-  if(!n) return '';
-  const units=[,'هزار','میلیون','میلیارد','هزار میلیارد'];
-  let i=0; while(n>=1000 && i<units.length-1){ n=Math.round(n/1000); i++; }
-  return formatNumber(n)+' '+units[i]+' تومان';
-}
-
-/* ================== ارجاعات DOM ================== */
-const form = document.getElementById('adForm');
-const sizeInput = document.getElementById('size');
-const totalPriceInput = document.getElementById('price_total');
-const pricePerMeterInput = document.getElementById('price_per_meter');
-const priceWords = document.getElementById('price_words');
-const mainSelect = document.getElementById('category_main');
-const subSelect  = document.getElementById('category_sub');
-const imagesInput = document.getElementById('imagesInput');
-const previewContainer = document.getElementById('preview-container');
-const uploadStatus = document.getElementById('upload-status');
-const progressContainer = document.getElementById('progress-container');
-const progressBar = document.getElementById('progress-bar');
-const imagesOrderInput = document.getElementById('images_order');
-const coverIndexInput = document.getElementById('cover_index');
-const uploadedIdsInput = document.getElementById('uploaded_ids');
-const clearImagesBtn = document.getElementById('clearImages');
-const submitBtn = document.getElementById('btnSubmit');
-const dropzone = document.getElementById('dropzone');
-
-/* ================== قیمت متری ================== */
-function recalc(){
-  const s=parseNumber(sizeInput.value), t=parseNumber(totalPriceInput.value);
-  sizeInput.value = s?formatNumber(s):'';
-  totalPriceInput.value = t?formatNumber(t):'';
-  pricePerMeterInput.value = (s>0 && t>0) ? formatNumber(Math.floor(t/s)) : '';
-  priceWords.textContent = t?('≈ '+numberToWordsFa(t)):'';
-}
-sizeInput.addEventListener('input', recalc);
-totalPriceInput.addEventListener('input', recalc);
-
-/* ================== دسته‌بندی ================== */
-const categoriesMap = {
-  "فروش مسکونی": ["آپارتمان","خانه و ویلا","زمین و ملک کلنگی"],
-  "اجاره مسکونی": ["آپارتمان","خانه و ویلا"],
-  "اجاره اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
-  "فروش اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
-  "اجاره کوتاه‌مدت": ["آپارتمان و سوئیت","ویلا و باغ","دفتر کار و فضای آموزشی"],
-  "پروژه‌های ساخت‌وساز": ["مشارکت در ساخت","پیش‌فروش"]
-};
-function fillSub(main, setValue=null){
-  subSelect.innerHTML = '';
-  const def = document.createElement('option');
-  def.value=''; def.disabled=true; def.selected=true; def.textContent='زیرشاخه را انتخاب کنید...';
-  subSelect.appendChild(def);
-  (categoriesMap[main]||[]).forEach(item=>{
-    const opt=document.createElement('option'); opt.value=item; opt.textContent=item;
-    subSelect.appendChild(opt);
+(() => {
+  /* =========================[ تنظیمات پایه ]========================= */
+  const CONFIG = Object.freeze({
+    UPLOAD_URL: '/api/uploads/images',
+    MAX_FILES: 10,
+    MAX_FILE_SIZE_MB: 12,
+    SAVE_KEY: 'adFormDraftV1'
   });
-  subSelect.disabled = !(categoriesMap[main]||[]).length;
-  if(setValue && !subSelect.disabled){
-    subSelect.value = setValue;
-    if(!subSelect.value) subSelect.selectedIndex = 0;
+
+  /* =========================[ ارجاعات DOM ]========================== */
+  const form                = document.getElementById('adForm');
+  const sizeInput           = document.getElementById('size');
+  const totalPriceInput     = document.getElementById('price_total');
+  const pricePerMeterInput  = document.getElementById('price_per_meter');
+  const priceWords          = document.getElementById('price_words');
+  const mainSelect          = document.getElementById('category_main');
+  const subSelect           = document.getElementById('category_sub');
+  const imagesInput         = document.getElementById('imagesInput');
+  const previewContainer    = document.getElementById('preview-container');
+  const uploadStatus        = document.getElementById('upload-status');
+  const progressContainer   = document.getElementById('progress-container');
+  const progressBar         = document.getElementById('progress-bar');
+  const imagesOrderInput    = document.getElementById('images_order');
+  const coverIndexInput     = document.getElementById('cover_index');
+  const uploadedIdsInput    = document.getElementById('uploaded_ids');
+  const clearImagesBtn      = document.getElementById('clearImages');
+  const submitBtn           = document.getElementById('btnSubmit');
+  const dropzone            = document.getElementById('dropzone');
+  const overlay             = document.getElementById('loadingOverlay');
+
+  /* =========================[ ابزارهای کمکی ]========================= */
+  const categoriesMap = {
+    "فروش مسکونی": ["آپارتمان","خانه و ویلا","زمین و ملک کلنگی"],
+    "اجاره مسکونی": ["آپارتمان","خانه و ویلا"],
+    "اجاره اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
+    "فروش اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
+    "اجاره کوتاه‌مدت": ["آپارتمان و سوئیت","ویلا و باغ","دفتر کار و فضای آموزشی"],
+    "پروژه‌های ساخت‌وساز": ["مشارکت در ساخت","پیش‌فروش"]
+  };
+
+  const numfmt = new Intl.NumberFormat('fa-IR');
+  const formatNumber = (n) => n ? numfmt.format(n) : '';
+  function parseNumber(str) {
+    if (!str) return 0;
+    const persian = '۰۱۲۳۴۵۶۷۸۹';
+    const en = String(str).replace(/[۰-۹]/g, d => String(persian.indexOf(d))).replace(/[^\d]/g, '');
+    return Number(en || 0);
   }
-}
-mainSelect.addEventListener('change', e=>fillSub(e.target.value));
+  function numberToWordsFa(n){
+    if(!n) return '';
+    const units=[,'هزار','میلیون','میلیارد','هزار میلیارد'];
+    let i=0; while(n>=1000 && i<units.length-1){ n=Math.round(n/1000); i++; }
+    return formatNumber(n)+' '+units[i]+' تومان';
+  }
+  function getCsrf(){
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if(meta?.content) return meta.content;
+    const hidden = document.querySelector('input[name="csrf_token"]');
+    return hidden ? hidden.value : null;
+  }
+  const debounce = (fn, t=300) => { let id=null; return (...args)=>{ clearTimeout(id); id=setTimeout(()=>fn(...args), t); }; };
 
-/* ================== آپلود/پیش‌نمایش ================== */
-let imageItems = []; // {id,url,file,isCover, serverId, uploading}
-let totalUploads = 0, doneUploads = 0;
+  /* =========================[ منطق قیمت ]============================= */
+  function recalc(){
+    const s = parseNumber(sizeInput.value);
+    const t = parseNumber(totalPriceInput.value);
+    sizeInput.value        = s ? formatNumber(s) : '';
+    totalPriceInput.value  = t ? formatNumber(t) : '';
+    pricePerMeterInput.value = (s>0 && t>0) ? formatNumber(Math.floor(t/s)) : '';
+    priceWords.textContent   = t ? ('≈ ' + numberToWordsFa(t)) : '';
+  }
+  sizeInput.addEventListener('input', recalc);
+  totalPriceInput.addEventListener('input', recalc);
 
-function cryptoRandom(){ return (self.crypto||window.crypto).getRandomValues(new Uint32Array(1))[0].toString(16); }
-function fileToDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }); }
-function compressImage(file, maxW=1600, quality=0.82){
-  return new Promise((res,rej)=>{
-    const img = new Image();
-    img.onload = ()=>{
-      const scale = Math.min(1, maxW/img.width);
-      const c=document.createElement('canvas');
-      c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=> b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')),'image/jpeg',quality);
-    };
-    img.onerror = ()=>rej(new Error('Invalid image'));
-    img.src = URL.createObjectURL(file);
-  });
-}
+  /* =====================[ منطق دسته‌بندی/زیرشاخه ]==================== */
+  function fillSub(main, setValue=null){
+    subSelect.innerHTML = '';
+    const def = document.createElement('option');
+    def.value=''; def.disabled=true; def.selected=true; def.textContent='زیرشاخه را انتخاب کنید...';
+    subSelect.appendChild(def);
 
-function renderThumbs(){
-  previewContainer.innerHTML='';
-  imageItems.forEach((it,idx)=>{
-    const d=document.createElement('div');
-    d.className='thumb border rounded overflow-hidden';
-    d.draggable=true; d.dataset.id=it.id;
-    d.setAttribute('aria-label','تصویر '+(idx+1));
-
-    const img=document.createElement('img');
-    img.src=it.url; img.className='w-full h-28 object-cover'; img.loading='lazy'; img.alt='تصویر آگهی';
-
-    const rm=document.createElement('button');
-    rm.type='button'; rm.className='remove'; rm.innerHTML='<i class="fas fa-times"></i>';
-    rm.title='حذف تصویر';
-    rm.addEventListener('click', ()=>{
-      imageItems=imageItems.filter(x=>x.id!==it.id);
-      if(it.isCover && imageItems[0]) imageItems[0].isCover=true;
-      renderThumbs(); syncHiddenInputs(); updateHintOnly();
+    (categoriesMap[main] || []).forEach(item=>{
+      const opt=document.createElement('option');
+      opt.value=item; opt.textContent=item;
+      subSelect.appendChild(opt);
     });
 
-    const star=document.createElement('button');
-    star.type='button'; star.className='star'; star.innerHTML = it.isCover ? '⭐' : '☆';
-    star.title='انتخاب به‌عنوان کاور';
-    star.addEventListener('click', ()=>{
-      imageItems.forEach(x=>x.isCover=false); it.isCover=true;
-      renderThumbs(); syncHiddenInputs(); updateHintOnly();
-    });
+    subSelect.disabled = !(categoriesMap[main]||[]).length;
 
-    d.addEventListener('dragstart', ev=>{ d.classList.add('dragging'); ev.dataTransfer.setData('text/plain', it.id); });
-    d.addEventListener('dragend', ()=> d.classList.remove('dragging'));
-    d.addEventListener('dragover', ev=>ev.preventDefault());
-    d.addEventListener('drop', ev=>{
-      ev.preventDefault();
-      const fromId = ev.dataTransfer.getData('text/plain');
-      const toId = it.id;
-      if(fromId===toId) return;
-      const fromIdx=imageItems.findIndex(x=>x.id===fromId);
-      const toIdx=imageItems.findIndex(x=>x.id===toId);
-      const [moved]=imageItems.splice(fromIdx,1);
-      imageItems.splice(toIdx,0,moved);
-      renderThumbs(); syncHiddenInputs(); updateHintOnly();
-    });
-
-    d.appendChild(img); d.appendChild(rm); d.appendChild(star);
-
-    if (it.uploading) {
-      const sp=document.createElement('div');
-      sp.className='spinner';
-      sp.textContent='در حال آپلود...';
-      d.appendChild(sp);
+    if(setValue && !subSelect.disabled){
+      subSelect.value = setValue;
+      if(!subSelect.value) subSelect.selectedIndex = 0;
     }
-    if(it.isCover){
-      const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور';
-      d.appendChild(lab);
-    }
+  }
+  mainSelect.addEventListener('change', e=>fillSub(e.target.value));
 
-    previewContainer.appendChild(d);
-  });
+  /* =======================[ منطق تصاویر/آپلود ]======================= */
+  /** آرایه وضعیت تصاویر روی کلاینت */
+  let imageItems = []; // {id,url,file,isCover,serverId,uploading}
+  let totalUploads = 0, doneUploads = 0;
 
-  syncHiddenInputs();
-}
+  const cryptoRandom = () =>
+    (self.crypto || window.crypto).getRandomValues(new Uint32Array(1))[0].toString(16);
 
-function syncHiddenInputs(){
-  imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
-  coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
-  uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
-}
+  const fileToDataURL = (file) =>
+    new Promise(res => { const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
 
-function validateFile(f){
-  if(!f.type.startsWith('image/')){ toast('فقط فایل تصویری مجاز است'); return false; }
-  if(f.size > MAX_FILE_SIZE_MB*1024*1024){ toast('حجم هر تصویر حداکثر '+MAX_FILE_SIZE_MB+' مگابایت'); return false; }
-  return true;
-}
-
-clearImagesBtn.addEventListener('click', ()=>{
-  imageItems = []; totalUploads=0; doneUploads=0;
-  renderThumbs(); updateGlobalProgress();
-  imagesInput.value=''; uploadedIdsInput.value='';
-  updateHintOnly();
-});
-
-async function handleFiles(files){
-  const arr = Array.from(files||[]);
-  if(!arr.length) return;
-
-  if(arr.length + imageItems.length > MAX_FILES){
-    toast('حداکثر '+MAX_FILES+' تصویر مجاز است'); return;
+  function compressImage(file, maxW=1600, quality=0.82){
+    return new Promise((res,rej)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxW/img.width);
+        const c=document.createElement('canvas');
+        c.width = Math.round(img.width*scale);
+        c.height= Math.round(img.height*scale);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        c.toBlob(b => b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')), 'image/jpeg', quality);
+      };
+      img.onerror = () => rej(new Error('Invalid image'));
+      img.src = URL.createObjectURL(file);
+    });
   }
 
-  uploadStatus.classList.remove('hidden');
-  progressContainer.classList.remove('hidden');
+  function renderThumbs(){
+    previewContainer.innerHTML='';
+    imageItems.forEach((it,idx)=>{
+      const d=document.createElement('div');
+      d.className='thumb border rounded overflow-hidden';
+      d.draggable=true; d.dataset.id=it.id;
+      d.setAttribute('aria-label','تصویر '+(idx+1));
 
-  totalUploads += arr.length;
-  updateGlobalProgress();
+      const img=document.createElement('img');
+      img.src=it.url; img.className='w-full h-28 object-cover'; img.loading='lazy'; img.alt='تصویر آگهی';
 
-  const tasks = arr.map(async (f) => {
-    if(!validateFile(f)){ doneUploads++; updateGlobalProgress(); return; }
+      const rm=document.createElement('button');
+      rm.type='button'; rm.className='remove'; rm.title='حذف تصویر';
+      rm.innerHTML='<i class="fas fa-times"></i>';
+      rm.addEventListener('click', ()=>{
+        imageItems=imageItems.filter(x=>x.id!==it.id);
+        if(it.isCover && imageItems[0]) imageItems[0].isCover=true;
+        renderThumbs(); syncImageHiddenInputs();
+      });
 
-    try{
-      const compressed = await compressImage(f, 1600, 0.82);
-      const url = await fileToDataURL(compressed);
-      const item = { id: cryptoRandom(), url, file: compressed, isCover:false, serverId:null, uploading:true };
-      imageItems.push(item);
-      if (!imageItems.some(x=>x.isCover)) item.isCover = true;
-      renderThumbs(); updateHintOnly();
+      const star=document.createElement('button');
+      star.type='button'; star.className='star'; star.title='انتخاب به‌عنوان کاور';
+      star.innerHTML = it.isCover ? '⭐' : '☆';
+      star.addEventListener('click', ()=>{
+        imageItems.forEach(x=>x.isCover=false); it.isCover=true;
+        renderThumbs(); syncImageHiddenInputs();
+      });
+
+      d.addEventListener('dragstart', ev=>{ d.classList.add('dragging'); ev.dataTransfer.setData('text/plain', it.id); });
+      d.addEventListener('dragend',   ()=> d.classList.remove('dragging'));
+      d.addEventListener('dragover',  ev=>ev.preventDefault());
+      d.addEventListener('drop', ev=>{
+        ev.preventDefault();
+        const fromId = ev.dataTransfer.getData('text/plain');
+        if(fromId === it.id) return;
+        const fromIdx=imageItems.findIndex(x=>x.id===fromId);
+        const toIdx  =imageItems.findIndex(x=>x.id===it.id);
+        const [moved]=imageItems.splice(fromIdx,1);
+        imageItems.splice(toIdx,0,moved);
+        renderThumbs(); syncImageHiddenInputs();
+      });
+
+      d.append(img, rm, star);
+
+      if (it.uploading) {
+        const sp=document.createElement('div');
+        sp.className='spinner';
+        sp.textContent='در حال آپلود...';
+        d.appendChild(sp);
+      }
+      if(it.isCover){
+        const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور';
+        d.appendChild(lab);
+      }
+
+      previewContainer.appendChild(d);
+    });
+
+    syncImageHiddenInputs();
+  }
+
+  function syncImageHiddenInputs(){
+    imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
+    coverIndexInput.value  = imageItems.findIndex(x=>x.isCover);
+    uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
+  }
+
+  function validateFile(f){
+    if(!f.type.startsWith('image/')){ toast('فقط فایل تصویری مجاز است'); return false; }
+    if(f.size > CONFIG.MAX_FILE_SIZE_MB*1024*1024){ toast('حجم هر تصویر حداکثر '+CONFIG.MAX_FILE_SIZE_MB+' مگابایت'); return false; }
+    return true;
+  }
+
+  clearImagesBtn.addEventListener('click', ()=>{
+    imageItems = []; totalUploads=0; doneUploads=0;
+    renderThumbs(); updateGlobalProgress();
+    imagesInput.value=''; uploadedIdsInput.value='';
+  });
+
+  async function handleFiles(files){
+    const arr = Array.from(files||[]);
+    if(!arr.length) return;
+
+    if(arr.length + imageItems.length > CONFIG.MAX_FILES){
+      toast('حداکثر '+CONFIG.MAX_FILES+' تصویر مجاز است'); return;
+    }
+
+    uploadStatus.classList.remove('hidden');
+    progressContainer.classList.remove('hidden');
+
+    totalUploads += arr.length;
+    updateGlobalProgress();
+
+    const tasks = arr.map(async (f) => {
+      if(!validateFile(f)){ doneUploads++; updateGlobalProgress(); return; }
 
       try{
-        const serverId = await uploadOne(compressed);
-        item.serverId = serverId;
-      }catch(err){
-        console.error('Upload failed:', err);
-        toast('آپلود یک تصویر ناموفق بود');
-      }finally{
-        item.uploading = false;
-        doneUploads++;
+        const compressed = await compressImage(f, 1600, 0.82);
+        const url = await fileToDataURL(compressed);
+        const item = { id: cryptoRandom(), url, file: compressed, isCover:false, serverId:null, uploading:true };
+        imageItems.push(item);
+        if (!imageItems.some(x=>x.isCover)) item.isCover = true;
         renderThumbs();
+
+        try{
+          const serverId = await uploadOne(compressed);
+          item.serverId = serverId;
+        }catch(err){
+          console.error('Upload failed:', err);
+          toast('آپلود یک تصویر ناموفق بود');
+        }finally{
+          item.uploading = false;
+          doneUploads++;
+          renderThumbs();
+          updateGlobalProgress();
+        }
+      }catch(err){
+        console.error(err);
+        doneUploads++;
         updateGlobalProgress();
-        updateHintOnly();
+        toast('پردازش یک تصویر ناموفق بود');
       }
+    });
+
+    await Promise.all(tasks);
+    uploadStatus.textContent = imageItems.every(x=>x.serverId) ? 'همه تصاویر آپلود شدند' : 'برخی تصاویر آپلود نشدند';
+  }
+
+  imagesInput.addEventListener('change', (e)=>handleFiles(e.target.files));
+  ['dragenter','dragover'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); });
+  });
+  dropzone.addEventListener('drop', e=>{
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if(dt?.files) handleFiles(dt.files);
+  });
+
+  async function uploadOne(file){
+    const fd = new FormData();
+    fd.append('file', file, 'image.jpg');
+    const csrf = getCsrf();
+    const headers = {};
+    if(csrf){
+      headers['X-CSRF-Token'] = csrf;
+      headers['X-CSRFToken']  = csrf;
+      headers['X-XSRF-TOKEN'] = csrf;
+    }
+    const resp = await fetch(CONFIG.UPLOAD_URL, { method:'POST', headers, body:fd, credentials:'same-origin' });
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data = await resp.json();
+    return data.id || data.file_id || data.uuid || null;
+  }
+
+  function updateGlobalProgress(){
+    const total = Math.max(totalUploads, 1);
+    const percent = Math.round((doneUploads/total)*100);
+    progressBar.style.width = percent+'%';
+    if (doneUploads >= total){
+      setTimeout(()=>{ progressContainer.classList.add('hidden'); uploadStatus.classList.add('hidden'); }, 600);
+    } else {
+      progressContainer.classList.remove('hidden');
+      uploadStatus.classList.remove('hidden');
+    }
+  }
+
+  /* =====================[ پیش‌نویس LocalStorage ]===================== */
+  const saveDraft = () => {
+    const fd = new FormData(form);
+    const obj = {};
+    fd.forEach((v,k)=>{ if(k !== 'images') obj[k]=v; });
+    obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
+    try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(obj)); } catch(_){}
+  };
+
+  const loadDraft = () => {
+    const raw = localStorage.getItem(CONFIG.SAVE_KEY); if(!raw) return;
+    try{
+      const obj = JSON.parse(raw);
+      Object.entries(obj).forEach(([k,v])=>{
+        if(k==='_images_meta') return;
+        const el = form.elements[k]; if(el) el.value = v;
+      });
+      if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
+      if(obj._images_meta){
+        imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
+        renderThumbs();
+      }
+      recalc();
+    }catch(_){}
+  };
+
+  form.addEventListener('input', debounce(saveDraft, 800));
+
+  /* =========================[ Toast کوچک ]============================ */
+  function toast(msg){
+    const t=document.createElement('div');
+    t.textContent=msg;
+    t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow z-[9999]';
+    document.body.appendChild(t);
+    setTimeout(()=>{ t.remove(); },1800);
+  }
+
+  /* =====================[ اعتبار حداقلی سمت کلاینت ]=================== */
+  function isFormReady(){
+    const titleOk = !!document.getElementById('title').value.trim();
+    const sizeOk  = parseNumber(sizeInput.value) > 0;
+    const locOk   = !!document.getElementById('location').value;
+    const mainOk  = !!document.getElementById('category_main').value;
+    const subOk   = !subSelect.disabled && !!subSelect.value;
+    const hasImgs = imageItems.length > 0;
+    const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
+    return titleOk && sizeOk && locOk && mainOk && subOk && hasImgs && uploadsDone;
+  }
+
+  /* =========================[ ارسال فرم ]============================== */
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+
+    // هشدار نرم اگر ناقص بود (ارسال همچنان انجام می‌شود؛ نهایی سمت سرور)
+    if(!isFormReady()){
+      toast('برخی فیلدها یا آپلود تصاویر ناقص است. می‌توانید ادامه دهید؛ اعتبارسنجی سرور تعیین‌کننده است.');
+    }
+
+    // پاکسازی اعداد و فیلدهای مخفی
+    sizeInput.value          = parseNumber(sizeInput.value);
+    totalPriceInput.value    = parseNumber(totalPriceInput.value);
+    pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
+
+    if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover = true; }
+    imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
+    coverIndexInput.value  = imageItems.findIndex(x=>x.isCover);
+    uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
+
+    // نمایش لایه «در حال ثبت»
+    overlay.classList.remove('hidden');
+    submitBtn.textContent = 'در حال ارسال...';
+
+    try{
+      const fd = new FormData(form);
+      const resp = await fetch(form.action || window.location.href, {
+        method: 'POST',
+        body: fd,
+        credentials: 'same-origin'
+      });
+
+      // 1) ریدایرکت واقعی
+      if(resp.redirected){ window.location.href = resp.url; return; }
+
+      // 2) JSON با آدرس هدایت
+      const ct = resp.headers.get('content-type') || '';
+      if(ct.includes('application/json')){
+        const data = await resp.json();
+        if(data.redirect_url){ window.location.href = data.redirect_url; return; }
+        if(data.success && data.location){ window.location.href = data.location; return; }
+        if(data.success){ toast('ثبت با موفقیت انجام شد'); setTimeout(()=>location.reload(), 900); return; }
+      }
+
+      // 3) هدر Location حتی با 200/201/204
+      const loc = resp.headers.get('Location') || resp.headers.get('location');
+      if(loc){ window.location.href = loc; return; }
+
+      // 4) HTML صفحه بعد
+      if(resp.ok){
+        const html = await resp.text();
+        if(html && html.trim().length){
+          document.open(); document.write(html); document.close(); return;
+        }
+      }
+
+      throw new Error('ثبت ناموفق بود');
     }catch(err){
       console.error(err);
-      doneUploads++;
-      updateGlobalProgress();
-      toast('پردازش یک تصویر ناموفق بود');
-      updateHintOnly();
+      overlay.classList.add('hidden');
+      submitBtn.textContent = 'تکمیل و ادامه';
+      toast('خطا در ثبت آگهی. دوباره تلاش کنید.');
     }
   });
 
-  await Promise.all(tasks);
-  uploadStatus.textContent = imageItems.every(x=>x.serverId) ? 'همه تصاویر آپلود شدند' : 'برخی تصاویر آپلود نشدند';
-  updateHintOnly();
-}
-
-imagesInput.addEventListener('change', (e)=>handleFiles(e.target.files));
-['dragenter','dragover'].forEach(evt=>{
-  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
-});
-['dragleave','drop'].forEach(evt=>{
-  dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); });
-});
-dropzone.addEventListener('drop', e=>{
-  e.preventDefault();
-  const dt = e.dataTransfer;
-  if(dt && dt.files) handleFiles(dt.files);
-});
-
-/* آپلود تک‌تصویر با پشتیبانی CSRF در چند هدر رایج */
-async function uploadOne(file){
-  const fd = new FormData();
-  fd.append('file', file, 'image.jpg');
-  const csrf = getCsrf();
-  const headers = {};
-  if(csrf){
-    headers['X-CSRF-Token'] = csrf;
-    headers['X-CSRFToken']  = csrf;
-    headers['X-XSRF-TOKEN'] = csrf;
-  }
-  const resp = await fetch(UPLOAD_URL, {
-    method: 'POST',
-    headers,
-    body: fd,
-    credentials: 'same-origin'
-  });
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
-  const data = await resp.json();
-  return data.id || data.file_id || data.uuid || null;
-}
-
-/* Progress کلی */
-function updateGlobalProgress(){
-  const total = Math.max(totalUploads, 1);
-  const percent = Math.round((doneUploads/total)*100);
-  progressBar.style.width = percent+'%';
-  if (doneUploads>=total){
-    setTimeout(()=>{ progressContainer.classList.add('hidden'); uploadStatus.classList.add('hidden'); }, 600);
-  } else {
-    progressContainer.classList.remove('hidden');
-    uploadStatus.classList.remove('hidden');
-  }
-}
-
-/* پیش‌نویس (LocalStorage) — فقط خودکار، بدون دکمه و بدون توست */
-const SAVE_KEY = 'adFormDraftV1';
-function saveDraft(){
-  const fd = new FormData(form);
-  const obj = {};
-  fd.forEach((v,k)=>{ if(k!=='images') obj[k]=v; });
-  obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(obj)); } catch(_) {}
-}
-function loadDraft(){
-  const raw = localStorage.getItem(SAVE_KEY); if(!raw) return;
-  try{
-    const obj = JSON.parse(raw);
-    Object.entries(obj).forEach(([k,v])=>{
-      if(k==='_images_meta') return;
-      const el = form.elements[k]; if(!el) return;
-      el.value = v;
-    });
-    if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
-    if(obj._images_meta){
-      imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
-      renderThumbs();
-    }
-    recalc();
-  }catch(_){}
-}
-let saveTimer=null;
-form.addEventListener('input', ()=>{
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{ saveDraft(); }, 800);
-});
-
-/* توست ساده */
-function toast(msg){
-  const t=document.createElement('div');
-  t.textContent=msg;
-  t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow z-[9999]';
-  document.body.appendChild(t);
-  setTimeout(()=>{ t.remove(); },1800);
-}
-
-/* وضعیت آماده‌بودن — این نسخه فقط نوتیف نمی‌دهد (تابع خنثی برای سازگاری) */
-function isFormReady(){
-  const titleOk = !!document.getElementById('title').value.trim();
-  const sizeOk = parseNumber(sizeInput.value) > 0;
-  const locOk  = !!document.getElementById('location').value;
-  const mainOk = !!document.getElementById('category_main').value;
-  const subOk  = !subSelect.disabled && !!subSelect.value;
-  const hasImgs = imageItems.length > 0;
-  const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
-  return titleOk && sizeOk && locOk && mainOk && subOk && hasImgs && uploadsDone;
-}
-function updateHintOnly(){ /* حذف شد؛ برای سازگاری خنثی نگه داشته شد */ }
-
-window.addEventListener('load', ()=>{ loadDraft(); recalc(); });
-
-/* ارسال با fetch + هدایت به صفحه بعد */
-form.addEventListener('submit', async function(e){
-  e.preventDefault();
-
-  // اگر ناقص بود، فقط پیام بده؛ دکمه همیشه فعال می‌ماند
-  if(!isFormReady()){
-    toast('برخی فیلدها یا آپلود تصاویر ناقص است. می‌توانید ادامه دهید؛ اعتبارسنجی سرور تعیین‌کننده است.');
-  }
-
-  // پاکسازی اعداد و فیلدهای مخفی
-  sizeInput.value = parseNumber(sizeInput.value);
-  totalPriceInput.value = parseNumber(totalPriceInput.value);
-  pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
-  if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover=true; }
-  imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
-  coverIndexInput.value = imageItems.findIndex(x=>x.isCover);
-  uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
-
-  // نمایش لایه «در حال ثبت»
-  const overlay = document.getElementById('loadingOverlay');
-  overlay.classList.remove('hidden');
-  submitBtn.textContent = 'در حال ارسال...';
-
-  try{
-    const fd = new FormData(form);
-    const resp = await fetch(form.action || window.location.href, {
-      method: 'POST',
-      body: fd,
-      credentials: 'same-origin'
-    });
-
-    // 1) ریدایرکت واقعی
-    if(resp.redirected){
-      window.location.href = resp.url; return;
-    }
-
-    // 2) JSON با redirect_url
-    const ct = resp.headers.get('content-type') || '';
-    if(ct.includes('application/json')){
-      const data = await resp.json();
-      if(data.redirect_url){ window.location.href = data.redirect_url; return; }
-      if(data.success && data.location){ window.location.href = data.location; return; }
-      if(data.success){ toast('ثبت با موفقیت انجام شد'); setTimeout(()=>location.reload(), 900); return; }
-    }
-
-    // 3) هدر Location حتی با 200/201/204
-    const loc = resp.headers.get('Location') || resp.headers.get('location');
-    if(loc){ window.location.href = loc; return; }
-
-    // 4) HTML صفحه بعد
-    if(resp.ok){
-      const html = await resp.text();
-      if(html && html.trim().length){
-        document.open(); document.write(html); document.close(); return;
-      }
-    }
-
-    throw new Error('ثبت ناموفق بود');
-
-  }catch(err){
-    console.error(err);
-    overlay.classList.add('hidden');
-    submitBtn.textContent = 'تکمیل و ادامه';
-    toast('خطا در ثبت آگهی. دوباره تلاش کنید.');
-  }
-});
+  /* =======================[ شروع: بارگذاری پیش‌نویس ]================== */
+  window.addEventListener('load', ()=>{ loadDraft(); recalc(); });
+})();
 </script>
 {% endblock %}
