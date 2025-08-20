@@ -508,3 +508,4 @@ def notifications_read_all():
         save_notifications(items)
     flash('همه اعلان‌ها خوانده شد.', 'success')
     return redirect(url_for('main.notifications'))
+
