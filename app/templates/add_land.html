@@ -144,15 +144,10 @@
                 class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"></textarea>
     </section>
 
-    <!-- اکشن‌ها -->
+    <!-- اکشن‌ها (فوتر ثابت موبایل‌محور) -->
     <div class="h-16 sm:h-0"></div>
-    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-between">
-      <button type="button" id="btnSaveDraft" class="px-4 py-2 rounded border">ذخیره پیش‌نویس</button>
-      <div id="formReadyHint" class="text-xs text-gray-500 hidden sm:block">وضعیت فرم: <span id="formReadyText">—</span></div>
-      <div class="flex-1 hidden sm:block"></div>
+    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-end">
       <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded border">بازگشت</a>
-
-      <!-- دکمه همیشه فعال -->
       <button type="submit" id="btnSubmit"
               class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition">
         تکمیل و ادامه
@@ -186,7 +181,7 @@ const UPLOAD_URL = '/api/uploads/images';
 const MAX_FILES = 10;
 const MAX_FILE_SIZE_MB = 12;
 
-/* CSRF: از متا یا فیلد مخفی داخل فرم بخوان */
+/* CSRF */
 function getCsrf(){
   const meta = document.querySelector('meta[name="csrf-token"]');
   if(meta && meta.content) return meta.content;
@@ -228,8 +223,6 @@ const uploadedIdsInput = document.getElementById('uploaded_ids');
 const clearImagesBtn = document.getElementById('clearImages');
 const submitBtn = document.getElementById('btnSubmit');
 const dropzone = document.getElementById('dropzone');
-const formReadyText = document.getElementById('formReadyText');
-const formReadyHint = document.getElementById('formReadyHint');
 
 /* ================== قیمت متری ================== */
 function recalc(){
@@ -470,15 +463,14 @@ function updateGlobalProgress(){
   }
 }
 
-/* پیش‌نویس (LocalStorage) */
+/* پیش‌نویس (LocalStorage) — فقط خودکار، بدون دکمه و بدون توست */
 const SAVE_KEY = 'adFormDraftV1';
 function saveDraft(){
   const fd = new FormData(form);
   const obj = {};
   fd.forEach((v,k)=>{ if(k!=='images') obj[k]=v; });
   obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
-  localStorage.setItem(SAVE_KEY, JSON.stringify(obj));
-  toast('پیش‌نویس ذخیره شد');
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(obj)); } catch(_) {}
 }
 function loadDraft(){
   const raw = localStorage.getItem(SAVE_KEY); if(!raw) return;
@@ -495,12 +487,13 @@ function loadDraft(){
       renderThumbs();
     }
     recalc();
-    updateHintOnly();
   }catch(_){}
 }
-document.getElementById('btnSaveDraft').addEventListener('click', ()=>{ saveDraft(); updateHintOnly(); });
 let saveTimer=null;
-form.addEventListener('input', ()=>{ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ saveDraft(); updateHintOnly(); }, 800); });
+form.addEventListener('input', ()=>{
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{ saveDraft(); }, 800);
+});
 
 /* توست ساده */
 function toast(msg){
@@ -511,7 +504,7 @@ function toast(msg){
   setTimeout(()=>{ t.remove(); },1800);
 }
 
-/* فقط نمایش وضعیت آماده‌بودن، بدون قفل دکمه */
+/* وضعیت آماده‌بودن — این نسخه فقط نوتیف نمی‌دهد (تابع خنثی برای سازگاری) */
 function isFormReady(){
   const titleOk = !!document.getElementById('title').value.trim();
   const sizeOk = parseNumber(sizeInput.value) > 0;
@@ -522,12 +515,9 @@ function isFormReady(){
   const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
   return titleOk && sizeOk && locOk && mainOk && subOk && hasImgs && uploadsDone;
 }
-function updateHintOnly(){
-  const ready = isFormReady();
-  if(formReadyHint){ formReadyHint.classList.remove('hidden'); }
-  if(formReadyText){ formReadyText.textContent = ready ? 'آماده ثبت' : 'ناقص'; }
-}
-window.addEventListener('load', ()=>{ loadDraft(); recalc(); updateHintOnly(); });
+function updateHintOnly(){ /* حذف شد؛ برای سازگاری خنثی نگه داشته شد */ }
+
+window.addEventListener('load', ()=>{ loadDraft(); recalc(); });
 
 /* ارسال با fetch + هدایت به صفحه بعد */
 form.addEventListener('submit', async function(e){
@@ -536,9 +526,6 @@ form.addEventListener('submit', async function(e){
   // اگر ناقص بود، فقط پیام بده؛ دکمه همیشه فعال می‌ماند
   if(!isFormReady()){
     toast('برخی فیلدها یا آپلود تصاویر ناقص است. می‌توانید ادامه دهید؛ اعتبارسنجی سرور تعیین‌کننده است.');
-    updateHintOnly();
-    // اگر نمی‌خواهید وقتی ناقص است ارسال شود، این خط را فعال کنید:
-    // return;
   }
 
   // پاکسازی اعداد و فیلدهای مخفی
