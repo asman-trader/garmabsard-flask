@@ -3,16 +3,18 @@
 {% block title %}✏️ ویرایش آگهی | املاک آسمان گرمابسرد{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-8">
+<div class="max-w-3xl mx-auto px-4 py-8 pb-28">  {# فضای پایین برای جای دکمه‌ها #}
   <h2 class="text-2xl font-bold text-green-700 mb-6">✏️ ویرایش آگهی</h2>
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+  <form method="POST" enctype="multipart/form-data" id="editAdForm"
+        class="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
 
     <!-- عنوان -->
     <div>
       <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی</label>
       <input type="text" name="title" id="title" value="{{ land.title }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
+             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
+                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
              required>
     </div>
 
@@ -20,7 +22,8 @@
     <div>
       <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📍 موقعیت</label>
       <input type="text" name="location" id="location" value="{{ land.location }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
+             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
+                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
              required>
     </div>
 
@@ -28,7 +31,8 @@
     <div>
       <label for="size" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📏 متراژ (متر)</label>
       <input type="number" name="size" id="size" value="{{ land.size }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
+             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
+                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
              required>
     </div>
 
@@ -36,7 +40,8 @@
     <div>
       <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📝 توضیحات</label>
       <textarea name="description" id="description" rows="4"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
+                       dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
                 placeholder="توضیحات تکمیلی درباره زمین، امکانات، دسترسی‌ها و ...">{{ land.description }}</textarea>
     </div>
 
@@ -44,7 +49,8 @@
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📷 تصاویر جدید (در صورت نیاز)</label>
       <input type="file" name="images" multiple accept="image/*"
-             class="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 dark:bg-gray-700 dark:text-white">
+             class="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
+                    dark:bg-gray-700 dark:text-white">
       <p class="text-sm text-gray-500 mt-1">در صورت آپلود، تصاویر قبلی جایگزین می‌شوند.</p>
     </div>
 
@@ -61,14 +67,32 @@
         </div>
       </div>
     {% endif %}
-
-    <!-- دکمه ثبت -->
-    <div>
-      <button type="submit"
-              class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg">
-        💾 ذخیره تغییرات
-      </button>
-    </div>
   </form>
 </div>
+
+<!-- دکمه‌های ثابت پایین صفحه -->
+<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200
+            dark:border-gray-700 p-4 flex gap-3 z-50">
+  <a href="{{ url_for('main.dashboard') }}"
+     class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white text-center py-2 rounded-lg font-semibold">
+    🔙 بازگشت
+  </a>
+  <button type="submit" form="editAdForm"
+          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold">
+    💾 ذخیره تغییرات
+  </button>
+  <button type="button" onclick="hideAd('{{ land.code }}')"
+          class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold">
+    🚫 عدم نمایش
+  </button>
+</div>
+
+<script>
+  function hideAd(code) {
+    if (confirm("آیا مطمئن هستید می‌خواهید این آگهی را غیرفعال کنید؟")) {
+      fetch(`/hide-ad/${code}`, { method: "POST" })
+        .then(r => location.reload());
+    }
+  }
+</script>
 {% endblock %}
