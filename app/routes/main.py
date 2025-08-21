@@ -509,3 +509,8 @@ def notifications_read_all():
     flash('همه اعلان‌ها خوانده شد.', 'success')
     return redirect(url_for('main.notifications'))
 
+# در بالای فایل: from flask import render_template
+@main_bp.route('/city')
+def city_select():
+    # صفحهٔ مستقل انتخاب شهر (بدون نیاز به دیتابیس)
+    return render_template('city_select.html')

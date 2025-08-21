@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}انتخاب شهر{% endblock %}
+
+{% block content %}
+<main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-4">
+    <button onclick="history.back()" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:underline">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </button>
+    <h1 class="text-lg font-bold text-gray-800 dark:text-gray-100">انتخاب شهر</h1>
+    <div></div>
+  </div>
+
+  <!-- Search -->
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
+    <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">شهر خود را جستجو کنید</label>
+    <input id="cityInput" type="text" placeholder="مثلاً دماوند، تهران، رودهن..."
+           class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
+                  dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
+  </div>
+
+  <!-- Quick chips -->
+  <section class="mt-4">
+    <div class="flex flex-wrap gap-2">
+      {% set quick = ['دماوند','گرمابسرد','تهران','پردیس','بومهن','رودهن','فیروزکوه','شمیرانات','میگون','لواسان','گیلاوند'] %}
+      {% for c in quick %}
+      <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+              data-city="{{ c }}">{{ c }}</button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Suggestions / results -->
+  <section class="mt-4">
+    <ul id="cityResults" class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+      <!-- آیتم‌ها با جاوااسکریپت ساخته می‌شن -->
+    </ul>
+  </section>
+
+  <!-- Actions -->
+  <div class="mt-4 flex items-center justify-between">
+    <button id="clearCity" class="text-sm text-red-600 hover:underline">حذف شهر انتخابی</button>
+    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+      <input id="cityRemember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700" checked>
+      ذخیره به‌عنوان پیش‌فرض
+    </label>
+  </div>
+
+  <div class="mt-3 grid grid-cols-2 gap-2">
+    <button id="saveCity"
+            class="py-2 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 active:scale-[0.99]">
+      ذخیره
+    </button>
+    <a href="{{ url_for('main.index') }}"
+       class="py-2 text-center rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+      انصراف
+    </a>
+  </div>
+</main>
+
+<script>
+  (function () {
+    const CITY_KEY = 'gbs_city';
+    const cityInput = document.getElementById('cityInput');
+    const cityResults = document.getElementById('cityResults');
+    const cityRemember = document.getElementById('cityRemember');
+    const saveBtn = document.getElementById('saveCity');
+    const clearBtn = document.getElementById('clearCity');
+
+    // نمونه دیتاست سبک (می‌تونی بعداً از سرور بگیری)
+    const DATASET = [
+      'گرمابسرد','دماوند','تهران','پردیس','بومهن','رودهن','فیروزکوه',
+      'شمیرانات','میگون','لواسان','آبعلی','کیلان','گیلاوند','جاجرود',
+      'سربندان','احمدآباد','سرخه‌حصار','ری','اسلام‌شهر','ورامین','قرچک'
+    ];
+
+    function getCity() { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } }
+    function setCity(name) {
+      try { localStorage.setItem(CITY_KEY, name || ''); } catch {}
+      // اعلان برای سایر صفحات (و side_menu)
+      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: name || '' } }));
+      // sync به تب‌های دیگر
+      try { localStorage.setItem('gbs_city_sync', Date.now().toString()); } catch {}
+    }
+    function clearCity() {
+      try { localStorage.removeItem(CITY_KEY); } catch {}
+      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: '' } }));
+      try { localStorage.setItem('gbs_city_sync', Date.now().toString()); } catch {}
+      cityInput.value = '';
+      renderList('');
+    }
+
+    function renderList(query) {
+      const q = (query || '').trim();
+      let items = DATASET.slice();
+      if (q) {
+        const qq = q.toLowerCase();
+        items = items.filter(x => x.toLowerCase().includes(qq));
+      }
+      // اگر خالی هم بود، چند پیشنهاد نشان بده
+      if (!q) items = ['گرمابسرد','دماوند','پردیس','تهران','بومهن','رودهن'];
+
+      cityResults.innerHTML = '';
+      items.slice(0, 30).forEach(name => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between px-3 py-2 hover:bg-green-50 dark:hover:bg-green-800 cursor-pointer';
+        li.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i class="fas fa-map-marker-alt text-green-600"></i>
+            <span class="text-sm">${name}</span>
+          </div>
+          <i class="fas fa-check text-green-600 opacity-0 select-check"></i>
+        `;
+        li.addEventListener('click', () => {
+          cityInput.value = name;
+          document.querySelectorAll('.select-check').forEach(i => i.classList.add('opacity-0'));
+          li.querySelector('.select-check').classList.remove('opacity-0');
+        });
+        cityResults.appendChild(li);
+      });
+    }
+
+    // Chips
+    document.querySelectorAll('.city-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const name = chip.getAttribute('data-city') || chip.textContent.trim();
+        cityInput.value = name;
+        renderList(name);
+      });
+    });
+
+    // Search typing
+    cityInput.addEventListener('input', () => renderList(cityInput.value));
+    cityInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveBtn.click();
+      }
+    });
+
+    // Save
+    saveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const name = (cityInput.value || '').trim();
+      if (!name) { history.back(); return; }
+      if (cityRemember.checked) setCity(name);
+      else {
+        // فقط برای این صفحه/سشن رویداد می‌فرستیم
+        document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: name } }));
+      }
+      // بعد از ذخیره می‌تونه به خانه برگرده
+      window.location.href = "{{ url_for('main.index') }}";
+    });
+
+    // Clear
+    clearBtn.addEventListener('click', (e) => { e.preventDefault(); clearCity(); });
+
+    // Init
+    const current = getCity();
+    if (current) cityInput.value = current;
+    renderList(current);
+  })();
+</script>
+{% endblock %}
