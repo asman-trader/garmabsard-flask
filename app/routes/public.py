@@ -1,7 +1,7 @@
 # app/routes/public.py
 import os
 from typing import Any, Dict, List, Optional
-from flask import render_template, send_from_directory, request, abort
+from flask import render_template, send_from_directory, request, abort, redirect, url_for
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads
 from ..utils.dates import parse_datetime_safe
@@ -57,10 +57,32 @@ def _find_by_code(code: str) -> Optional[Dict[str, Any]]:
 # -------------------------
 # Routes
 # -------------------------
+
 @main_bp.route("/")
 def index():
+    """
+    صفحه اصلی سایت = لندینگ
+    """
+    return render_template("landing.html")
+
+
+@main_bp.route("/app")
+def app_home():
+    """
+    ورودی اپلیکیشن (رفتار قبلی صفحه اصلی):
+    فهرست آگهی‌های تأییدشده به ترتیب نزولی تاریخ.
+    """
     lands = _sort_by_created_at_desc(_get_approved_ads())
     return render_template("index.html", lands=lands, CATEGORY_MAP=CATEGORY_MAP)
+
+
+@main_bp.route("/start")
+def start():
+    """
+    مسیر کمکی برای دکمه‌های CTA «شروع» در لندینگ.
+    """
+    return redirect(url_for("main.app_home"))
+
 
 @main_bp.route("/land/<code>")
 def land_detail(code):
@@ -74,6 +96,7 @@ def land_detail(code):
     land["price_per_meter"] = ppm
 
     return render_template("land_detail.html", land=land, CATEGORY_MAP=CATEGORY_MAP)
+
 
 @main_bp.route("/uploads/<path:filename>")
 def uploaded_file(filename):
@@ -90,6 +113,7 @@ def uploaded_file(filename):
             # اگر خواستی: cache_timeout را هم تنظیم کن
             return send_from_directory(folder, filename)
     abort(404, description="File not found")
+
 
 @main_bp.route("/search")
 def search_page():
@@ -108,6 +132,7 @@ def search_page():
         category=active_category,
         CATEGORY_MAP=CATEGORY_MAP,
     )
+
 
 @main_bp.route("/search-results")
 def search_results():
@@ -131,6 +156,7 @@ def search_results():
         query=q,
         CATEGORY_MAP=CATEGORY_MAP,
     )
+
 
 @main_bp.route("/city")
 def city_select():
