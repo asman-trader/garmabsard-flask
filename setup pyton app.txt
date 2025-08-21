@@ -60,3 +60,12 @@ git fetch origin main
 git reset --hard origin/main
 git clean -fd
 
+
+
+
+
+زایما (Zaima) → کمیاب و متفاوت
+
+سیتون (Situn) → ساختگی ولی خیلی برندینگ‌پسند
+
+وینور (Vinor)
