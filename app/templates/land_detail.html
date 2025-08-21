@@ -1,97 +1,99 @@
-{% set first_img = land.images[0] if land.images else '' %}
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ land.title }} | املاک آسمان گرمابسرد</title>
+{% extends "base.html" %}
+{% block title %}{{ land.title }} | املاک آسمان گرمابسرد{% endblock %}
+
+{% block head %}
   <meta name="description" content="جزئیات آگهی زمین {{ land.title }} در املاک آسمان گرمابسرد" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  <style>
-    body { font-family: 'Vazirmatn', sans-serif; scroll-behavior: smooth; }
-    @media (prefers-color-scheme: dark) {
-      body { background-color: #1e293b; color: #e2e8f0; }
-      header, main, footer { background-color: #0f172a; color: #e2e8f0; }
-      a { color: #60a5fa; }
-      input, textarea {
-        background-color: #1e293b; color: #e2e8f0; border-color: #334155;
-      }
-      input:focus, textarea:focus {
-        border-color: #38bdf8; outline: none;
-      }
-    }
-    .fullscreen-overlay {
-      position: fixed; inset: 0; background-color: rgba(0,0,0,0.95);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
-    }
-    .fullscreen-overlay img {
-      max-width: 100%; max-height: 100%; border-radius: 8px;
-    }
-  </style>
-</head>
-<body class="bg-gray-100 text-gray-800 dark:bg-slate-900 dark:text-slate-100">
+{% endblock %}
 
-<header class="bg-white dark:bg-slate-800 shadow p-4 sticky top-0 z-30">
-  <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-    <a href="{{ url_for('main.index') }}" class="sm:hidden text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 text-xl">
-      <i class="fas fa-arrow-right"></i>
-    </a>
-    <div></div>
-    <a href="{{ url_for('main.index') }}" class="text-sm text-blue-600 hover:underline hidden sm:inline dark:text-blue-400">
-      ← بازگشت به لیست زمین‌ها
-    </a>
-    <div class="relative group">
-      <a href="{{ url_for('main.favorites') }}" aria-label="علاقه‌مندی‌ها">
-        <i class="fas fa-heart text-xl text-red-500 hover:text-red-600 transition"></i>
-        <span id="fav-count" class="absolute -top-2 -right-2 text-xs bg-red-600 text-white rounded-full px-1.5 py-0.5 hidden">0</span>
-      </a>
-    </div>
-  </div>
-</header>
+{% block content %}
+<div class="max-w-4xl mx-auto mt-2 sm:mt-6 bg-white dark:bg-slate-800 rounded-xl shadow p-3 sm:p-6 pb-28">
 
-<main class="max-w-4xl mx-auto mt-6 bg-white rounded-xl shadow p-4 sm:p-6 pb-28 dark:bg-slate-800">
-  {% if land.images %}
+  {% if land.images and land.images|length > 0 %}
   <div class="mb-6">
-    <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow">
+    <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative">
       <div class="swiper-wrapper">
         {% for img in land.images %}
         <div class="swiper-slide">
           <img
             src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}"
-            data-full="{{ url_for('main.uploaded_file', filename='full/' + img.split('/')[-1]) }}"
-            alt="تصویر {{ loop.index }}"
+            alt="تصویر {{ loop.index }} از {{ land.title }}"
             class="w-full h-64 sm:h-96 object-cover cursor-zoom-in"
             loading="lazy"
-            onclick="openFullscreen(this.dataset.full)" />
+            onclick="openFullscreen('{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}')"
+          />
         </div>
         {% endfor %}
       </div>
       <div class="swiper-button-next text-white"></div>
       <div class="swiper-button-prev text-white"></div>
-      <div class="swiper-pagination text-white"></div>
+      <div class="swiper-pagination"></div>
     </div>
   </div>
-  <div id="fullscreenOverlay" class="fullscreen-overlay" onclick="closeFullscreen()">
-    <img id="fullscreenImage" src="" alt="تمام صفحه">
+
+  <div id="fullscreenOverlay" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50" onclick="closeFullscreen()">
+    <img id="fullscreenImage" src="" alt="نمایش تمام‌صفحه" class="max-w-[95vw] max-h-[95vh] rounded-lg shadow-2xl" />
   </div>
   {% endif %}
 
-  <h2 class="text-xl sm:text-2xl font-bold text-green-700 mb-4 dark:text-green-400">{{ land.title }}</h2>
+  <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">{{ land.title }}</h1>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-6 dark:text-gray-300">
-    <p>🌏 <strong>متراژ:</strong> {{ "{:,}".format(land.size | int).replace(",", "٫") if land.size else "نامشخص" }} متر</p>
-    <p>📍 <strong>موقیت:</strong> {{ land.location or "نامشخص" }}</p>
+  <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+    <span class="inline-flex items-center gap-1">
+      <i class="fas fa-clock"></i>
+      {{ land.created_at | date_ymd }}
+    </span>
+    <span class="mx-2">·</span>
+    <span class="inline-flex items-center gap-1">
+      <i class="fas fa-hashtag"></i>
+      کد آگهی: {{ land.code }}
+    </span>
+    {% if land.status %}
+      <span class="mx-2">·</span>
+      {% if land.status == 'approved' %}
+        <span class="inline-flex items-center gap-1 text-green-600"><i class="fas fa-check-circle"></i> تأیید شده</span>
+      {% elif land.status == 'pending' %}
+        <span class="inline-flex items-center gap-1 text-yellow-600"><i class="fas fa-hourglass-half"></i> در انتظار تأیید</span>
+      {% elif land.status == 'rejected' %}
+        <span class="inline-flex items-center gap-1 text-red-600"><i class="fas fa-times-circle"></i> رد شده</span>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mt-4 dark:text-gray-300">
+    <p>🌏 <strong>متراژ:</strong>
+      {% set _sz = (land.size|int if land.size is not none else 0) %}
+      {{ "{:,}".format(_sz).replace(",", "٫") if _sz else "نامشخص" }} متر
+    </p>
+    <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
     <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-    <p>🏮 <strong>کد آگهی:</strong> {{ land.code }}</p>
-    <p>💰 <strong>قیمت کل:</strong> {{ "{:,}".format(land.price_total | int).replace(",", "٫") if land.price_total else "نامشخص" }} تومان</p>
-    <p>📊 <strong>قیمت متری:</strong> {{ "{:,}".format(land.price_per_meter | int).replace(",", "٫") if land.price_per_meter else "نامشخص" }} تومان</p>
+    <p>🏮 <strong>دسته:</strong>
+      {% set _cat = land.category or '' %}
+      {{ CATEGORY_MAP.get(_cat, 'نامشخص') }}
+    </p>
+    <p>💰 <strong>قیمت کل:</strong>
+      {% if land.price_total is not none %}
+        {% set _pt = land.price_total|int %}
+        {{ "{:,}".format(_pt).replace(",", "٫") }} تومان
+      {% else %}
+        نامشخص
+      {% endif %}
+    </p>
+    <p>📊 <strong>قیمت متری:</strong>
+      {% if land.price_per_meter is not none %}
+        {% set _ppm = land.price_per_meter|int %}
+        {{ "{:,}".format(_ppm).replace(",", "٫") }} تومان
+      {% elif (land.price_total is not none) and (land.size) and (land.size|int > 0) %}
+        {% set _calc = (land.price_total|int) // (land.size|int) %}
+        {{ "{:,}".format(_calc).replace(",", "٫") }} تومان
+      {% else %}
+        نامشخص
+      {% endif %}
+    </p>
   </div>
 
   {% if land.features %}
-  <div class="mb-6">
+  <div class="mt-6">
     <p class="font-semibold text-gray-800 mb-2 dark:text-gray-100">امکانات:</p>
     <div class="flex flex-wrap gap-2">
       {% for feature in land.features %}
@@ -107,61 +109,110 @@
     {{ land.description or "توضیحاتی برای این آگهی ثبت نشده است." }}
   </div>
 
-  <div class="mt-10 hidden sm:flex gap-4">
+  <!-- دکمه‌های دسکتاپ -->
+  <div class="mt-8 hidden sm:flex flex-wrap gap-3">
+    {% if land.owner %}
     <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
+    {% endif %}
     <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 درخواست مشاوره</button>
+    <button type="button" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm px-6 py-2 rounded-full shadow transition"
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ land.title|e }}')">
+      🔗 اشتراک‌گذاری
+    </button>
   </div>
-</main>
 
-<div class="fixed bottom-0 inset-x-0 z-50 sm:hidden">
+</div>
+
+<!-- دکمه‌های ثابت پایین در موبایل -->
+<div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
+    {% if land.owner %}
     <a href="tel:{{ land.owner }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
-    <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 دریافت مشاوره</button>
+    {% endif %}
+    <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 مشاوره</button>
+    <button type="button" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm py-2 rounded-full"
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ land.title|e }}')">🔗 اشتراک</button>
   </div>
 </div>
 
-<!-- اسکریپت‌ها -->
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script>
-  const swiper = new Swiper('.swiper', {
-    loop: true,
-    pagination: { el: '.swiper-pagination', clickable: true },
-    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-    spaceBetween: 10, centeredSlides: true,
-  });
+<!-- پاپ‌آپ فرم مشاوره -->
+<div id="popupForm" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 w-full max-w-md shadow-xl">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-base font-bold">درخواست مشاوره</h3>
+      <button onclick="closePopup()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ url_for('main.consult', code=land.code) }}" class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-500">نام</label>
+        <input name="name" class="w-full mt-1 rounded-lg border px-3 py-2 dark:bg-slate-900 dark:border-slate-600" required />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">شماره تماس</label>
+        <input name="phone" class="w-full mt-1 rounded-lg border px-3 py-2 dark:bg-slate-900 dark:border-slate-600" required />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">توضیحات</label>
+        <textarea name="message" rows="3" class="w-full mt-1 rounded-lg border px-3 py-2 dark:bg-slate-900 dark:border-slate-600"></textarea>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" onclick="closePopup()" class="px-4 py-2 rounded-lg border dark:border-slate-600">انصراف</button>
+        <button class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white">ارسال</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
 
-  function openFullscreen(src) {
-    const img = document.getElementById('fullscreenImage');
-    img.src = '';
-    img.src = src;
-    document.getElementById('fullscreenOverlay').style.display = 'flex';
-  }
-  function closeFullscreen() {
-    document.getElementById('fullscreenOverlay').style.display = 'none';
-  }
-  function openPopup() {
-    document.getElementById('popupForm').classList.remove('hidden');
-    document.getElementById('popupForm').classList.add('flex');
-  }
-  function closePopup() {
-    document.getElementById('popupForm').classList.add('hidden');
-    document.getElementById('popupForm').classList.remove('flex');
-  }
-  function updateFavoriteCount() {
-    const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
-    const countEl = document.getElementById("fav-count");
-    if (countEl) {
-      if (favs.length > 0) {
-        countEl.textContent = favs.length;
-        countEl.classList.remove("hidden");
-      } else {
-        countEl.classList.add("hidden");
-      }
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    // اسلایدر تصاویر
+    const swiper = new Swiper('.swiper', {
+      loop: true,
+      pagination: { el: '.swiper-pagination', clickable: true },
+      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+      spaceBetween: 10,
+      centeredSlides: true
+    });
+
+    // فول‌اسکرین
+    function openFullscreen(src){
+      const img = document.getElementById('fullscreenImage');
+      img.src = src;
+      document.getElementById('fullscreenOverlay').classList.remove('hidden');
+      document.getElementById('fullscreenOverlay').classList.add('flex');
     }
-  }
-  document.addEventListener("DOMContentLoaded", function () {
-    updateFavoriteCount();
-  });
-</script>
-</body>
-</html>
+    function closeFullscreen(){
+      const ov = document.getElementById('fullscreenOverlay');
+      ov.classList.add('hidden'); ov.classList.remove('flex');
+      document.getElementById('fullscreenImage').src = '';
+    }
+
+    // پاپ‌آپ مشاوره
+    function openPopup(){
+      const p = document.getElementById('popupForm');
+      p.classList.remove('hidden'); p.classList.add('flex');
+    }
+    function closePopup(){
+      const p = document.getElementById('popupForm');
+      p.classList.add('hidden'); p.classList.remove('flex');
+    }
+
+    // اشتراک‌گذاری/کپی لینک
+    async function shareLand(url, title){
+      const data = { title: title || document.title, text: 'آگهی ملک - املاک آسمان گرمابسرد', url };
+      try{
+        if(navigator.share){ await navigator.share(data); return; }
+        await navigator.clipboard.writeText(url);
+        toast('لینک کپی شد ✅');
+      }catch(_){}
+    }
+    function toast(text){
+      const t = document.createElement('div');
+      t.textContent = text; t.dir='rtl';
+      t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-green-600 text-white shadow z-[60]';
+      document.body.appendChild(t); setTimeout(()=>t.remove(), 1800);
+    }
+  </script>
+{% endblock %}
