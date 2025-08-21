@@ -9,13 +9,13 @@
 {% block content %}
 <div class="max-w-4xl mx-auto mt-2 sm:mt-6 bg-white dark:bg-slate-800 rounded-xl shadow p-3 sm:p-6 pb-28">
 
-  {# ---------------- گالری تصاویر (ایمن در برابر None/رشته) ---------------- #}
+  {# ---------------- گالری تصاویر (ایمن برای رشته/لیست) ---------------- #}
   {% set _images = [] %}
   {% if land.images %}
-    {% if land.images is sequence %}
-      {% set _images = land.images %}
-    {% elif land.images is string %}
+    {% if land.images is string %}
       {% set _images = [land.images] %}
+    {% elif land.images is iterable %}
+      {% set _images = land.images %}
     {% endif %}
   {% endif %}
 
@@ -24,7 +24,7 @@
     <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative">
       <div class="swiper-wrapper">
         {% for img in _images %}
-        {% set _name = (img|string|replace('\\','/')|split('/')|last) %}
+        {% set _name = img|basename %}
         <div class="swiper-slide">
           <img
             src="{{ url_for('main.uploaded_file', filename=_name) }}"
@@ -51,22 +51,17 @@
     {{ land.title or "بدون عنوان" }}
   </h1>
 
+  {# ---------------- متادیتا ---------------- #}
   <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-    <span class="inline-flex items-center gap-1">
-      <i class="fas fa-clock"></i>
-      {{ land.created_at | date_ymd }}
-    </span>
+    <span class="inline-flex items-center gap-1"><i class="fas fa-clock"></i>{{ land.created_at | date_ymd }}</span>
     <span class="mx-2">·</span>
-    <span class="inline-flex items-center gap-1">
-      <i class="fas fa-hashtag"></i>
-      کد آگهی: {{ land.code or "?" }}
-    </span>
+    <span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: {{ land.code or "?" }}</span>
     {% if land.status %}
       <span class="mx-2">·</span>
       {% if land.status == 'approved' %}
         <span class="inline-flex items-center gap-1 text-green-600"><i class="fas fa-check-circle"></i> تأیید شده</span>
       {% elif land.status == 'pending' %}
-        <span class="inline-flex items-center gap-1 text-yellow-600"><i class="fas fa-hourglass-half"></i> در انتظار تأیید</span>
+        <span class="inline-flex items-center gap-1 text-yellow-600"><i class="fas fa-hourglass-half"></i> در انتظار</span>
       {% elif land.status == 'rejected' %}
         <span class="inline-flex items-center gap-1 text-red-600"><i class="fas fa-times-circle"></i> رد شده</span>
       {% endif %}
@@ -81,23 +76,17 @@
     </p>
     <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
     <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-    <p>🏮 <strong>دسته:</strong>
-      {% set _cat = land.category or '' %}
-      {{ CATEGORY_MAP.get(_cat, 'نامشخص') }}
-    </p>
+    <p>🏮 <strong>دسته:</strong> {{ CATEGORY_MAP.get(land.category or '', 'نامشخص') }}</p>
     <p>💰 <strong>قیمت کل:</strong>
       {% if land.price_total is not none %}
-        {% set _pt = land.price_total|int %}
-        {{ "{:,}".format(_pt).replace(",", "٫") }} تومان
+        {{ "{:,}".format(land.price_total|int).replace(",", "٫") }} تومان
       {% else %} نامشخص {% endif %}
     </p>
     <p>📊 <strong>قیمت متری:</strong>
       {% if land.price_per_meter is not none %}
-        {% set _ppm = land.price_per_meter|int %}
-        {{ "{:,}".format(_ppm).replace(",", "٫") }} تومان
-      {% elif (land.price_total is not none) and (land.size) and (land.size|int > 0) %}
-        {% set _calc = (land.price_total|int) // (land.size|int) %}
-        {{ "{:,}".format(_calc).replace(",", "٫") }} تومان
+        {{ "{:,}".format(land.price_per_meter|int).replace(",", "٫") }} تومان
+      {% elif land.price_total and land.size|int > 0 %}
+        {{ "{:,}".format((land.price_total|int)//(land.size|int)).replace(",", "٫") }} تومان
       {% else %} نامشخص {% endif %}
     </p>
   </div>
@@ -105,10 +94,10 @@
   {# ---------------- امکانات ---------------- #}
   {% set _features = [] %}
   {% if land.features %}
-    {% if land.features is sequence %}
-      {% set _features = land.features %}
-    {% elif land.features is string %}
+    {% if land.features is string %}
       {% set _features = [land.features] %}
+    {% elif land.features is iterable %}
+      {% set _features = land.features %}
     {% endif %}
   {% endif %}
   {% if _features and _features|length > 0 %}
@@ -134,16 +123,13 @@
     {% if land.owner %}
     <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
     {% endif %}
-    <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 درخواست مشاوره</button>
+    <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 مشاوره</button>
     <button type="button" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm px-6 py-2 rounded-full shadow transition"
-            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">
-      🔗 اشتراک‌گذاری
-    </button>
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">🔗 اشتراک</button>
   </div>
-
 </div>
 
-{# ---------------- دکمه‌های ثابت پایین در موبایل ---------------- #}
+{# ---------------- دکمه‌های موبایل ---------------- #}
 <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
     {% if land.owner %}
@@ -187,7 +173,6 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // اسلایدر تصاویر (اگر وجود داشته باشد)
     document.addEventListener("DOMContentLoaded", function(){
       const sw = document.querySelector('.swiper');
       if (sw && window.Swiper){
@@ -210,9 +195,9 @@
       ov.classList.remove('hidden'); ov.classList.add('flex');
     }
     function closeFullscreen(){
-      const ov = document.getElementById('fullscreenOverlay');
       const img = document.getElementById('fullscreenImage');
-      if (!ov || !img) return;
+      const ov  = document.getElementById('fullscreenOverlay');
+      if (!img || !ov) return;
       ov.classList.add('hidden'); ov.classList.remove('flex');
       img.src = '';
     }

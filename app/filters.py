@@ -20,5 +20,12 @@ def date_ymd(value, default="-"):
         return value.split(" ")[0].replace("-", "/")
     return default
 
+def basename(value):
+    if value is None:
+        return ""
+    s = str(value).replace("\\", "/")
+    return s.rsplit("/", 1)[-1]
+
 def register_filters(app):
     app.add_template_filter(date_ymd, "date_ymd")
+    app.add_template_filter(basename, "basename")
