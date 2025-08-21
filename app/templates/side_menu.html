@@ -1,4 +1,4 @@
-{# side_menu.html - Mobile-first, compact & clean with global sticky footer + City Link #}
+{# side_menu.html - Mobile-first, compact & clean with City Chip + Universal Footer #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -41,10 +41,10 @@
       </a>
 
       <div class="flex items-center gap-2">
-        <!-- Current City Chip -->
+        <!-- Current City Chip (visible on all sizes) -->
         <a id="cityChip"
            href="{{ url_for('main.city_select') }}"
-           class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
+           class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
                   border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200
                   hover:bg-green-50 dark:hover:bg-green-800"
            title="انتخاب شهر">
@@ -108,25 +108,51 @@
 
   </div>
 
-  <!-- Global Bottom quick actions -->
-  <footer class="shrink-0 sticky bottom-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
-                 border-t border-gray-200 dark:border-gray-700">
+  <!-- Global Bottom quick actions (universal, accessible, safe-area aware) -->
+  <footer
+    class="shrink-0 sticky bottom-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
+           border-t border-gray-200 dark:border-gray-700"
+    style="padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);"
+    role="toolbar"
+    aria-label="اقدامات سریع">
+
+    {# ---------- Config (with safe defaults) ---------- #}
+    {% set PHONE = (contact_phone if contact_phone is defined and contact_phone) or '+989121234567' %}
+    {% set WA    = (contact_whatsapp if contact_whatsapp is defined and contact_whatsapp) or PHONE %}
+    {% set WA_INT = WA|replace('+','')|replace(' ','')|replace('-','') %}
+    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'زمین‌های آینده‌دار در گرمابسرد دماوند' %}
+
     <div class="grid grid-cols-3 gap-2 text-center">
-      <a href="tel:+989121234567"
-         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800">
-        <i class="fas fa-phone"></i>
+      <!-- Call -->
+      <a id="qaCall"
+         href="tel:{{ PHONE }}"
+         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+         aria-label="تماس تلفنی"
+         rel="nofollow"
+         data-phone="{{ PHONE }}">
+        <i class="fas fa-phone" aria-hidden="true"></i>
         <span class="block text-xs mt-1">تماس</span>
       </a>
-      <a href="https://wa.me/989121234567"
-         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800"
-         target="_blank" rel="noopener">
-        <i class="fab fa-whatsapp"></i>
+
+      <!-- WhatsApp -->
+      <a id="qaWhatsapp"
+         href="https://wa.me/{{ WA_INT }}"
+         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+         aria-label="گفتگو در واتساپ"
+         target="_blank" rel="noopener noreferrer"
+         data-wa="{{ WA_INT }}"
+         data-wa-text="{{ SHARE_TEXT }}">
+        <i class="fab fa-whatsapp" aria-hidden="true"></i>
         <span class="block text-xs mt-1">واتساپ</span>
       </a>
-      <button id="shareSite"
-              class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800">
-        <i class="fas fa-share-alt"></i>
-        <span class="block text-xs mt-1">اشتراک</span>
+
+      <!-- Share -->
+      <button id="qaShare"
+              type="button"
+              class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
+              aria-label="اشتراک‌گذاری">
+        <i class="fas fa-share-alt" aria-hidden="true"></i>
+    <span class="block text-xs mt-1">اشتراک</span>
       </button>
     </div>
   </footer>
@@ -137,11 +163,10 @@
     const sideMenu   = document.getElementById('sideMenu');
     const overlay    = document.getElementById('menuOverlay');
     const closeBtn   = document.getElementById('closeMenu');
-    const shareBtn   = document.getElementById('shareSite');
     const cityChipText = document.getElementById('cityChipText');
     const cityMenuText = document.getElementById('cityMenuText');
 
-    // Helpers
+    // ====== Open/Close ======
     const isOpen = () => sideMenu.classList.contains('!translate-x-0');
     const openMenu = () => {
       sideMenu.classList.add('!translate-x-0');
@@ -159,11 +184,9 @@
     window.openSideMenu = openMenu;
     overlay?.addEventListener('click', closeMenu);
     closeBtn?.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) closeMenu(); });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isOpen()) closeMenu();
-    });
-
+    // Swipe close
     let startX = null;
     sideMenu.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
     sideMenu.addEventListener('touchmove', (e) => {
@@ -173,6 +196,7 @@
     }, {passive:true});
     sideMenu.addEventListener('touchend', () => { startX = null; });
 
+    // Require-login guard
     document.querySelectorAll('#sideMenu a.require-login').forEach(a => {
       a.addEventListener('click', (e) => {
         const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
@@ -183,21 +207,39 @@
       });
     });
 
-    // Web Share
-    shareBtn?.addEventListener('click', async () => {
-      const shareData = {
-        title: 'املاک آسمان گرمابسرد',
-        text: 'زمین‌های آینده‌دار در گرمابسرد دماوند',
-        url: window.location.origin
-      };
+    // ===== Web Share (Universal) =====
+    const btnShare   = document.getElementById('qaShare');
+    const aWhatsapp  = document.getElementById('qaWhatsapp');
+
+    const shareTitle = document.title || 'املاک آسمان گرمابسرد';
+    const shareUrl   = window.location.href;
+    const shareText  = (aWhatsapp?.dataset.waText) || 'زمین‌های آینده‌دار در گرمابسرد دماوند';
+
+    // WhatsApp deep link with text
+    if (aWhatsapp) {
+      const wa = aWhatsapp.dataset.wa || '';
+      const url = new URL(`https://wa.me/${wa}`);
+      url.searchParams.set('text', `${shareText} — ${shareTitle}\n${shareUrl}`);
+      aWhatsapp.href = url.toString();
+    }
+
+    // Share: Web Share API + clipboard fallback
+    btnShare?.addEventListener('click', async () => {
+      const data = { title: shareTitle, text: shareText, url: shareUrl };
       try {
-        if (navigator.share) await navigator.share(shareData);
-        else {
-          await navigator.clipboard.writeText(shareData.url);
-          alert('لینک کپی شد ✅');
+        if (navigator.share) {
+          await navigator.share(data);
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          const t = document.createElement('div');
+          t.textContent = 'لینک کپی شد ✅';
+          t.dir = 'rtl';
+          t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-green-600 text-white shadow z-[60]';
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 1800);
         }
-      } catch (_) {}
-    });
+      } catch (_) { /* کاربر انصراف داد یا پشتیبانی نیست */ }
+    }, { passive: true });
 
     // ===== City UI from localStorage =====
     const CITY_KEY = 'gbs_city';
@@ -209,9 +251,8 @@
     }
     updateCityUI();
 
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'gbs_city') updateCityUI();
-    });
+    // Sync when city changes elsewhere
+    window.addEventListener('storage', (e) => { if (e.key === 'gbs_city') updateCityUI(); });
     document.addEventListener('gbs:city-changed', updateCityUI);
   })();
 </script>

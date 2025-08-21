@@ -1,70 +1,248 @@
 {% extends "base.html" %}
-
 {% block title %}آگهی‌های من | املاک آسمان گرمابسرد{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 py-6">
-  <h2 class="text-xl font-bold text-green-700 mb-4">📋 آگهی‌های من</h2>
+<div class="max-w-7xl mx-auto px-4 py-6">
 
-  {% if lands %}
+  <!-- Header + actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+    <div>
+      <h2 class="text-xl font-bold text-green-700">📋 آگهی‌های من</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        در اینجا می‌توانید آگهی‌هایتان را مدیریت کنید.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('main.submit_ad') }}"
+         class="inline-flex items-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2">
+        <i class="fas fa-plus-circle"></i> ثبت آگهی جدید
+      </a>
+      <a href="{{ url_for('main.city_select') }}"
+         class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm hover:bg-green-50 dark:hover:bg-green-800">
+        <i class="fas fa-map-marker-alt text-green-600"></i>
+        <span id="myCityChip">شهر من</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Toolbar: search + filters + sort -->
+  <form id="filterForm" method="get" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <!-- Search -->
+      <div class="md:col-span-2">
+        <label class="text-xs text-gray-600 dark:text-gray-300">جستجو</label>
+        <div class="mt-1 relative">
+          <input name="q" value="{{ request.args.get('q','') }}"
+                 type="text" placeholder="عنوان، کد ملک، موقعیت..."
+                 class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 pe-9
+                        dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
+          <i class="fas fa-search absolute top-1/2 -translate-y-1/2 left-3 text-gray-400"></i>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label class="text-xs text-gray-600 dark:text-gray-300">وضعیت</label>
+        <select name="status" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 dark:bg-gray-800 dark:text-white">
+          {% set st = request.args.get('status','') %}
+          <option value="" {{ 'selected' if st=='' else '' }}>همه</option>
+          <option value="approved" {{ 'selected' if st=='approved' else '' }}>تأیید شده</option>
+          <option value="pending" {{ 'selected' if st=='pending' else '' }}>در انتظار تأیید</option>
+          <option value="rejected" {{ 'selected' if st=='rejected' else '' }}>رد شده</option>
+        </select>
+      </div>
+
+      <!-- Sort -->
+      <div>
+        <label class="text-xs text-gray-600 dark:text-gray-300">مرتب‌سازی</label>
+        <select name="sort" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 dark:bg-gray-800 dark:text-white">
+          {% set srt = request.args.get('sort','new') %}
+          <option value="new" {{ 'selected' if srt=='new' else '' }}>جدیدترین</option>
+          <option value="old" {{ 'selected' if srt=='old' else '' }}>قدیمی‌ترین</option>
+          <option value="size_desc" {{ 'selected' if srt=='size_desc' else '' }}>بزرگ‌ترین متراژ</option>
+          <option value="size_asc"  {{ 'selected' if srt=='size_asc'  else '' }}>کوچک‌ترین متراژ</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 mt-3">
+      <button class="inline-flex items-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2">
+        <i class="fas fa-filter"></i> اعمال فیلتر
+      </button>
+      <a href="{{ url_for('main.my_lands') }}"
+         class="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+        پاک‌سازی
+      </a>
+    </div>
+  </form>
+
+  {% set has_items = lands and lands|length > 0 %}
+  {% if has_items %}
+    {# --- در صورتیکه بک‌اند سورت نکرده باشد: مرتب‌سازی سمت قالب --- #}
+    {% set _srt = request.args.get('sort','new') %}
+    {% if _srt == 'old' %}
+      {% set ordered = lands|sort(attribute='created_at') %}
+    {% elif _srt == 'size_desc' %}
+      {% set ordered = lands|sort(attribute='size')|reverse %}
+    {% elif _srt == 'size_asc' %}
+      {% set ordered = lands|sort(attribute='size') %}
+    {% else %}
+      {# پیش‌فرض: جدیدترین #}
+      {% set ordered = lands|sort(attribute='created_at', reverse=True) %}
+    {% endif %}
+
+    <!-- Count -->
+    <div class="flex items-center justify-between mt-5 mb-3">
+      <span class="text-sm text-gray-600 dark:text-gray-400">
+        تعداد آگهی‌ها: <strong>{{ ordered|length }}</strong>
+      </span>
+    </div>
+
+    <!-- Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for land in lands %}
-      <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-
-        <!-- وضعیت آگهی -->
+      {% for land in ordered %}
+      <article class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-lg transition overflow-hidden">
+        <!-- Status badge -->
         {% if land.status == 'pending' %}
-          <div class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
-            در انتظار تأیید
-          </div>
+          <div class="absolute top-2 right-2 bg-yellow-500 text-white text-[11px] font-bold px-2 py-1 rounded">در انتظار تأیید</div>
         {% elif land.status == 'approved' %}
-          <div class="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">
-            تأیید شده
-          </div>
+          <div class="absolute top-2 right-2 bg-green-600 text-white text-[11px] font-bold px-2 py-1 rounded">تأیید شده</div>
         {% elif land.status == 'rejected' %}
-          <div class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-            رد شده
-          </div>
+          <div class="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded">رد شده</div>
         {% endif %}
 
-        <a href="{{ url_for('main.land_detail', code=land.code) }}">
+        <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
           {% if land.images and land.images[0] %}
             <img src="{{ url_for('main.uploaded_file', filename=land.images[0]) }}"
-                 alt="تصویر زمین {{ land.title }}"
-                 loading="lazy"
-                 class="w-full h-48 object-cover rounded-t-xl">
+                 alt="تصویر زمین {{ land.title }}" loading="lazy"
+                 class="w-full h-48 object-cover">
           {% else %}
-            <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 rounded-t-xl">
+            <div class="w-full h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400">
               بدون تصویر
             </div>
           {% endif %}
         </a>
 
         <div class="p-4">
-          <h3 class="text-lg font-semibold text-green-700 dark:text-green-400 truncate">{{ land.title }}</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر | 📍 {{ land.location or "?" }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">🆔 کد ملک: {{ land.code }}</p>
+          <h3 class="text-base font-bold text-green-700 dark:text-green-400 truncate" title="{{ land.title }}">{{ land.title }}</h3>
 
-          <div class="mt-4 flex justify-between items-center gap-2">
+          <!-- Meta -->
+          <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300">
+            <div class="flex items-center gap-1">
+              <i class="fas fa-vector-square text-gray-500"></i>
+              <span>{{ land.size and "{:,}".format(land.size|int) or "?" }} متر</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="fas fa-map-marker-alt text-gray-500"></i>
+              <span class="truncate" title="{{ land.location or '' }}">{{ land.location or "?" }}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="fas fa-hashtag text-gray-500"></i>
+              <span>کد: {{ land.code }}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="fas fa-clock text-gray-500"></i>
+              <span>
+                {% if land.created_at %}
+                  {{ land.created_at.strftime('%Y/%m/%d') }}
+                {% else %}
+                  —
+                {% endif %}
+              </span>
+            </div>
+          </div>
+
+          {% if land.price %}
+          <div class="mt-2 text-sm font-bold text-gray-800 dark:text-gray-100">
+            💰 قیمت: {{ "{:,}".format(land.price|int) }} تومان
+          </div>
+          {% endif %}
+
+          <!-- Actions -->
+          <div class="mt-4 flex items-center gap-2">
+            <a href="{{ url_for('main.land_detail', code=land.code) }}"
+               class="flex-1 text-center border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm px-3 py-2 rounded-lg">
+              👁️ مشاهده
+            </a>
             <a href="{{ url_for('main.edit_land', code=land.code) }}"
-               class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg">
+               class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg">
               ✏️ ویرایش
             </a>
             <form method="POST" action="{{ url_for('main.delete_land', code=land.code) }}"
                   onsubmit="return confirm('آیا از حذف این آگهی مطمئن هستید؟')">
               <button type="submit"
-                      class="flex-1 text-center bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg w-full">
+                      class="flex-1 text-center bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg w-full">
                 🗑️ حذف
               </button>
             </form>
           </div>
+
+          <!-- Quick share/copy -->
+          <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <button type="button" class="inline-flex items-center gap-1 hover:text-green-700"
+                    onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ land.title|e }}')">
+              <i class="fas fa-share-alt"></i> اشتراک
+            </button>
+            <button type="button" class="inline-flex items-center gap-1 hover:text-green-700"
+                    onclick="copyLink('{{ url_for('main.land_detail', code=land.code, _external=True) }}')">
+              <i class="fas fa-link"></i> کپی لینک
+            </button>
+          </div>
         </div>
-      </div>
+      </article>
       {% endfor %}
     </div>
+
   {% else %}
-    <div class="bg-yellow-100 dark:bg-yellow-200 border border-yellow-300 text-yellow-800 p-4 rounded">
-      هنوز هیچ آگهی‌ای ثبت نکرده‌اید.
+    <!-- Empty state -->
+    <div class="mt-6 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 text-center">
+      <div class="text-4xl mb-2">🗂️</div>
+      <h3 class="font-bold text-gray-800 dark:text-gray-100">هنوز آگهی‌ای ثبت نکرده‌اید</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">با ثبت آگهی، زمین خود را سریع‌تر به خریداران معرفی کنید.</p>
+      <a href="{{ url_for('main.submit_ad') }}"
+         class="inline-flex items-center gap-2 mt-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2">
+        <i class="fas fa-plus-circle"></i> ثبت اولین آگهی
+      </a>
     </div>
   {% endif %}
 </div>
+
+<!-- Floating Action Button (mobile) -->
+<a href="{{ url_for('main.submit_ad') }}"
+   class="fixed sm:hidden bottom-20 right-4 z-40 inline-flex items-center justify-center w-14 h-14 rounded-full shadow-lg
+          bg-green-600 hover:bg-green-700 text-white">
+  <i class="fas fa-plus text-xl"></i>
+</a>
+
+<script>
+  // City chip: read from localStorage if exists
+  (function() {
+    const CITY_KEY = 'gbs_city';
+    const chip = document.getElementById('myCityChip');
+    try {
+      const c = localStorage.getItem(CITY_KEY) || '';
+      if (c && chip) chip.textContent = 'شهر من: ' + c;
+    } catch (_) {}
+  })();
+
+  // Web Share + Clipboard fallbacks for item
+  async function shareLand(url, title){
+    const data = { title: title || document.title, text: 'آگهی ملک - املاک آسمان گرمابسرد', url };
+    try {
+      if (navigator.share) { await navigator.share(data); return; }
+      await navigator.clipboard.writeText(url);
+      toast('لینک کپی شد ✅');
+    } catch(_) { /* ignored */ }
+  }
+  async function copyLink(url){
+    try { await navigator.clipboard.writeText(url); toast('لینک کپی شد ✅'); } catch(_) {}
+  }
+  function toast(text){
+    const t = document.createElement('div');
+    t.textContent = text; t.dir='rtl';
+    t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-green-600 text-white shadow z-[60]';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1800);
+  }
+</script>
 {% endblock %}
