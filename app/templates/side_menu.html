@@ -1,4 +1,4 @@
-{# side_menu.html - Mobile-first, compact & clean with global sticky footer #}
+{# side_menu.html - Mobile-first, compact & clean with global sticky footer + City Picker #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -35,12 +35,22 @@
                 hover:text-green-700 dark:hover:text-green-300 transition"
          title="{{ 'رفتن به پروفایل' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
-        <span class="truncate max-w-[44vw] sm:max-w-[120px]">
+        <span class="truncate max-w-[36vw] sm:max-w-[120px]">
           {% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}مهمان{% endif %}
         </span>
       </a>
 
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-2">
+        <!-- Current City Chip (clickable) -->
+        <button id="cityChip"
+                class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
+                       border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200
+                       hover:bg-green-50 dark:hover:bg-green-800"
+                title="انتخاب شهر">
+          <i class="fas fa-map-marker-alt text-green-600 dark:text-green-400"></i>
+          <span id="cityChipText">انتخاب شهر</span>
+        </button>
+
         <!-- Quick menu -->
         <div class="relative">
           <button id="quickMenuBtn"
@@ -52,6 +62,10 @@
                class="absolute left-0 mt-2 w-40 hidden
                       bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
                       rounded-xl shadow-xl overflow-hidden z-50">
+            <button type="button" id="openCityPickerQuick"
+                    class="w-full text-start flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <i class="fas fa-city"></i> انتخاب شهر
+            </button>
             <a href="{{ url_for('main.settings') }}"
                class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
               <i class="fas fa-cog"></i> تنظیمات
@@ -91,6 +105,14 @@
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
+
+    <!-- City selector entry -->
+    <button id="openCityPicker"
+            class="w-full flex items-center gap-3 p-3 rounded-xl transition text-start
+                   hover:bg-green-100 dark:hover:bg-green-800 active:scale-[0.98]">
+      <i class="fas fa-city text-lg text-green-600 dark:text-green-400"></i>
+      <span id="cityMenuText" class="text-[15px] font-medium text-gray-800 dark:text-gray-100">انتخاب شهر</span>
+    </button>
 
     <!-- User bundle (بدون ناحیه کاربری) -->
     <div class="space-y-2">
@@ -142,6 +164,71 @@
   </footer>
 </aside>
 
+<!-- City Picker Modal (bottom sheet) -->
+<div id="cityModal"
+     class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center">
+  <!-- backdrop -->
+  <div id="cityBackdrop" class="absolute inset-0 bg-black/40"></div>
+  <!-- sheet -->
+  <div class="relative w-full sm:w-[520px] bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl
+              border border-gray-200 dark:border-gray-700 p-4 sm:p-5 shadow-2xl">
+    <div class="flex items-center justify-between">
+      <h3 class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب شهر</h3>
+      <button id="closeCityModal" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="mt-3 space-y-3">
+      <div>
+        <label class="text-sm text-gray-600 dark:text-gray-300">شهر خود را جستجو کنید</label>
+        <input id="cityInput" type="text" placeholder="مثلاً دماوند، تهران، رودهن..."
+               class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
+                      dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
+      </div>
+
+      <!-- quick chips -->
+      <div id="cityChips" class="flex flex-wrap gap-2">
+        <!-- نمونه شهرهای پرکاربرد منطقه -->
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="دماوند">دماوند</button>
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="گرمابسرد">گرمابسرد</button>
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="تهران">تهران</button>
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="پردیس">پردیس</button>
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="بومهن">بومهن</button>
+        <button class="city-chip px-3 py-1.5 rounded-full border text-sm hover:bg-green-50 dark:hover:bg-green-800"
+                data-city="رودهن">رودهن</button>
+      </div>
+
+      <div class="flex items-center justify-between pt-1">
+        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+          <input id="cityRemember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700">
+          ذخیره به‌عنوان پیش‌فرض
+        </label>
+        <button id="clearCity"
+                class="text-sm text-red-600 hover:underline">
+          حذف شهر انتخابی
+        </button>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button id="saveCity"
+                class="flex-1 py-2 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 active:scale-[0.99]">
+          ذخیره
+        </button>
+        <button id="cancelCity"
+                class="flex-1 py-2 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+          انصراف
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   (function () {
     const sideMenu   = document.getElementById('sideMenu');
@@ -151,15 +238,34 @@
     const quickMenu  = document.getElementById('quickMenu');
     const shareBtn   = document.getElementById('shareSite');
 
+    // === City Picker elements ===
+    const cityModal   = document.getElementById('cityModal');
+    const cityBackdrop= document.getElementById('cityBackdrop');
+    const closeCity   = document.getElementById('closeCityModal');
+    const cityInput   = document.getElementById('cityInput');
+    const cityRemember= document.getElementById('cityRemember');
+    const saveCityBtn = document.getElementById('saveCity');
+    const cancelCity  = document.getElementById('cancelCity');
+    const clearCity   = document.getElementById('clearCity');
+
+    const openCityBtns = [
+      document.getElementById('openCityPicker'),
+      document.getElementById('openCityPickerQuick'),
+      document.getElementById('cityChip')
+    ].filter(Boolean);
+
+    const cityChipText = document.getElementById('cityChipText');
+    const cityMenuText = document.getElementById('cityMenuText');
+
     // Helpers
     const isOpen = () => sideMenu.classList.contains('!translate-x-0');
-    const open = () => {
+    const openMenu = () => {
       sideMenu.classList.add('!translate-x-0');
       overlay?.classList.remove('pointer-events-none');
       overlay?.classList.add('opacity-100');
       document.body.style.overflow = 'hidden';
     };
-    const close = () => {
+    const closeMenu = () => {
       sideMenu.classList.remove('!translate-x-0');
       overlay?.classList.add('pointer-events-none');
       overlay?.classList.remove('opacity-100');
@@ -177,11 +283,11 @@
     };
 
     // Expose open for external trigger
-    window.openSideMenu = open;
+    window.openSideMenu = openMenu;
 
     // Overlay/Close
-    overlay?.addEventListener('click', close);
-    closeBtn?.addEventListener('click', close);
+    overlay?.addEventListener('click', closeMenu);
+    closeBtn?.addEventListener('click', closeMenu);
 
     // Quick menu
     quickBtn?.addEventListener('click', (e) => {
@@ -194,7 +300,7 @@
 
     // ESC to close
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isOpen()) close();
+      if (e.key === 'Escape' && isOpen()) closeMenu();
     });
 
     // Swipe to close (touch)
@@ -203,7 +309,7 @@
     sideMenu.addEventListener('touchmove', (e) => {
       if (startX === null) return;
       const delta = e.touches[0].clientX - startX;
-      if (delta > 50) { startX = null; close(); }
+      if (delta > 50) { startX = null; closeMenu(); }
     }, {passive:true});
     sideMenu.addEventListener('touchend', () => { startX = null; });
 
@@ -233,5 +339,92 @@
         }
       } catch (_) {}
     });
+
+    // ===== City Picker Logic =====
+    const CITY_KEY = 'gbs_city';
+
+    function getCity() {
+      try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; }
+    }
+    function setCity(name) {
+      try { localStorage.setItem(CITY_KEY, name || ''); } catch {}
+      updateCityUI();
+      // اینجا اگر لازم شد می‌تونی یک رویداد سفارشی برای فیلتر لیست آگهی‌ها dispatch کنی
+      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: name || '' } }));
+    }
+    function clearCitySelection() {
+      try { localStorage.removeItem(CITY_KEY); } catch {}
+      updateCityUI();
+      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: '' } }));
+    }
+    function updateCityUI() {
+      const c = getCity();
+      if (cityChipText) cityChipText.textContent = c ? c : 'انتخاب شهر';
+      if (cityMenuText) cityMenuText.textContent = c ? ('شهر من: ' + c) : 'انتخاب شهر';
+    }
+
+    function openCityModal(prefill = '') {
+      cityInput.value = prefill || getCity() || '';
+      cityRemember.checked = true;
+      cityModal.classList.remove('hidden');
+      cityModal.classList.add('flex');
+      setTimeout(() => cityInput.focus(), 50);
+    }
+    function closeCityModal() {
+      cityModal.classList.add('hidden');
+      cityModal.classList.remove('flex');
+    }
+
+    // Open modal triggers
+    openCityBtns.forEach(btn => btn && btn.addEventListener('click', () => {
+      hideQuick();
+      openCityModal();
+    }));
+
+    // Modal controls
+    cityBackdrop?.addEventListener('click', closeCityModal);
+    closeCity?.addEventListener('click', closeCityModal);
+    cancelCity?.addEventListener('click', (e) => { e.preventDefault(); closeCityModal(); });
+
+    // Quick chips
+    document.querySelectorAll('.city-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const name = chip.getAttribute('data-city') || chip.textContent.trim();
+        cityInput.value = name;
+      });
+    });
+
+    // Clear city
+    clearCity?.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearCitySelection();
+      closeCityModal();
+    });
+
+    // Save city
+    saveCityBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const name = cityInput.value.trim();
+      if (!name) { closeCityModal(); return; }
+      if (cityRemember.checked) setCity(name);
+      else {
+        // اگر نخواستی ذخیره دائمی بشه، فقط UI رو به‌روز می‌کنیم
+        if (cityChipText) cityChipText.textContent = name;
+        if (cityMenuText) cityMenuText.textContent = 'شهر من: ' + name;
+        document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: name } }));
+      }
+      closeCityModal();
+    });
+
+    // Enter to save
+    cityInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveCityBtn?.click();
+      }
+    });
+
+    // Init on load
+    updateCityUI();
   })();
 </script>
