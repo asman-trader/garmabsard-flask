@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, send_from_directory
-import os, json, random, requests, subprocess
+import os, json, random, requests, subprocess, shutil
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
@@ -12,38 +12,56 @@ CATEGORY_MAP = {
     "residential_land": "زمین مسکونی",
     "garden": "باغ",
     "villa": "ویلا",
-    "titled": "सنددار",
+    "titled": "سنددار",
     "with_utilities": "دارای آب و برق",
     "good_price": "قیمت مناسب"
 }
 CATEGORY_KEYS = set(CATEGORY_MAP.keys()) - {""}
 
-# ---------------- ابزارهای کمکی مسیر/فایل ----------------
-def _data_dir():
-    path = os.path.join(current_app.root_path, 'data')
+# ================== مسیرهای Production-safe (instance/data) ==================
+def _data_dir(app=None):
+    """
+    مسیر امن و قابل‌نوشتن روی هاست: <instance>/data
+    اگر app پاس شود، از همان استفاده می‌شود تا خارج از context هم کار کند.
+    """
+    app = app or current_app
+    base = app.instance_path
+    os.makedirs(base, exist_ok=True)
+    path = os.path.join(base, 'data')
     os.makedirs(path, exist_ok=True)
+    os.makedirs(os.path.join(path, 'uploads'), exist_ok=True)  # uploads/
     return path
 
-def _ensure_file(config_key: str, filename: str, default_content):
+def _legacy_data_dir(app=None):
+    """مسیر قدیمی داخل کُد (ممکن است read-only باشد)"""
+    app = app or current_app
+    return os.path.join(app.root_path, 'data')
+
+def _ensure_file(config_key: str, filename: str, default_content, app=None):
     """
     اگر config_key ست نشده باشد یا فایل وجود نداشته باشد:
-      - مسیر پیش‌فرض data/<filename> ساخته می‌شود
-      - فایل با default_content ایجاد می‌شود
-    در نهایت مسیر را در config ثبت و برمی‌گرداند.
+      - مسیر پیش‌فرض instance/data/<filename> ساخته می‌شود
+      - در صورت نبود، فایل با default_content ایجاد می‌شود
     """
-    # اگر مسیر از قبل ست شده:
-    fpath = current_app.config.get(config_key)
-    if not fpath:
-        fpath = os.path.join(_data_dir(), filename)
-        current_app.config[config_key] = fpath
+    data_dir = _data_dir(app)
+    fpath = (app or current_app).config.get(config_key) or os.path.join(data_dir, filename)
+    (app or current_app).config[config_key] = fpath
 
     os.makedirs(os.path.dirname(fpath), exist_ok=True)
     if not os.path.exists(fpath):
-        with open(fpath, 'w', encoding='utf-8') as f:
-            if isinstance(default_content, (dict, list)):
-                json.dump(default_content, f, ensure_ascii=False, indent=2)
-            else:
-                f.write(str(default_content or ""))
+        # اگر نسخه قدیمی در root_path/data هست، اولویت با آن است (مهاجرت)
+        legacy = os.path.join(_legacy_data_dir(app), filename)
+        if os.path.exists(legacy):
+            try:
+                shutil.copy2(legacy, fpath)
+            except Exception:
+                pass
+        if not os.path.exists(fpath):
+            with open(fpath, 'w', encoding='utf-8') as f:
+                if isinstance(default_content, (dict, list)):
+                    json.dump(default_content, f, ensure_ascii=False, indent=2)
+                else:
+                    f.write(str(default_content or ""))
     return fpath
 
 def load_json(path):
@@ -72,42 +90,89 @@ def parse_datetime_safe(date_str):
 
 def _to_int(x, default=0):
     try:
-        # حذف کاما و فاصله برای اطمینان
         return int(str(x).replace(',', '').strip())
     except Exception:
         return default
 
-def load_ads():
-    path = _ensure_file('LANDS_FILE', 'lands.json', [])
+def load_ads(app=None):
+    path = _ensure_file('LANDS_FILE', 'lands.json', [], app)
     return load_json(path)
 
-def save_ads(items):
-    path = _ensure_file('LANDS_FILE', 'lands.json', [])
+def save_ads(items, app=None):
+    path = _ensure_file('LANDS_FILE', 'lands.json', [], app)
     save_json(path, items)
 
-def load_users():
-    path = _ensure_file('USERS_FILE', 'users.json', [])
+def load_users(app=None):
+    path = _ensure_file('USERS_FILE', 'users.json', [], app)
     return load_json(path)
 
-def save_users(items):
-    path = _ensure_file('USERS_FILE', 'users.json', [])
+def save_users(items, app=None):
+    path = _ensure_file('USERS_FILE', 'users.json', [], app)
     save_json(path, items)
 
-def load_consults():
-    path = _ensure_file('CONSULTS_FILE', 'consults.json', [])
+def load_consults(app=None):
+    path = _ensure_file('CONSULTS_FILE', 'consults.json', [], app)
     return load_json(path)
 
-def save_consults(items):
-    path = _ensure_file('CONSULTS_FILE', 'consults.json', [])
+def save_consults(items, app=None):
+    path = _ensure_file('CONSULTS_FILE', 'consults.json', [], app)
     save_json(path, items)
 
-def load_settings():
-    path = _ensure_file('SETTINGS_FILE', 'settings.json', {"approval_method": "manual"})
+def load_settings(app=None):
+    path = _ensure_file('SETTINGS_FILE', 'settings.json', {"approval_method": "manual"}, app)
     return load_json(path)
 
 def get_land_by_code(code):
     lands = load_ads()
     return next((l for l in lands if l.get('code') == code), None)
+
+# ---------------- مهاجرت فایل‌های قدیمی + آماده‌سازی ----------------
+def _migrate_legacy(app=None):
+    """
+    اگر فایل‌های قدیمی داخل root_path/data باشند و در instance/data نباشند،
+    به instance/data کپی می‌شوند. uploads نیز در صورت وجود، مهاجرت می‌شود.
+    """
+    inst = _data_dir(app)
+    legacy = _legacy_data_dir(app)
+    try:
+        # JSON ها
+        for name in ('lands.json', 'users.json', 'consults.json', 'settings.json', 'notifications.json'):
+            old = os.path.join(legacy, name)
+            new = os.path.join(inst, name)
+            if os.path.exists(old) and not os.path.exists(new):
+                try:
+                    shutil.copy2(old, new)
+                except Exception:
+                    pass
+        # uploads
+        old_up = os.path.join(legacy, 'uploads')
+        new_up = os.path.join(inst, 'uploads')
+        if os.path.isdir(old_up):
+            # فقط کپی اگر مقصد خالی است
+            if not os.path.exists(new_up) or (os.path.exists(new_up) and not os.listdir(new_up)):
+                try:
+                    shutil.copytree(old_up, new_up, dirs_exist_ok=True)
+                except Exception:
+                    pass
+    except Exception as e:
+        # در مرحلهٔ bootstrap ترجیحاً فقط هشدار بدهیم
+        try:
+            (app or current_app).logger.warning("Legacy migration issue: %s", e)
+        except Exception:
+            pass
+
+@main_bp.record_once
+def _on_bp_loaded(setup_state):
+    # اینجا هنوز application context نداریم؛ از app پاس‌داده‌شده استفاده می‌کنیم.
+    app = setup_state.app
+    _ = _data_dir(app)
+    _migrate_legacy(app)
+    # فایل‌های ضروری را هم تضمین کنیم (ایجاد اگر نبودند)
+    _ensure_file('LANDS_FILE', 'lands.json', [], app)
+    _ensure_file('USERS_FILE', 'users.json', [], app)
+    _ensure_file('CONSULTS_FILE', 'consults.json', [], app)
+    _ensure_file('SETTINGS_FILE', 'settings.json', {"approval_method": "manual"}, app)
+    _ensure_file('NOTIFICATIONS_FILE', 'notifications.json', [], app)
 
 # ---------------- ارسال OTP ----------------
 def send_sms_code(phone, code):
@@ -125,7 +190,10 @@ def send_sms_code(phone, code):
     try:
         requests.post(url, headers=headers, json=data, timeout=10)
     except Exception as e:
-        print("❌ خطا در ارسال پیامک:", e)
+        try:
+            current_app.logger.error("❌ خطا در ارسال پیامک: %s", e)
+        except Exception:
+            print("❌ خطا در ارسال پیامک:", e)
 
 # ---------------- وب‌هوک Pull اتوماتیک ----------------
 @main_bp.route('/git-webhook', methods=['POST'])
@@ -160,8 +228,18 @@ def land_detail(code):
 # ---------------- سرو فایل‌های آپلود ----------------
 @main_bp.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    folder = os.path.join(current_app.root_path, 'data', 'uploads')
-    return send_from_directory(folder, filename)
+    """
+    ابتدا از instance/data/uploads سرو می‌کنیم؛ اگر نبود، از مسیر قدیمی root_path/data/uploads.
+    """
+    cand = [
+        os.path.join(_data_dir(), 'uploads'),
+        os.path.join(_legacy_data_dir(), 'uploads')
+    ]
+    for folder in cand:
+        fpath = os.path.join(folder, filename)
+        if os.path.exists(fpath):
+            return send_from_directory(folder, filename)
+    return "File not found", 404
 
 # ---------------- ثبت درخواست مشاوره ----------------
 @main_bp.route('/consult/<code>', methods=['POST'])
@@ -246,7 +324,7 @@ def add_land():
             return redirect(url_for('main.add_land'))
 
         code = datetime.now().strftime('%Y%m%d%H%M%S')
-        upload_dir = os.path.join(current_app.root_path, 'data', 'uploads')
+        upload_dir = os.path.join(_data_dir(), 'uploads')   # ← instance
         os.makedirs(upload_dir, exist_ok=True)
         image_names = []
 
@@ -322,7 +400,6 @@ def finalize_land():
 
     lands.append(new_land)
     save_ads(lands)
-
     for k in keys:
         session.pop(k, None)
 
@@ -338,22 +415,18 @@ def my_lands():
         session['next'] = url_for('main.my_lands')
         return redirect(url_for('main.send_otp'))
 
-    # پارامترها
     q        = (request.args.get('q') or '').strip().lower()
     status   = (request.args.get('status') or '').strip()
     sort     = (request.args.get('sort') or 'new').strip()
     page     = int(request.args.get('page', 1) or 1)
     per_page = min(int(request.args.get('per_page', 12) or 12), 48)
 
-    # داده خام
     lands_all = load_ads()
     user_lands = [l for l in lands_all if l.get('owner') == session['user_phone']]
 
-    # فیلتر وضعیت
     if status in {'approved', 'pending', 'rejected'}:
         user_lands = [l for l in user_lands if l.get('status') == status]
 
-    # جستجو (عنوان/لوکیشن/توضیح/کد)
     if q:
         def _hit(ad):
             title = (ad.get('title') or '').lower()
@@ -363,7 +436,6 @@ def my_lands():
             return (q in title) or (q in loc) or (q in desc) or (q == code)
         user_lands = [ad for ad in user_lands if _hit(ad)]
 
-    # مرتب‌سازی
     if sort == 'old':
         user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')))
     elif sort == 'size_desc':
@@ -373,7 +445,6 @@ def my_lands():
     else:  # new
         user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
 
-    # صفحه‌بندی ساده
     total = len(user_lands)
     pages = max((total - 1) // per_page + 1, 1)
     page = max(min(page, pages), 1)
@@ -447,7 +518,7 @@ def edit_land(code):
         })
 
         images = request.files.getlist('images')
-        folder = os.path.join(current_app.root_path, 'data', 'uploads')
+        folder = os.path.join(_data_dir(), 'uploads')  # ← instance
         os.makedirs(folder, exist_ok=True)
         saved = []
         for img in images:
@@ -550,19 +621,14 @@ def search_results():
     return render_template('search_results.html', results=results, query=query, CATEGORY_MAP=CATEGORY_MAP)
 
 # ---------- اعلان‌ها (Notifications) ----------
-def _notifications_file():
-    default_path = os.path.join(current_app.root_path, 'data', 'notifications.json')
-    current_app.config.setdefault('NOTIFICATIONS_FILE', default_path)
-    os.makedirs(os.path.dirname(current_app.config['NOTIFICATIONS_FILE']), exist_ok=True)
-    if not os.path.exists(current_app.config['NOTIFICATIONS_FILE']):
-        save_json(current_app.config['NOTIFICATIONS_FILE'], [])
-    return current_app.config['NOTIFICATIONS_FILE']
+def _notifications_file(app=None):
+    return _ensure_file('NOTIFICATIONS_FILE', 'notifications.json', [], app)
 
-def load_notifications():
-    return load_json(_notifications_file())
+def load_notifications(app=None):
+    return load_json(_notifications_file(app))
 
-def save_notifications(items):
-    save_json(_notifications_file(), items)
+def save_notifications(items, app=None):
+    save_json(_notifications_file(app), items)
 
 def user_unread_notifications_count(phone):
     if not phone:
@@ -613,3 +679,46 @@ def notifications_read_all():
 @main_bp.route('/city')
 def city_select():
     return render_template('city_select.html')
+
+# ---------------- روت‌های عیب‌یابی ----------------
+@main_bp.route('/healthz')
+def healthz():
+    try:
+        _ = load_ads()
+        return "ok", 200
+    except Exception as e:
+        try:
+            current_app.logger.exception("Health error: %s", e)
+        except Exception:
+            pass
+        return "not ok", 500
+
+@main_bp.route('/diag')
+def diag():
+    info = {}
+    try:
+        app = current_app
+        info['instance_path'] = app.instance_path
+        data_dir = _data_dir()
+        info['data_dir'] = data_dir
+        info['writable'] = os.access(data_dir, os.W_OK)
+        test_file = os.path.join(data_dir, '.__write_test')
+        with open(test_file, 'w', encoding='utf-8') as f:
+            f.write(datetime.now().isoformat())
+        os.remove(test_file)
+        info['write_test'] = 'ok'
+    except Exception as e:
+        info['write_test'] = f'error: {e}'
+    return info, 200
+
+# ---------------- هندلر خطای عمومی (اختیاری) ----------------
+@main_bp.app_errorhandler(Exception)
+def handle_any_error(e):
+    try:
+        current_app.logger.exception("Unhandled error: %s", e)
+    except Exception:
+        pass
+    try:
+        return render_template('500.html'), 500
+    except Exception:
+        return "Internal Server Error", 500

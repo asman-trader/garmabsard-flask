@@ -1,0 +1,56 @@
+WSGI load error:
+Traceback (most recent call last):
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\run.py", line 26, in <module>
+    app = create_app()
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\__init__.py", line 39, in create_app
+    app.register_blueprint(main_bp)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\scaffold.py", line 50, in wrapper_func
+    return f(self, *args, **kwargs)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\app.py", line 997, in register_blueprint
+    blueprint.register(self, options)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\blueprints.py", line 365, in register
+    deferred(state)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\blueprints.py", line 242, in wrapper
+    func(state)
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\routes\main.py", line 160, in _on_bp_loaded
+    _ = _data_dir()
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\routes\main.py", line 27, in _data_dir
+    base = current_app.instance_path
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\werkzeug\local.py", line 311, in __get__
+    obj = instance._get_current_object()
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\werkzeug\local.py", line 508, in _get_current_object
+    raise RuntimeError(unbound_message) from None
+RuntimeError: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+
+WSGI load error:
+Traceback (most recent call last):
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\run.py", line 26, in <module>
+    app = create_app()
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\__init__.py", line 39, in create_app
+    app.register_blueprint(main_bp)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\scaffold.py", line 50, in wrapper_func
+    return f(self, *args, **kwargs)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\app.py", line 997, in register_blueprint
+    blueprint.register(self, options)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\blueprints.py", line 365, in register
+    deferred(state)
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\flask\blueprints.py", line 242, in wrapper
+    func(state)
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\routes\main.py", line 160, in _on_bp_loaded
+    _ = _data_dir()
+  File "C:\Users\Aseman\OneDrive\Desktop\py-code\G\app\routes\main.py", line 27, in _data_dir
+    base = current_app.instance_path
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\werkzeug\local.py", line 311, in __get__
+    obj = instance._get_current_object()
+  File "C:\Users\Aseman\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\werkzeug\local.py", line 508, in _get_current_object
+    raise RuntimeError(unbound_message) from None
+RuntimeError: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+
