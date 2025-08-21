@@ -5,64 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}گرمابسرد{% endblock %}</title>
 
-  <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}" sizes="32x32" type="image/png" />
+  {# --- Favicon & PWA (دو حالت: png و ico) --- #}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#166534">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  {# در صورت داشتن سایزهای دیگر، اضافه کن: icon-256.png, icon-512.png #}
+
+  {# --- CSS/Fonts --- #}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet" />
 
   <style>
-    body {
-      font-family: 'Vazirmatn', sans-serif;
-      scroll-behavior: smooth;
+    body{font-family:'Vazirmatn',sans-serif;scroll-behavior:smooth}
+    /* FAB موبایلی */
+    .fab{
+      position:fixed;bottom:20px;left:20px;z-index:40;background:#16a34a;color:#fff;
+      width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 6px rgba(0,0,0,.3);transition:background-color .3s
     }
-    .fab {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 40;
-      background-color: #16a34a;
-      color: white;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      transition: background-color 0.3s;
-    }
-    .fab:hover {
-      background-color: #15803d;
-    }
+    .fab:hover{background:#15803d}
 
-    #advancedFilters { position: absolute; top: 110%; left: 0; width: 100%; z-index: 30; display: none; }
-    #advancedFilters.active { display: block; }
-    #locationMenu.active { display: block !important; }
+    /* فیلترهای پیشرفته */
+    #advancedFilters{position:absolute;top:110%;left:0;width:100%;z-index:30;display:none}
+    #advancedFilters.active{display:block}
+    #locationMenu.active{display:block!important}
 
-    /* منوی کناری */
-    #sideMenu {
-      position: fixed;
-      top: 0;
-      right: 0;
-      height: 100%;
-      width: 18rem;
-      background-color: white;
-      z-index: 50;
-      transform: translateX(100%);
-      transition: transform 0.3s ease-in-out;
-      box-shadow: -1px 0 5px rgba(0,0,0,0.1);
-      border-left: 1px solid #e5e7eb;
+    /* سایدبار */
+    #sideMenu{
+      position:fixed;top:0;right:0;height:100%;width:18rem;background:#fff;z-index:50;
+      transform:translateX(100%);transition:transform .3s ease-in-out;
+      box-shadow:-1px 0 5px rgba(0,0,0,.1);border-left:1px solid #e5e7eb
     }
-    #sideMenu.open {
-      transform: translateX(0);
-    }
-    .dark #sideMenu {
-      background-color: #111827;
-      border-color: #374151;
-    }
+    #sideMenu.open{transform:translateX(0)}
+    .dark #sideMenu{background:#111827;border-color:#374151}
   </style>
 
   {% block head %}{% endblock %}
@@ -83,16 +61,14 @@
         <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
           <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
         </a>
-        <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800">
+        <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800" aria-label="جستجو">
           <i class="fas fa-search"></i>
         </a>
-        <!-- دکمه منو همیشه نمایش داده می‌شود -->
-        <button id="menuToggle" class="text-2xl text-green-600 dark:text-green-400">
+        <button id="menuToggle" class="text-2xl text-green-600 dark:text-green-400" aria-label="باز کردن منو">
           <i class="fas fa-bars"></i>
         </button>
       </div>
     </div>
-
   </header>
   {% endif %}
 
@@ -109,40 +85,42 @@
   {% include 'side_menu.html' %}
 
   <script>
+    // وضعیت ورود
     const isLoggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
-    document.querySelectorAll('.require-login').forEach(item => {
-      item.addEventListener('click', function (e) {
-        if (!isLoggedIn) {
+    document.querySelectorAll('.require-login').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        if(!isLoggedIn){
           e.preventDefault();
-          window.location.href = "{{ url_for('main.send_otp') }}";
+          location.href = "{{ url_for('main.send_otp') }}";
         }
       });
     });
 
+    // سایدبار
     const sideMenu = document.getElementById("sideMenu");
-    document.getElementById("menuToggle")?.addEventListener("click", () => {
-      sideMenu?.classList.add("open");
-    });
-    document.getElementById("closeMenu")?.addEventListener("click", () => {
-      sideMenu?.classList.remove("open");
-    });
-    window.addEventListener("click", (e) => {
-      if (!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) {
-        sideMenu?.classList.remove("open");
-      }
+    document.getElementById("menuToggle")?.addEventListener("click", ()=> sideMenu?.classList.add("open"));
+    document.getElementById("closeMenu")?.addEventListener("click", ()=> sideMenu?.classList.remove("open"));
+    window.addEventListener("click", (e)=>{
+      if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
     });
 
+    // فیلترها
     const toggleBtn = document.getElementById("toggleFilters");
-    const filters = document.getElementById("advancedFilters");
-    toggleBtn?.addEventListener("click", () => filters?.classList.toggle("active"));
+    const filters   = document.getElementById("advancedFilters");
+    toggleBtn?.addEventListener("click", ()=> filters?.classList.toggle("active"));
 
     const locationToggle = document.getElementById("locationToggle");
-    const locationMenu = document.getElementById("locationMenu");
-    locationToggle?.addEventListener("click", () => locationMenu?.classList.toggle("active"));
-    window.addEventListener("click", (e) => {
-      if (!e.target.closest("#locationMenu") && !e.target.closest("#locationToggle")) locationMenu?.classList.remove("active");
-      if (!e.target.closest("#advancedFilters") && !e.target.closest("#toggleFilters")) filters?.classList.remove("active");
+    const locationMenu   = document.getElementById("locationMenu");
+    locationToggle?.addEventListener("click", ()=> locationMenu?.classList.toggle("active"));
+    window.addEventListener("click", (e)=>{
+      if (!e.target.closest("#locationMenu")   && !e.target.closest("#locationToggle")) locationMenu?.classList.remove("active");
+      if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
     });
+
+    // ثبت Service Worker در صورت وجود (اختیاری اما مفید برای PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(()=>{});
+    }
   </script>
 
   {% block scripts %}{% endblock %}

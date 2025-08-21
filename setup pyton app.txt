@@ -52,4 +52,11 @@ source /home/garmabs2/virtualenv/myapp/3.11/bin/activate && cd /home/garmabs2/my
 
 git pull origin main
 ----------------------------
-00000
+ریست کل و هماهنگ سازی کامل و اجباری با گیت
+
+source /home/garmabs2/virtualenv/myapp/3.11/bin/activate && cd /home/garmabs2/myapp
+
+git fetch origin main
+git reset --hard origin/main
+git clean -fd
+

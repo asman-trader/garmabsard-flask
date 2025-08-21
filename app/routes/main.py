@@ -42,14 +42,15 @@ def _ensure_file(config_key: str, filename: str, default_content, app=None):
     اگر config_key ست نشده باشد یا فایل وجود نداشته باشد:
       - مسیر پیش‌فرض instance/data/<filename> ساخته می‌شود
       - در صورت نبود، فایل با default_content ایجاد می‌شود
+      - اگر نسخهٔ قدیمی در data/ باشد، مهاجرت می‌شود
     """
+    app = app or current_app
     data_dir = _data_dir(app)
-    fpath = (app or current_app).config.get(config_key) or os.path.join(data_dir, filename)
-    (app or current_app).config[config_key] = fpath
+    fpath = app.config.get(config_key) or os.path.join(data_dir, filename)
+    app.config[config_key] = fpath
 
     os.makedirs(os.path.dirname(fpath), exist_ok=True)
     if not os.path.exists(fpath):
-        # اگر نسخه قدیمی در root_path/data هست، اولویت با آن است (مهاجرت)
         legacy = os.path.join(_legacy_data_dir(app), filename)
         if os.path.exists(legacy):
             try:
@@ -132,6 +133,7 @@ def _migrate_legacy(app=None):
     اگر فایل‌های قدیمی داخل root_path/data باشند و در instance/data نباشند،
     به instance/data کپی می‌شوند. uploads نیز در صورت وجود، مهاجرت می‌شود.
     """
+    app = app or current_app
     inst = _data_dir(app)
     legacy = _legacy_data_dir(app)
     try:
@@ -148,31 +150,48 @@ def _migrate_legacy(app=None):
         old_up = os.path.join(legacy, 'uploads')
         new_up = os.path.join(inst, 'uploads')
         if os.path.isdir(old_up):
-            # فقط کپی اگر مقصد خالی است
             if not os.path.exists(new_up) or (os.path.exists(new_up) and not os.listdir(new_up)):
                 try:
                     shutil.copytree(old_up, new_up, dirs_exist_ok=True)
                 except Exception:
                     pass
     except Exception as e:
-        # در مرحلهٔ bootstrap ترجیحاً فقط هشدار بدهیم
         try:
-            (app or current_app).logger.warning("Legacy migration issue: %s", e)
+            app.logger.warning("Legacy migration issue: %s", e)
         except Exception:
             pass
 
 @main_bp.record_once
 def _on_bp_loaded(setup_state):
-    # اینجا هنوز application context نداریم؛ از app پاس‌داده‌شده استفاده می‌کنیم.
     app = setup_state.app
     _ = _data_dir(app)
     _migrate_legacy(app)
-    # فایل‌های ضروری را هم تضمین کنیم (ایجاد اگر نبودند)
     _ensure_file('LANDS_FILE', 'lands.json', [], app)
     _ensure_file('USERS_FILE', 'users.json', [], app)
     _ensure_file('CONSULTS_FILE', 'consults.json', [], app)
     _ensure_file('SETTINGS_FILE', 'settings.json', {"approval_method": "manual"}, app)
     _ensure_file('NOTIFICATIONS_FILE', 'notifications.json', [], app)
+
+# ---------------- فیلتر تاریخ جینجا: از خطای strftime جلوگیری می‌کند ----------------
+def _parse_any_date(value):
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d", "%Y/%m/%d"):
+            try:
+                return datetime.strptime(value, fmt)
+            except Exception:
+                pass
+    return None
+
+@main_bp.app_template_filter("date_ymd")
+def date_ymd(value, default="-"):
+    dt = _parse_any_date(value)
+    if dt:
+        return dt.strftime("%Y/%m/%d")
+    if isinstance(value, str) and value:
+        return value.split(" ")[0].replace("-", "/")
+    return default
 
 # ---------------- ارسال OTP ----------------
 def send_sms_code(phone, code):
@@ -315,7 +334,7 @@ def add_land():
         description = request.form.get('description')
         category = request.form.get('category', '').strip()
         if category and category not in CATEGORY_KEYS:
-            category = ""  # مقدار نامعتبر را نادیده بگیر
+            category = ""
 
         images = request.files.getlist('images')
 
@@ -324,7 +343,7 @@ def add_land():
             return redirect(url_for('main.add_land'))
 
         code = datetime.now().strftime('%Y%m%d%H%M%S')
-        upload_dir = os.path.join(_data_dir(), 'uploads')   # ← instance
+        upload_dir = os.path.join(_data_dir(), 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
         image_names = []
 
@@ -518,7 +537,7 @@ def edit_land(code):
         })
 
         images = request.files.getlist('images')
-        folder = os.path.join(_data_dir(), 'uploads')  # ← instance
+        folder = os.path.join(_data_dir(), 'uploads')
         os.makedirs(folder, exist_ok=True)
         saved = []
         for img in images:

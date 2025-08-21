@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <!-- Toolbar: search + filters + sort -->
+  <!-- Toolbar: search + filters + sort (فیلترها به بک‌اند اعمال می‌شود) -->
   <form id="filterForm" method="get" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
       <!-- Search -->
@@ -48,7 +48,7 @@
           {% set st = request.args.get('status','') %}
           <option value="" {{ 'selected' if st=='' else '' }}>همه</option>
           <option value="approved" {{ 'selected' if st=='approved' else '' }}>تأیید شده</option>
-          <option value="pending" {{ 'selected' if st=='pending' else '' }}>در انتظار تأیید</option>
+          <option value="pending"  {{ 'selected' if st=='pending'  else '' }}>در انتظار تأیید</option>
           <option value="rejected" {{ 'selected' if st=='rejected' else '' }}>رد شده</option>
         </select>
       </div>
@@ -58,10 +58,10 @@
         <label class="text-xs text-gray-600 dark:text-gray-300">مرتب‌سازی</label>
         <select name="sort" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 dark:bg-gray-800 dark:text-white">
           {% set srt = request.args.get('sort','new') %}
-          <option value="new" {{ 'selected' if srt=='new' else '' }}>جدیدترین</option>
-          <option value="old" {{ 'selected' if srt=='old' else '' }}>قدیمی‌ترین</option>
-          <option value="size_desc" {{ 'selected' if srt=='size_desc' else '' }}>بزرگ‌ترین متراژ</option>
-          <option value="size_asc"  {{ 'selected' if srt=='size_asc'  else '' }}>کوچک‌ترین متراژ</option>
+          <option value="new"        {{ 'selected' if srt=='new' else '' }}>جدیدترین</option>
+          <option value="old"        {{ 'selected' if srt=='old' else '' }}>قدیمی‌ترین</option>
+          <option value="size_desc"  {{ 'selected' if srt=='size_desc' else '' }}>بزرگ‌ترین متراژ</option>
+          <option value="size_asc"   {{ 'selected' if srt=='size_asc'  else '' }}>کوچک‌ترین متراژ</option>
         </select>
       </div>
     </div>
@@ -79,29 +79,17 @@
 
   {% set has_items = lands and lands|length > 0 %}
   {% if has_items %}
-    {# --- در صورتیکه بک‌اند سورت نکرده باشد: مرتب‌سازی سمت قالب --- #}
-    {% set _srt = request.args.get('sort','new') %}
-    {% if _srt == 'old' %}
-      {% set ordered = lands|sort(attribute='created_at') %}
-    {% elif _srt == 'size_desc' %}
-      {% set ordered = lands|sort(attribute='size')|reverse %}
-    {% elif _srt == 'size_asc' %}
-      {% set ordered = lands|sort(attribute='size') %}
-    {% else %}
-      {# پیش‌فرض: جدیدترین #}
-      {% set ordered = lands|sort(attribute='created_at', reverse=True) %}
-    {% endif %}
 
     <!-- Count -->
     <div class="flex items-center justify-between mt-5 mb-3">
       <span class="text-sm text-gray-600 dark:text-gray-400">
-        تعداد آگهی‌ها: <strong>{{ ordered|length }}</strong>
+        تعداد آگهی‌ها: <strong>{{ lands|length }}</strong>
       </span>
     </div>
 
     <!-- Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for land in ordered %}
+      {% for land in lands %}
       <article class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-lg transition overflow-hidden">
         <!-- Status badge -->
         {% if land.status == 'pending' %}
@@ -131,7 +119,10 @@
           <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300">
             <div class="flex items-center gap-1">
               <i class="fas fa-vector-square text-gray-500"></i>
-              <span>{{ land.size and "{:,}".format(land.size|int) or "?" }} متر</span>
+              <span>
+                {% set _sz = (land.size|int if land.size is not none else 0) %}
+                {{ "{:,}".format(_sz) if _sz else "?" }} متر
+              </span>
             </div>
             <div class="flex items-center gap-1">
               <i class="fas fa-map-marker-alt text-gray-500"></i>
@@ -144,18 +135,16 @@
             <div class="flex items-center gap-1">
               <i class="fas fa-clock text-gray-500"></i>
               <span>
-                {% if land.created_at %}
-                  {{ land.created_at.strftime('%Y/%m/%d') }}
-                {% else %}
-                  —
-                {% endif %}
+                {{ land.created_at | date_ymd }}
               </span>
             </div>
           </div>
 
-          {% if land.price %}
+          {% if land.price_total is not none %}
           <div class="mt-2 text-sm font-bold text-gray-800 dark:text-gray-100">
-            💰 قیمت: {{ "{:,}".format(land.price|int) }} تومان
+            💰 قیمت:
+            {% set _pt = land.price_total|int %}
+            {{ "{:,}".format(_pt) }} تومان
           </div>
           {% endif %}
 
@@ -193,6 +182,33 @@
       </article>
       {% endfor %}
     </div>
+
+    <!-- Pagination -->
+    {% if pagination and (pagination.pages > 1) %}
+      <div class="mt-6 flex items-center justify-center gap-2">
+        {% if pagination.has_prev %}
+          <a href="{{ page_url(pagination.page - 1) }}"
+             class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">
+            قبلی
+          </a>
+        {% else %}
+          <span class="px-3 py-2 rounded-lg border border-transparent text-sm text-gray-400">قبلی</span>
+        {% endif %}
+
+        <span class="px-3 py-2 text-sm">
+          صفحه {{ pagination.page }} از {{ pagination.pages }}
+        </span>
+
+        {% if pagination.has_next %}
+          <a href="{{ page_url(pagination.page + 1) }}"
+             class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm">
+            بعدی
+          </a>
+        {% else %}
+          <span class="px-3 py-2 rounded-lg border border-transparent text-sm text-gray-400">بعدی</span>
+        {% endif %}
+      </div>
+    {% endif %}
 
   {% else %}
     <!-- Empty state -->
