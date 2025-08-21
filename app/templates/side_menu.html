@@ -41,7 +41,7 @@
       </a>
 
       <div class="flex items-center gap-2">
-        <!-- Current City Chip (click to page) -->
+        <!-- Current City Chip -->
         <a id="cityChip"
            href="{{ url_for('main.city_select') }}"
            class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
@@ -51,39 +51,6 @@
           <i class="fas fa-map-marker-alt text-green-600 dark:text-green-400"></i>
           <span id="cityChipText">انتخاب شهر</span>
         </a>
-
-        <!-- Quick menu -->
-        <div class="relative">
-          <button id="quickMenuBtn"
-                  class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  aria-label="منوی سریع" aria-expanded="false" aria-controls="quickMenu">
-            <i class="fas fa-ellipsis-v"></i>
-          </button>
-          <div id="quickMenu"
-               class="absolute left-0 mt-2 w-40 hidden
-                      bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                      rounded-xl shadow-xl overflow-hidden z-50">
-            <a href="{{ url_for('main.city_select') }}"
-               class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <i class="fas fa-city"></i> انتخاب شهر
-            </a>
-            <a href="{{ url_for('main.settings') }}"
-               class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <i class="fas fa-cog"></i> تنظیمات
-            </a>
-            {% if session.get('user_phone') %}
-              <a href="{{ url_for('main.logout') }}"
-                 class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-700">
-                <i class="fas fa-sign-out-alt"></i> خروج
-              </a>
-            {% else %}
-              <a href="{{ url_for('main.send_otp') }}"
-                 class="flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-700">
-                <i class="fas fa-sign-in-alt"></i> ورود / ثبت‌نام
-              </a>
-            {% endif %}
-          </div>
-        </div>
 
         <!-- Close (mobile) -->
         <button id="closeMenu"
@@ -107,7 +74,7 @@
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
 
-    <!-- City selector entry (go to page) -->
+    <!-- City selector entry -->
     <a href="{{ url_for('main.city_select') }}"
        class="w-full flex items-center gap-3 p-3 rounded-xl transition
               hover:bg-green-100 dark:hover:bg-green-800 active:scale-[0.98]">
@@ -170,8 +137,6 @@
     const sideMenu   = document.getElementById('sideMenu');
     const overlay    = document.getElementById('menuOverlay');
     const closeBtn   = document.getElementById('closeMenu');
-    const quickBtn   = document.getElementById('quickMenuBtn');
-    const quickMenu  = document.getElementById('quickMenu');
     const shareBtn   = document.getElementById('shareSite');
     const cityChipText = document.getElementById('cityChipText');
     const cityMenuText = document.getElementById('cityMenuText');
@@ -189,28 +154,11 @@
       overlay?.classList.add('pointer-events-none');
       overlay?.classList.remove('opacity-100');
       document.body.style.overflow = '';
-      hideQuick();
-    };
-    const toggleQuick = () => {
-      const show = quickMenu.classList.contains('hidden');
-      quickMenu.classList.toggle('hidden', !show);
-      quickBtn?.setAttribute('aria-expanded', String(show));
-    };
-    const hideQuick = () => {
-      quickMenu.classList.add('hidden');
-      quickBtn?.setAttribute('aria-expanded', 'false');
     };
 
     window.openSideMenu = openMenu;
     overlay?.addEventListener('click', closeMenu);
     closeBtn?.addEventListener('click', closeMenu);
-
-    quickBtn?.addEventListener('click', (e) => {
-      e.stopPropagation(); toggleQuick();
-    });
-    document.addEventListener('click', (e) => {
-      if (!quickMenu.contains(e.target) && e.target !== quickBtn) hideQuick();
-    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen()) closeMenu();
@@ -261,7 +209,6 @@
     }
     updateCityUI();
 
-    // وقتی در صفحهٔ انتخاب شهر تغییر کرد، اینجا هم به‌روز شود
     window.addEventListener('storage', (e) => {
       if (e.key === 'gbs_city') updateCityUI();
     });
