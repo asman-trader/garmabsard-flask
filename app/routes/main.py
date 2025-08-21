@@ -12,13 +12,40 @@ CATEGORY_MAP = {
     "residential_land": "زمین مسکونی",
     "garden": "باغ",
     "villa": "ویلا",
-    "titled": "سنددار",
+    "titled": "सنددار",
     "with_utilities": "دارای آب و برق",
     "good_price": "قیمت مناسب"
 }
 CATEGORY_KEYS = set(CATEGORY_MAP.keys()) - {""}
 
-# ---------------- ابزارهای کمکی ----------------
+# ---------------- ابزارهای کمکی مسیر/فایل ----------------
+def _data_dir():
+    path = os.path.join(current_app.root_path, 'data')
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def _ensure_file(config_key: str, filename: str, default_content):
+    """
+    اگر config_key ست نشده باشد یا فایل وجود نداشته باشد:
+      - مسیر پیش‌فرض data/<filename> ساخته می‌شود
+      - فایل با default_content ایجاد می‌شود
+    در نهایت مسیر را در config ثبت و برمی‌گرداند.
+    """
+    # اگر مسیر از قبل ست شده:
+    fpath = current_app.config.get(config_key)
+    if not fpath:
+        fpath = os.path.join(_data_dir(), filename)
+        current_app.config[config_key] = fpath
+
+    os.makedirs(os.path.dirname(fpath), exist_ok=True)
+    if not os.path.exists(fpath):
+        with open(fpath, 'w', encoding='utf-8') as f:
+            if isinstance(default_content, (dict, list)):
+                json.dump(default_content, f, ensure_ascii=False, indent=2)
+            else:
+                f.write(str(default_content or ""))
+    return fpath
+
 def load_json(path):
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
@@ -29,13 +56,60 @@ def load_json(path):
     return []
 
 def save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ---------------- ابزارهای کمکی داده ----------------
+def parse_datetime_safe(date_str):
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    except Exception:
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%d')
+        except Exception:
+            return datetime(1970, 1, 1)
+
+def _to_int(x, default=0):
+    try:
+        # حذف کاما و فاصله برای اطمینان
+        return int(str(x).replace(',', '').strip())
+    except Exception:
+        return default
+
+def load_ads():
+    path = _ensure_file('LANDS_FILE', 'lands.json', [])
+    return load_json(path)
+
+def save_ads(items):
+    path = _ensure_file('LANDS_FILE', 'lands.json', [])
+    save_json(path, items)
+
+def load_users():
+    path = _ensure_file('USERS_FILE', 'users.json', [])
+    return load_json(path)
+
+def save_users(items):
+    path = _ensure_file('USERS_FILE', 'users.json', [])
+    save_json(path, items)
+
+def load_consults():
+    path = _ensure_file('CONSULTS_FILE', 'consults.json', [])
+    return load_json(path)
+
+def save_consults(items):
+    path = _ensure_file('CONSULTS_FILE', 'consults.json', [])
+    save_json(path, items)
+
+def load_settings():
+    path = _ensure_file('SETTINGS_FILE', 'settings.json', {"approval_method": "manual"})
+    return load_json(path)
+
 def get_land_by_code(code):
-    lands = load_json(current_app.config['LANDS_FILE'])
+    lands = load_ads()
     return next((l for l in lands if l.get('code') == code), None)
 
+# ---------------- ارسال OTP ----------------
 def send_sms_code(phone, code):
     url = "https://api.sms.ir/v1/send/verify"
     headers = {
@@ -53,18 +127,6 @@ def send_sms_code(phone, code):
     except Exception as e:
         print("❌ خطا در ارسال پیامک:", e)
 
-def parse_datetime_safe(date_str):
-    try:
-        return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    except Exception:
-        try:
-            return datetime.strptime(date_str, '%Y-%m-%d')
-        except Exception:
-            return datetime(1970, 1, 1)
-
-def load_ads():
-    return load_json(current_app.config['LANDS_FILE'])
-
 # ---------------- وب‌هوک Pull اتوماتیک ----------------
 @main_bp.route('/git-webhook', methods=['POST'])
 def git_webhook():
@@ -80,7 +142,11 @@ def git_webhook():
 def index():
     lands = load_ads()
     approved = [l for l in lands if l.get('status') == 'approved']
-    sorted_lands = sorted(approved, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+    sorted_lands = sorted(
+        approved,
+        key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')),
+        reverse=True
+    )
     return render_template('index.html', lands=sorted_lands, now=datetime.now(), CATEGORY_MAP=CATEGORY_MAP)
 
 # ---------------- جزئیات آگهی ----------------
@@ -100,7 +166,7 @@ def uploaded_file(filename):
 # ---------------- ثبت درخواست مشاوره ----------------
 @main_bp.route('/consult/<code>', methods=['POST'])
 def consult(code):
-    consults = load_json(current_app.config['CONSULTS_FILE'])
+    consults = load_consults()
     consults.append({
         'name': request.form.get('name'),
         'phone': request.form.get('phone'),
@@ -108,7 +174,7 @@ def consult(code):
         'code': code,
         'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
-    save_json(current_app.config['CONSULTS_FILE'], consults)
+    save_consults(consults)
     flash("✅ درخواست مشاوره ثبت شد.")
     return redirect(url_for('main.land_detail', code=code))
 
@@ -136,10 +202,10 @@ def verify_otp():
 
     if session.get('otp_code') == code and session.get('otp_phone') == phone:
         session['user_phone'] = phone
-        users = load_json(current_app.config['USERS_FILE'])
+        users = load_users()
         if not any(u.get('phone') == phone for u in users):
             users.append({'phone': phone, 'registered_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
-            save_json(current_app.config['USERS_FILE'], users)
+            save_users(users)
         flash("✅ ورود موفقیت‌آمیز بود.")
         return redirect(session.pop('next', None) or url_for('main.index'))
     flash("❌ کد واردشده نادرست است.")
@@ -171,8 +237,7 @@ def add_land():
         description = request.form.get('description')
         category = request.form.get('category', '').strip()
         if category and category not in CATEGORY_KEYS:
-            # اگر مقدار نادرست آمد، نادیده بگیر
-            category = ""
+            category = ""  # مقدار نامعتبر را نادیده بگیر
 
         images = request.files.getlist('images')
 
@@ -197,15 +262,14 @@ def add_land():
                 'title': title,
                 'location': location,
                 'size': size,
-                'price_total': int(price_total) if price_total else None,
+                'price_total': _to_int(price_total) if price_total else None,
                 'description': description,
-                'category': category  # ممکن است خالی باشد
+                'category': category
             },
             'land_images': image_names
         })
         return redirect(url_for('main.add_land_step3'))
 
-    # برای فرم: CATEGORY_MAP را بده تا در Select استفاده شود
     return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP)
 
 # ---------------- ثبت آگهی (مرحله 3: انتخاب نوع) ----------------
@@ -235,18 +299,11 @@ def finalize_land():
         flash("اطلاعات ناقص است.")
         return redirect(url_for('main.add_land'))
 
-    approval_method = 'manual'
-    settings_file = current_app.config['SETTINGS_FILE']
-    if os.path.exists(settings_file):
-        try:
-            with open(settings_file, 'r', encoding='utf-8') as f:
-                approval_method = json.load(f).get('approval_method', 'manual')
-        except Exception:
-            pass
-
+    settings = load_settings()
+    approval_method = settings.get('approval_method', 'manual')
     status = 'approved' if approval_method == 'auto' else 'pending'
-    lands = load_ads()
 
+    lands = load_ads()
     lt = session['land_temp']
     new_land = {
         'code': session['land_code'],
@@ -260,11 +317,11 @@ def finalize_land():
         'owner': session.get('user_phone'),
         'status': status,
         'ad_type': session['land_ad_type'],
-        'category': lt.get('category', '')  # ممکن است خالی باشد
+        'category': lt.get('category', '')
     }
 
     lands.append(new_land)
-    save_json(current_app.config['LANDS_FILE'], lands)
+    save_ads(lands)
 
     for k in keys:
         session.pop(k, None)
@@ -273,7 +330,7 @@ def finalize_land():
     flash(msg)
     return redirect(url_for('main.my_lands'))
 
-# ---------------- آگهی‌های من ----------------
+# ---------------- آگهی‌های من (جستجو/فیلتر/سورت/صفحه‌بندی) ----------------
 @main_bp.route('/my-lands')
 def my_lands():
     if 'user_phone' not in session:
@@ -281,10 +338,68 @@ def my_lands():
         session['next'] = url_for('main.my_lands')
         return redirect(url_for('main.send_otp'))
 
-    lands = load_ads()
-    user_lands = [l for l in lands if l.get('owner') == session['user_phone']]
-    # نمایش همه وضعیت‌ها برای صاحب آگهی
-    return render_template('my_lands.html', lands=user_lands, CATEGORY_MAP=CATEGORY_MAP)
+    # پارامترها
+    q        = (request.args.get('q') or '').strip().lower()
+    status   = (request.args.get('status') or '').strip()
+    sort     = (request.args.get('sort') or 'new').strip()
+    page     = int(request.args.get('page', 1) or 1)
+    per_page = min(int(request.args.get('per_page', 12) or 12), 48)
+
+    # داده خام
+    lands_all = load_ads()
+    user_lands = [l for l in lands_all if l.get('owner') == session['user_phone']]
+
+    # فیلتر وضعیت
+    if status in {'approved', 'pending', 'rejected'}:
+        user_lands = [l for l in user_lands if l.get('status') == status]
+
+    # جستجو (عنوان/لوکیشن/توضیح/کد)
+    if q:
+        def _hit(ad):
+            title = (ad.get('title') or '').lower()
+            loc   = (ad.get('location') or '').lower()
+            desc  = (ad.get('description') or '').lower()
+            code  = str(ad.get('code') or '')
+            return (q in title) or (q in loc) or (q in desc) or (q == code)
+        user_lands = [ad for ad in user_lands if _hit(ad)]
+
+    # مرتب‌سازی
+    if sort == 'old':
+        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')))
+    elif sort == 'size_desc':
+        user_lands.sort(key=lambda x: _to_int(x.get('size')), reverse=True)
+    elif sort == 'size_asc':
+        user_lands.sort(key=lambda x: _to_int(x.get('size')))
+    else:  # new
+        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+
+    # صفحه‌بندی ساده
+    total = len(user_lands)
+    pages = max((total - 1) // per_page + 1, 1)
+    page = max(min(page, pages), 1)
+    start = (page - 1) * per_page
+    end = start + per_page
+    items = user_lands[start:end]
+
+    def page_url(p):
+        args = request.args.to_dict()
+        args['page'] = p
+        return url_for('main.my_lands', **args)
+
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'pages': pages,
+        'total': total,
+        'has_prev': page > 1,
+        'has_next': page < pages
+    }
+
+    return render_template('my_lands.html',
+                           lands=items,
+                           pagination=pagination,
+                           page_url=page_url,
+                           CATEGORY_MAP=CATEGORY_MAP)
 
 # ---------------- پروفایل ----------------
 @main_bp.route('/profile')
@@ -294,7 +409,7 @@ def profile():
         session['next'] = url_for('main.profile')
         return redirect(url_for('main.send_otp'))
 
-    users = load_json(current_app.config['USERS_FILE'])
+    users = load_users()
     user = next((u for u in users if u.get('phone') == session['user_phone']), None)
     return render_template('profile.html', user=user)
 
@@ -326,7 +441,7 @@ def edit_land(code):
             'title': request.form.get('title'),
             'location': request.form.get('location'),
             'size': request.form.get('size'),
-            'price_total': int(request.form.get('price_total')) if request.form.get('price_total') else None,
+            'price_total': _to_int(request.form.get('price_total')) if request.form.get('price_total') else None,
             'description': request.form.get('description'),
             'category': category
         })
@@ -344,7 +459,7 @@ def edit_land(code):
         if saved:
             land['images'] = saved
 
-        save_json(current_app.config['LANDS_FILE'], lands)
+        save_ads(lands)
         flash("✅ آگهی با موفقیت ویرایش شد.")
         return redirect(url_for('main.my_lands'))
 
@@ -363,7 +478,7 @@ def delete_land(code):
     if len(new_lands) == len(lands):
         flash("❌ آگهی پیدا نشد یا متعلق به شما نیست.")
     else:
-        save_json(current_app.config['LANDS_FILE'], new_lands)
+        save_ads(new_lands)
         flash("🗑️ آگهی حذف شد.")
 
     return redirect(url_for('main.my_lands'))
@@ -376,7 +491,7 @@ def settings():
         session['next'] = url_for('main.settings')
         return redirect(url_for('main.send_otp'))
 
-    users = load_json(current_app.config['USERS_FILE'])
+    users = load_users()
     phone = session['user_phone']
     user = next((u for u in users if u.get('phone') == phone), None)
 
@@ -393,7 +508,7 @@ def settings():
         if new_password:
             user['password'] = new_password
 
-        save_json(current_app.config['USERS_FILE'], users)
+        save_users(users)
         flash("✅ تنظیمات با موفقیت ذخیره شد.")
         return redirect(url_for('main.settings'))
 
@@ -402,23 +517,16 @@ def settings():
 # ---------------- صفحه فهرست با فیلتر دسته ----------------
 @main_bp.route('/search')
 def search_page():
-    # دسته‌ی فعال از URL
     active_category = request.args.get('category', '').strip()
     if active_category and active_category not in CATEGORY_KEYS:
-        # اگر کلید نامعتبر بود، آن را خالی کن تا «همه» شود
         active_category = ""
 
-    # همه آگهی‌های تایید شده
     ads = [ad for ad in load_ads() if ad.get('status') == 'approved']
 
-    # فیلتر بر اساس دسته (در صورت وجود)
     if active_category:
         ads = [ad for ad in ads if ad.get('category', '') == active_category]
 
-    # مرتب‌سازی جدیدترین اول
     ads = sorted(ads, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
-
-    # می‌توانی پارامترهای دیگری مثل sort/page را هم در قالب هندل کنی
     return render_template('search.html', ads=ads, category=active_category, CATEGORY_MAP=CATEGORY_MAP)
 
 # ---------------- نتایج جست‌وجوی متنی ----------------
@@ -428,7 +536,6 @@ def search_results():
     q = query.lower()
 
     all_ads = load_ads()
-    # فقط تاییدشده‌ها
     pool = [ad for ad in all_ads if ad.get('status') == 'approved']
 
     results = []
@@ -442,17 +549,11 @@ def search_results():
     results = sorted(results, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
     return render_template('search_results.html', results=results, query=query, CATEGORY_MAP=CATEGORY_MAP)
 
-
 # ---------- اعلان‌ها (Notifications) ----------
-from flask import flash
-
 def _notifications_file():
-    # اگر جایی ست‌ نکردی، به صورت پیش‌فرض فایل را در app/data/notifications.json می‌سازیم
     default_path = os.path.join(current_app.root_path, 'data', 'notifications.json')
     current_app.config.setdefault('NOTIFICATIONS_FILE', default_path)
-    # اگر پوشه data وجود نداشت، بساز
     os.makedirs(os.path.dirname(current_app.config['NOTIFICATIONS_FILE']), exist_ok=True)
-    # اگر فایل وجود ندارد، یک آرایه خالی ذخیره کن
     if not os.path.exists(current_app.config['NOTIFICATIONS_FILE']):
         save_json(current_app.config['NOTIFICATIONS_FILE'], [])
     return current_app.config['NOTIFICATIONS_FILE']
@@ -471,7 +572,6 @@ def user_unread_notifications_count(phone):
 
 @main_bp.app_context_processor
 def inject_notifications_count():
-    # این متغیر در همه قالب‌ها در دسترس است: notif_count
     phone = session.get('user_phone')
     return {'notif_count': user_unread_notifications_count(phone)}
 
@@ -484,7 +584,7 @@ def notifications():
 
     items = load_notifications()
     my_items = [n for n in items if n.get('to') == phone]
-    # مرتب‌سازی نزولی بر اساس زمان ایجاد (created_at) اگر باشد، وگرنه بر اساس id/آخر لیست
+
     def sort_key(n):
         return n.get('created_at') or n.get('id') or 0
     my_items.sort(key=sort_key, reverse=True)
@@ -509,8 +609,7 @@ def notifications_read_all():
     flash('همه اعلان‌ها خوانده شد.', 'success')
     return redirect(url_for('main.notifications'))
 
-# در بالای فایل: from flask import render_template
+# ---------------- انتخاب شهر ----------------
 @main_bp.route('/city')
 def city_select():
-    # صفحهٔ مستقل انتخاب شهر (بدون نیاز به دیتابیس)
     return render_template('city_select.html')
