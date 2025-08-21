@@ -76,11 +76,14 @@
     {% block content %}{% endblock %}
   </main>
 
-  {% if not hide_header %}
-  <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
-    <i class="fas fa-plus text-xl"></i>
-  </a>
-  {% endif %}
+  {# --- FAB: با شرط مخفی‌سازی در صفحه آگهی‌های من + بلوک قابل‌اورراید --- #}
+  {% block floating_action %}
+    {% if not hide_header and request.endpoint != 'main.my_lands' %}
+      <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
+        <i class="fas fa-plus text-xl"></i>
+      </a>
+    {% endif %}
+  {% endblock %}
 
   {% include 'side_menu.html' %}
 
