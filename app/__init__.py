@@ -5,12 +5,13 @@ from .filters import register_filters
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
-    app.config.setdefault("SECRET_KEY", os.environ.get("SECRET_KEY", "dev-key"))
+
+    # 🔑 حتماً یک secret_key ست کن (از env یا مقدار ثابت امن)
+    app.secret_key = os.environ.get("SECRET_KEY") or "super-secret-key-change-this"
+
     register_filters(app)
 
-    # این import، کل پکیج routes را لود می‌کند و چون
-    # داخل routes/__init__.py ماژول‌ها import شده‌اند،
-    # همه‌ی روت‌ها قبل از register آماده‌اند.
+    # لود کردن همه‌ی روت‌ها از پکیج routes
     from .routes import main_bp
     app.register_blueprint(main_bp)
 
