@@ -1,26 +1,37 @@
 {% extends "base.html" %}
-{% block title %}{{ land.title }} | املاک آسمان گرمابسرد{% endblock %}
+{% block title %}{{ land.title or "جزئیات آگهی" }} | املاک آسمان گرمابسرد{% endblock %}
 
 {% block head %}
-  <meta name="description" content="جزئیات آگهی زمین {{ land.title }} در املاک آسمان گرمابسرد" />
+  <meta name="description" content="جزئیات آگهی {{ land.title or '' }} در املاک آسمان گرمابسرد" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 {% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto mt-2 sm:mt-6 bg-white dark:bg-slate-800 rounded-xl shadow p-3 sm:p-6 pb-28">
 
-  {% if land.images and land.images|length > 0 %}
+  {# ---------------- گالری تصاویر (ایمن در برابر None/رشته) ---------------- #}
+  {% set _images = [] %}
+  {% if land.images %}
+    {% if land.images is sequence %}
+      {% set _images = land.images %}
+    {% elif land.images is string %}
+      {% set _images = [land.images] %}
+    {% endif %}
+  {% endif %}
+
+  {% if _images and _images|length > 0 %}
   <div class="mb-6">
     <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative">
       <div class="swiper-wrapper">
-        {% for img in land.images %}
+        {% for img in _images %}
+        {% set _name = (img|string|replace('\\','/')|split('/')|last) %}
         <div class="swiper-slide">
           <img
-            src="{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}"
-            alt="تصویر {{ loop.index }} از {{ land.title }}"
+            src="{{ url_for('main.uploaded_file', filename=_name) }}"
+            alt="تصویر {{ loop.index }} از {{ land.title or '' }}"
             class="w-full h-64 sm:h-96 object-cover cursor-zoom-in"
             loading="lazy"
-            onclick="openFullscreen('{{ url_for('main.uploaded_file', filename=img.split('/')[-1]) }}')"
+            onclick="openFullscreen('{{ url_for('main.uploaded_file', filename=_name) }}')"
           />
         </div>
         {% endfor %}
@@ -36,7 +47,9 @@
   </div>
   {% endif %}
 
-  <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">{{ land.title }}</h1>
+  <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">
+    {{ land.title or "بدون عنوان" }}
+  </h1>
 
   <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
     <span class="inline-flex items-center gap-1">
@@ -46,7 +59,7 @@
     <span class="mx-2">·</span>
     <span class="inline-flex items-center gap-1">
       <i class="fas fa-hashtag"></i>
-      کد آگهی: {{ land.code }}
+      کد آگهی: {{ land.code or "?" }}
     </span>
     {% if land.status %}
       <span class="mx-2">·</span>
@@ -60,6 +73,7 @@
     {% endif %}
   </div>
 
+  {# ---------------- مشخصات ---------------- #}
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mt-4 dark:text-gray-300">
     <p>🌏 <strong>متراژ:</strong>
       {% set _sz = (land.size|int if land.size is not none else 0) %}
@@ -75,9 +89,7 @@
       {% if land.price_total is not none %}
         {% set _pt = land.price_total|int %}
         {{ "{:,}".format(_pt).replace(",", "٫") }} تومان
-      {% else %}
-        نامشخص
-      {% endif %}
+      {% else %} نامشخص {% endif %}
     </p>
     <p>📊 <strong>قیمت متری:</strong>
       {% if land.price_per_meter is not none %}
@@ -86,17 +98,24 @@
       {% elif (land.price_total is not none) and (land.size) and (land.size|int > 0) %}
         {% set _calc = (land.price_total|int) // (land.size|int) %}
         {{ "{:,}".format(_calc).replace(",", "٫") }} تومان
-      {% else %}
-        نامشخص
-      {% endif %}
+      {% else %} نامشخص {% endif %}
     </p>
   </div>
 
+  {# ---------------- امکانات ---------------- #}
+  {% set _features = [] %}
   {% if land.features %}
+    {% if land.features is sequence %}
+      {% set _features = land.features %}
+    {% elif land.features is string %}
+      {% set _features = [land.features] %}
+    {% endif %}
+  {% endif %}
+  {% if _features and _features|length > 0 %}
   <div class="mt-6">
     <p class="font-semibold text-gray-800 mb-2 dark:text-gray-100">امکانات:</p>
     <div class="flex flex-wrap gap-2">
-      {% for feature in land.features %}
+      {% for feature in _features %}
       <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-green-900 dark:text-green-200">
         <i class="fas fa-check-circle ml-1"></i>{{ feature }}
       </span>
@@ -105,25 +124,26 @@
   </div>
   {% endif %}
 
+  {# ---------------- توضیحات ---------------- #}
   <div class="mt-6 whitespace-pre-line text-gray-700 leading-relaxed border-t pt-4 dark:text-gray-300 dark:border-slate-600">
     {{ land.description or "توضیحاتی برای این آگهی ثبت نشده است." }}
   </div>
 
-  <!-- دکمه‌های دسکتاپ -->
+  {# ---------------- دکمه‌های دسکتاپ ---------------- #}
   <div class="mt-8 hidden sm:flex flex-wrap gap-3">
     {% if land.owner %}
     <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
     {% endif %}
     <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 درخواست مشاوره</button>
     <button type="button" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm px-6 py-2 rounded-full shadow transition"
-            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ land.title|e }}')">
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">
       🔗 اشتراک‌گذاری
     </button>
   </div>
 
 </div>
 
-<!-- دکمه‌های ثابت پایین در موبایل -->
+{# ---------------- دکمه‌های ثابت پایین در موبایل ---------------- #}
 <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
     {% if land.owner %}
@@ -131,11 +151,11 @@
     {% endif %}
     <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 مشاوره</button>
     <button type="button" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm py-2 rounded-full"
-            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ land.title|e }}')">🔗 اشتراک</button>
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">🔗 اشتراک</button>
   </div>
 </div>
 
-<!-- پاپ‌آپ فرم مشاوره -->
+{# ---------------- پاپ‌آپ فرم مشاوره ---------------- #}
 <div id="popupForm" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4">
   <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 w-full max-w-md shadow-xl">
     <div class="flex items-center justify-between mb-3">
@@ -167,35 +187,45 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // اسلایدر تصاویر
-    const swiper = new Swiper('.swiper', {
-      loop: true,
-      pagination: { el: '.swiper-pagination', clickable: true },
-      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-      spaceBetween: 10,
-      centeredSlides: true
+    // اسلایدر تصاویر (اگر وجود داشته باشد)
+    document.addEventListener("DOMContentLoaded", function(){
+      const sw = document.querySelector('.swiper');
+      if (sw && window.Swiper){
+        new Swiper('.swiper', {
+          loop: true,
+          pagination: { el: '.swiper-pagination', clickable: true },
+          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+          spaceBetween: 10,
+          centeredSlides: true
+        });
+      }
     });
 
     // فول‌اسکرین
     function openFullscreen(src){
       const img = document.getElementById('fullscreenImage');
-      img.src = src;
-      document.getElementById('fullscreenOverlay').classList.remove('hidden');
-      document.getElementById('fullscreenOverlay').classList.add('flex');
+      const ov  = document.getElementById('fullscreenOverlay');
+      if (!img || !ov) return;
+      img.src = src || '';
+      ov.classList.remove('hidden'); ov.classList.add('flex');
     }
     function closeFullscreen(){
       const ov = document.getElementById('fullscreenOverlay');
+      const img = document.getElementById('fullscreenImage');
+      if (!ov || !img) return;
       ov.classList.add('hidden'); ov.classList.remove('flex');
-      document.getElementById('fullscreenImage').src = '';
+      img.src = '';
     }
 
     // پاپ‌آپ مشاوره
     function openPopup(){
       const p = document.getElementById('popupForm');
+      if (!p) return;
       p.classList.remove('hidden'); p.classList.add('flex');
     }
     function closePopup(){
       const p = document.getElementById('popupForm');
+      if (!p) return;
       p.classList.add('hidden'); p.classList.remove('flex');
     }
 
@@ -203,7 +233,7 @@
     async function shareLand(url, title){
       const data = { title: title || document.title, text: 'آگهی ملک - املاک آسمان گرمابسرد', url };
       try{
-        if(navigator.share){ await navigator.share(data); return; }
+        if (navigator.share){ await navigator.share(data); return; }
         await navigator.clipboard.writeText(url);
         toast('لینک کپی شد ✅');
       }catch(_){}
