@@ -37,8 +37,6 @@
       radial-gradient(900px 380px at 80% -10%,rgba(22,163,74,.18),transparent 60%),
       radial-gradient(700px 360px at 10% 90%,rgba(59,130,246,.15),transparent 55%)}
     .focusable:focus{outline:2px solid var(--brand);outline-offset:2px}
-    .scroll-snap{scroll-snap-type:x mandatory}
-    .snap-start{scroll-snap-align:start}
     .chip{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .7rem;border-radius:9999px;border:1px solid rgb(229 231 235/.6)}
     .dark .chip{border-color:rgb(31 41 55/.6)}
   </style>
@@ -64,48 +62,30 @@
     </div>
   </header>
 
-  <!-- HERO: معرفی + CTA -->
+  <!-- HERO: معرفی + CTA (بدون پیش‌نمایش) -->
   <section id="app" class="relative overflow-hidden">
     <div class="hero-shape" aria-hidden="true"></div>
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-10 sm:py-14 grid lg:grid-cols-2 gap-8 items-center">
-      <div class="space-y-5">
-        <h1 class="text-3xl sm:text-5xl font-black leading-[1.15]"><span dir="ltr">VINOR</span>: اپلیکیشن <span class="text-emerald-600">ساده و سریع</span> خرید و فروش ملک</h1>
-        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">آگهی‌های بررسی‌شده، جستجوی هوشمند، و ارتباط مستقیم با مشاور—همه با تجربه‌ای کاملاً موبایل‌محور.</p>
-        <div id="download" class="flex flex-wrap items-center gap-3">
+    <div class="max-w-4xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
+      <div class="space-y-5 text-center">
+        <h1 class="text-3xl sm:text-5xl font-black leading-[1.15]">
+          <span dir="ltr">VINOR</span>: اپلیکیشن <span class="text-emerald-600">ساده و سریع</span> خرید و فروش ملک
+        </h1>
+        <p class="mx-auto max-w-2xl text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">
+          آگهی‌های بررسی‌شده، جستجوی هوشمند، و ارتباط مستقیم با مشاور—همه با تجربه‌ای کاملاً موبایل‌محور.
+        </p>
+        <div id="download" class="flex flex-wrap items-center justify-center gap-3">
           <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow ring-brand focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
           <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" id="pwaInstall"><i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> نصب وب‌اپ (PWA)</a>
           <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable"><i class="fa-solid fa-bolt text-amber-500"></i> اگر نصب است، باز کن</a>
-          <!-- دکمه ورود به حالت وب: مسیر /app -->
           <a href="/app" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" aria-label="ورود به حالت وب">
             <i class="fa-solid fa-globe text-sky-600"></i> ورود به حالت وب
           </a>
         </div>
-        <div class="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+        <div class="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
           <span class="chip"><i class="fa-solid fa-shield-halved text-emerald-600"></i> پرونده‌های تأییدشده</span>
           <span class="chip"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> فیلترهای هوشمند</span>
           <span class="chip"><i class="fa-solid fa-headset text-purple-600"></i> پشتیبانی تا عقد قرارداد</span>
         </div>
-      </div>
-      <div class="relative">
-        <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-200/60 dark:border-gray-800/60">
-          <img src="https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=1400&auto=format&fit=crop" alt="پیش‌نمایش اپلیکیشن VINOR" class="w-full h-[420px] object-cover" loading="lazy"/>
-        </div>
-        <div class="absolute -bottom-6 -left-6 bg-white/90 dark:bg-gray-900/90 glass rounded-2xl shadow-xl p-4 flex items-center gap-4 border border-gray-200/60 dark:border-gray-800/60">
-          <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
-          <div class="text-sm"><p class="font-bold"><span dir="ltr">VINOR</span>، انتخاب هوشمند</p><p class="text-gray-600 dark:text-gray-400">+۱,۲۵۰ نصب فعال</p></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- اسکرین‌شات‌های اپ (اسکرول افقی) -->
-  <section class="py-8">
-    <div class="max-w-7xl mx-auto px-3 sm:px-4">
-      <h2 class="text-xl sm:text-2xl font-extrabold mb-3">چند نما از اپ</h2>
-      <div class="flex gap-3 overflow-x-auto scroll-snap pb-2">
-        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۱" loading="lazy"/>
-        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۲" loading="lazy"/>
-        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۳" loading="lazy"/>
       </div>
     </div>
   </section>
@@ -131,7 +111,7 @@
     </div>
   </section>
 
-  <!-- FAQ (فشرده و کامل) -->
+  <!-- FAQ -->
   <section id="faq" class="py-8">
     <div class="max-w-5xl mx-auto px-3 sm:px-4">
       <h2 class="text-xl sm:text-2xl font-extrabold text-center mb-4">سوالات متداول</h2>
@@ -141,7 +121,7 @@
           <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">فعلاً نسخه اندروید و وب‌اپ (PWA) در دسترس است. روی iOS می‌توانید وب‌اپ را از Safari به صفحهٔ اصلی اضافه کنید.</p>
         </details>
         <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify_between">تأیید آگهی چقدر زمان می‌برد؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <summary class="cursor-pointer font-bold flex items-center justify-between">تأیید آگهی چقدر زمان می‌برد؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
           <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">معمولاً کمتر از ۲۴ ساعت. اگر «تأیید خودکار» برای دسته‌ای فعال باشد، آگهی بلافاصله نمایش داده می‌شود.</p>
         </details>
         <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
@@ -157,7 +137,6 @@
     <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-md p-2 flex items-center gap-2">
       <a href="#" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
       <button id="pwaInstallMobile" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable"><i class="fa-solid fa-mobile-screen-button"></i> نصب PWA</button>
-      <!-- حالت وب: مسیر /app -->
       <a href="/app" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable" aria-label="ورود به حالت وب"><i class="fa-solid fa-globe"></i> حالت وب</a>
     </div>
   </div>
@@ -187,8 +166,6 @@
         deferredPrompt.prompt();
         await deferredPrompt.userChoice;
         deferredPrompt = null;
-      } else {
-        // هنوز رویداد نصب آماده نیست - فعلاً کاری نکن
       }
     }));
 
