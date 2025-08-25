@@ -3,24 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>آسمان | خرید و فروش ملک</title>
-  <meta name="description" content="پلتفرم ساده و سریع برای خرید و فروش زمین، باغ و ویلا. جستجوی هوشمند، آگهی‌های معتبر و مشاوره تخصصی." />
+  <title>آسمان | اپلیکیشن خرید و فروش ملک</title>
+  <meta name="description" content="اپلیکیشن موبایل‌محور آسمان؛ ساده‌ترین راه برای جستجو، ثبت آگهی و معامله امن زمین، باغ و ویلا." />
   <meta name="theme-color" content="#16a34a">
   <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}">
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="آسمان | خرید و فروش ملک">
-  <meta property="og:description" content="جستجوی هوشمند، آگهی‌های معتبر و انتشار سریع.">
-  <meta property="og:image" content="{{ url_for('static', filename='og-cover.jpg', _external=True) }}">
+  <meta property="og:title" content="آسمان | اپلیکیشن خرید و فروش ملک">
+  <meta property="og:description" content="جستجوی هوشمند، پرونده‌های تأیید شده و تجربه سریع موبایل‌محور.">
+  <meta property="og:image" content="{{ url_for('static', filename='og-cover.jpg', _external=true) }}">
   <meta property="og:url" content="{{ request.url }}">
   <meta name="twitter:card" content="summary_large_image">
+
+  <!-- PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root{--brand:#16a34a;--brand-700:#15803d}
@@ -29,403 +34,125 @@
     .dark .glass{background:rgba(17,24,39,.6)}
     .ring-brand{box-shadow:0 0 0 6px rgba(22,163,74,.12)}
     .hero-shape{position:absolute;inset:0;pointer-events:none;background:
-      radial-gradient(1200px 520px at 70% -10%,rgba(22,163,74,.18),transparent 60%),
-      radial-gradient(900px 420px at 10% 90%,rgba(59,130,246,.15),transparent 55%)}
+      radial-gradient(900px 380px at 80% -10%,rgba(22,163,74,.18),transparent 60%),
+      radial-gradient(700px 360px at 10% 90%,rgba(59,130,246,.15),transparent 55%)}
     .focusable:focus{outline:2px solid var(--brand);outline-offset:2px}
-    .mask-fade{mask-image:linear-gradient(180deg,rgba(0,0,0,1) 80%,rgba(0,0,0,0))}
+    .scroll-snap{scroll-snap-type:x mandatory}
+    .snap-start{scroll-snap-align:start}
+    .chip{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .7rem;border-radius:9999px;border:1px solid rgb(229 231 235/.6)}
+    .dark .chip{border-color:rgb(31 41 55/.6)}
   </style>
-
-  <!-- JSON-LD (سازمان + جستجو) -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"Organization",
-    "name":"آسمان",
-    "url":"{{ request.url_root.rstrip('/') }}",
-    "logo":"{{ url_for('static', filename='favicon-32x32.png', _external=True) }}"
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"WebSite",
-    "url":"{{ request.url_root.rstrip('/') }}",
-    "potentialAction":{
-      "@type":"SearchAction",
-      "target":"{{ url_for('main.search_page', _external=True) }}?q={query}",
-      "query-input":"required name=query"
-    }
-  }
-  </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
 
-  <!-- Top Bar -->
-  <div class="bg-white/80 dark:bg-gray-900/80 glass border-b border-gray-200/60 dark:border-gray-800/60">
-    <div class="max-w-7xl mx-auto px-4 py-2 text-xs flex items-center gap-4 justify-between">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300">
-          <i class="fa-solid fa-location-dot text-emerald-600"></i>
-          <span id="loc-label">مناطق منتخب</span>
-        </span>
-        <a href="tel:+982191000000" class="hidden sm:inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable" aria-label="تماس تلفنی">
-          <i class="fa-solid fa-phone"></i> 021-9100-0000
-        </a>
-      </div>
-      <div class="flex items-center gap-3">
-        <button id="langToggle" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable" title="تغییر زبان" aria-label="تغییر زبان">
-          <i class="fa-solid fa-language"></i>
-        </button>
-        <button id="darkToggle" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable" title="تغییر تم" aria-label="تغییر تم">
-          <i class="fa-solid fa-moon"></i>
-        </button>
-        <a href="#contact" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable">ارتباط با ما</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Header -->
-  <header class="bg-white/70 dark:bg-gray-900/70 glass sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <!-- Header (مینیمال) -->
+  <header class="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 glass">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3 text-sm">
       <a href="{{ url_for('main.start') or url_for('main.index') }}" class="flex items-center gap-2 group focusable" title="آسمان">
-        <span class="bg-emerald-600 group-hover:bg-emerald-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg">
-          <i class="fa-solid fa-seedling" aria-hidden="true"></i>
-        </span>
-        <span class="font-extrabold text-xl">آسمان</span>
+        <span class="bg-emerald-600 group-hover:bg-emerald-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-lg shadow"><i class="fa-solid fa-seedling"></i></span>
+        <span class="font-extrabold text-lg sm:text-xl">آسمان</span>
       </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm" aria-label="ناوبری اصلی">
-        <a href="#features" class="hover:text-emerald-600 focusable">مزایا</a>
-        <a href="#listings" class="hover:text-emerald-600 focusable">آگهی‌های ویژه</a>
+      <nav class="hidden md:flex items-center gap-6" aria-label="ناوبری">
+        <a href="#app" class="hover:text-emerald-600 focusable">اپلیکیشن</a>
+        <a href="#how" class="hover:text-emerald-600 focusable">مراحل</a>
         <a href="#faq" class="hover:text-emerald-600 focusable">سوالات</a>
       </nav>
       <div class="flex items-center gap-2">
-        <a href="{{ url_for('main.search_page') }}" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-sm shadow ring-brand focusable" aria-label="جستجوی ملک">
-          <i class="fa-solid fa-search"></i> جستجو
-        </a>
-        <a href="{{ url_for('main.submit_ad') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 text-sm focusable" aria-label="ثبت آگهی رایگان">
-          <i class="fa-solid fa-plus-circle text-emerald-600"></i> ثبت آگهی
-        </a>
+        <a href="#download" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow ring-brand focusable" aria-label="دانلود اپ"><i class="fa-solid fa-download"></i><span class="hidden sm:inline">دانلود اپ</span></a>
+        <button id="darkToggle" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable" title="تغییر تم" aria-label="تغییر تم"><i class="fa-solid fa-moon"></i></button>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
-  <section class="relative overflow-hidden">
+  <!-- HERO: معرفی + CTA -->
+  <section id="app" class="relative overflow-hidden">
     <div class="hero-shape" aria-hidden="true"></div>
-    <div class="max-w-7xl mx-auto px-4 py-12 sm:py-16 lg:py-20 grid lg:grid-cols-2 gap-8 items-center">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-10 sm:py-14 grid lg:grid-cols-2 gap-8 items-center">
       <div class="space-y-5">
-        <h1 class="text-3xl sm:text-5xl font-black leading-[1.15]">
-          خرید و فروش <span class="text-emerald-600">زمین، باغ و ویلا</span>
-        </h1>
-        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">
-          ساده، سریع و شفاف. آگهی‌های معتبر با مدارک کامل، فیلترهای هوشمند و مشاوره تخصصی.
-        </p>
-        <form action="{{ url_for('main.search_page') }}" method="get" class="flex flex-col sm:flex-row gap-3" aria-label="فرم جستجوی سریع">
-          <input name="q" type="search" inputmode="search" autocomplete="off" placeholder="مثلاً: زمین ۳۰۰ متری داخل بافت" class="flex-1 rounded-2xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm focusable">
-          <select name="region" class="rounded-2xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm focusable">
-            <option value="">همه مناطق</option>
-            <option value="north">شمال</option>
-            <option value="tehran">تهران</option>
-            <option value="karaj">کرج</option>
-          </select>
-          <button class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg ring-brand focusable" aria-label="شروع جستجو">
-            <i class="fa-solid fa-magnifying-glass"></i> جستجو
-          </button>
-        </form>
-        <div class="flex items-center gap-6 text-xs text-gray-600 dark:text-gray-300">
-          <span class="inline-flex items-center gap-2"><i class="fa-solid fa-shield-halved text-emerald-600"></i> مدارک بررسی‌شده</span>
-          <span class="inline-flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500"></i> انتشار سریع</span>
+        <h1 class="text-3xl sm:text-5xl font-black leading-[1.15]">آسمان: اپلیکیشن <span class="text-emerald-600">ساده و سریع</span> خرید و فروش ملک</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">آگهی‌های بررسی‌شده، جستجوی هوشمند، و ارتباط مستقیم با مشاور—همه با تجربه‌ای کاملاً موبایل‌محور.</p>
+        <div id="download" class="flex flex-wrap items-center gap-3">
+          <a href="{{ url_for('main.app_android') or '#' }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow ring-brand focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
+          <a href="{{ url_for('main.pwa_install') or '#' }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable"><i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> نصب وب‌اپ (PWA)</a>
+          <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable"><i class="fa-solid fa-bolt text-amber-500"></i> اگر نصب است، باز کن</a>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+          <span class="chip"><i class="fa-solid fa-shield-halved text-emerald-600"></i> پرونده‌های تأییدشده</span>
+          <span class="chip"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> فیلترهای هوشمند</span>
+          <span class="chip"><i class="fa-solid fa-headset text-purple-600"></i> پشتیبانی تا عقد قرارداد</span>
         </div>
       </div>
       <div class="relative">
-        <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-200/60 dark:border-gray-800/60 mask-fade">
-          <img src="https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=1600&auto=format&fit=crop" alt="نمایی از طبیعت و املاک" class="w-full h-[420px] object-cover" loading="lazy" width="1600" height="420"/>
+        <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-200/60 dark:border-gray-800/60">
+          <img src="https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=1400&auto=format&fit=crop" alt="پیش‌نمایش اپلیکیشن آسمان" class="w-full h-[420px] object-cover" loading="lazy"/>
         </div>
         <div class="absolute -bottom-6 -left-6 bg-white/90 dark:bg-gray-900/90 glass rounded-2xl shadow-xl p-4 flex items-center gap-4 border border-gray-200/60 dark:border-gray-800/60">
           <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-leaf"></i></div>
-          <div class="text-sm">
-            <p class="font-bold">آسمان، انتخاب هوشمند</p>
-            <p class="text-gray-600 dark:text-gray-400">+۱,۲۵۰ بازدید روزانه</p>
-          </div>
+          <div class="text-sm"><p class="font-bold">آسمان، انتخاب هوشمند</p><p class="text-gray-600 dark:text-gray-400">+۱,۲۵۰ نصب فعال</p></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Quick Filters -->
-  <section id="search" class="py-8">
-    <div class="max-w-5xl mx-auto px-4">
-      <form action="{{ url_for('main.search_page') }}" method="get" class="bg-white dark:bg-gray-900 rounded-2xl shadow border border-gray-200 dark:border-gray-800 p-4 sm:p-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-3" aria-label="فیلترهای جستجو">
-        <div>
-          <label class="text-xs text-gray-500">نوع</label>
-          <select name="category" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable">
-            <option value="">همه</option>
-            <option value="land">زمین</option>
-            <option value="garden">باغ</option>
-            <option value="villa">ویلا</option>
-            <option value="deeded">سنددار</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-gray-500">حداقل متراژ</label>
-          <input name="min_area" type="number" min="0" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable" placeholder="۲۵۰" />
-        </div>
-        <div>
-          <label class="text-xs text-gray-500">حداکثر قیمت (تومان)</label>
-          <input name="max_price" type="number" min="0" class="mt-1 w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable" placeholder="۳,۰۰۰,۰۰۰,۰۰۰" />
-        </div>
-        <div class="flex items-end">
-          <button class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 focusable">
-            <i class="fa-solid fa-filter ml-2"></i> جستجو
-          </button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <section id="features" class="py-10 bg-gradient-to-b from-transparent to-emerald-50/40 dark:to-gray-900/30">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="text-center mb-8">
-        <h2 class="text-2xl sm:text-3xl font-extrabold">مزیت‌ها</h2>
-        <p class="text-gray-600 dark:text-gray-300 mt-2">سریع، شفاف و مطمئن برای خرید و فروش.</p>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 flex items-center justify-center mb-3" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></div>
-          <h3 class="font-bold mb-1">آگهی‌های بررسی‌شده</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300">اصالت مدارک و اطلاعات راستی‌آزمایی می‌شود.</p>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/40 flex items-center justify-center mb-3" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-          <h3 class="font-bold mb-1">جستجوی هوشمند</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300">فیلتر بر اساس متراژ، قیمت، امکانات و موقعیت.</p>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/40 flex items-center justify-center mb-3" aria-hidden="true"><i class="fa-solid fa-bolt"></i></div>
-          <h3 class="font-bold mb-1">انتشار سریع</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300">ثبت آسان و نمایش در نتایج برتر.</p>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/40 flex items-center justify-center mb-3" aria-hidden="true"><i class="fa-solid fa-headset"></i></div>
-          <h3 class="font-bold mb-1">مشاوره تخصصی</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300">کارشناسان محلی در کنار شما تا عقد قرارداد.</p>
-        </div>
+  <!-- اسکرین‌شات‌های اپ (اسکرول افقی) -->
+  <section class="py-8">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4">
+      <h2 class="text-xl sm:text-2xl font-extrabold mb-3">چند نما از اپ</h2>
+      <div class="flex gap-3 overflow-x-auto scroll-snap pb-2">
+        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۱" loading="lazy"/>
+        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۲" loading="lazy"/>
+        <img class="w-60 h-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800 snap-start" src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop" alt="اسکرین ۳" loading="lazy"/>
       </div>
     </div>
   </section>
 
-  <!-- Listings (Sample) -->
-  <section id="listings" class="py-10">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="flex items-end justify-between mb-6">
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-extrabold">آگهی‌های ویژه</h2>
-          <p class="text-gray-600 dark:text-gray-300 text-sm mt-1">منتخب امروز با قیمت و موقعیت مناسب.</p>
-        </div>
-        <a href="{{ url_for('main.search_page') }}" class="hidden sm:inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 focusable">مشاهده همه <i class="fa-solid fa-arrow-left"></i></a>
+  <!-- مراحل استفاده (۳ قدم) -->
+  <section id="how" class="py-8 bg-white/60 dark:bg-gray-900/30">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 grid sm:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
+        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">1</div>
+        <h3 class="font-bold mb-1">دانلود و نصب</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">از لینک بالا اپ را نصب کنید یا نسخه PWA را اضافه کنید.</p>
       </div>
-
-      <!-- نمونه کارت‌های استاتیک -->
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <article class="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow border border-gray-200 dark:border-gray-800 hover:shadow-lg transition">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?q=80&w=1600&auto=format&fit=crop" alt="۲۵۰ متر باغچه خوش‌قواره" class="w-full h-48 object-cover" loading="lazy"/>
-            <span class="absolute top-3 right-3 bg-emerald-600 text-white text-[11px] px-2 py-1 rounded">تأیید شده</span>
-          </div>
-          <div class="p-4 space-y-2">
-            <h3 class="font-bold truncate">۲۵۰ متر باغچه خوش‌قواره</h3>
-            <div class="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-3">
-              <span><i class="fa-solid fa-location-dot text-gray-500"></i> موقعیت عالی</span>
-              <span><i class="fa-solid fa-vector-square text-gray-500"></i> ۲۵۰ متر</span>
-            </div>
-            <div class="font-extrabold">۳٬۵۰۰٬۰۰۰٬۰۰۰ تومان</div>
-            <div class="flex gap-2 pt-2">
-              <a href="{{ url_for('main.search_page') }}" class="flex-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 focusable">مشاهده</a>
-              <a href="tel:+982191000000" class="flex-1 text-center rounded-xl bg-emerald-600 text-white py-2 hover:bg-emerald-700 focusable">تماس</a>
-            </div>
-          </div>
-        </article>
-
-        <article class="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow border border-gray-200 dark:border-gray-800 hover:shadow-lg transition">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1600&auto=format&fit=crop" alt="ویلای نقلی با دید عالی" class="w-full h-48 object-cover" loading="lazy"/>
-            <span class="absolute top-3 right-3 bg-emerald-600 text-white text-[11px] px-2 py-1 rounded">تأیید شده</span>
-          </div>
-          <div class="p-4 space-y-2">
-            <h3 class="font-bold truncate">ویلای نقلی با‌دید عالی</h3>
-            <div class="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-3">
-              <span><i class="fa-solid fa-location-dot text-gray-500"></i> دسترسی مناسب</span>
-              <span><i class="fa-solid fa-vector-square text-gray-500"></i> ۳۵۰ متر</span>
-            </div>
-            <div class="font-extrabold">۶٬۸۰۰٬۰۰۰٬۰۰۰ تومان</div>
-            <div class="flex gap-2 pt-2">
-              <a href="{{ url_for('main.search_page') }}" class="flex-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 focusable">مشاهده</a>
-              <a href="tel:+982191000000" class="flex-1 text-center rounded-xl bg-emerald-600 text-white py-2 hover:bg-emerald-700 focusable">تماس</a>
-            </div>
-          </div>
-        </article>
-
-        <article class="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow border border-gray-200 dark:border-gray-800 hover:shadow-lg transition">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?q=80&w=1600&auto=format&fit=crop" alt="زمین سنددار آماده ساخت" class="w-full h-48 object-cover" loading="lazy"/>
-            <span class="absolute top-3 right-3 bg-emerald-600 text-white text-[11px] px-2 py-1 rounded">تأیید شده</span>
-          </div>
-          <div class="p-4 space-y-2">
-            <h3 class="font-bold truncate">زمین سنددار آماده ساخت</h3>
-            <div class="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-3">
-              <span><i class="fa-solid fa-location-dot text-gray-500"></i> داخل بافت</span>
-              <span><i class="fa-solid fa-vector-square text-gray-500"></i> ۳۰۰ متر</span>
-            </div>
-            <div class="font-extrabold">۴٬۹۰۰٬۰۰۰٬۰۰۰ تومان</div>
-            <div class="flex gap-2 pt-2">
-              <a href="{{ url_for('main.search_page') }}" class="flex-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 focusable">مشاهده</a>
-              <a href="tel:+982191000000" class="flex-1 text-center rounded-xl bg-emerald-600 text-white py-2 hover:bg-emerald-700 focusable">تماس</a>
-            </div>
-          </div>
-        </article>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
+        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">2</div>
+        <h3 class="font-bold mb-1">جستجو یا ثبت آگهی</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">زمین، باغ یا ویلا را پیدا کنید یا فایل‌تان را ثبت کنید.</p>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
+        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">3</div>
+        <h3 class="font-bold mb-1">ارتباط و معامله امن</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">با مشاور گفتگو کنید و با خیال راحت قرارداد ببندید.</p>
       </div>
     </div>
   </section>
 
-  <!-- Why Us -->
-  <section id="whyus" class="py-10 bg-white/60 dark:bg-gray-900/30">
-    <div class="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-8 items-center">
-      <div class="order-2 lg:order-1 space-y-4">
-        <h2 class="text-2xl sm:text-3xl font-extrabold">چرا آسمان؟</h2>
-        <ul class="space-y-3 text-gray-700 dark:text-gray-300">
-          <li class="flex items-start gap-3"><i class="fa-solid fa-circle-check text-emerald-600 mt-1"></i><span>تمرکز بر کیفیت آگهی‌ها و شفافیت اطلاعات</span></li>
-          <li class="flex items-start gap-3"><i class="fa-solid fa-circle-check text-emerald-600 mt-1"></i><span>راستی‌آزمایی مدارک قبل از انتشار</span></li>
-          <li class="flex items-start gap-3"><i class="fa-solid fa-circle-check text-emerald-600 mt-1"></i><span>تجربه کاربری موبایل‌محور و سریع</span></li>
-          <li class="flex items-start gap-3"><i class="fa-solid fa-circle-check text-emerald-600 mt-1"></i><span>مشاوران محلی تا عقد قرارداد</span></li>
-        </ul>
-        <div class="flex gap-3 pt-2">
-          <a href="{{ url_for('main.submit_ad') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold focusable">
-            <i class="fa-solid fa-plus"></i> ثبت آگهی
-          </a>
-          <a href="#contact" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 font-bold focusable">
-            <i class="fa-solid fa-phone"></i> درخواست مشاوره
-          </a>
-        </div>
-      </div>
-      <div class="order-1 lg:order-2">
-        <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-200/60 dark:border-gray-800/60">
-          <img src="https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1600&auto=format&fit=crop" alt="نمایی از ویلا و فضای سبز" class="w-full h-[360px] object-cover" loading="lazy"/>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq" class="py-10 bg-gray-50 dark:bg-gray-900/40">
-    <div class="max-w-5xl mx-auto px-4">
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-center mb-6">سوالات متداول</h2>
-      <div class="space-y-3">
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">چطور آگهی تأیید می‌شود؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">پس از ثبت، مدارک بررسی و در صورت تکمیل، در کمتر از ۲۴ ساعت منتشر می‌شود. در صورت فعال بودن تأیید خودکار، آگهی فوراً نمایش داده می‌شود.</p>
+  <!-- FAQ (فشرده و کامل) -->
+  <section id="faq" class="py-8">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4">
+      <h2 class="text-xl sm:text-2xl font-extrabold text-center mb-4">سوالات متداول</h2>
+      <div class="space-y-2">
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between">آیا نسخه iOS دارید؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">فعلاً نسخه اندروید و وب‌اپ (PWA) در دسترس است. روی iOS می‌توانید وب‌اپ را از Safari به صفحهٔ اصلی اضافه کنید.</p>
         </details>
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">آیا امکان مشاوره رایگان هست؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">بله، از طریق واتساپ، تماس مستقیم یا فرم تماس می‌توانید رایگان مشاوره بگیرید.</p>
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between">تأیید آگهی چقدر زمان می‌برد؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">معمولاً کمتر از ۲۴ ساعت. اگر «تأیید خودکار» برای دسته‌ای فعال باشد، آگهی بلافاصله نمایش داده می‌شود.</p>
         </details>
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">چطور اعتماد کنم؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">تمام آگهی‌ها با مدارک معتبر بررسی می‌شوند و فقط فایل‌های مطمئن منتشر می‌گردند.</p>
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between">چطور از صحت آگهی مطمئن شوم؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">مدارک مالکیت بررسی می‌شود و وضعیت هر فایل (تأیید شده/نیاز به بررسی) به‌صورت شفاف در اپ نمایش داده می‌شود.</p>
         </details>
       </div>
     </div>
   </section>
 
-  <!-- Contact -->
-  <section id="contact" class="py-10">
-    <div class="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-8 items-start">
-      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
-        <h3 class="text-xl font-extrabold mb-4">درخواست مشاوره</h3>
-        <form class="grid sm:grid-cols-2 gap-3" aria-label="فرم درخواست مشاوره">
-          <div>
-            <label class="text-xs text-gray-500" for="full_name">نام و نام خانوادگی</label>
-            <input id="full_name" name="full_name" class="w-full mt-1 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable" placeholder="مثلاً علی حسینی" />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500" for="phone">شماره تماس</label>
-            <input id="phone" name="phone" class="w-full mt-1 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable" placeholder="09XXXXXXXXX" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="text-xs text-gray-500" for="message">پیام</label>
-            <textarea id="message" name="message" rows="4" class="w-full mt-1 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focusable" placeholder="موضوع مورد نظر..."></textarea>
-          </div>
-          <div class="sm:col-span-2 flex items-center justify-between gap-2 pt-2">
-            <button type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold focusable">ارسال</button>
-            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"><i class="fa-solid fa-lock" aria-hidden="true"></i> اطلاعات شما محرمانه است.</div>
-          </div>
-        </form>
-      </div>
-      <div class="space-y-4">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
-          <h4 class="font-extrabold mb-2">راه‌های ارتباطی</h4>
-          <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2"><i class="fa-solid fa-phone text-emerald-600" aria-hidden="true"></i> 021-9100-0000</li>
-            <li class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-600" aria-hidden="true"></i> 0912-000-0000</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-emerald-600" aria-hidden="true"></i> مناطق منتخب</li>
-          </ul>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
-          <h4 class="font-extrabold mb-2">ساعت کاری</h4>
-          <p class="text-sm text-gray-700 dark:text-gray-300">هر روز ۹ تا ۱۹ (به‌جز تعطیلات رسمی)</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="border-t border-gray-200 dark:border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 py-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-      <div>
-        <div class="flex items-center gap-2 mb-2">
-          <span class="bg-emerald-600 text-white w-8 h-8 flex items-center justify-center rounded-full text-lg" aria-hidden="true">
-            <i class="fa-solid fa-seedling"></i>
-          </span>
-          <span class="font-extrabold">آسمان</span>
-        </div>
-        <p class="text-gray-600 dark:text-gray-300">بازار آنلاین خرید و فروش ملک</p>
-      </div>
-      <div>
-        <h5 class="font-extrabold mb-2">دسترسی سریع</h5>
-        <ul class="space-y-2">
-          <li><a href="#features" class="hover:text-emerald-600 focusable">مزایا</a></li>
-          <li><a href="{{ url_for('main.search_page') }}" class="hover:text-emerald-600 focusable">آگهی‌ها</a></li>
-          <li><a href="{{ url_for('main.submit_ad') }}" class="hover:text-emerald-600 focusable">ثبت آگهی</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5 class="font-extrabold mb-2">خدمات</h5>
-        <ul class="space-y-2">
-          <li>مشاوره خرید</li>
-          <li>قیمت‌گذاری فایل</li>
-          <li>بازاریابی و انتشار</li>
-        </ul>
-      </div>
-      <div>
-        <h5 class="font-extrabold mb-2">خبرنامه</h5>
-        <form action="#" method="post" class="flex gap-2" aria-label="عضویت در خبرنامه">
-          <label for="newsletter" class="sr-only">ایمیل شما</label>
-          <input id="newsletter" type="email" class="flex-1 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2" placeholder="ایمیل شما" />
-          <button class="px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 focusable" type="submit">عضویت</button>
-        </form>
-      </div>
-    </div>
-    <div class="border-t border-gray-200 dark:border-gray-800 text-xs py-4 text-center text-gray-600 dark:text-gray-400">
-      © <span id="y"></span> آسمان • انتخاب هوشمند
-    </div>
-  </footer>
-
-  <!-- Sticky Mobile Bar -->
-  <div class="sm:hidden fixed bottom-0 inset-x-0 z-40" role="navigation" aria-label="نوار میانبر موبایل">
+  <!-- نوار چسبان موبایل (CTA) -->
+  <div class="sm:hidden fixed bottom-0 inset-x-0 z-40" role="navigation" aria-label="میانبر نصب">
     <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-md p-2 flex items-center gap-2">
-      <a href="{{ url_for('main.search_page') }}" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable">جستجو</a>
-      <a href="tel:+982191000000" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable">تماس</a>
-      <a href="{{ url_for('main.submit_ad') }}" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable">ثبت آگهی</a>
+      <a href="{{ url_for('main.app_android') or '#' }}" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
+      <button id="pwaInstall" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable"><i class="fa-solid fa-mobile-screen-button"></i> نصب PWA</button>
     </div>
   </div>
 
@@ -439,17 +166,24 @@
       localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
     });
 
-    // --- Year ---
-    document.getElementById('y').textContent = new Date().getFullYear();
+    // --- PWA Install Hooks ---
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
 
-    // --- Language Toggle (FA/EN skeleton) ---
-    const langBtn = document.getElementById('langToggle');
-    langBtn?.addEventListener('click', () => {
-      const isFa = document.documentElement.lang === 'fa';
-      document.documentElement.lang = isFa ? 'en' : 'fa';
-      document.documentElement.dir = isFa ? 'ltr' : 'rtl';
-      // نمونه‌ی ساده: فقط برچسب مکان را تغییر می‌دهیم.
-      document.getElementById('loc-label').textContent = isFa ? 'Selected Areas' : 'مناطق منتخب';
+    const pwaButtons = [document.getElementById('pwaInstall'), document.querySelector('a[href*="pwa_install"], a[href*="pwa"]')].filter(Boolean);
+    pwaButtons.forEach(btn => btn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+      else { window.location.href = '{{ url_for('main.pwa_install') or '#' }}'; }
+    }));
+
+    // --- Open App Deep Link fallback ---
+    document.getElementById('openApp')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fallback = '{{ url_for('main.app_android') or '#' }}';
+      const start = Date.now();
+      window.location.href = 'app://open';
+      setTimeout(() => { if (Date.now() - start < 1600) window.location.href = fallback; }, 1500);
     });
   </script>
 </body>
