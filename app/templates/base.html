@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}گرمابسرد{% endblock %}</title>
+  <title>{% block title %}وینور | خرید و فروش ملک{% endblock %}</title>
 
-  {# --- Favicon & PWA (دو حالت: png و ico) --- #}
+  {# --- Favicon & PWA --- #}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-  <meta name="theme-color" content="#166534">
+  <meta name="theme-color" content="#16a34a">
   <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-  {# در صورت داشتن سایزهای دیگر، اضافه کن: icon-256.png, icon-512.png #}
 
   {# --- CSS/Fonts --- #}
   <script src="https://cdn.tailwindcss.com"></script>
@@ -51,11 +50,11 @@
   {% if not hide_header %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3" aria-label="وینور | صفحه اصلی">
         <span class="bg-green-600 hover:bg-green-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
           <i class="fas fa-seedling animate-pulse"></i>
         </span>
-        <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">گرمابسرد</span>
+        <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
       </a>
       <div class="flex items-center gap-4">
         <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
@@ -76,7 +75,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  {# --- FAB: با شرط مخفی‌سازی در صفحه آگهی‌های من + بلوک قابل‌اورراید --- #}
+  {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
     {% if not hide_header and request.endpoint != 'main.my_lands' %}
       <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
@@ -85,45 +84,54 @@
     {% endif %}
   {% endblock %}
 
+  {# سایدبار #}
   {% include 'side_menu.html' %}
 
+  {# === آماده‌سازی امن متغیرها برای اسکریپت‌ها (بدون استفاده از globals()) === #}
+  {% set __is_logged_in = (VINOR_IS_LOGGED_IN if VINOR_IS_LOGGED_IN is defined else (session.get('user_id') and True)) %}
+  {% set __login_url    = (VINOR_LOGIN_URL    if VINOR_LOGIN_URL    is defined else url_for('main.login')) %}
+
   <script>
-    // وضعیت ورود
-    const isLoggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
-    document.querySelectorAll('.require-login').forEach(el=>{
-      el.addEventListener('click', (e)=>{
-        if(!isLoggedIn){
-          e.preventDefault();
-          location.href = "{{ url_for('main.send_otp') }}";
-        }
+    (function(){
+      const IS_LOGGED_IN = {{ 'true' if __is_logged_in else 'false' }};
+      const LOGIN_URL    = "{{ __login_url }}";
+
+      // گارد لاگین برای لینک‌هایی که ورود لازم دارند
+      document.querySelectorAll('[data-require-login="1"], .require-login').forEach(el=>{
+        el.addEventListener('click', (e)=>{
+          if(!IS_LOGGED_IN){
+            e.preventDefault();
+            location.href = LOGIN_URL;
+          }
+        });
       });
-    });
 
-    // سایدبار
-    const sideMenu = document.getElementById("sideMenu");
-    document.getElementById("menuToggle")?.addEventListener("click", ()=> sideMenu?.classList.add("open"));
-    document.getElementById("closeMenu")?.addEventListener("click", ()=> sideMenu?.classList.remove("open"));
-    window.addEventListener("click", (e)=>{
-      if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
-    });
+      // سایدبار
+      const sideMenu = document.getElementById("sideMenu");
+      document.getElementById("menuToggle")?.addEventListener("click", ()=> sideMenu?.classList.add("open"));
+      document.getElementById("closeMenu")?.addEventListener("click", ()=> sideMenu?.classList.remove("open"));
+      window.addEventListener("click", (e)=>{
+        if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
+      });
 
-    // فیلترها
-    const toggleBtn = document.getElementById("toggleFilters");
-    const filters   = document.getElementById("advancedFilters");
-    toggleBtn?.addEventListener("click", ()=> filters?.classList.toggle("active"));
+      // فیلترها
+      const toggleBtn = document.getElementById("toggleFilters");
+      const filters   = document.getElementById("advancedFilters");
+      toggleBtn?.addEventListener("click", ()=> filters?.classList.toggle("active"));
 
-    const locationToggle = document.getElementById("locationToggle");
-    const locationMenu   = document.getElementById("locationMenu");
-    locationToggle?.addEventListener("click", ()=> locationMenu?.classList.toggle("active"));
-    window.addEventListener("click", (e)=>{
-      if (!e.target.closest("#locationMenu")   && !e.target.closest("#locationToggle")) locationMenu?.classList.remove("active");
-      if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
-    });
+      const locationToggle = document.getElementById("locationToggle");
+      const locationMenu   = document.getElementById("locationMenu");
+      locationToggle?.addEventListener("click", ()=> locationMenu?.classList.toggle("active"));
+      window.addEventListener("click", (e)=>{
+        if (!e.target.closest("#locationMenu")   && !e.target.closest("#locationToggle")) locationMenu?.classList.remove("active");
+        if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
+      });
 
-    // ثبت Service Worker در صورت وجود (اختیاری اما مفید برای PWA)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(()=>{});
-    }
+      // ثبت Service Worker (اختیاری برای PWA)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(()=>{});
+      }
+    })();
   </script>
 
   {% block scripts %}{% endblock %}

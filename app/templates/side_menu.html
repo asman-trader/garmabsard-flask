@@ -30,13 +30,13 @@
                  border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between">
       <!-- User -->
-      <a href="{{ url_for('main.profile') if session.get('user_phone') else url_for('main.send_otp') }}"
+      <a href="{{ url_for('main.app_home') if session.get('user_id') else url_for('main.login') }}"
          class="flex items-center gap-2 text-[15px] font-bold text-gray-800 dark:text-white
                 hover:text-green-700 dark:hover:text-green-300 transition"
-         title="{{ 'رفتن به پروفایل' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
+         title="{{ 'رفتن به داشبورد' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
         <span class="truncate max-w-[36vw] sm:max-w-[120px]">
-          {% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}مهمان{% endif %}
+          {% if session.get('user_id') %}حساب من{% else %}مهمان{% endif %}
         </span>
       </a>
 
@@ -69,7 +69,8 @@
     <div class="space-y-2">
       {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
       {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
-      {{ MenuItem(url_for('main.notifications'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
+      {# اعلان‌ها: فعلاً به داشبورد هدایت می‌شود تا خطا ندهد #}
+      {{ MenuItem(url_for('main.app_home'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
@@ -82,23 +83,23 @@
       <span id="cityMenuText" class="text-[15px] font-medium text-gray-800 dark:text-gray-100">انتخاب شهر</span>
     </a>
 
-    <!-- User bundle -->
+    <!-- User bundle (فعلاً به داشبورد لینک می‌شوند) -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.my_lands'), 'fa-list', 'آگهی‌های من', True) }}
-      {{ MenuItem(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
-      {{ MenuItem(url_for('main.settings'), 'fa-cog', 'تنظیمات', True) }}
+      {{ MenuItem(url_for('main.app_home'), 'fa-list', 'آگهی‌های من', True) }}
+      {{ MenuItem(url_for('main.app_home'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
+      {{ MenuItem(url_for('main.app_home'), 'fa-cog', 'تنظیمات', True) }}
     </div>
 
     <!-- Auth -->
     <div class="pt-2">
-      {% if session.get('user_phone') %}
+      {% if session.get('user_id') %}
         <a href="{{ url_for('main.logout') }}"
            class="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
           <i class="fas fa-sign-out-alt"></i>
           <span class="text-[15px] font-medium">خروج</span>
         </a>
       {% else %}
-        <a href="{{ url_for('main.send_otp') }}"
+        <a href="{{ url_for('main.login') }}"
            class="flex items-center gap-3 p-3 rounded-xl text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
           <i class="fas fa-sign-in-alt"></i>
           <span class="text-[15px] font-medium">ورود / ثبت‌نام</span>
@@ -120,7 +121,7 @@
     {% set PHONE = (contact_phone if contact_phone is defined and contact_phone) or '+989121234567' %}
     {% set WA    = (contact_whatsapp if contact_whatsapp is defined and contact_whatsapp) or PHONE %}
     {% set WA_INT = WA|replace('+','')|replace(' ','')|replace('-','') %}
-    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'زمین‌های آینده‌دار در گرمابسرد دماوند' %}
+    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'وینور، زمین‌های آینده‌دار.' %}
 
     <div class="grid grid-cols-3 gap-2 text-center">
       <!-- Call -->
@@ -152,7 +153,7 @@
               class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
               aria-label="اشتراک‌گذاری">
         <i class="fas fa-share-alt" aria-hidden="true"></i>
-    <span class="block text-xs mt-1">اشتراک</span>
+        <span class="block text-xs mt-1">اشتراک</span>
       </button>
     </div>
   </footer>
@@ -199,10 +200,10 @@
     // Require-login guard
     document.querySelectorAll('#sideMenu a.require-login').forEach(a => {
       a.addEventListener('click', (e) => {
-        const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
+        const loggedIn = {{ 'true' if session.get('user_id') else 'false' }};
         if (!loggedIn) {
           e.preventDefault();
-          window.location.href = "{{ url_for('main.send_otp') }}";
+          window.location.href = "{{ url_for('main.login') }}";
         }
       });
     });
@@ -211,9 +212,9 @@
     const btnShare   = document.getElementById('qaShare');
     const aWhatsapp  = document.getElementById('qaWhatsapp');
 
-    const shareTitle = document.title || 'املاک آسمان گرمابسرد';
+    const shareTitle = document.title || 'وینور | خرید و فروش ملک';
     const shareUrl   = window.location.href;
-    const shareText  = (aWhatsapp?.dataset.waText) || 'زمین‌های آینده‌دار در گرمابسرد دماوند';
+    const shareText  = (aWhatsapp?.dataset.waText) || 'وینور، زمین‌های آینده‌دار.';
 
     // WhatsApp deep link with text
     if (aWhatsapp) {
@@ -242,7 +243,7 @@
     }, { passive: true });
 
     // ===== City UI from localStorage =====
-    const CITY_KEY = 'gbs_city';
+    const CITY_KEY = 'vinor_city';
     function getCity() { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } }
     function updateCityUI() {
       const c = getCity();
@@ -252,7 +253,7 @@
     updateCityUI();
 
     // Sync when city changes elsewhere
-    window.addEventListener('storage', (e) => { if (e.key === 'gbs_city') updateCityUI(); });
-    document.addEventListener('gbs:city-changed', updateCityUI);
+    window.addEventListener('storage', (e) => { if (e.key === 'vinor_city') updateCityUI(); });
+    document.addEventListener('vinor:city-changed', updateCityUI);
   })();
 </script>

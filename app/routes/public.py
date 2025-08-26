@@ -64,14 +64,30 @@ def _find_by_code(code: str) -> Optional[Dict[str, Any]]:
 def _login_url_fallback() -> str:
     """
     مسیر ورود را به‌صورت امن پیدا می‌کند.
-    ابتدا سعی می‌کند اندپوینت‌های رایج را بسازد و اگر نبود، به /login برمی‌گردد.
+    فقط به اندپوینت موجود ارجاع می‌دهد تا BuildError رخ ندهد.
     """
-    for endpoint in ("main.send_otp", "main.login"):
-        try:
-            return url_for(endpoint)
-        except Exception:
-            pass
-    return "/login"
+    try:
+        return url_for("main.login")
+    except Exception:
+        # در شرایط خاص (قبل از رجیستر بلوپرینت در ساختارهای تستی) به مسیر ثابت برمی‌گردد
+        return "/login"
+
+
+# -------------------------
+# Context (برای استفادهٔ ساده در تمام قالب‌ها)
+# -------------------------
+@main_bp.app_context_processor
+def inject_vinor_globals():
+    """
+    متغیرهای عمومیِ وینور برای استفاده در تمپلیت‌ها
+    """
+    return {
+        "VINOR_IS_LOGGED_IN": bool(session.get("user_id")),
+        "VINOR_LOGIN_URL": url_for("main.login"),
+        "VINOR_HOME_URL": url_for("main.app_home"),
+        "VINOR_BRAND": "وینور",
+        "VINOR_DOMAIN": "vinor.ir",
+    }
 
 
 # -------------------------
@@ -113,7 +129,13 @@ def app_home():
     if not session.get("user_id"):
         return redirect(_login_url_fallback())
     lands = _sort_by_created_at_desc(_get_approved_ads())
-    return render_template("index.html", lands=lands, CATEGORY_MAP=CATEGORY_MAP, brand="وینور", domain="vinor.ir")
+    return render_template(
+        "index.html",
+        lands=lands,
+        CATEGORY_MAP=CATEGORY_MAP,
+        brand="وینور",
+        domain="vinor.ir",
+    )
 
 
 @main_bp.route("/land/<code>")
@@ -129,7 +151,13 @@ def land_detail(code):
     if ppm is not None:
         land["price_per_meter"] = ppm
 
-    return render_template("land_detail.html", land=land, CATEGORY_MAP=CATEGORY_MAP, brand="وینور", domain="vinor.ir")
+    return render_template(
+        "land_detail.html",
+        land=land,
+        CATEGORY_MAP=CATEGORY_MAP,
+        brand="وینور",
+        domain="vinor.ir",
+    )
 
 
 @main_bp.route("/uploads/<path:filename>")
@@ -208,6 +236,7 @@ def city_select():
     """
     return render_template("city_select.html", brand="وینور", domain="vinor.ir")
 
+
 # --- Dev Auth (موقت برای تست) ---
 @main_bp.route("/login")
 def login():
@@ -219,6 +248,7 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("main.index"))
+
 
 # --- Submit Ad (placeholder for development) ---
 @main_bp.route("/submit-ad")
