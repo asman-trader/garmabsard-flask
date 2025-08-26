@@ -6,6 +6,8 @@
   <title>VINOR | اپلیکیشن خرید و فروش ملک</title>
   <meta name="description" content="اپلیکیشن موبایل‌محور VINOR؛ ساده‌ترین راه برای جستجو، ثبت آگهی و معامله امن زمین، باغ و ویلا." />
   <meta name="theme-color" content="#16a34a">
+
+  <!-- Favicon / Manifest -->
   <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}">
@@ -43,10 +45,10 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
 
-  <!-- Header (مینیمال) -->
+  <!-- Header -->
   <header class="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 glass">
     <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3 text-sm">
-      <a href="/" class="flex items-center gap-2 group focusable" title="VINOR">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 group focusable" title="VINOR">
         <span class="bg-emerald-600 group-hover:bg-emerald-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-lg shadow"><i class="fa-solid fa-seedling"></i></span>
         <span dir="ltr" class="font-extrabold text-lg sm:text-xl">VINOR</span>
       </a>
@@ -56,13 +58,13 @@
         <a href="#faq" class="hover:text-emerald-600 focusable">سوالات</a>
       </nav>
       <div class="flex items-center gap-2">
-        <a href="#download" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow ring-brand focusable" aria-label="دانلود اپ"><i class="fa-solid fa-download"></i><span class="hidden sm:inline">دانلود اپ</span></a>
+        <a href="{{ url_for('main.start') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow ring-brand focusable" aria-label="شروع"><i class="fa-solid fa-play"></i><span class="hidden sm:inline">شروع</span></a>
         <button id="darkToggle" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 focusable" title="تغییر تم" aria-label="تغییر تم"><i class="fa-solid fa-moon"></i></button>
       </div>
     </div>
   </header>
 
-  <!-- HERO: معرفی + CTA (بدون پیش‌نمایش) -->
+  <!-- HERO -->
   <section id="app" class="relative overflow-hidden">
     <div class="hero-shape" aria-hidden="true"></div>
     <div class="max-w-4xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
@@ -73,14 +75,30 @@
         <p class="mx-auto max-w-2xl text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">
           آگهی‌های بررسی‌شده، جستجوی هوشمند، و ارتباط مستقیم با مشاور—همه با تجربه‌ای کاملاً موبایل‌محور.
         </p>
+
+        <!-- CTA های هماهنگ با گیت -->
         <div id="download" class="flex flex-wrap items-center justify-center gap-3">
-          <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow ring-brand focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
-          <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" id="pwaInstall"><i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> نصب وب‌اپ (PWA)</a>
-          <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable"><i class="fa-solid fa-bolt text-amber-500"></i> اگر نصب است، باز کن</a>
-          <a href="/app" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" aria-label="ورود به حالت وب">
-            <i class="fa-solid fa-globe text-sky-600"></i> ورود به حالت وب
+          <!-- اصلی: ست‌کردن کوکی و ادامه مسیر -->
+          <a href="{{ url_for('main.start') }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow ring-brand focusable">
+            <i class="fa-solid fa-rocket"></i> شروع
+          </a>
+
+          <!-- نصب PWA -->
+          <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" id="pwaInstall">
+            <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> نصب وب‌اپ (PWA)
+          </a>
+
+          <!-- بازکردن اپ اگر نصب است -->
+          <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable">
+            <i class="fa-solid fa-bolt text-amber-500"></i> اگر نصب است، باز کن
+          </a>
+
+          <!-- حالت وب (با منطق گیت، اگر لاگین نباشد به لندینگ/ورود هدایت می‌شود) -->
+          <a href="{{ url_for('main.app_home') }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" aria-label="ورود به حالت وب">
+            <i class="fa-solid fa-globe text-sky-600"></i> حالت وب
           </a>
         </div>
+
         <div class="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
           <span class="chip"><i class="fa-solid fa-shield-halved text-emerald-600"></i> پرونده‌های تأییدشده</span>
           <span class="chip"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> فیلترهای هوشمند</span>
@@ -90,13 +108,13 @@
     </div>
   </section>
 
-  <!-- مراحل استفاده (۳ قدم) -->
+  <!-- مراحل استفاده -->
   <section id="how" class="py-8 bg-white/60 dark:bg-gray-900/30">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 grid sm:grid-cols-3 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
         <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">1</div>
-        <h3 class="font-bold mb-1">دانلود و نصب</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-300">از لینک بالا اپ را نصب کنید یا نسخه PWA را اضافه کنید.</p>
+        <h3 class="font-bold mb-1">شروع سریع</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">روی «شروع» بزنید؛ کوکی اولین بازدید ست می‌شود و ادامه می‌دهید.</p>
       </div>
       <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
         <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">2</div>
@@ -135,9 +153,15 @@
   <!-- نوار چسبان موبایل (CTA) -->
   <div class="sm:hidden fixed bottom-0 inset-x-0 z-40" role="navigation" aria-label="میانبر نصب">
     <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-md p-2 flex items-center gap-2">
-      <a href="#" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable"><i class="fa-brands fa-android"></i> دانلود اندروید</a>
-      <button id="pwaInstallMobile" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable"><i class="fa-solid fa-mobile-screen-button"></i> نصب PWA</button>
-      <a href="/app" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable" aria-label="ورود به حالت وب"><i class="fa-solid fa-globe"></i> حالت وب</a>
+      <a href="{{ url_for('main.start') }}" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable">
+        <i class="fa-solid fa-play"></i> شروع
+      </a>
+      <button id="pwaInstallMobile" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable">
+        <i class="fa-solid fa-mobile-screen-button"></i> نصب PWA
+      </button>
+      <a href="{{ url_for('main.app_home') }}" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable" aria-label="ورود به حالت وب">
+        <i class="fa-solid fa-globe"></i> حالت وب
+      </a>
     </div>
   </div>
 
@@ -154,12 +178,7 @@
     // --- PWA Install Hooks ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-
-    const pwaButtons = [
-      document.getElementById('pwaInstall'),
-      document.getElementById('pwaInstallMobile')
-    ].filter(Boolean);
-
+    const pwaButtons = [document.getElementById('pwaInstall'), document.getElementById('pwaInstallMobile')].filter(Boolean);
     pwaButtons.forEach(btn => btn.addEventListener('click', async (ev) => {
       ev.preventDefault();
       if (deferredPrompt) {

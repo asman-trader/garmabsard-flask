@@ -3,18 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تأیید کد پیامک | املاک آسمان گرمابسرد</title>
+  <title>تأیید کد پیامکی | وینور (Vinor)</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- فونت فارسی -->
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Vazirmatn', sans-serif;
-    }
-  </style>
+  <style> body { font-family: 'Vazirmatn', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 transition-all">
 
@@ -22,53 +18,56 @@
 
     <!-- تیتر -->
     <div class="text-center">
-      <div class="flex justify-center mb-2">
-        <span class="bg-green-600 text-white w-10 h-10 flex items-center justify-center rounded-full text-xl font-bold shadow-lg">G</span>
+      <div class="flex justify-center mb-3">
+        <span class="bg-emerald-600 text-white w-12 h-12 flex items-center justify-center rounded-full text-2xl font-extrabold shadow-lg">V</span>
       </div>
-      <h2 class="text-2xl font-bold text-green-700 dark:text-green-400">تأیید کد پیامکی</h2>
+      <h1 class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">تأیید کد پیامکی</h1>
       <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">
         کدی که برای شماره <span class="font-semibold">{{ phone }}</span> ارسال شده را وارد کنید.
       </p>
     </div>
 
     <!-- فرم کد -->
-    <form id="otpForm" method="POST" action="{{ url_for('main.verify_otp') }}" class="space-y-5">
+    <form id="otpForm" method="POST" action="{{ url_for('main.verify_otp') }}" class="space-y-5" novalidate>
       <input type="hidden" name="phone" value="{{ phone }}">
 
       <div>
-        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">کد پیامک</label>
+        <label for="otpInput" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">کد پیامک</label>
         <input
           type="text"
           name="otp_code"
           id="otpInput"
-          maxlength="6"
-          pattern="\d*"
+          maxlength="5"
+          pattern="\\d{5}"
           inputmode="numeric"
           required
           autocomplete="one-time-code"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-center text-lg tracking-widest"
-          placeholder="مثلاً 123456"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center text-lg tracking-widest"
+          placeholder="مثلاً 12345"
+          aria-label="کد پیامکی ۵ رقمی"
         />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">کد ۵ رقمی را وارد کنید.</p>
       </div>
 
       <button
         type="submit"
-        class="w-full py-2 bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white rounded-lg text-sm font-semibold transition"
+        class="w-full py-2 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white rounded-lg text-sm font-semibold transition"
       >
-        ✅ ورود به حساب کاربری
+        ✅ ورود به وینور
       </button>
     </form>
 
     <!-- تایمر و ارسال مجدد -->
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
       <p id="timer" class="mt-2">ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر</p>
-      <form method="POST" action="{{ url_for('main.send_otp') }}" id="resendForm">
+      <form method="POST" action="{{ url_for('main.send_otp') }}" id="resendForm" class="inline-block">
         <input type="hidden" name="phone" value="{{ phone }}">
         <button
           type="submit"
           id="resendBtn"
           disabled
-          class="mt-2 text-green-600 dark:text-green-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed"
+          class="mt-2 text-emerald-600 dark:text-emerald-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed"
+          aria-disabled="true"
         >
           🔄 ارسال مجدد کد
         </button>
@@ -78,11 +77,13 @@
 
   <!-- اسکریپت تایمر و Web OTP -->
   <script>
-    // تایید خودکار فرم اگر کد کامل وارد شد
+    // ارسال خودکار وقتی ۵ رقم کامل شد
     const otpInput = document.getElementById('otpInput');
     const otpForm = document.getElementById('otpForm');
     otpInput.addEventListener('input', () => {
-      if (otpInput.value.length === 5 || otpInput.value.length === 6) {
+      // فقط اعداد
+      otpInput.value = otpInput.value.replace(/\\D+/g, '');
+      if (otpInput.value.length === 5) {
         otpForm.submit();
       }
     });
@@ -91,31 +92,35 @@
     let counter = 60;
     const countdownEl = document.getElementById('countdown');
     const resendBtn = document.getElementById('resendBtn');
+    const timerEl = document.getElementById('timer');
 
-    const timer = setInterval(() => {
+    const t = setInterval(() => {
       counter--;
       countdownEl.textContent = counter;
       if (counter <= 0) {
-        clearInterval(timer);
-        document.getElementById('timer').textContent = 'هنوز کد را دریافت نکردید؟';
+        clearInterval(t);
+        timerEl.textContent = 'هنوز کد را دریافت نکردید؟';
         resendBtn.disabled = false;
+        resendBtn.removeAttribute('aria-disabled');
       }
     }, 1000);
 
-    // Web OTP API
-    if ("OTPCredential" in window) {
-      window.addEventListener("DOMContentLoaded", async () => {
+    // Web OTP API (در مرورگرهای پشتیبانی‌شده)
+    if ('OTPCredential' in window) {
+      window.addEventListener('DOMContentLoaded', async () => {
         try {
+          const ac = new AbortController();
           const content = await navigator.credentials.get({
-            otp: { transport: ["sms"] },
-            signal: new AbortController().signal
+            otp: { transport: ['sms'] },
+            signal: ac.signal
           });
           if (content && content.code) {
-            document.getElementById("otpInput").value = content.code;
-            otpForm.submit();
+            otpInput.value = (content.code + '').replace(/\\D+/g, '').slice(0, 5);
+            if (otpInput.value.length === 5) otpForm.submit();
           }
         } catch (err) {
-          console.log("Web OTP API error:", err);
+          // سکوت؛ عدم پشتیبانی یا خطای دسترسی
+          console.log('Web OTP API:', err);
         }
       });
     }
