@@ -25,9 +25,9 @@ def create_app():
     # 🧩 فیلترهای Jinja
     register_filters(app)
 
-    # 🧭 بلوپرینت‌های اصلی
+    # 🧭 بلوپرینت‌ها
     from .routes import main_bp
-    app.register_blueprint(main_bp)
+    app.register_blueprint(main_bp)  # روت‌های عمومی (شامل / و /app و ...)
 
     from .routes.admin import admin_bp
     from .routes.webhook import webhook_bp
@@ -61,8 +61,9 @@ def create_app():
         safe_paths = {
             "/",           # لندینگ
             "/start",      # CTA لندینگ
-            "/login",      # ورود (اگر روت مستقل داری)
-            "/verify",     # تایید OTP
+            "/login",      # ورود (main.login)
+            "/verify",     # تایید OTP (main.verify)
+            "/logout",     # خروج
             "/favicon.ico",
             "/robots.txt",
             "/sitemap.xml",
@@ -82,11 +83,6 @@ def create_app():
             return redirect(url_for("main.index"))
         else:
             # قبلاً لندینگ را دیده اما وارد نیست: هدایت به صفحه ورود
-            # اگر ویوی ورود شما نام دیگری دارد، اینجا جایگزین کنید.
-            try:
-                return redirect(url_for("main.send_otp"))
-            except Exception:
-                # در صورت نبودن ویوی بالا، به /login هدایت کن
-                return redirect("/login")
+            return redirect(url_for("main.login"))
 
     return app

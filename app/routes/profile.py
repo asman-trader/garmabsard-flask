@@ -3,42 +3,66 @@ from flask import render_template, request, session, redirect, url_for, flash
 from . import main_bp
 from ..utils.storage import load_users, save_users
 
-@main_bp.route('/profile')
+# -------------------------
+# Helpers
+# -------------------------
+def _require_login(next_endpoint: str):
+    """اگر لاگین نیست، next را ست کند و به صفحه ورود ببرد."""
+    if not session.get("user_phone"):
+        flash("برای دسترسی به این بخش ابتدا وارد شوید.", "error")
+        session["next"] = url_for(next_endpoint)
+        return redirect(url_for("main.login"))
+    return None
+
+# -------------------------
+# Routes (با نام‌های ثابت برای تمپلیت)
+# -------------------------
+
+@main_bp.route("/profile", methods=["GET"], endpoint="profile")
 def profile():
-    if 'user_phone' not in session:
-        flash("برای مشاهده پروفایل وارد شوید.")
-        session['next'] = url_for('main.profile')
-        return redirect(url_for('main.send_otp'))
-    users = load_users()
-    user = next((u for u in users if u.get('phone') == session['user_phone']), None)
-    return render_template('profile.html', user=user)
+    # نیاز به ورود
+    guard = _require_login("main.profile")
+    if guard:
+        return guard
 
-@main_bp.route('/settings', methods=['GET','POST'])
+    users = load_users()
+    phone = session.get("user_phone")
+    user = next((u for u in users if u.get("phone") == phone), None)
+    return render_template("profile.html", user=user)
+
+
+@main_bp.route("/settings", methods=["GET", "POST"], endpoint="settings")
 def settings():
-    if 'user_phone' not in session:
-        flash("برای ورود به تنظیمات وارد شوید.")
-        session['next'] = url_for('main.settings')
-        return redirect(url_for('main.send_otp'))
+    # نیاز به ورود
+    guard = _require_login("main.settings")
+    if guard:
+        return guard
 
     users = load_users()
-    phone = session['user_phone']
-    user = next((u for u in users if u.get('phone') == phone), None)
+    phone = session.get("user_phone")
+    user = next((u for u in users if u.get("phone") == phone), None)
+
     if not user:
-        flash("کاربر یافت نشد.")
-        return redirect(url_for('main.profile'))
+        flash("کاربر یافت نشد.", "error")
+        return redirect(url_for("main.profile"))
 
-    if request.method == 'POST':
-        user['name']      = request.form.get('name','').strip()
-        user['lastname']  = request.form.get('lastname','').strip()
-        user['province']  = request.form.get('province','').strip()
-        user['city']      = request.form.get('city','').strip()
-        new_password      = request.form.get('password','').strip()
-        if new_password: user['password'] = new_password
+    if request.method == "POST":
+        user["name"]     = (request.form.get("name") or "").strip()
+        user["lastname"] = (request.form.get("lastname") or "").strip()
+        user["province"] = (request.form.get("province") or "").strip()
+        user["city"]     = (request.form.get("city") or "").strip()
+        new_password     = (request.form.get("password") or "").strip()
+        if new_password:
+            user["password"] = new_password
+
         save_users(users)
-        flash("✅ تنظیمات ذخیره شد.")
-        return redirect(url_for('main.settings'))
-    return render_template('settings.html', user=user)
+        flash("✅ تنظیمات با موفقیت ذخیره شد.", "success")
+        return redirect(url_for("main.settings"))
 
-@main_bp.route('/favorites')
+    return render_template("settings.html", user=user)
+
+
+@main_bp.route("/favorites", methods=["GET"], endpoint="favorites")
 def favorites():
-    return render_template('favorites.html')
+    # (در صورت نیاز، موارد نیازمند ورود را هم محافظت کن)
+    return render_template("favorites.html")

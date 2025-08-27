@@ -13,7 +13,6 @@ from ..constants import CATEGORY_MAP
 # ثابت‌ها
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
 
-
 # -------------------------
 # Helpers
 # -------------------------
@@ -67,11 +66,9 @@ def _login_url_fallback() -> str:
     فقط به اندپوینت موجود ارجاع می‌دهد تا BuildError رخ ندهد.
     """
     try:
-        return url_for("main.login")
+        return url_for("main.login")  # از auth.py
     except Exception:
-        # در شرایط خاص (قبل از رجیستر بلوپرینت در ساختارهای تستی) به مسیر ثابت برمی‌گردد
         return "/login"
-
 
 # -------------------------
 # Context (برای استفادهٔ ساده در تمام قالب‌ها)
@@ -89,12 +86,11 @@ def inject_vinor_globals():
         "VINOR_DOMAIN": "vinor.ir",
     }
 
-
 # -------------------------
 # Routes
 # -------------------------
 
-@main_bp.route("/")
+@main_bp.route("/", endpoint="index")
 def index():
     """
     لندینگ وینور (Vinor) – فقط برای اولین بار.
@@ -104,8 +100,7 @@ def index():
         return redirect(url_for("main.app_home"))
     return render_template("landing.html", brand="وینور", domain="vinor.ir")
 
-
-@main_bp.route("/start")
+@main_bp.route("/start", endpoint="start")
 def start():
     """
     CTA لندینگ → ست‌کردن کوکی «اولین بازدید انجام شد»
@@ -119,8 +114,7 @@ def start():
     session.permanent = True
     return resp
 
-
-@main_bp.route("/app")
+@main_bp.route("/app", endpoint="app_home")
 def app_home():
     """
     خانه اپ وینور (پس از ورود)
@@ -137,8 +131,7 @@ def app_home():
         domain="vinor.ir",
     )
 
-
-@main_bp.route("/land/<code>")
+@main_bp.route("/land/<code>", endpoint="land_detail")
 def land_detail(code):
     """
     صفحهٔ جزئیات آگهی
@@ -159,8 +152,7 @@ def land_detail(code):
         domain="vinor.ir",
     )
 
-
-@main_bp.route("/uploads/<path:filename>")
+@main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")
 def uploaded_file(filename):
     """
     فایل‌های آپلود را از دو محل data و legacy سرو می‌کند.
@@ -175,8 +167,7 @@ def uploaded_file(filename):
             return send_from_directory(folder, filename)
     abort(404, description="File not found")
 
-
-@main_bp.route("/search")
+@main_bp.route("/search", endpoint="search_page")
 def search_page():
     """
     صفحهٔ جستجو با فیلتر دسته‌بندی
@@ -199,8 +190,7 @@ def search_page():
         domain="vinor.ir",
     )
 
-
-@main_bp.route("/search-results")
+@main_bp.route("/search-results", endpoint="search_results")
 def search_results():
     """
     نتایج جستجو با تطبیق ساده روی عنوان/موقعیت/توضیحات
@@ -228,32 +218,13 @@ def search_results():
         domain="vinor.ir",
     )
 
-
-@main_bp.route("/city")
+@main_bp.route("/city", endpoint="city_select")
 def city_select():
     """
     انتخاب شهر (برای آینده: شخصی‌سازی نتایج)
     """
     return render_template("city_select.html", brand="وینور", domain="vinor.ir")
 
-
-# --- Dev Auth (موقت برای تست) ---
-@main_bp.route("/login")
-def login():
-    # ورود موقت: یک شناسه ساده در سشن ست می‌کنیم تا /app باز شود
-    session["user_id"] = "dev-user"
-    return redirect(url_for("main.app_home"))
-
-@main_bp.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("main.index"))
-
-
-# --- Submit Ad (placeholder for development) ---
-@main_bp.route("/submit-ad")
-def submit_ad():
-    # فعلاً صفحه‌ی موقت؛ بعداً فرم واقعی ثبت آگهی جایگزین می‌شود
-    if not session.get("user_id"):
-        return redirect(_login_url_fallback())
-    return render_template("submit_ad_placeholder.html", brand="وینور", domain="vinor.ir")
+# ⚠️ مهم: هیچ مسیر /login /logout /submit-ad در این فایل تعریف نمی‌شود.
+#   - /login و /logout در app/routes/auth.py
+#   - /submit-ad ریدایرکت در app/routes/ads.py (endpoint='submit_ad_redirect')

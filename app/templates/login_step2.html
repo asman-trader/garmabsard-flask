@@ -28,7 +28,7 @@
     </div>
 
     <!-- فرم کد -->
-    <form id="otpForm" method="POST" action="{{ url_for('main.verify_otp') }}" class="space-y-5" novalidate>
+    <form id="otpForm" method="POST" action="{{ url_for('main.verify') }}" class="space-y-5" novalidate>
       <input type="hidden" name="phone" value="{{ phone }}">
 
       <div>
@@ -38,7 +38,7 @@
           name="otp_code"
           id="otpInput"
           maxlength="5"
-          pattern="\\d{5}"
+          pattern="\d{5}"
           inputmode="numeric"
           required
           autocomplete="one-time-code"
@@ -60,7 +60,7 @@
     <!-- تایمر و ارسال مجدد -->
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
       <p id="timer" class="mt-2">ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر</p>
-      <form method="POST" action="{{ url_for('main.send_otp') }}" id="resendForm" class="inline-block">
+      <form method="POST" action="{{ url_for('main.login') }}" id="resendForm" class="inline-block">
         <input type="hidden" name="phone" value="{{ phone }}">
         <button
           type="submit"
@@ -82,7 +82,7 @@
     const otpForm = document.getElementById('otpForm');
     otpInput.addEventListener('input', () => {
       // فقط اعداد
-      otpInput.value = otpInput.value.replace(/\\D+/g, '');
+      otpInput.value = otpInput.value.replace(/\D+/g, '');
       if (otpInput.value.length === 5) {
         otpForm.submit();
       }
@@ -115,7 +115,7 @@
             signal: ac.signal
           });
           if (content && content.code) {
-            otpInput.value = (content.code + '').replace(/\\D+/g, '').slice(0, 5);
+            otpInput.value = (content.code + '').replace(/\D+/g, '').slice(0, 5);
             if (otpInput.value.length === 5) otpForm.submit();
           }
         } catch (err) {

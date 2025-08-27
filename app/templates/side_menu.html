@@ -1,4 +1,4 @@
-{# side_menu.html - Mobile-first, compact & clean with City Chip + Universal Footer #}
+{# side_menu.html - Vinor | Mobile-first, complete & production-safe #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -7,41 +7,39 @@
      data-require-login="{{ '1' if require_login else '0' }}">
     <i class="fas {{ icon }} text-lg text-green-600 dark:text-green-400"></i>
     <span class="text-[15px] font-medium text-gray-800 dark:text-gray-100">{{ text }}</span>
-    {% if badge and badge|int > 0 %}
+    {% if badge is not none and badge|int > 0 %}
       <span class="ms-auto inline-flex items-center justify-center min-w-5 h-5 px-2 text-[11px] rounded-full
                    bg-red-500 text-white">{{ badge }}</span>
     {% endif %}
   </a>
 {%- endmacro %}
 
-<!-- Overlay (برای موبایل) -->
+<!-- Overlay (فقط موبایل) -->
 <div id="menuOverlay"
      class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-200 sm:hidden"></div>
 
 <aside id="sideMenu"
-       class="fixed top-0 right-0 z-50 h-full w-[88vw] max-w-80
-              translate-x-full sm:translate-x-0 sm:w-72
+       class="fixed top-0 right-0 z-50 h-full w-[88vw] max-w-80 sm:w-72
               bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700
-              shadow-2xl transition-transform duration-250 ease-out will-change-transform
+              shadow-2xl transition-transform duration-300 ease-out
               flex flex-col">
-
-  {# Header #}
+  <!-- Header -->
   <header class="shrink-0 sticky top-0 px-3 py-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur
                  border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between">
       <!-- User -->
-      <a href="{{ url_for('main.app_home') if session.get('user_id') else url_for('main.login') }}"
+      <a href="{{ url_for('main.profile') if session.get('user_id') else url_for('main.login') }}"
          class="flex items-center gap-2 text-[15px] font-bold text-gray-800 dark:text-white
                 hover:text-green-700 dark:hover:text-green-300 transition"
-         title="{{ 'رفتن به داشبورد' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
+         title="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
         <span class="truncate max-w-[36vw] sm:max-w-[120px]">
-          {% if session.get('user_id') %}حساب من{% else %}مهمان{% endif %}
+          {% if session.get('user_id') %}پروفایل من{% else %}مهمان{% endif %}
         </span>
       </a>
 
       <div class="flex items-center gap-2">
-        <!-- Current City Chip (visible on all sizes) -->
+        <!-- City Chip -->
         <a id="cityChip"
            href="{{ url_for('main.city_select') }}"
            class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
@@ -62,32 +60,25 @@
     </div>
   </header>
 
-  <!-- Body (scrollable) -->
+  <!-- Body -->
   <div class="flex-1 overflow-y-auto p-3 space-y-2">
 
     <!-- Primary actions -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی رایگان', True) }}
-      {{ MenuItem(url_for('main.index'), 'fa-home', 'خانه') }}
-      {# اعلان‌ها: فعلاً به داشبورد هدایت می‌شود تا خطا ندهد #}
-      {{ MenuItem(url_for('main.app_home'), 'fa-bell', 'اعلان‌ها', True, notif_count or 0) }}
+      {{ MenuItem(url_for('main.app_home'),   'fa-home',         'خانه') }}
+      {{ MenuItem(url_for('main.search_page'),'fa-search',       'جستجو') }}
+      {{ MenuItem(url_for('main.submit_ad'),  'fa-plus-circle',  'ثبت آگهی رایگان', True) }}
+      {{ MenuItem(url_for('main.notifications'),'fa-bell',       'اعلان‌ها', True, (notif_count if notif_count is defined else 0)) }}
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
 
-    <!-- City selector entry -->
-    <a href="{{ url_for('main.city_select') }}"
-       class="w-full flex items-center gap-3 p-3 rounded-xl transition
-              hover:bg-green-100 dark:hover:bg-green-800 active:scale-[0.98]">
-      <i class="fas fa-city text-lg text-green-600 dark:text-green-400"></i>
-      <span id="cityMenuText" class="text-[15px] font-medium text-gray-800 dark:text-gray-100">انتخاب شهر</span>
-    </a>
-
-    <!-- User bundle (فعلاً به داشبورد لینک می‌شوند) -->
+    <!-- User bundle -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.app_home'), 'fa-list', 'آگهی‌های من', True) }}
-      {{ MenuItem(url_for('main.app_home'), 'fa-heart', 'علاقه‌مندی‌ها', True) }}
-      {{ MenuItem(url_for('main.app_home'), 'fa-cog', 'تنظیمات', True) }}
+      {{ MenuItem(url_for('main.my_lands'),   'fa-list',         'آگهی‌های من', True) }}
+      {{ MenuItem(url_for('main.favorites'),  'fa-heart',        'علاقه‌مندی‌ها', True) }}
+      {{ MenuItem(url_for('main.settings'),   'fa-cog',          'تنظیمات', True) }}
+      {{ MenuItem(url_for('main.city_select'),'fa-city',         'انتخاب شهر') }}
     </div>
 
     <!-- Auth -->
@@ -109,47 +100,35 @@
 
   </div>
 
-  <!-- Global Bottom quick actions (universal, accessible, safe-area aware) -->
+  <!-- Bottom quick actions -->
   <footer
     class="shrink-0 sticky bottom-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
            border-t border-gray-200 dark:border-gray-700"
     style="padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);"
-    role="toolbar"
-    aria-label="اقدامات سریع">
+    role="toolbar" aria-label="اقدامات سریع">
 
-    {# ---------- Config (with safe defaults) ---------- #}
     {% set PHONE = (contact_phone if contact_phone is defined and contact_phone) or '+989121234567' %}
     {% set WA    = (contact_whatsapp if contact_whatsapp is defined and contact_whatsapp) or PHONE %}
     {% set WA_INT = WA|replace('+','')|replace(' ','')|replace('-','') %}
-    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'وینور، زمین‌های آینده‌دار.' %}
+    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'وینور | خرید و فروش ملک' %}
 
     <div class="grid grid-cols-3 gap-2 text-center">
-      <!-- Call -->
-      <a id="qaCall"
-         href="tel:{{ PHONE }}"
+      <a id="qaCall" href="tel:{{ PHONE }}"
          class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-         aria-label="تماس تلفنی"
-         rel="nofollow"
-         data-phone="{{ PHONE }}">
+         aria-label="تماس تلفنی" rel="nofollow">
         <i class="fas fa-phone" aria-hidden="true"></i>
         <span class="block text-xs mt-1">تماس</span>
       </a>
 
-      <!-- WhatsApp -->
-      <a id="qaWhatsapp"
-         href="https://wa.me/{{ WA_INT }}"
+      <a id="qaWhatsapp" href="https://wa.me/{{ WA_INT }}"
          class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-         aria-label="گفتگو در واتساپ"
-         target="_blank" rel="noopener noreferrer"
-         data-wa="{{ WA_INT }}"
-         data-wa-text="{{ SHARE_TEXT }}">
+         aria-label="گفتگو در واتساپ" target="_blank" rel="noopener noreferrer"
+         data-wa="{{ WA_INT }}" data-wa-text="{{ SHARE_TEXT }}">
         <i class="fab fa-whatsapp" aria-hidden="true"></i>
         <span class="block text-xs mt-1">واتساپ</span>
       </a>
 
-      <!-- Share -->
-      <button id="qaShare"
-              type="button"
+      <button id="qaShare" type="button"
               class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
               aria-label="اشتراک‌گذاری">
         <i class="fas fa-share-alt" aria-hidden="true"></i>
@@ -161,44 +140,37 @@
 
 <script>
   (function () {
-    const sideMenu   = document.getElementById('sideMenu');
-    const overlay    = document.getElementById('menuOverlay');
-    const closeBtn   = document.getElementById('closeMenu');
+    const sideMenu     = document.getElementById('sideMenu');
+    const overlay      = document.getElementById('menuOverlay');
+    const closeBtn     = document.getElementById('closeMenu');
     const cityChipText = document.getElementById('cityChipText');
     const cityMenuText = document.getElementById('cityMenuText');
 
-    // ====== Open/Close ======
-    const isOpen = () => sideMenu.classList.contains('!translate-x-0');
+    // Open/Close (هماهنگ با base.html که کلاس open را کنترل می‌کند)
     const openMenu = () => {
-      sideMenu.classList.add('!translate-x-0');
+      sideMenu?.classList.add('open');
       overlay?.classList.remove('pointer-events-none');
       overlay?.classList.add('opacity-100');
       document.body.style.overflow = 'hidden';
     };
     const closeMenu = () => {
-      sideMenu.classList.remove('!translate-x-0');
+      sideMenu?.classList.remove('open');
       overlay?.classList.add('pointer-events-none');
       overlay?.classList.remove('opacity-100');
       document.body.style.overflow = '';
     };
-
     window.openSideMenu = openMenu;
     overlay?.addEventListener('click', closeMenu);
     closeBtn?.addEventListener('click', closeMenu);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) closeMenu(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
-    // Swipe close
-    let startX = null;
-    sideMenu.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
-    sideMenu.addEventListener('touchmove', (e) => {
-      if (startX === null) return;
-      const delta = e.touches[0].clientX - startX;
-      if (delta > 50) { startX = null; closeMenu(); }
-    }, {passive:true});
-    sideMenu.addEventListener('touchend', () => { startX = null; });
+    // بستن منو بعد از کلیک روی هر لینک
+    document.querySelectorAll('#sideMenu a').forEach(a => {
+      a.addEventListener('click', () => setTimeout(closeMenu, 0));
+    });
 
-    // Require-login guard
-    document.querySelectorAll('#sideMenu a.require-login').forEach(a => {
+    // Require-login guard (برای آیتم‌هایی که data-require-login=1 دارند)
+    document.querySelectorAll('#sideMenu a.require-login, #sideMenu a[data-require-login="1"]').forEach(a => {
       a.addEventListener('click', (e) => {
         const loggedIn = {{ 'true' if session.get('user_id') else 'false' }};
         if (!loggedIn) {
@@ -208,15 +180,13 @@
       });
     });
 
-    // ===== Web Share (Universal) =====
+    // Web Share
     const btnShare   = document.getElementById('qaShare');
     const aWhatsapp  = document.getElementById('qaWhatsapp');
-
     const shareTitle = document.title || 'وینور | خرید و فروش ملک';
     const shareUrl   = window.location.href;
-    const shareText  = (aWhatsapp?.dataset.waText) || 'وینور، زمین‌های آینده‌دار.';
+    const shareText  = (aWhatsapp?.dataset.waText) || 'وینور | خرید و فروش ملک';
 
-    // WhatsApp deep link with text
     if (aWhatsapp) {
       const wa = aWhatsapp.dataset.wa || '';
       const url = new URL(`https://wa.me/${wa}`);
@@ -224,7 +194,6 @@
       aWhatsapp.href = url.toString();
     }
 
-    // Share: Web Share API + clipboard fallback
     btnShare?.addEventListener('click', async () => {
       const data = { title: shareTitle, text: shareText, url: shareUrl };
       try {
@@ -239,21 +208,19 @@
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 1800);
         }
-      } catch (_) { /* کاربر انصراف داد یا پشتیبانی نیست */ }
+      } catch (_) {}
     }, { passive: true });
 
-    // ===== City UI from localStorage =====
+    // City UI via localStorage
     const CITY_KEY = 'vinor_city';
-    function getCity() { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } }
-    function updateCityUI() {
+    const getCity = () => { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } };
+    const updateCityUI = () => {
       const c = getCity();
-      if (cityChipText) cityChipText.textContent = c ? c : 'انتخاب شهر';
+      if (cityChipText) cityChipText.textContent = c || 'انتخاب شهر';
       if (cityMenuText) cityMenuText.textContent = c ? ('شهر من: ' + c) : 'انتخاب شهر';
-    }
+    };
     updateCityUI();
-
-    // Sync when city changes elsewhere
-    window.addEventListener('storage', (e) => { if (e.key === 'vinor_city') updateCityUI(); });
+    window.addEventListener('storage', (e) => { if (e.key === CITY_KEY) updateCityUI(); });
     document.addEventListener('vinor:city-changed', updateCityUI);
   })();
 </script>

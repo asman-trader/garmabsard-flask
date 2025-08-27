@@ -9,19 +9,23 @@ from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
 
 def _to_int(x, default=0):
-    try: return int(str(x).replace(',', '').strip())
-    except Exception: return default
+    try:
+        return int(str(x).replace(',', '').strip())
+    except Exception:
+        return default
 
-@main_bp.route('/submit-ad', methods=['GET','POST'])
-def submit_ad():
+# ⚠️ قبلاً endpoint پیش‌فرض «submit_ad» باعث تداخل شده بود.
+# با endpoint یکتا مشکل رفع می‌شود.
+@main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
+def submit_ad_redirect():
     return redirect(url_for('main.add_land'))
 
-@main_bp.route('/lands/add', methods=['GET','POST'])
+@main_bp.route('/lands/add', methods=['GET','POST'], endpoint='add_land')
 def add_land():
     if 'user_phone' not in session:
         flash("برای ثبت آگهی وارد شوید.")
         session['next'] = url_for('main.add_land')
-        return redirect(url_for('main.send_otp'))
+        return redirect(url_for('main.login'))
 
     if request.method == 'POST':
         title = request.form.get('title')
@@ -60,12 +64,13 @@ def add_land():
 
     return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP)
 
-@main_bp.route('/lands/add/step3', methods=['GET','POST'])
+@main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')
 def add_land_step3():
     if 'user_phone' not in session:
         flash("برای ثبت آگهی وارد شوید.")
         session['next'] = url_for('main.add_land_step3')
-        return redirect(url_for('main.send_otp'))
+        return redirect(url_for('main.login'))
+
     if request.method == 'POST':
         ad_type = request.form.get('ad_type')
         if ad_type not in ['site','broadcast']:
@@ -75,7 +80,7 @@ def add_land_step3():
         return redirect(url_for('main.finalize_land'))
     return render_template('add_land_step3.html')
 
-@main_bp.route('/lands/finalize')
+@main_bp.route('/lands/finalize', methods=['GET'], endpoint='finalize_land')
 def finalize_land():
     keys = ['land_code','land_temp','land_images','land_ad_type']
     if not all(k in session for k in keys):
@@ -102,17 +107,18 @@ def finalize_land():
     }
     lands.append(new_land)
     save_ads(lands)
-    for k in keys: session.pop(k, None)
+    for k in keys:
+        session.pop(k, None)
 
     flash("✅ آگهی شما ثبت شد." + (" منتشر شد." if status=='approved' else " و منتظر تأیید است."))
     return redirect(url_for('main.my_lands'))
 
-@main_bp.route('/my-lands')
+@main_bp.route('/my-lands', methods=['GET'], endpoint='my_lands')
 def my_lands():
     if 'user_phone' not in session:
         flash("برای مشاهده وارد شوید.")
         session['next'] = url_for('main.my_lands')
-        return redirect(url_for('main.send_otp'))
+        return redirect(url_for('main.login'))
 
     q        = (request.args.get('q') or '').strip().lower()
     status   = (request.args.get('status') or '').strip()
@@ -160,12 +166,12 @@ def my_lands():
     }
     return render_template('my_lands.html', lands=items, pagination=pagination, page_url=page_url, CATEGORY_MAP=CATEGORY_MAP)
 
-@main_bp.route('/lands/edit/<code>', methods=['GET','POST'])
+@main_bp.route('/lands/edit/<code>', methods=['GET','POST'], endpoint='edit_land')
 def edit_land(code):
     if 'user_phone' not in session:
         flash("برای ویرایش وارد شوید.")
         session['next'] = url_for('main.edit_land', code=code)
-        return redirect(url_for('main.send_otp'))
+        return redirect(url_for('main.login'))
 
     lands = load_ads()
     land = next((l for l in lands if l.get('code') == code and l.get('owner') == session['user_phone']), None)
@@ -204,11 +210,11 @@ def edit_land(code):
 
     return render_template('edit_land.html', land=land, CATEGORY_MAP=CATEGORY_MAP)
 
-@main_bp.route('/lands/delete/<code>', methods=['POST'])
+@main_bp.route('/lands/delete/<code>', methods=['POST'], endpoint='delete_land')
 def delete_land(code):
     if 'user_phone' not in session:
         flash("برای حذف وارد شوید.")
-        return redirect(url_for('main.send_otp'))
+        return redirect(url_for('main.login'))
 
     lands = load_ads()
     new_lands = [l for l in lands if not (l.get('code') == code and l.get('owner') == session['user_phone'])]
@@ -219,7 +225,7 @@ def delete_land(code):
         flash("🗑️ آگهی حذف شد.")
     return redirect(url_for('main.my_lands'))
 
-@main_bp.route('/consult/<code>', methods=['POST'])
+@main_bp.route('/consult/<code>', methods=['POST'], endpoint='consult')
 def consult(code):
     consults = load_consults()
     consults.append({
