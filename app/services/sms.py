@@ -2,7 +2,7 @@
 import os, requests
 from flask import current_app
 SMS_API_KEY = os.environ.get("SMS_API_KEY") or "cwDc9dmxkF4c1avGDTBFnlRPyJQkxk2TVhpZCj6ShGrVx9y4"
-TEMPLATE_ID = 753422
+TEMPLATE_ID = 373657
 
 def send_sms_code(phone: str, code: str):
     url = "https://api.sms.ir/v1/send/verify"
