@@ -1,7 +1,21 @@
 # -*- coding: utf-8 -*-
-import os, hmac, hashlib, shlex, subprocess, fcntl, time, json
-from typing import List, Dict, Any
+import os, hmac, hashlib, shlex, subprocess, time, json, platform
+from typing import List, Dict, Any, Optional
 from flask import Blueprint, request, jsonify
+
+# ───────── وابسته به پلتفرم: fcntl/msvcrt ─────────
+IS_WINDOWS = platform.system() == "Windows"
+try:
+    if not IS_WINDOWS:
+        import fcntl  # فقط لینوکس/یونیکس
+except Exception:
+    fcntl = None  # احتیاط
+
+try:
+    if IS_WINDOWS:
+        import msvcrt  # فقط ویندوز
+except Exception:
+    msvcrt = None  # احتیاط
 
 # ───────── کانفیگ از Env (ایمن‌تر) ─────────
 PROJECT_PATH = os.getenv("VINOR_PROJECT_PATH", "/home/garmabs2/myapp")
@@ -9,38 +23,60 @@ ALLOWED_BRANCHES = set(os.getenv("VINOR_ALLOWED_BRANCHES", "main").split(","))
 SECRET = os.getenv("VINOR_WEBHOOK_SECRET", "")  # در GitHub هم همین Secret
 ALLOWED_REPO = os.getenv("VINOR_ALLOWED_REPO", "asman-trader/garmabsard-flask")  # owner/repo
 DEPLOY_LOG = os.getenv("VINOR_DEPLOY_LOG", f"{PROJECT_PATH}/deploy.log")
-LOCK_FILE = os.getenv("VINOR_DEPLOY_LOCK", "/tmp/vinor_deploy.lock")
+LOCK_FILE = os.getenv("VINOR_DEPLOY_LOCK", "/tmp/vinor_deploy.lock" if not IS_WINDOWS else os.path.join(os.getenv("TEMP", "."), "vinor_deploy.lock"))
 TIMEOUT = int(os.getenv("VINOR_CMD_TIMEOUT", "300"))
 
-# دستورات پسادیپلوی (Passenger/venv)
+# دستورات پسادیپلوی (Passenger/venv) — روی ویندوز برای توسعه محلی غیرفعال می‌کنیم
 VENV_ACTIVATE = "/home/garmabs2/virtualenv/myapp/3.11/bin/activate"
-POST_DEPLOY_COMMANDS: List[str] = [
+DEFAULT_POST_DEPLOY_COMMANDS: List[str] = [
     # نصب وابستگی‌ها اگر وجود داشت
     f"bash -lc 'source {shlex.quote(VENV_ACTIVATE)} && pip install --upgrade pip && "
     f"[ -f requirements.txt ] && pip install -r requirements.txt || true'",
     # Passenger restart
     "bash -lc 'mkdir -p tmp && touch tmp/restart.txt'",
 ]
+POST_DEPLOY_COMMANDS: List[str] = [] if IS_WINDOWS else DEFAULT_POST_DEPLOY_COMMANDS
 
 webhook_bp = Blueprint("webhook", __name__)
 
-def log_line(msg: str, extra: Dict[str, Any] = None) -> None:
+# ───────── Utilities ─────────
+def log_line(msg: str, extra: Optional[Dict[str, Any]] = None) -> None:
     try:
         rec = {"ts": time.strftime("%Y-%m-%d %H:%M:%S"), "msg": msg}
         if extra: rec.update(extra)
+        os.makedirs(os.path.dirname(DEPLOY_LOG), exist_ok=True)
         with open(DEPLOY_LOG, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     except Exception:
         pass
 
-def run(cmd: str, cwd: str = None, timeout: int = TIMEOUT) -> Dict[str, Any]:
-    proc = subprocess.run(
-        shlex.split(cmd), cwd=cwd, capture_output=True, text=True, timeout=timeout
-    )
-    out = {"cmd": cmd, "rc": proc.returncode,
-           "stdout": (proc.stdout or "").strip(), "stderr": (proc.stderr or "").strip()}
-    log_line("run", out)
-    return out
+def run(cmd: str, cwd: Optional[str] = None, timeout: int = TIMEOUT) -> Dict[str, Any]:
+    """
+    اجرای امن دستور. توجه: روی ویندوز، دستورات bash کار نمی‌کنند؛
+    ما از قبل POST_DEPLOY_COMMANDS را روی ویندوز خالی کرده‌ایم.
+    """
+    try:
+        # shlex.split برای سازگاری لینوکس/یونیکس
+        # اگر cmd شامل space در مسیر باشد، shlex.split درست مدیریت می‌کند.
+        proc = subprocess.run(
+            shlex.split(cmd),
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        out = {
+            "cmd": cmd,
+            "rc": proc.returncode,
+            "stdout": (proc.stdout or "").strip(),
+            "stderr": (proc.stderr or "").strip()
+        }
+        log_line("run", out)
+        return out
+    except Exception as e:
+        out = {"cmd": cmd, "rc": -1, "stdout": "", "stderr": f"{type(e).__name__}: {e}"}
+        log_line("run_exception", out)
+        return out
 
 def verify_signature(secret: str, raw_body: bytes) -> bool:
     sig = request.headers.get("X-Hub-Signature-256", "")
@@ -55,13 +91,66 @@ def verify_signature(secret: str, raw_body: bytes) -> bool:
 def extract_branch(ref: str) -> str:
     return ref.split("/", 2)[-1] if ref and ref.startswith("refs/heads/") else ""
 
-def acquire_lock() -> Any:
-    f = open(LOCK_FILE, "w+")
-    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    f.write(str(time.time()))
-    f.flush()
-    return f
+# ───────── Cross-platform file lock ─────────
+class FileLock:
+    """
+    لاک فایل کراس‌پلتفرم:
+      - روی لینوکس/یونیکس از fcntl.flock با LOCK_EX | LOCK_NB
+      - روی ویندوز از msvcrt.locking با LK_NBLCK روی 1 بایت
+    """
+    def __init__(self, path: str):
+        self.path = path
+        self.fh = None
 
+    def acquire(self) -> None:
+        os.makedirs(os.path.dirname(self.path), exist_ok=True) if os.path.dirname(self.path) else None
+        self.fh = open(self.path, "a+b")
+        try:
+            if not IS_WINDOWS and fcntl:
+                fcntl.flock(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            elif IS_WINDOWS and msvcrt:
+                # از ابتدای فایل یک بایت را قفل می‌کنیم
+                self.fh.seek(0)
+                msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                # اگر هیچ‌کدام در دسترس نبود، با ایجاد فایل به‌صورت best-effort ادامه می‌دهیم
+                pass
+            # نوشتن مهر زمان برای مشاهده دیباگ
+            self.fh.seek(0)
+            self.fh.write(str(time.time()).encode("utf-8"))
+            self.fh.flush()
+            os.fsync(self.fh.fileno())
+        except (BlockingIOError, OSError) as e:
+            # آزادسازی هندل در صورت عدم موفقیت
+            try:
+                self.fh.close()
+            except Exception:
+                pass
+            self.fh = None
+            raise BlockingIOError(str(e))
+
+    def release(self) -> None:
+        if not self.fh:
+            return
+        try:
+            if not IS_WINDOWS and fcntl:
+                fcntl.flock(self.fh, fcntl.LOCK_UN)
+            elif IS_WINDOWS and msvcrt:
+                self.fh.seek(0)
+                msvcrt.locking(self.fh.fileno(), msvcrt.LK_UNLCK, 1)
+        finally:
+            try:
+                self.fh.close()
+            except Exception:
+                pass
+            self.fh = None
+
+def acquire_lock() -> FileLock:
+    lock = FileLock(LOCK_FILE)
+    lock.acquire()
+    return lock
+
+# ───────── Route ─────────
 @webhook_bp.route("/git-webhook", methods=["POST"])
 def git_webhook():
     event = request.headers.get("X-GitHub-Event", "")
@@ -101,20 +190,24 @@ def git_webhook():
 
     steps: List[Dict[str, Any]] = []
     try:
+        # اطمینان از گیت
         steps.append(run("git rev-parse --is-inside-work-tree", cwd=PROJECT_PATH))
         if steps[-1]["rc"] != 0 or steps[-1]["stdout"] != "true":
             return jsonify(ok=False, step="check-git", results=steps), 500
 
-        for cmd in [
+        # همگام‌سازی با ریموت
+        git_cmds = [
             "git config --global --add safe.directory " + PROJECT_PATH,
             "git fetch --all --prune",
             f"git reset --hard origin/{branch}",
             "git clean -fd -e instance -e instance/*",
-        ]:
+        ]
+        for cmd in git_cmds:
             steps.append(run(cmd, cwd=PROJECT_PATH))
             if steps[-1]["rc"] != 0:
                 return jsonify(ok=False, step="git", results=steps), 500
 
+        # دستورات پسادیپلوی (فقط لینوکس/سرور)
         for cmd in POST_DEPLOY_COMMANDS:
             steps.append(run(cmd, cwd=PROJECT_PATH))
             if steps[-1]["rc"] != 0:
@@ -125,7 +218,6 @@ def git_webhook():
 
     finally:
         try:
-            fcntl.flock(lock_handle, fcntl.LOCK_UN)
-            lock_handle.close()
+            lock_handle.release()
         except Exception:
             pass
