@@ -1,4 +1,4 @@
-{# side_menu.html - Vinor | Mobile-first, complete & production-safe #}
+{# side_menu.html - Vinor | Mobile-first, final #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -27,15 +27,12 @@
   <header class="shrink-0 sticky top-0 px-3 py-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur
                  border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between">
-      <!-- User -->
+      <!-- فقط آیکن پروفایل (لینک‌دار) -->
       <a href="{{ url_for('main.profile') if session.get('user_id') else url_for('main.login') }}"
-         class="flex items-center gap-2 text-[15px] font-bold text-gray-800 dark:text-white
-                hover:text-green-700 dark:hover:text-green-300 transition"
-         title="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
+         class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+         title="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}"
+         aria-label="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
-        <span class="truncate max-w-[36vw] sm:max-w-[120px]">
-          {% if session.get('user_id') %}پروفایل من{% else %}مهمان{% endif %}
-        </span>
       </a>
 
       <div class="flex items-center gap-2">
@@ -45,9 +42,21 @@
            class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
                   border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200
                   hover:bg-green-50 dark:hover:bg-green-800"
-           title="انتخاب شهر">
+           title="انتخاب شهر" aria-label="انتخاب شهر">
           <i class="fas fa-map-marker-alt text-green-600 dark:text-green-400"></i>
           <span id="cityChipText">انتخاب شهر</span>
+        </a>
+
+        <!-- Notifications icon with badge -->
+        <a href="{{ url_for('main.notifications') if session.get('user_id') else url_for('main.login') }}"
+           class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+           title="اعلان‌ها" aria-label="اعلان‌ها">
+          <i class="fas fa-bell text-[18px] text-gray-700 dark:text-gray-200"></i>
+          {% if notif_count is defined and notif_count|int > 0 %}
+            <span class="absolute -top-1 -left-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+              {{ notif_count }}
+            </span>
+          {% endif %}
         </a>
 
         <!-- Close (mobile) -->
@@ -68,7 +77,7 @@
       {{ MenuItem(url_for('main.app_home'),   'fa-home',         'خانه') }}
       {{ MenuItem(url_for('main.search_page'),'fa-search',       'جستجو') }}
       {{ MenuItem(url_for('main.submit_ad'),  'fa-plus-circle',  'ثبت آگهی رایگان', True) }}
-      {{ MenuItem(url_for('main.notifications'),'fa-bell',       'اعلان‌ها', True, (notif_count if notif_count is defined else 0)) }}
+      {# اعلان‌ها به هدر منتقل شد و از این لیست حذف گردید #}
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
@@ -169,7 +178,7 @@
       a.addEventListener('click', () => setTimeout(closeMenu, 0));
     });
 
-    // Require-login guard (برای آیتم‌هایی که data-require-login=1 دارند)
+    // Require-login guard
     document.querySelectorAll('#sideMenu a.require-login, #sideMenu a[data-require-login="1"]').forEach(a => {
       a.addEventListener('click', (e) => {
         const loggedIn = {{ 'true' if session.get('user_id') else 'false' }};
@@ -180,7 +189,7 @@
       });
     });
 
-    // Web Share
+    // Web Share + WhatsApp text
     const btnShare   = document.getElementById('qaShare');
     const aWhatsapp  = document.getElementById('qaWhatsapp');
     const shareTitle = document.title || 'وینور | خرید و فروش ملک';

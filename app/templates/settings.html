@@ -4,158 +4,177 @@
 {% block title %}تنظیمات حساب | وینور{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow mt-4 sm:mt-8">
+<!-- ظرف اصلی (Mobile-First) -->
+<div class="mx-auto max-w-xl px-4 pb-28 pt-3 sm:pt-6">
 
-  <!-- نوار بالای موبایلی -->
-  <div class="flex items-center justify-between mb-4">
-    <button onclick="history.back()" class="text-sm text-gray-600 dark:text-gray-300 hover:underline">
-      ← بازگشت
-    </button>
-    <span class="text-sm font-bold text-green-700 dark:text-green-400">وینور</span>
+  <!-- هدر چسبان موبایلی -->
+  <header class="sticky top-0 z-10 -mx-4 mb-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-100 dark:border-gray-800">
+    <div class="max-w-xl mx-auto px-4 h-12 flex items-center justify-between">
+      <button onclick="history.back()" class="text-sm font-medium text-gray-600 dark:text-gray-300">
+        ← بازگشت
+      </button>
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-green-600"></span>
+        <span class="text-sm font-bold text-green-700 dark:text-green-400">وینور</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- عنوان و توضیح -->
+  <div class="mb-4 sm:mb-6">
+    <h1 class="text-[18px] sm:text-2xl font-bold text-gray-900 dark:text-white">⚙️ تنظیمات حساب کاربری</h1>
+    <p class="mt-1 text-[12px] sm:text-sm text-gray-500 dark:text-gray-400">
+      اطلاعات پروفایل و موقعیت پیش‌فرض جستجو را به‌روزرسانی کنید. تغییرات شما بلافاصله در تجربه جستجو در وینور اعمال می‌شود.
+    </p>
   </div>
 
-  <h1 class="text-xl sm:text-2xl font-bold mb-1 text-gray-900 dark:text-white">
-    ⚙️ تنظیمات حساب کاربری
-  </h1>
-  <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6">
-    اطلاعات پروفایل، استان و شهر دلخواه برای جستجو را اینجا ویرایش کنید.
-  </p>
-
   {% if user %}
-  <form method="post" action="{{ url_for('main.settings') }}" class="space-y-6">
+  <form id="settings-form" method="post" action="{{ url_for('main.settings') }}" class="space-y-8">
 
-    <!-- شماره موبایل (نمایشی) -->
-    <div class="space-y-1">
-      <label class="block text-sm text-gray-600 dark:text-gray-300">شماره موبایل (غیرقابل تغییر)</label>
-      <input type="text" value="{{ user.phone }}" disabled
-             class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-400 dark:border-slate-600" />
-    </div>
+    <!-- کارت: اطلاعات کاربری -->
+    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
+      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">👤 اطلاعات کاربری</h2>
 
-    <!-- نام -->
-    <div class="space-y-1">
-      <label for="first_name" class="block text-sm text-gray-600 dark:text-gray-300">نام</label>
-      <input id="first_name" type="text" name="first_name" value="{{ user.first_name or '' }}" required
-             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-    </div>
+      <!-- موبایل (غیرقابل تغییر) -->
+      <div class="mb-4">
+        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شماره موبایل</label>
+        <input type="text" value="{{ user.phone }}" disabled
+               class="w-full rounded-xl border bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-700 px-3 py-2">
+        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">این فیلد غیرقابل ویرایش است.</p>
+      </div>
 
-    <!-- نام خانوادگی -->
-    <div class="space-y-1">
-      <label for="last_name" class="block text-sm text-gray-600 dark:text-gray-300">نام خانوادگی</label>
-      <input id="last_name" type="text" name="last_name" value="{{ user.last_name or '' }}"
-             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-    </div>
+      <!-- نام -->
+      <div class="mb-4">
+        <label for="first_name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام</label>
+        <input id="first_name" name="first_name" type="text" value="{{ user.first_name or '' }}" required
+               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      </div>
 
-    <!-- بخش: موقعیت پیش‌فرض جستجو (استان/شهر) -->
-    <div class="pt-2">
-      <h2 class="text-base font-semibold mb-2 text-gray-800 dark:text-gray-100">📍 موقعیت پیش‌فرض جستجو</h2>
+      <!-- نام خانوادگی -->
+      <div>
+        <label for="last_name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام خانوادگی</label>
+        <input id="last_name" name="last_name" type="text" value="{{ user.last_name or '' }}"
+               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      </div>
+    </section>
+
+    <!-- کارت: موقعیت پیش‌فرض جستجو -->
+    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
+      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">📍 موقعیت پیش‌فرض جستجو</h2>
 
       <!-- استان -->
-      <div class="space-y-1 mb-3">
-        <label for="province-select" class="block text-sm text-gray-600 dark:text-gray-300">استان</label>
-        <select name="province" id="province-select" required
-                class="w-full border rounded-lg px-3 py-2 appearance-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          <option value="">انتخاب کنید…</option>
-          <option value="تهران" {{ 'selected' if user.province == 'تهران' else '' }}>تهران</option>
-          <option value="البرز" {{ 'selected' if user.province == 'البرز' else '' }}>البرز</option>
-          <option value="مازندران" {{ 'selected' if user.province == 'مازندران' else '' }}>مازندران</option>
-          <!-- در صورت نیاز، استان‌های بیشتر را از سرور پر کنید -->
-        </select>
-        <p class="text-[11px] text-gray-500 dark:text-gray-400">استانی که بیشتر در آن جستجو می‌کنید را انتخاب کنید.</p>
-      </div>
-
-      <!-- شهر -->
-      <div class="space-y-1">
-        <label for="city-select" class="block text-sm text-gray-600 dark:text-gray-300">شهر</label>
+      <div class="mb-4">
+        <label for="province-select" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">استان</label>
         <div class="relative">
-          <select name="city" id="city-select" required
-                  class="w-full border rounded-lg px-3 py-2 appearance-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-            {% if user.city %}
-              <option value="{{ user.city }}" selected>{{ user.city }}</option>
-            {% else %}
-              <option value="">ابتدا استان را انتخاب کنید</option>
-            {% endif %}
+          <select id="province-select" name="province" required
+                  class="w-full appearance-none rounded-xl border px-3 py-2 pr-8 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+            <option value="">انتخاب کنید…</option>
+            <option value="تهران" {{ 'selected' if (request.args.get('province') or user.province) == 'تهران' else '' }}>تهران</option>
+            <option value="البرز" {{ 'selected' if (request.args.get('province') or user.province) == 'البرز' else '' }}>البرز</option>
+            <option value="مازندران" {{ 'selected' if (request.args.get('province') or user.province) == 'مازندران' else '' }}>مازندران</option>
           </select>
-          <!-- آیکن فلش سفارشی -->
-          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">▾</span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
         </div>
-        <p class="text-[11px] text-gray-500 dark:text-gray-400">این شهر به‌عنوان پیش‌فرض فیلتر جستجو در وینور استفاده می‌شود.</p>
+        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">استانی که بیشتر در آن جستجو می‌کنید را انتخاب کنید.</p>
       </div>
-    </div>
 
-    <!-- تغییر رمز عبور -->
-    <div class="border-t dark:border-slate-700 pt-4">
-      <label for="new_password" class="block text-sm mb-2 text-gray-600 dark:text-gray-300">تغییر رمز عبور (اختیاری)</label>
-      <input id="new_password" type="password" name="new_password" placeholder="رمز جدید"
-             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-      <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">در صورت عدم تغییر، این بخش را خالی بگذارید.</p>
-    </div>
+      <!-- شهر (انتخاب در صفحه جدا) -->
+      <div>
+        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شهر</label>
 
-    <!-- ذخیره -->
-    <div class="pt-2">
-      <button type="submit"
-              class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow transition active:scale-[0.99]">
-        💾 ذخیره تغییرات
-      </button>
+        <!-- نمایش مقدار انتخاب‌شده -->
+        <input id="city-display" type="text"
+               value="{{ request.args.get('city', user.city or '') }}"
+               disabled
+               class="w-full rounded-xl border bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-200 dark:border-slate-700 px-3 py-2">
+
+        <!-- مقدار واقعی برای ارسال فرم -->
+        <input type="hidden" id="city-hidden" name="city" value="{{ request.args.get('city', user.city or '') }}">
+
+        <!-- رفتن به city_select -->
+        <button type="button" id="city-picker-btn"
+                class="mt-3 w-full rounded-xl px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition active:scale-[0.99]">
+          🗺️ انتخاب / تغییر شهر
+        </button>
+
+        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">با انتخاب شهر، فیلتر پیش‌فرض جستجو در وینور به‌روز می‌شود.</p>
+      </div>
+    </section>
+
+    <!-- کارت: امنیت -->
+    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
+      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">🔒 امنیت حساب</h2>
+      <label for="new_password" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">تغییر رمز عبور (اختیاری)</label>
+      <input id="new_password" name="new_password" type="password" placeholder="رمز جدید"
+             class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">اگر قصد تغییر ندارید، این قسمت را خالی بگذارید.</p>
+    </section>
+
+    <!-- نوار ذخیره چسبان در موبایل -->
+    <div class="fixed bottom-0 right-0 left-0 z-20 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 py-3 sm:static sm:p-0 sm:bg-transparent sm:border-none">
+      <div class="mx-auto max-w-xl">
+        <button type="submit"
+                class="w-full h-12 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-[15px] font-semibold shadow active:scale-[0.99]">
+          💾 ذخیره تغییرات
+        </button>
+      </div>
     </div>
   </form>
   {% else %}
-  <div class="text-red-600 mt-6">خطا: اطلاعات کاربر یافت نشد.</div>
+    <div class="rounded-xl border border-rose-200/60 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 p-4">
+      خطا: اطلاعات کاربر یافت نشد.
+    </div>
   {% endif %}
 
-  <!-- لینک بازگشت به خانه -->
-  <div class="mt-6">
-    <a href="{{ url_for('main.index') }}"
-       class="block text-center text-sm text-green-700 dark:text-green-400 hover:underline">
+  <!-- لینک بازگشت به خانه (فقط دسکتاپ نشان بده) -->
+  <div class="hidden sm:block mt-6">
+    <a href="{{ url_for('main.index') }}" class="text-sm text-green-700 dark:text-green-400 hover:underline">
       ← بازگشت به صفحه اصلی
     </a>
   </div>
 </div>
 
-<!-- JS: بارگذاری شهرها بر اساس استان (Mobile-First و سبک) -->
+<!-- JS: همگام‌سازی با city_select و ساخت لینک -->
 <script>
-  // مجموعه نمونه؛ در صورت نیاز از سرور پر کنید.
-  const citiesByProvince = {
-    'تهران': ['تهران', 'دماوند', 'رودهن', 'بومهن', 'پردیس', 'فیروزکوه', 'ورامین', 'اسلام‌شهر'],
-    'البرز': ['کرج', 'نظرآباد', 'طالقان', 'هشتگرد', 'فردیس'],
-    'مازندران': ['ساری', 'آمل', 'بابل', 'چالوس', 'نوشهر', 'رامسر']
-  };
+  (function () {
+    const $province  = document.getElementById('province-select');
+    const $cityDisp  = document.getElementById('city-display');
+    const $cityHidden= document.getElementById('city-hidden');
+    const $pickBtn   = document.getElementById('city-picker-btn');
 
-  const $province = document.getElementById('province-select');
-  const $city = document.getElementById('city-select');
+    // خواندن QueryString در صورت بازگشت از city_select
+    const params = new URLSearchParams(location.search);
+    const qsProvince = params.get('province');
+    const qsCity     = params.get('city');
 
-  function renderCityOptions(list) {
-    $city.innerHTML = '';
-    if (!list || list.length === 0) {
-      $city.innerHTML = '<option value="">ابتدا استان را انتخاب کنید</option>';
-      return;
+    if (qsProvince) $province.value = qsProvince;
+    if (qsCity) {
+      $cityDisp.value   = qsCity;
+      $cityHidden.value = qsCity;
     }
-    for (const c of list) {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      $city.appendChild(opt);
-    }
-  }
 
-  function onProvinceChange() {
-    const pv = $province.value;
-    const list = citiesByProvince[pv] || [];
-    const current = '{{ user.city or "" }}';
-    renderCityOptions(list);
-    // اگر شهر فعلی کاربر در لیست وجود دارد، انتخاب شود
-    if (current && list.includes(current)) {
-      $city.value = current;
-    }
-  }
+    // دکمه انتخاب شهر
+    $pickBtn.addEventListener('click', function () {
+      const next = "{{ url_for('main.settings') }}";
+      const province = $province.value || "{{ user.province or '' }}";
+      const city     = $cityHidden.value || "{{ user.city or '' }}";
 
-  window.addEventListener('DOMContentLoaded', () => {
-    // اگر استان از قبل انتخاب شده، شهرها را لود کن
-    if ($province && $province.value) {
-      onProvinceChange();
-    } else {
-      renderCityOptions(null);
-    }
-    $province && $province.addEventListener('change', onProvinceChange);
-  });
+      const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
+      url.searchParams.set('next', next);
+      if (province) url.searchParams.set('province', province);
+      if (city)     url.searchParams.set('city', city);
+
+      // اسکرول را پس از بازگشت به بالا ببریم تا UX بهتر شود
+      url.searchParams.set('from', 'settings');
+      window.location.href = url.toString();
+    });
+
+    // در تغییر استان، اگر شهر قبلی به استان جدید تعلق ندارد، نمایش را خالی کن (پرهیز از ناسازگاری)
+    $province.addEventListener('change', function () {
+      // به کاربر یادآوری کنیم شهر را دوباره انتخاب کند
+      $cityDisp.value   = '';
+      $cityHidden.value = '';
+    });
+  })();
 </script>
 {% endblock %}
