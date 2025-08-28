@@ -1,4 +1,4 @@
-{# side_menu.html - Vinor | Mobile-first, final #}
+{# side_menu.html - Vinor | Mobile-first, final (City in header + Help accordion) #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -77,17 +77,40 @@
       {{ MenuItem(url_for('main.app_home'),   'fa-home',         'خانه') }}
       {{ MenuItem(url_for('main.search_page'),'fa-search',       'جستجو') }}
       {{ MenuItem(url_for('main.submit_ad'),  'fa-plus-circle',  'ثبت آگهی رایگان', True) }}
-      {# اعلان‌ها به هدر منتقل شد و از این لیست حذف گردید #}
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-2">
 
     <!-- User bundle -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.my_lands'),   'fa-list',         'آگهی‌های من', True) }}
-      {{ MenuItem(url_for('main.favorites'),  'fa-heart',        'علاقه‌مندی‌ها', True) }}
-      {{ MenuItem(url_for('main.settings'),   'fa-cog',          'تنظیمات', True) }}
-      {{ MenuItem(url_for('main.city_select'),'fa-city',         'انتخاب شهر') }}
+      {{ MenuItem(url_for('main.my_lands'),   'fa-list',             'آگهی‌های من', True) }}
+      {{ MenuItem(url_for('main.favorites'),  'fa-heart',            'علاقه‌مندی‌ها', True) }}
+      {{ MenuItem(url_for('main.settings'),   'fa-cog',              'تنظیمات', True) }}
+
+      <!-- Help accordion -->
+      <div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <button id="helpToggle"
+                class="w-full flex items-center gap-3 p-3 text-right hover:bg-green-50 dark:hover:bg-green-800 transition"
+                aria-expanded="false" aria-controls="helpPanel">
+          <i class="fas fa-life-ring text-lg text-green-600 dark:text-green-400"></i>
+          <span class="text-[15px] font-medium text-gray-800 dark:text-gray-100">راهنما</span>
+          <i id="helpCaret" class="fas fa-chevron-down ms-auto text-xs text-gray-500"></i>
+        </button>
+
+        <div id="helpPanel" class="max-h-0 overflow-hidden transition-[max-height] duration-300 ease-out bg-gray-50/60 dark:bg-gray-800/60">
+          <a href="{{ url_for('main.about') }}"
+             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
+            <i class="fas fa-info-circle text-sm text-green-600 dark:text-green-400"></i>
+            درباره وینور
+          </a>
+          <a href="{{ url_for('main.faq') }}"
+             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
+            <i class="fas fa-question-circle text-sm text-green-600 dark:text-green-400"></i>
+            سوالات پرتکرار
+          </a>
+        </div>
+      </div>
+      <!-- /Help accordion -->
     </div>
 
     <!-- Auth -->
@@ -153,9 +176,8 @@
     const overlay      = document.getElementById('menuOverlay');
     const closeBtn     = document.getElementById('closeMenu');
     const cityChipText = document.getElementById('cityChipText');
-    const cityMenuText = document.getElementById('cityMenuText');
 
-    // Open/Close (هماهنگ با base.html که کلاس open را کنترل می‌کند)
+    // Open/Close
     const openMenu = () => {
       sideMenu?.classList.add('open');
       overlay?.classList.remove('pointer-events-none');
@@ -173,7 +195,7 @@
     closeBtn?.addEventListener('click', closeMenu);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
-    // بستن منو بعد از کلیک روی هر لینک
+    // بستن منو بعد از کلیک روی هر لینک (برای UX بهتر در موبایل)
     document.querySelectorAll('#sideMenu a').forEach(a => {
       a.addEventListener('click', () => setTimeout(closeMenu, 0));
     });
@@ -226,10 +248,27 @@
     const updateCityUI = () => {
       const c = getCity();
       if (cityChipText) cityChipText.textContent = c || 'انتخاب شهر';
-      if (cityMenuText) cityMenuText.textContent = c ? ('شهر من: ' + c) : 'انتخاب شهر';
     };
     updateCityUI();
     window.addEventListener('storage', (e) => { if (e.key === CITY_KEY) updateCityUI(); });
     document.addEventListener('vinor:city-changed', updateCityUI);
+
+    // Help accordion toggle
+    const helpToggle = document.getElementById('helpToggle');
+    const helpPanel  = document.getElementById('helpPanel');
+    const helpCaret  = document.getElementById('helpCaret');
+    const setHelpOpen = (open) => {
+      helpPanel.style.maxHeight = open ? helpPanel.scrollHeight + 'px' : '0px';
+      helpToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (helpCaret) {
+        helpCaret.classList.toggle('fa-rotate-180', open);
+      }
+    };
+    let helpOpen = false;
+    helpToggle?.addEventListener('click', () => {
+      helpOpen = !helpOpen;
+      setHelpOpen(helpOpen);
+    });
+
   })();
 </script>

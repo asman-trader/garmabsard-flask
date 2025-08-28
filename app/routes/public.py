@@ -1,5 +1,6 @@
 # app/routes/public.py
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from flask import (
     render_template, send_from_directory, request, abort,
@@ -224,6 +225,35 @@ def city_select():
     انتخاب شهر (برای آینده: شخصی‌سازی نتایج)
     """
     return render_template("city_select.html", brand="وینور", domain="vinor.ir")
+
+# --- About Vinor ---
+@main_bp.route("/about")
+@main_bp.route("/درباره-ما")
+def about():
+    """
+    صفحهٔ درباره وینور
+    هر دو مسیر /about و /درباره-ما به این ویو می‌خورند.
+    """
+    return render_template(
+        "main/about.html",   # اگر فایل را در ریشه templates گذاشتی، بکنش 'about.html'
+        brand="وینور",
+        domain="vinor.ir",
+        current_year=datetime.now().year,
+    )
+
+@main_bp.route("/faq")
+@main_bp.route("/سوالات-پرتکرار")
+def faq():
+    """
+    صفحهٔ سوالات پرتکرار (FAQ)
+    """
+    return render_template(
+        "main/faq.html",
+        brand="وینور",
+        domain="vinor.ir",
+        current_year=datetime.now().year,
+    )
+
 
 # ⚠️ مهم: هیچ مسیر /login /logout /submit-ad در این فایل تعریف نمی‌شود.
 #   - /login و /logout در app/routes/auth.py
