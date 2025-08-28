@@ -1,4 +1,4 @@
-{# side_menu.html - Vinor | Mobile-first, final (City in header + Help accordion) #}
+{# side_menu.html - Vinor | Mobile-first, final (بدون خانه و جستجو) #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -74,8 +74,6 @@
 
     <!-- Primary actions -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.app_home'),   'fa-home',         'خانه') }}
-      {{ MenuItem(url_for('main.search_page'),'fa-search',       'جستجو') }}
       {{ MenuItem(url_for('main.submit_ad'),  'fa-plus-circle',  'ثبت آگهی رایگان', True) }}
     </div>
 
