@@ -2,10 +2,13 @@
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode, urlparse, parse_qs
+
 from flask import (
     render_template, send_from_directory, request, abort,
-    redirect, url_for, session, make_response
+    redirect, url_for, session, make_response, current_app
 )
+
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads
 from ..utils.dates import parse_datetime_safe
@@ -254,6 +257,85 @@ def faq():
         current_year=datetime.now().year,
     )
 
+# -------------------------
+# PWA Routes (Manifest, SW, Offline)
+# -------------------------
+@main_bp.route("/manifest.webmanifest", endpoint="pwa_manifest")
+def pwa_manifest():
+    """
+    سرو مانیفست با MIME صحیح.
+    فایل باید در static/manifest.webmanifest موجود باشد.
+    """
+    resp = make_response(send_from_directory(current_app.static_folder, "manifest.webmanifest"))
+    resp.headers["Content-Type"] = "application/manifest+json; charset=utf-8"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+@main_bp.route("/sw.js", endpoint="pwa_sw")
+def pwa_sw():
+    """
+    سرو سرویس‌ورکر با MIME صحیح.
+    فایل باید در static/sw.js موجود باشد.
+    """
+    resp = make_response(send_from_directory(current_app.static_folder, "sw.js"))
+    resp.headers["Content-Type"] = "application/javascript; charset=utf-8"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+@main_bp.route("/offline", endpoint="pwa_offline")
+def pwa_offline():
+    """
+    صفحهٔ آفلاین PWA
+    """
+    return send_from_directory(current_app.static_folder, "offline.html")
+
+# -------------------------
+# Optional: Web Share Target & Protocol Handler
+# -------------------------
+@main_bp.route("/share", methods=["GET", "POST"], endpoint="web_share_target")
+def web_share_target():
+    """
+    پذیرش اشتراک‌گذاری وب (title/text/url و فایل‌ها)
+    سناریوی ساده: هدایت به ثبت آگهی با پیش‌پر کردن عنوان.
+    """
+    if request.method == "POST":
+        title = (request.form.get("title") or "").strip()
+        text  = (request.form.get("text") or "").strip()
+        url_v = (request.form.get("url") or "").strip()
+        # TODO: در صورت نیاز، request.files.getlist("files") را پردازش و ذخیره کن
+
+        params = {}
+        pretitle = title or text or url_v
+        if pretitle:
+            params["title"] = pretitle
+        target = url_for("main.submit_ad")
+        if params:
+            target = f"{target}?{urlencode(params)}"
+        return redirect(target)
+
+    return redirect(url_for("main.submit_ad"))
+
+@main_bp.route("/open", endpoint="protocol_open")
+def protocol_open():
+    """
+    هندل لینک‌های اختصاصی مانند:
+      web+vinor://ad?code=ABC123
+    پشتیبانی ساده برای هدایت به جزئیات آگهی.
+    """
+    uri = request.args.get("uri", "") or ""
+    try:
+        parsed = urlparse(uri)
+        path = (parsed.path or "").lstrip("/")
+        qs = parse_qs(parsed.query or "")
+        # نمونه: web+vinor://ad?code=XYZ
+        if path.lower() in ("ad", "land") and "code" in qs:
+            code = (qs.get("code") or [""])[0]
+            if code:
+                return redirect(url_for("main.land_detail", code=code))
+    except Exception:
+        pass
+    # پیش‌فرض: خانه اپ
+    return redirect(url_for("main.app_home"))
 
 # ⚠️ مهم: هیچ مسیر /login /logout /submit-ad در این فایل تعریف نمی‌شود.
 #   - /login و /logout در app/routes/auth.py
