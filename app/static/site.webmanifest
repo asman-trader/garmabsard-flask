@@ -1,16 +1,117 @@
 {
+  "id": "/app",
   "name": "وینور | بازار آنلاین ملک",
   "short_name": "وینور",
+  "description": "وینور؛ تجربه سریع، امن و شفاف برای خرید و فروش زمین، باغ، ویلا و آپارتمان.",
   "dir": "rtl",
   "lang": "fa",
-  "start_url": "/app",
+  "start_url": "/app?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
-  "scope": "/",
+  "categories": ["business", "shopping", "productivity"],
+
   "icons": [
-    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/static/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+    { "src": "/static/icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+
+    { "src": "/static/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+
+    { "src": "/static/icons/monochrome-192.png", "sizes": "192x192", "type": "image/png", "purpose": "monochrome" },
+    { "src": "/static/icons/monochrome-512.png", "sizes": "512x512", "type": "image/png", "purpose": "monochrome" }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "ثبت آگهی رایگان",
+      "short_name": "ثبت آگهی",
+      "description": "ایجاد آگهی جدید در وینور",
+      "url": "/submit-ad",
+      "icons": [{ "src": "/static/shortcuts/submit.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "آگهی‌های من",
+      "short_name": "آگهی‌ها",
+      "url": "/my-lands",
+      "icons": [{ "src": "/static/shortcuts/my-ads.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "جستجو",
+      "short_name": "جستجو",
+      "url": "/search",
+      "icons": [{ "src": "/static/shortcuts/search.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "علاقه‌مندی‌ها",
+      "short_name": "علاقه‌مندی",
+      "url": "/favorites",
+      "icons": [{ "src": "/static/shortcuts/fav.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/static/screenshots/narrow-home.png",
+      "type": "image/png",
+      "sizes": "1080x1920",
+      "form_factor": "narrow",
+      "label": "خانه اپ | تجربه سریع و شفاف"
+    },
+    {
+      "src": "/static/screenshots/narrow-submit.png",
+      "type": "image/png",
+      "sizes": "1080x1920",
+      "form_factor": "narrow",
+      "label": "ثبت آگهی رایگان با آپلود سریع"
+    },
+    {
+      "src": "/static/screenshots/wide-home.png",
+      "type": "image/png",
+      "sizes": "1920x1080",
+      "form_factor": "wide",
+      "label": "نسخه دسکتاپ | رابط تمیز و حرفه‌ای"
+    }
+  ],
+
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [{ "name": "files", "accept": ["image/*"] }]
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+vinor",
+      "url": "/open?uri=%s"
+    }
+  ],
+
+  "capture_links": "existing-client-navigate",
+  "launch_handler": { "client_mode": "auto" },
+
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "ir.vinor.app",
+      "url": "https://play.google.com/store/apps/details?id=ir.vinor.app"
+    }
   ]
 }
