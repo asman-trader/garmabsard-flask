@@ -64,8 +64,7 @@ git clean -fd
 
 
 
-زایما (Zaima) → کمیاب و متفاوت
+pip install -r requirements.txt
 
-سیتون (Situn) → ساختگی ولی خیلی برندینگ‌پسند
+touch tmp/restart.txt
 
-وینور (Vinor)

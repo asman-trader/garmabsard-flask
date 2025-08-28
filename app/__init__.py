@@ -1,19 +1,31 @@
 # app/__init__.py
 # -*- coding: utf-8 -*-
+"""
+Vinor (vinor.ir) – Flask App Factory (Final)
+- Mobile‑first, امن و شفاف بر مبنای سشن و گِیت پیمایش
+- ایمن‌سازی importهای بلوپرینت و Push API
+- ثبت فیلترهای Jinja و تزریق مقادیر سراسری برای PWA/Push
+"""
 import os
 import logging
 from datetime import timedelta
-from flask import Flask, request, redirect, url_for, session, current_app, send_from_directory
+from flask import (
+    Flask, request, redirect, url_for, session, current_app, send_from_directory
+)
 
 # رجیستر فیلترهای Jinja در سطح اپ (جلوگیری از import loop)
 from .filters import register_filters
 
+# ثوابت کوکی و سشن
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
 SESSION_COOKIE_NAME = "vinor_session"
 
 
+# -------------------------
+# Utils
+# -------------------------
 def _ensure_instance_folder(app: Flask) -> None:
-    """ایجاد خودکار پوشه instance در صورت نبودن (برای لاگ‌ها/فایل‌های محلی)."""
+    """ایجاد خودکار پوشه instance (برای لاگ/فایل‌های محلی)."""
     try:
         os.makedirs(app.instance_path, exist_ok=True)
     except Exception as e:
@@ -21,17 +33,21 @@ def _ensure_instance_folder(app: Flask) -> None:
 
 
 def _setup_logging(app: Flask) -> None:
-    """تنظیم لاگر اپ برای محیط هاست (WSGI)."""
+    """تنظیم لاگر برای محیط هاست/WGSI (بدون تداخل با حالت دیباگ)."""
     if not app.debug and not app.testing:
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
         fmt = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
         handler.setFormatter(fmt)
+        # جلوگیری از افزودن هندلر تکراری
         if not any(isinstance(h, logging.StreamHandler) for h in app.logger.handlers):
             app.logger.addHandler(handler)
         app.logger.setLevel(logging.INFO)
 
 
+# -------------------------
+# App Factory
+# -------------------------
 def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
 
@@ -59,6 +75,9 @@ def create_app() -> Flask:
 
         # مسیر فایل ذخیره سابسکرایب‌ها
         PUSH_STORE_PATH=os.environ.get("PUSH_STORE_PATH", default_push_store),
+
+        # (اختیاری) عنوان اپ برای استفاده در قالب‌ها
+        APP_BRAND_NAME="وینور | Vinor",
     )
 
     # 🗂️ آماده‌سازی پوشه instance و لاگر
@@ -75,18 +94,28 @@ def create_app() -> Flask:
             "VAPID_PUBLIC_KEY": app.config.get("VAPID_PUBLIC_KEY", ""),
             "VINOR_IS_LOGGED_IN": bool(session.get("user_id")),
             "VINOR_LOGIN_URL": url_for("main.login"),
+            "APP_BRAND_NAME": app.config.get("APP_BRAND_NAME", "Vinor"),
         }
 
-    # 🧭 بلوپرینت‌ها (import درون تابع برای جلوگیری از import loop)
+    # 🧭 ثبت بلوپرینت‌ها (import درون تابع برای جلوگیری از import loop)
     from .routes import main_bp
     from .routes.admin import admin_bp
     from .routes.webhook import webhook_bp
-    from .api.push import push_bp
 
-    app.register_blueprint(main_bp)                    # روت‌های عمومی (/ ، /app ، ...)
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(webhook_bp)                 # /git-webhook
-    app.register_blueprint(push_bp)                    # /api/push/*
+    # Push API را محافظه‌کارانه ثبت می‌کنیم تا نبودن وابستگی‌ها باعث Fail نشود
+    push_bp = None
+    try:
+        from .api.push import push_bp as _push_bp
+        push_bp = _push_bp
+    except Exception as e:
+        app.logger.warning(f"Push API disabled: {e}")
+
+    # ثبت
+    app.register_blueprint(main_bp)                         # روت‌های عمومی (/ ، /app ، ...)
+    app.register_blueprint(admin_bp, url_prefix="/admin")  # پنل ادمین
+    app.register_blueprint(webhook_bp)                      # /git-webhook
+    if push_bp is not None:
+        app.register_blueprint(push_bp, url_prefix="/api/push")  # /api/push/*
 
     # (اختیاری) راه‌اندازی CSRF اگر Flask-WTF نصب باشد + معافیت وبهوک
     try:
@@ -98,19 +127,21 @@ def create_app() -> Flask:
             csrf.exempt(git_webhook)
         except Exception:
             csrf.exempt(webhook_bp)
-        # در صورت نیاز می‌توانید API پوش را هم معاف کنید:
-        # csrf.exempt(push_bp)
+        # اگر لازم شد API پوش هم معاف شود:
+        # if push_bp is not None:
+        #     csrf.exempt(push_bp)
     except Exception:
+        # اگر Flask-WTF نصب نبود، بی‌صدا ادامه بده
         pass
 
     # ⚡ سرویس مستقیم Service Worker از ریشه دامنه: /sw.js
-    # فایل sw.js را در پوشه /app/static قرار بده تا این روت آن را از ریشه سرو کند.
+    # فایل sw.js را در پوشه /app/static قرار دهید.
     @app.get("/sw.js")
     def service_worker():
         static_dir = os.path.join(app.root_path, "static")
         return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
 
-    # 🚧 گِیت سراسری: کنترل پیمایش مهمان/کاربر + معافیت‌ها
+    # 🚧 گِیت سراسری: سیاست پیمایش مهمان/کاربر + معافیت‌ها
     @app.before_request
     def landing_gate():
         """
@@ -121,7 +152,7 @@ def create_app() -> Flask:
         - اگر وارد نیست و هنوز لندینگ را ندیده → هدایت به لندینگ.
         - اگر وارد نیست و لندینگ را دیده → هدایت به صفحه ورود.
         """
-        # مسیرهایی که نباید محدود شوند (استاتیک/وبهوک/ادمین/آپلودها/تشخیصی/ API)
+        # مسیرهایی که نباید محدود شوند (استاتیک/وبهوک/ادمین/آپلودها/تشخیصی/API)
         safe_prefixes = (
             "/static",
             "/api",
@@ -144,7 +175,7 @@ def create_app() -> Flask:
             "/robots.txt",
             "/sitemap.xml",
             "/site.webmanifest",
-            "/sw.js",              # Service Worker باید از روت آزاد باشد
+            "/sw.js",              # Service Worker باید از ریشه آزاد باشد
             "/git-webhook",        # وبهوک GitHub
             "/git-webhook/",
         }
