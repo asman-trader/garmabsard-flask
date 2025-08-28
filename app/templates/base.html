@@ -8,8 +8,13 @@
   {# --- Favicon & PWA --- #}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  {# مانیفست از روت اختصاصی با MIME صحیح #}
+  <link rel="manifest" href="{{ url_for('main.pwa_manifest') }}">
   <meta name="theme-color" content="#16a34a">
+
+  {# iOS PWA #}
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
 
   {# --- CSS/Fonts --- #}
@@ -127,9 +132,9 @@
         if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
       });
 
-      // ثبت Service Worker (اختیاری برای PWA)
+      // ثبت Service Worker (PWA) از روت صحیح
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(()=>{});
+        navigator.serviceWorker.register('{{ url_for("main.pwa_sw") }}', { scope: '/' }).catch(()=>{});
       }
     })();
   </script>
