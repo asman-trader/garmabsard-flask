@@ -5,195 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>تأیید کد پیامکی | وینور (Vinor)</title>
   <meta name="theme-color" content="#059669" />
-  <meta name="color-scheme" content="dark light" />
-
-  <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- فونت فارسی -->
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <style>
-    :root { --vinor: #059669; }
-    body { font-family: 'Vazirmatn', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    /* ورودی‌های عددی: مخفی کردن فلش‌های افزایش/کاهش در برخی مرورگرها */
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-  </style>
+  <style>body{font-family:'Vazirmatn',system-ui,-apple-system,Segoe UI,Roboto,sans-serif}</style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex items-center justify-center px-4 transition-colors">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex items-center justify-center px-4">
   <main class="w-full max-w-md">
     <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
-
-      <!-- برند و تیتر -->
       <header class="text-center">
         <div class="mx-auto mb-3 flex justify-center">
-          <span class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl font-extrabold shadow-lg select-none" aria-hidden="true">V</span>
+          <span class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl font-extrabold">V</span>
         </div>
         <h1 class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">تأیید کد پیامکی</h1>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-          کدی که برای شماره <span class="font-semibold">{{ phone }}</span> ارسال شده را وارد کنید.
-        </p>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">کد ۵ رقمی ارسال‌شده به <span class="font-semibold">{{ phone }}</span> را وارد کنید.</p>
       </header>
 
-      <!-- نمایش پیام‌های سیستم (اختیاری: Flask flash) -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="space-y-2" role="status" aria-live="polite">
-            {% for category, msg in messages %}
-              <div class="text-sm rounded-lg px-3 py-2
-                          {% if category == 'error' %} bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200
-                          {% elif category == 'success' %} bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200
-                          {% else %} bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-200 {% endif %}">
-                {{ msg|safe }}
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-
-      <!-- فرم ورود کد -->
       <form id="otpForm" method="POST" action="{{ url_for('main.verify') }}" class="space-y-5" novalidate>
         <input type="hidden" name="phone" value="{{ phone }}">
-        {% if csrf_token %}
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% endif %}
+        {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        <input type="hidden" name="otp_code" id="otpHidden" />
 
-        <div>
-          <label for="otpInput" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">
-            کد پیامک
-          </label>
-          <input
-            id="otpInput"
-            name="otp_code"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            pattern="\\d{5}"
-            maxlength="5"
-            required
-            aria-describedby="otpHelp"
-            class="w-full text-center tracking-widest text-lg px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            placeholder="مثلاً 12345"
-          />
-          <p id="otpHelp" class="mt-1 text-xs text-gray-500 dark:text-gray-400">کد ۵ رقمی را وارد کنید.</p>
+        <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr" aria-label="ورود کد ۵ رقمی">
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم اول" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم دوم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم سوم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم چهارم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم پنجم" />
         </div>
 
-        <button
-          type="submit"
-          class="w-full py-3 rounded-xl text-white text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition">
-          ✅ ورود به وینور
-        </button>
+        <button type="submit" class="w-full py-3 rounded-xl text-white text-sm font-semibold bg-emerald-600 hover:bg-emerald-700">✅ ورود به وینور</button>
       </form>
 
-      <!-- تایمر و ارسال مجدد -->
       <footer class="pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-        <p id="timer" class="text-xs text-gray-600 dark:text-gray-400">
-          ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر
-        </p>
-
+        <p id="timer" class="text-xs text-gray-600 dark:text-gray-400">ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر</p>
         <form method="POST" action="{{ url_for('main.login') }}" id="resendForm" class="inline-block mt-2">
           <input type="hidden" name="phone" value="{{ phone }}">
-          {% if csrf_token %}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          {% endif %}
-          <button
-            type="submit"
-            id="resendBtn"
-            disabled
-            class="text-emerald-600 dark:text-emerald-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed transition">
-            🔄 ارسال مجدد کد
-          </button>
+          {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <button type="submit" id="resendBtn" disabled
+                  class="text-emerald-600 dark:text-emerald-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed">🔄 ارسال مجدد کد</button>
         </form>
-
-        <div class="mt-3 text-[11px] text-gray-500 dark:text-gray-400">
-          اگر مشکلی دارید، از طریق <a href="https://vinor.ir" class="underline hover:no-underline text-emerald-600 dark:text-emerald-400">vinor.ir</a> پیگیری کنید.
-        </div>
       </footer>
     </section>
 
-    <p class="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400">
-      وینور – تجربه سریع، امن و شفاف در معاملات ملکی.
-    </p>
+    <p class="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400">وینور – تجربه سریع، امن و شفاف در معاملات ملکی.</p>
   </main>
 
-  <noscript>
-    <div class="fixed inset-x-0 bottom-0 mx-4 mb-4 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-100 rounded-xl px-4 py-3 text-sm shadow-lg">
-      برای استفاده از تأیید خودکار کد، جاوااسکریپت را فعال کنید.
-    </div>
-  </noscript>
-
   <script>
-    // فوکوس اولیه روی ورودی
-    const otpInput = document.getElementById('otpInput');
-    const otpForm  = document.getElementById('otpForm');
+    const boxes = Array.from(document.querySelectorAll('.otp-box'));
+    const hidden = document.getElementById('otpHidden');
+    const form = document.getElementById('otpForm');
     const countdownEl = document.getElementById('countdown');
     const resendBtn = document.getElementById('resendBtn');
     const timerEl = document.getElementById('timer');
 
-    requestAnimationFrame(() => otpInput && otpInput.focus({ preventScroll: true }));
+    boxes[0].focus();
 
-    // فقط اعداد + ارسال خودکار بعد از ۵ رقم
-    otpInput.addEventListener('input', () => {
-      otpInput.value = otpInput.value.replace(/\\D+/g, '').slice(0, 5);
-      if (otpInput.value.length === 5) {
-        otpForm.requestSubmit(); // امن‌تر از submit() برای رویدادهای بومی
-      }
+    function syncHiddenAndMaybeSubmit() {
+      hidden.value = boxes.map(b => (b.value || '').replace(/\\D/g,'')).join('').slice(0,5);
+      if (hidden.value.length === 5) form.requestSubmit();
+    }
+
+    boxes.forEach((box, idx) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\\D/g,'').slice(0,1);
+        if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
+        syncHiddenAndMaybeSubmit();
+      });
+
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !box.value && idx > 0) {
+          e.preventDefault(); boxes[idx - 1].focus(); boxes[idx - 1].value = '';
+          syncHiddenAndMaybeSubmit();
+        }
+        if (e.key === 'ArrowLeft' && idx > 0) { e.preventDefault(); boxes[idx - 1].focus(); }
+        if (e.key === 'ArrowRight' && idx < boxes.length - 1) { e.preventDefault(); boxes[idx + 1].focus(); }
+      });
+
+      box.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/\\D+/g,'').slice(0,5).split('');
+        digits.forEach((d, i) => { if (boxes[idx + i]) boxes[idx + i].value = d; });
+        const last = Math.min(idx + digits.length, boxes.length) - 1;
+        if (last >= 0) boxes[last].focus();
+        syncHiddenAndMaybeSubmit();
+      });
     });
 
-    // جلوگیری از کاراکتر غیرعددی در paste
-    otpInput.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-      const digits = text.replace(/\\D+/g, '').slice(0, 5);
-      if (digits) {
-        otpInput.value = digits;
-        if (digits.length === 5) otpForm.requestSubmit();
-      }
-    });
-
-    // تایمر ارسال مجدد
     let counter = 60;
     const t = setInterval(() => {
-      counter--;
-      countdownEl.textContent = String(counter);
-      if (counter <= 0) {
-        clearInterval(t);
-        timerEl.textContent = 'هنوز کد را دریافت نکردید؟';
-        resendBtn.disabled = false;
-        resendBtn.removeAttribute('aria-disabled');
-      }
+      counter--; countdownEl.textContent = String(counter);
+      if (counter <= 0) { clearInterval(t); timerEl.textContent = 'هنوز کد را دریافت نکردید؟'; resendBtn.disabled = false; }
     }, 1000);
-
-    // Web OTP API (در مرورگرهای پشتیبانی‌شده)
-    // نکته: فرمت پیامک باید دامنه را شامل شود، مثل:
-    // "🔔 وینور\nکد ورود: 12345 | یکبار مصرف: 67890\nhttps://vinor.ir #12345"
-    if ('OTPCredential' in window) {
-      (async () => {
-        try {
-          const ac = new AbortController();
-          // تایم‌اوت 90 ثانیه‌ای برای امنیت/UX
-          const timeout = setTimeout(() => ac.abort(), 90000);
-
-          const content = await navigator.credentials.get({
-            otp: { transport: ['sms'] },
-            signal: ac.signal
-          });
-
-          clearTimeout(timeout);
-          if (content && content.code) {
-            const code = String(content.code).replace(/\\D+/g, '').slice(0, 5);
-            if (code) {
-              otpInput.value = code;
-              if (code.length === 5) otpForm.requestSubmit();
-            }
-          }
-        } catch (err) {
-          // احتمالاً عدم پشتیبانی یا رد دسترسی
-          // console.debug('Web OTP API:', err);
-        }
-      })();
-    }
   </script>
 </body>
 </html>
