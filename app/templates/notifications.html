@@ -3,14 +3,12 @@
 
 {% block content %}
 <main class="max-w-2xl mx-auto px-4 py-6">
-  <!-- هدر اعلان‌ها -->
   <div class="flex items-center justify-between mb-4">
     <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
       <i class="fas fa-bell text-green-600 dark:text-green-400"></i>
       اعلان‌های شما
     </h1>
     <div class="flex items-center gap-2">
-      <!-- دکمه خواندن همه -->
       {% if items and items|length > 0 and notif_count and notif_count > 0 %}
       <form method="post" action="{{ url_for('main.notifications_read_all') }}">
         <button class="px-3 py-1 text-sm rounded bg-green-600 text-white hover:bg-green-700">
@@ -18,15 +16,17 @@
         </button>
       </form>
       {% endif %}
-      <!-- دکمه اجازه اعلان -->
       <button id="enableNotifications"
               class="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-600 hover:text-white transition">
         اجازه اعلان
       </button>
+      <button id="testPush"
+              class="px-3 py-1 text-sm rounded bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-200 hover:bg-green-200">
+        آزمایش اعلان
+      </button>
     </div>
   </div>
 
-  <!-- محتوای اعلان‌ها -->
   {% if not items or items|length == 0 %}
     <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300">
       هنوز اعلانی ندارید.
@@ -35,11 +35,7 @@
     <div class="space-y-3">
       {% for n in items %}
       <div class="p-4 rounded-xl border
-                  {% if n.read %}
-                    border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-gray-900/60
-                  {% else %}
-                    border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/20
-                  {% endif %}">
+                  {% if n.read %}border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-gray-900/60{% else %}border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/20{% endif %}">
         <div class="flex items-center justify-between">
           <div class="font-semibold text-gray-800 dark:text-gray-100">
             {{ n.title or 'اعلان' }}
@@ -62,22 +58,5 @@
   {% endif %}
 </main>
 
-<!-- اسکریپت اجازه اعلان -->
-<script>
-  document.getElementById("enableNotifications").addEventListener("click", async () => {
-    if (!("Notification" in window)) {
-      alert("مرورگر شما از اعلان پشتیبانی نمی‌کند.");
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      new Notification("وینور", {
-        body: "اعلان‌ها فعال شدند ✅",
-        icon: "/static/icons/icon-72.png"
-      });
-    } else if (permission === "denied") {
-      alert("اجازه اعلان رد شد ❌");
-    }
-  });
-</script>
+<!-- اسکریپت‌های پوش (بخش 2) باید اینجا یا در base.html قرار بگیرند -->
 {% endblock %}

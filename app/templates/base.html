@@ -83,7 +83,7 @@
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
     {% if not hide_header and request.endpoint != 'main.my_lands' %}
-      <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی">
+      <a href="{{ url_for('main.submit_ad') }}" class="fab" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>
     {% endif %}
@@ -136,6 +136,102 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('{{ url_for("main.pwa_sw") }}', { scope: '/' }).catch(()=>{});
       }
+    })();
+  </script>
+
+  {# ===== Push Helpers (بدون UI) — صفحه‌ها می‌توانند از این توابع استفاده کنند ===== #}
+  <script>
+    (function(){
+      // VAPID Public Key از کانفیگ (تزریق‌شده در context processor)
+      const VAPID_PUBLIC_KEY = "{{ VAPID_PUBLIC_KEY|default('', true) }}";
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+      }
+
+      async function requestPermission() {
+        if (!("Notification" in window)) throw new Error("مرورگر شما از اعلان پشتیبانی نمی‌کند.");
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") throw new Error("اجازه اعلان داده نشد.");
+        return perm;
+      }
+
+      async function getRegistration() {
+        if (!('serviceWorker' in navigator)) throw new Error("Service Worker پشتیبانی نمی‌شود.");
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (reg) return reg;
+        // تلاش برای رجیستر اگر هنوز انجام نشده
+        return await navigator.serviceWorker.register('{{ url_for("main.pwa_sw") }}', { scope: '/' });
+      }
+
+      async function subscribePush() {
+        await requestPermission();
+        const reg = await getRegistration();
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) return existing;
+        if (!VAPID_PUBLIC_KEY) throw new Error("VAPID_PUBLIC_KEY تنظیم نشده است.");
+        const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        return await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey });
+      }
+
+      async function saveSubscription(sub) {
+        const res = await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(sub),
+        });
+        if (!res.ok) throw new Error("ذخیره اشتراک ناموفق بود.");
+        return await res.json();
+      }
+
+      async function testPush(payload = { title: "وینور", body: "اعلان تستی فعال شد ✅", url: "/app/notifications" }) {
+        const res = await fetch("/api/push/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("ارسال تست ناموفق بود.");
+        return await res.json();
+      }
+
+      // اکسپورت سراسری (بدون آلودگی زیاد)
+      window.VinorPush = {
+        subscribe: async () => {
+          const sub = await subscribePush();
+          await saveSubscription(sub);
+          return sub;
+        },
+        test: testPush,
+        permission: () => (Notification && Notification.permission) || "default",
+        hasSW: () => 'serviceWorker' in navigator,
+        vapid: () => VAPID_PUBLIC_KEY
+      };
+
+      // پشتیبانی از ایونت سفارشی برای صفحات
+      window.addEventListener("vinor:enable-push", async (e) => {
+        try {
+          await window.VinorPush.subscribe();
+          window.dispatchEvent(new CustomEvent("vinor:push-enabled", { detail: { ok: true }}));
+        } catch (err) {
+          window.dispatchEvent(new CustomEvent("vinor:push-enabled", { detail: { ok: false, error: String(err) }}));
+        }
+      });
+
+      window.addEventListener("vinor:test-push", async (e) => {
+        try {
+          await window.VinorPush.test(e.detail || undefined);
+          window.dispatchEvent(new CustomEvent("vinor:push-tested", { detail: { ok: true }}));
+        } catch (err) {
+          window.dispatchEvent(new CustomEvent("vinor:push-tested", { detail: { ok: false, error: String(err) }}));
+        }
+      });
     })();
   </script>
 

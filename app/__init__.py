@@ -3,11 +3,10 @@
 import os
 import logging
 from datetime import timedelta
-from flask import Flask, request, redirect, url_for, session, current_app
+from flask import Flask, request, redirect, url_for, session, current_app, send_from_directory
 
 # رجیستر فیلترهای Jinja در سطح اپ (جلوگیری از import loop)
 from .filters import register_filters
-
 
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
 SESSION_COOKIE_NAME = "vinor_session"
@@ -24,7 +23,6 @@ def _ensure_instance_folder(app: Flask) -> None:
 def _setup_logging(app: Flask) -> None:
     """تنظیم لاگر اپ برای محیط هاست (WSGI)."""
     if not app.debug and not app.testing:
-        # ساده: لاگ به استریم استاندارد (توسط WSGI جمع‌آوری می‌شود)
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
         fmt = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
@@ -40,7 +38,12 @@ def create_app() -> Flask:
     # 🔑 کلید سشن (در پروداکشن از ENV بخوانید)
     app.secret_key = os.environ.get("SECRET_KEY") or "super-secret-key-change-this"
 
-    # ⚙️ تنظیمات پایه سشن/کوکی
+    # مسیر پیش‌فرض ذخیره سابسکرایب‌ها (قابل override با ENV)
+    default_push_store = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "data", "push_subs.json")
+    )
+
+    # ⚙️ تنظیمات پایه سشن/کوکی و پوش
     cookie_secure = os.environ.get("SESSION_COOKIE_SECURE", "0") == "1"
     app.config.update(
         SESSION_COOKIE_NAME=SESSION_COOKIE_NAME,
@@ -48,6 +51,14 @@ def create_app() -> Flask:
         SESSION_COOKIE_SECURE=cookie_secure,  # برای HTTPS واقعی مقدار 1 بگذارید
         PERMANENT_SESSION_LIFETIME=timedelta(days=180),
         PREFERRED_URL_SCHEME="https" if cookie_secure else "http",
+
+        # 🔔 کلیدهای VAPID برای Web Push (از ENV بخوان؛ در صورت نبود، خالی می‌ماند)
+        VAPID_PUBLIC_KEY=os.environ.get("VAPID_PUBLIC_KEY", ""),
+        VAPID_PRIVATE_KEY=os.environ.get("VAPID_PRIVATE_KEY", ""),
+        VAPID_CLAIMS={"sub": os.environ.get("VAPID_SUB", "mailto:admin@vinor.ir")},
+
+        # مسیر فایل ذخیره سابسکرایب‌ها
+        PUSH_STORE_PATH=os.environ.get("PUSH_STORE_PATH", default_push_store),
     )
 
     # 🗂️ آماده‌سازی پوشه instance و لاگر
@@ -57,37 +68,49 @@ def create_app() -> Flask:
     # 🧩 فیلترهای Jinja
     register_filters(app)
 
-    # 🧭 بلوپرینت‌ها
-    # نکته: import‌ها را اینجا انجام می‌دهیم تا از import loop جلوگیری شود.
+    # --- Inject globals into Jinja templates (برای دسترسی در base.html و سایر قالب‌ها) ---
+    @app.context_processor
+    def inject_vinor_globals():
+        return {
+            "VAPID_PUBLIC_KEY": app.config.get("VAPID_PUBLIC_KEY", ""),
+            "VINOR_IS_LOGGED_IN": bool(session.get("user_id")),
+            "VINOR_LOGIN_URL": url_for("main.login"),
+        }
+
+    # 🧭 بلوپرینت‌ها (import درون تابع برای جلوگیری از import loop)
     from .routes import main_bp
     from .routes.admin import admin_bp
     from .routes.webhook import webhook_bp
-    # اگر نیاز به معافیت CSRF داریم، در ادامه هندل می‌شود.
+    from .api.push import push_bp
 
     app.register_blueprint(main_bp)                    # روت‌های عمومی (/ ، /app ، ...)
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(webhook_bp)                 # /git-webhook
+    app.register_blueprint(push_bp)                    # /api/push/*
 
-    # (اختیاری) راه‌اندازی CSRF فقط اگر Flask-WTF نصب باشد
-    # و معاف‌کردن روت وب‌هوک از CSRF (برای درخواست‌های GitHub)
+    # (اختیاری) راه‌اندازی CSRF اگر Flask-WTF نصب باشد + معافیت وبهوک
     try:
         from flask_wtf.csrf import CSRFProtect
         csrf = CSRFProtect()
         csrf.init_app(app)
-
-        # تلاش برای معاف‌کردن تنها ویوی وبهوک
         try:
-            # import محلی برای گرفتن تابع ویو
             from .routes.webhook import git_webhook
             csrf.exempt(git_webhook)
         except Exception:
-            # اگر تابع در دسترس نبود، کل بلوپرینت را معاف کن
             csrf.exempt(webhook_bp)
+        # در صورت نیاز می‌توانید API پوش را هم معاف کنید:
+        # csrf.exempt(push_bp)
     except Exception:
-        # Flask-WTF نصب نیست؛ مشکلی نیست، ادامه می‌دهیم.
         pass
 
-    # 🚧 گِیت سراسری: کنترل پیمایش مهمان/کاربر + معافیت کامل وبهوک
+    # ⚡ سرویس مستقیم Service Worker از ریشه دامنه: /sw.js
+    # فایل sw.js را در پوشه /app/static قرار بده تا این روت آن را از ریشه سرو کند.
+    @app.get("/sw.js")
+    def service_worker():
+        static_dir = os.path.join(app.root_path, "static")
+        return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
+
+    # 🚧 گِیت سراسری: کنترل پیمایش مهمان/کاربر + معافیت‌ها
     @app.before_request
     def landing_gate():
         """
@@ -108,9 +131,9 @@ def create_app() -> Flask:
         )
         if request.path.startswith(safe_prefixes):
             current_app.logger.debug("PASS (prefix): %s", request.path)
-            return  # اجازه عبور
+            return
 
-        # مسیرهای عمومی که همیشه آزادند + معافیت صریح وبهوک
+        # مسیرهای عمومی که همیشه آزادند + معافیت‌های صریح
         safe_paths = {
             "/",                   # لندینگ
             "/start",              # CTA لندینگ
@@ -121,8 +144,8 @@ def create_app() -> Flask:
             "/robots.txt",
             "/sitemap.xml",
             "/site.webmanifest",
-            # 👇 وبهوک GitHub باید کاملاً آزاد باشد (بدون ریدایرکت)
-            "/git-webhook",
+            "/sw.js",              # Service Worker باید از روت آزاد باشد
+            "/git-webhook",        # وبهوک GitHub
             "/git-webhook/",
         }
         if request.path in safe_paths:
