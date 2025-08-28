@@ -5,7 +5,8 @@
 <main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
   <!-- Header -->
   <div class="flex items-center justify-between mb-4">
-    <button onclick="history.back()" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:underline">
+    <button id="btnBack"
+            class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:underline">
       <i class="fas fa-arrow-right"></i> بازگشت
     </button>
     <h1 class="text-lg font-bold text-gray-800 dark:text-gray-100">انتخاب شهر</h1>
@@ -62,7 +63,7 @@
     </div>
   </section>
 
-  <!-- Results of search (filtered cities of selected province) -->
+  <!-- Results -->
   <section class="mt-4">
     <ul id="cityResults"
         class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
@@ -84,7 +85,8 @@
             class="py-2 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 active:scale-[0.99]">
       ذخیره
     </button>
-    <a href="{{ url_for('main.index') }}"
+    <a id="cancelBtn"
+       href="{{ url_for('main.index') }}"
        class="py-2 text-center rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
       انصراف
     </a>
@@ -93,8 +95,11 @@
 
 <script>
 (function() {
-  const CITY_KEY = 'gbs_city';          // سازگار با سایدمنو: رشته‌ی قابل نمایش
-  const CITY_OBJ_KEY = 'gbs_city_obj';  // آبجکت کامل {province, city}
+  // 🔁 هماهنگ با کل پروژه:
+  const CITY_KEY = 'vinor_city';               // لیبل قابل نمایش (مثلاً «دماوند، تهران» یا «کل ایران»)
+  const CITY_OBJ_KEY = 'vinor_city_obj';       // آبجکت {province, city}
+  const CITY_SYNC_KEY = 'vinor_city_sync';     // برای تریگر تغییرات بین تب‌ها
+  const EVT_NAME = 'vinor:city-changed';       // رویداد سفارشی پروژه
 
   const provinceSelect = document.getElementById('provinceSelect');
   const citySelect = document.getElementById('citySelect');
@@ -104,10 +109,22 @@
   const clearBtn = document.getElementById('clearCity');
   const rememberCheck = document.getElementById('rememberCheck');
   const btnAllIran = document.getElementById('btnAllIran');
+  const btnBack = document.getElementById('btnBack');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  // برگشت امن به صفحه‌ی قبلی (اگر referrer معتبر باشد)
+  function goBackSafely(fallbackUrl) {
+    try {
+      const ref = document.referrer || '';
+      const sameOrigin = ref && new URL(ref).origin === location.origin;
+      if (sameOrigin) { history.back(); return; }
+    } catch(_) {}
+    window.location.href = fallbackUrl;
+  }
+  btnBack.addEventListener('click', () => goBackSafely("{{ url_for('main.index') }}"));
+  cancelBtn.addEventListener('click', (e) => { e.preventDefault(); goBackSafely("{{ url_for('main.index') }}"); });
 
   // --- بارگذاری دیتاست استان/شهر ---
-  // قالب مورد انتظار:
-  // [{ "province": "تهران", "cities": ["تهران","ری","اسلام‌شهر", ...] }, ...]
   const FALLBACK = [
     {"province":"تهران","cities":["تهران","ری","اسلام‌شهر","ورامین","قرچک","شمیرانات","لواسان","میگون","پردیس","بومهن","رودهن","جاجرود","آبعلی","پاکدشت","دماوند","فیروزکوه","گرمابسرد","گیلاوند"]},
     {"province":"البرز","cities":["کرج","فردیس","ساوجبلاغ","نظرآباد","طالقان","اشتهارد","ماهدشت","محمدشهر"]},
@@ -121,8 +138,8 @@
     {"province":"کرمان","cities":["کرمان","رفسنجان","زرند","جیرفت","بم","سیرجان","بردسیر","انار"]}
   ];
 
-  let DATA = []; // کل استان‌ها + شهرها
-  let currentCities = []; // شهرهای استان انتخاب‌شده
+  let DATA = [];
+  let currentCities = [];
 
   async function loadData() {
     try {
@@ -132,7 +149,6 @@
       if (!Array.isArray(json) || !json.length) throw new Error("bad json");
       DATA = json;
     } catch (e) {
-      // اگر فایل نبود، از FALLBACK استفاده می‌کنیم تا صفحه معطل نشود
       DATA = FALLBACK;
     }
     populateProvinces();
@@ -140,9 +156,7 @@
   }
 
   function populateProvinces() {
-    // پاک‌سازی
     provinceSelect.innerHTML = '<option value="">— انتخاب استان —</option>';
-    // مرتب‌سازی الفبایی استان‌ها
     const provinces = DATA.map(d => d.province).sort((a,b)=>a.localeCompare(b,'fa'));
     for (const p of provinces) {
       const opt = document.createElement('option');
@@ -156,10 +170,10 @@
     citySelect.disabled = true;
     citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
     currentCities = [];
-    if (!province) return;
+    if (!province) { renderResults(citySearch.value); return; }
 
     const row = DATA.find(d => d.province === province);
-    if (!row) return;
+    if (!row) { renderResults(citySearch.value); return; }
     currentCities = (row.cities || []).slice().sort((a,b)=>a.localeCompare(b,'fa'));
 
     citySelect.disabled = false;
@@ -177,7 +191,6 @@
     const q = (query || '').trim().toLowerCase();
     let items = currentCities.slice();
     if (q) items = items.filter(x => x.toLowerCase().includes(q));
-    // اگر هیچ استان انتخاب نشده، نتیجه را خالی نگه داریم
     if (!provinceSelect.value) items = [];
 
     cityResults.innerHTML = '';
@@ -200,7 +213,7 @@
     });
   }
 
-  // --- ذخیره‌سازی ---
+  // ذخیره‌سازی
   function setCityStorage(province, city) {
     let label = 'کل ایران';
     if (province && city) label = `${city}، ${province}`;
@@ -209,9 +222,8 @@
     try {
       localStorage.setItem(CITY_KEY, label);
       localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province: province || '', city: city || '' }));
-      // اطلاع‌رسانی به سایر بخش‌ها/تب‌ها
-      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: label, province, cityName: city || '' } }));
-      localStorage.setItem('gbs_city_sync', Date.now().toString());
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province, cityName: city || '' } }));
+      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString()); // sync ping
     } catch (_) {}
   }
 
@@ -219,13 +231,12 @@
     try {
       localStorage.removeItem(CITY_KEY);
       localStorage.removeItem(CITY_OBJ_KEY);
-      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: '', province: '', cityName: '' } }));
-      localStorage.setItem('gbs_city_sync', Date.now().toString());
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: '', province: '', cityName: '' } }));
+      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
     } catch (_) {}
   }
 
   function initFromStorage() {
-    // اگر قبلاً چیزی ذخیره شده بود، UI رو هماهنگ کن
     try {
       const raw = localStorage.getItem(CITY_OBJ_KEY);
       if (!raw) return;
@@ -238,38 +249,32 @@
     } catch (_) {}
   }
 
-  // --- رویدادها ---
+  // رویدادها
   provinceSelect.addEventListener('change', () => {
     citySearch.value = '';
     populateCities(provinceSelect.value);
   });
-
   citySearch.addEventListener('input', () => renderResults(citySearch.value));
 
-  // چیپ‌های آماده (از جمله "کل ایران")
+  // چیپ‌ها (از جمله «کل ایران»)
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const name = chip.getAttribute('data-chip') || chip.textContent.trim();
       if (name === 'کل ایران') {
-        // انتخاب کل ایران
         provinceSelect.value = '';
         citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
         citySelect.disabled = true;
         citySearch.value = '';
         cityResults.innerHTML = '';
         if (rememberCheck.checked) setCityStorage('', '');
-        else document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: 'کل ایران' } }));
-        window.location.href = "{{ url_for('main.index') }}";
+        else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+        goBackSafely("{{ url_for('main.index') }}");
         return;
       }
-      // در غیر این صورت: تلاش برای تشخیص استان/شهر
-      // اگر در استان فعلی بود:
+      // جستجو در کل دیتا برای پیدا کردن استان/شهر
       if (provinceSelect.value && currentCities.includes(name)) {
-        citySelect.value = name;
-        renderResults(name);
-        return;
+        citySelect.value = name; renderResults(name); return;
       }
-      // اگر در هیچ استان انتخابی نیست، بین کل دیتا جستجو کن
       for (const row of DATA) {
         if (row.cities && row.cities.includes(name)) {
           provinceSelect.value = row.province;
@@ -279,12 +284,10 @@
           return;
         }
       }
-      // اگر اصلاً شهری نبود، شاید استان باشد:
       const asProvince = DATA.find(d => d.province === name);
       if (asProvince) {
         provinceSelect.value = asProvince.province;
         populateCities(asProvince.province);
-        return;
       }
     });
   });
@@ -297,27 +300,26 @@
     citySearch.value = '';
     cityResults.innerHTML = '';
     if (rememberCheck.checked) setCityStorage('', '');
-    else document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: 'کل ایران' } }));
-    window.location.href = "{{ url_for('main.index') }}";
+    else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+    goBackSafely("{{ url_for('main.index') }}");
   });
 
   saveBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const p = provinceSelect.value || '';
     const c = citySelect.value || '';
-    // اگر هیچ چیزی انتخاب نشده، معادل کل ایران فرض می‌کنیم
     if (!p && !c) {
       if (rememberCheck.checked) setCityStorage('', '');
-      else document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: 'کل ایران' } }));
-      window.location.href = "{{ url_for('main.index') }}";
+      else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+      goBackSafely("{{ url_for('main.index') }}");
       return;
     }
     if (rememberCheck.checked) setCityStorage(p, c);
     else {
       const label = c ? `${c}، ${p}` : `استان ${p}`;
-      document.dispatchEvent(new CustomEvent('gbs:city-changed', { detail: { city: label, province: p, cityName: c } }));
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province: p, cityName: c } }));
     }
-    window.location.href = "{{ url_for('main.index') }}";
+    goBackSafely("{{ url_for('main.index') }}");
   });
 
   clearBtn.addEventListener('click', (e) => {
@@ -330,7 +332,7 @@
     cityResults.innerHTML = '';
   });
 
-  // بارگذاری دیتا و راه‌اندازی
+  // شروع
   loadData();
 })();
 </script>

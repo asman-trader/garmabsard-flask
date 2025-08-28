@@ -12,6 +12,29 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% endif %}
 
+    <!-- شهر آگهی (انتخاب از city_select.html) -->
+    <section aria-label="شهر آگهی">
+      <label class="block text-gray-700 dark:text-gray-200 mb-1">شهر آگهی*</label>
+
+      <div class="flex items-center gap-2">
+        <div class="flex-1">
+          <div id="cityDisplay"
+               class="px-3 py-2 border rounded text-sm dark:bg-gray-700 dark:text-white"
+               aria-live="polite">در حال بارگذاری شهر...</div>
+          <input type="hidden" name="city" id="cityInput">
+          <p class="text-[11px] text-gray-500 mt-1">
+            شهر را از صفحهٔ انتخاب شهر تعیین کنید. (ذخیره می‌شود و در همهٔ بخش‌ها قابل استفاده است)
+          </p>
+        </div>
+
+        <a href="{{ url_for('main.city_select') }}"
+           class="px-3 py-2 rounded-lg border border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition whitespace-nowrap"
+           aria-label="انتخاب شهر">
+          <i class="fas fa-map-marker-alt ml-1"></i> انتخاب شهر
+        </a>
+      </div>
+    </section>
+
     <!-- تصاویر -->
     <section aria-label="تصاویر">
       <label class="block text-gray-700 dark:text-gray-200 mb-1">تصاویر</label>
@@ -55,13 +78,13 @@
     <section aria-label="عنوان">
       <label class="block text-gray-700 dark:text-gray-200 mb-1" for="title">عنوان آگهی*</label>
       <input type="text" name="title" id="title" required maxlength="120"
-             placeholder="مثلاً: ۵۰۰ متر باغ با درختان میوه در دشت اول"
+             placeholder="مثلاً: ۵۰۰ متر باغ با درختان میوه"
              class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
              autocomplete="off" inputmode="text">
       <div class="text-[11px] text-gray-500 mt-1">عنوان واضح و مختصر اعتماد ایجاد می‌کند.</div>
     </section>
 
-    <!-- متراژ و قیمت -->
+    <!-- ابعاد و قیمت -->
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="ابعاد و قیمت">
       <div>
         <label class="block text-gray-700 dark:text-gray-200 mb-1" for="size">متراژ (متر مربع)*</label>
@@ -81,17 +104,13 @@
       </div>
     </section>
 
-    <!-- موقعیت -->
-    <section aria-label="موقعیت">
-      <label class="block text-gray-700 dark:text-gray-200 mb-1" for="location">موقعیت*</label>
-      <select name="location" id="location" required
-              class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
-        <option value="" disabled selected>انتخاب کنید...</option>
-        <option value="دشت اول">دشت اول</option>
-        <option value="دشت دوم">دشت دوم</option>
-        <option value="نزدیک جاده اصلی">نزدیک جاده اصلی</option>
-        <option value="بالادست رودخانه">بالادست رودخانه</option>
-      </select>
+    <!-- موقعیت جزئی (اختیاری) -->
+    <section aria-label="موقعیت جزئی">
+      <label class="block text-gray-700 dark:text-gray-200 mb-1" for="location_detail">موقعیت جزئی / توضیح موقعیت</label>
+      <input type="text" name="location_detail" id="location_detail"
+             placeholder="مثلاً: دشت اول، نزدیک جاده اصلی"
+             class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
+      <div class="text-[11px] text-gray-500 mt-1">این فیلد اختیاری است. شهر اصلی از بخش بالا تأمین می‌شود.</div>
     </section>
 
     <!-- گروه/زیرشاخه -->
@@ -190,11 +209,13 @@
     UPLOAD_URL: '/api/uploads/images',
     MAX_FILES: 10,
     MAX_FILE_SIZE_MB: 12,
-    SAVE_KEY: 'adFormDraftV1'
+    SAVE_KEY: 'adFormDraftV2' // نسخه جدید پیش‌نویس
   });
 
   /* =========================[ ارجاعات DOM ]========================== */
   const form                = document.getElementById('adForm');
+  const cityDisplay         = document.getElementById('cityDisplay');
+  const cityInput           = document.getElementById('cityInput');
   const sizeInput           = document.getElementById('size');
   const totalPriceInput     = document.getElementById('price_total');
   const pricePerMeterInput  = document.getElementById('price_per_meter');
@@ -246,6 +267,24 @@
   }
   const debounce = (fn, t=300) => { let id=null; return (...args)=>{ clearTimeout(id); id=setTimeout(()=>fn(...args), t); }; };
 
+  /* =========================[ شهر از localStorage ]==================== */
+  const CITY_KEY = 'vinor_city';
+  const getCity = () => { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } };
+  const setCityUI = () => {
+    const c = getCity();
+    cityInput.value = c || '';
+    if (c) {
+      cityDisplay.textContent = c;
+      cityDisplay.classList.remove('border-red-300');
+    } else {
+      cityDisplay.textContent = 'شهر انتخاب نشده است';
+      cityDisplay.classList.add('border-red-300');
+    }
+  };
+  // واکنش به تغییر شهر (از صفحه city_select.html)
+  window.addEventListener('storage', (e) => { if (e.key === CITY_KEY) setCityUI(); });
+  document.addEventListener('vinor:city-changed', setCityUI);
+
   /* =========================[ منطق قیمت ]============================= */
   function recalc(){
     const s = parseNumber(sizeInput.value);
@@ -281,7 +320,6 @@
   mainSelect.addEventListener('change', e=>fillSub(e.target.value));
 
   /* =======================[ منطق تصاویر/آپلود ]======================= */
-  /** آرایه وضعیت تصاویر روی کلاینت */
   let imageItems = []; // {id,url,file,isCover,serverId,uploading}
   let totalUploads = 0, doneUploads = 0;
 
@@ -482,24 +520,30 @@
     const obj = {};
     fd.forEach((v,k)=>{ if(k !== 'images') obj[k]=v; });
     obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
+    // شهر را مستقیم از localStorage ذخیره می‌کنیم تا یکپارچه باشد
+    obj.city = getCity();
     try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(obj)); } catch(_){}
   };
 
   const loadDraft = () => {
-    const raw = localStorage.getItem(CONFIG.SAVE_KEY); if(!raw) return;
-    try{
-      const obj = JSON.parse(raw);
-      Object.entries(obj).forEach(([k,v])=>{
-        if(k==='_images_meta') return;
-        const el = form.elements[k]; if(el) el.value = v;
-      });
-      if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
-      if(obj._images_meta){
-        imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
-        renderThumbs();
-      }
-      recalc();
-    }catch(_){}
+    const raw = localStorage.getItem(CONFIG.SAVE_KEY);
+    if(raw){
+      try{
+        const obj = JSON.parse(raw);
+        Object.entries(obj).forEach(([k,v])=>{
+          if(k==='_images_meta') return;
+          const el = form.elements[k]; if(el) el.value = v;
+        });
+        if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
+        if(obj._images_meta){
+          imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
+          renderThumbs();
+        }
+      }catch(_){}
+    }
+    // همیشه آخر، UI شهر را از localStorage ست می‌کنیم (منبع حقیقت)
+    setCityUI();
+    recalc();
   };
 
   form.addEventListener('input', debounce(saveDraft, 800));
@@ -517,27 +561,38 @@
   function isFormReady(){
     const titleOk = !!document.getElementById('title').value.trim();
     const sizeOk  = parseNumber(sizeInput.value) > 0;
-    const locOk   = !!document.getElementById('location').value;
     const mainOk  = !!document.getElementById('category_main').value;
     const subOk   = !subSelect.disabled && !!subSelect.value;
     const hasImgs = imageItems.length > 0;
     const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
-    return titleOk && sizeOk && locOk && mainOk && subOk && hasImgs && uploadsDone;
+    const cityOk = !!getCity(); // شهر باید انتخاب شده باشد
+    return titleOk && sizeOk && mainOk && subOk && hasImgs && uploadsDone && cityOk;
   }
 
   /* =========================[ ارسال فرم ]============================== */
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
 
-    // هشدار نرم اگر ناقص بود (ارسال همچنان انجام می‌شود؛ نهایی سمت سرور)
+    // باید شهر انتخاب شده باشد
+    if(!getCity()){
+      toast('لطفاً ابتدا شهر آگهی را انتخاب کنید.');
+      // برجسته‌سازی
+      cityDisplay.classList.add('border-red-300');
+      return;
+    }
+    // هشدار نرم اگر بخش‌های دیگر ناقص باشند
     if(!isFormReady()){
-      toast('برخی فیلدها یا آپلود تصاویر ناقص است. می‌توانید ادامه دهید؛ اعتبارسنجی سرور تعیین‌کننده است.');
+      toast('برخی فیلدها یا آپلود تصاویر ناقص است. لطفاً موارد را تکمیل کنید.');
+      return;
     }
 
     // پاکسازی اعداد و فیلدهای مخفی
     sizeInput.value          = parseNumber(sizeInput.value);
     totalPriceInput.value    = parseNumber(totalPriceInput.value);
     pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
+
+    // اطمینان از ست بودن شهر در فیلد مخفی
+    cityInput.value = getCity();
 
     if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover = true; }
     imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
@@ -556,10 +611,8 @@
         credentials: 'same-origin'
       });
 
-      // 1) ریدایرکت واقعی
       if(resp.redirected){ window.location.href = resp.url; return; }
 
-      // 2) JSON با آدرس هدایت
       const ct = resp.headers.get('content-type') || '';
       if(ct.includes('application/json')){
         const data = await resp.json();
@@ -568,11 +621,9 @@
         if(data.success){ toast('ثبت با موفقیت انجام شد'); setTimeout(()=>location.reload(), 900); return; }
       }
 
-      // 3) هدر Location حتی با 200/201/204
       const loc = resp.headers.get('Location') || resp.headers.get('location');
       if(loc){ window.location.href = loc; return; }
 
-      // 4) HTML صفحه بعد
       if(resp.ok){
         const html = await resp.text();
         if(html && html.trim().length){
@@ -590,7 +641,7 @@
   });
 
   /* =======================[ شروع: بارگذاری پیش‌نویس ]================== */
-  window.addEventListener('load', ()=>{ loadDraft(); recalc(); });
+  window.addEventListener('load', ()=>{ loadDraft(); });
 })();
 </script>
 {% endblock %}
