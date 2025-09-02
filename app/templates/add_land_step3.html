@@ -4,10 +4,16 @@
 {% block content %}
 <div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6">
   <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">انتخاب نوع ثبت آگهی</h2>
-  <form method="POST" id="finalAdForm">
+
+  <!-- فرم مرحله ۳ با CSRF -->
+  <form method="POST" id="finalAdForm" action="{{ request.path }}" autocomplete="off" novalidate>
+    {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% endif %}
+
     <div class="space-y-4">
       <div class="border rounded-lg p-4 hover:border-blue-500 transition">
-        <label class="flex items-center space-x-3 cursor-pointer">
+        <label class="flex items-center gap-3 cursor-pointer">
           <input type="radio" name="ad_type" value="site" class="accent-blue-600" required>
           <div>
             <h3 class="text-lg font-semibold text-gray-800 dark:text-white">درج در سایت</h3>
@@ -19,7 +25,7 @@
       </div>
 
       <div class="border rounded-lg p-4 hover:border-blue-500 transition">
-        <label class="flex items-center space-x-3 cursor-pointer">
+        <label class="flex items-center gap-3 cursor-pointer">
           <input type="radio" name="ad_type" value="broadcast" class="accent-blue-600" required>
           <div>
             <h3 class="text-lg font-semibold text-gray-800 dark:text-white">ارسال به مشاوران املاک منطقه</h3>
@@ -45,10 +51,8 @@
     finalForm.addEventListener('submit', function () {
       try {
         localStorage.removeItem('adFormDraftV1');
-        console.log('پیش‌نویس پاک شد');
-      } catch (e) {
-        console.error('خطا در حذف پیش‌نویس', e);
-      }
+        localStorage.removeItem('adFormDraftV2'); // اگر نسخه جدید ذخیره شده
+      } catch (e) {}
     });
   }
 </script>
