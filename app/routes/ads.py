@@ -14,6 +14,16 @@ def _to_int(x, default=0):
     except Exception:
         return default
 
+def _safe_remove_file(path: str) -> None:
+    try:
+        if os.path.isfile(path):
+            os.remove(path)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        # ترجیحاً لاگ کنید
+        pass
+
 # ⚠️ قبلاً endpoint پیش‌فرض «submit_ad» باعث تداخل شده بود.
 # با endpoint یکتا مشکل رفع می‌شود.
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
@@ -217,12 +227,20 @@ def delete_land(code):
         return redirect(url_for('main.login'))
 
     lands = load_ads()
-    new_lands = [l for l in lands if not (l.get('code') == code and l.get('owner') == session['user_phone'])]
-    if len(new_lands) == len(lands):
+    target = next((l for l in lands if l.get('code') == code and l.get('owner') == session['user_phone']), None)
+    if not target:
         flash("❌ آگهی پیدا نشد یا متعلق به شما نیست.")
-    else:
-        save_ads(new_lands)
-        flash("🗑️ آگهی حذف شد.")
+        return redirect(url_for('main.my_lands'))
+
+    # حذف فایل‌های تصویر (در صورت وجود)
+    upload_dir = os.path.join(data_dir(), 'uploads')
+    for fname in (target.get('images') or []):
+        _safe_remove_file(os.path.join(upload_dir, fname))
+
+    # حذف رکورد
+    new_lands = [l for l in lands if l is not target]
+    save_ads(new_lands)
+    flash("🗑️ آگهی حذف شد.")
     return redirect(url_for('main.my_lands'))
 
 @main_bp.route('/consult/<code>', methods=['POST'], endpoint='consult')
@@ -238,3 +256,27 @@ def consult(code):
     save_consults(consults)
     flash("✅ درخواست مشاوره ثبت شد.")
     return redirect(url_for('main.land_detail', code=code))
+
+# حذف آگهی با مسیر دوم (سازگار با فرم‌های جدید)
+@main_bp.route('/ads/<code>/delete', methods=['POST'], endpoint='ad_delete')
+def ad_delete(code):
+    if 'user_phone' not in session:
+        flash("برای حذف وارد شوید.", "warning")
+        return redirect(url_for('main.login'))
+
+    lands = load_ads()
+    target = next((l for l in lands if l.get('code') == code and l.get('owner') == session['user_phone']), None)
+    if not target:
+        flash("❌ آگهی پیدا نشد یا متعلق به شما نیست.", "danger")
+        return redirect(url_for('main.my_lands'))
+
+    # حذف فایل‌های تصویر (اختیاری)
+    upload_dir = os.path.join(data_dir(), 'uploads')
+    for fname in (target.get('images') or []):
+        _safe_remove_file(os.path.join(upload_dir, fname))
+
+    # حذف رکورد
+    new_lands = [l for l in lands if l is not target]
+    save_ads(new_lands)
+    flash('🗑️ آگهی با موفقیت حذف شد.', 'success')
+    return redirect(url_for('main.my_lands'))

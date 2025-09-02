@@ -1,21 +1,25 @@
 {% extends "base.html" %}
 {% set hide_header = True %}
-{% block title %}ثبت آگهی جدید{% endblock %}
+{% block title %}ثبت آگهی جدید | وینور{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-0 sm:p-8 shadow rounded-lg mt-0 sm:mt-6">
 
-  <!-- فرم ثبت آگهی -->
-  <form method="POST" enctype="multipart/form-data" class="space-y-5 p-4 sm:p-0 sm:pt-6" id="adForm" novalidate>
-    {# اگر از Flask-WTF استفاده می‌کنید، این خط CSRF را تزریق می‌کند #}
+  <!-- فرم ثبت/ویرایش آگهی -->
+  <form method="POST" enctype="multipart/form-data" class="space-y-5 p-4 sm:p-0 sm:pt-6" id="adForm" novalidate
+        action="{{ form_action if form_action else request.path }}">
+    {# CSRF (اگر Flask-WTF فعال است) #}
     {% if csrf_token %}
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% endif %}
+    {# در حالت ویرایش می‌توانید ad_id را پاس بدهید #}
+    {% if ad_id %}
+      <input type="hidden" name="ad_id" value="{{ ad_id }}">
+    {% endif %}
 
-    <!-- شهر آگهی (انتخاب از city_select.html) -->
+    <!-- شهر آگهی -->
     <section aria-label="شهر آگهی">
       <label class="block text-gray-700 dark:text-gray-200 mb-1">شهر آگهی*</label>
-
       <div class="flex items-center gap-2">
         <div class="flex-1">
           <div id="cityDisplay"
@@ -23,10 +27,9 @@
                aria-live="polite">در حال بارگذاری شهر...</div>
           <input type="hidden" name="city" id="cityInput">
           <p class="text-[11px] text-gray-500 mt-1">
-            شهر را از صفحهٔ انتخاب شهر تعیین کنید. (ذخیره می‌شود و در همهٔ بخش‌ها قابل استفاده است)
+            شهر را از صفحهٔ انتخاب شهر تعیین کنید. (در حافظهٔ دستگاه ذخیره می‌شود)
           </p>
         </div>
-
         <a href="{{ url_for('main.city_select') }}"
            class="px-3 py-2 rounded-lg border border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition whitespace-nowrap"
            aria-label="انتخاب شهر">
@@ -104,16 +107,21 @@
       </div>
     </section>
 
+    <!-- 🔁 نگاشت به نام‌های مورد انتظار بک‌اند -->
+    <input type="hidden" name="area" id="area_hidden">
+    <input type="hidden" name="price" id="price_hidden">
+    <input type="hidden" name="location" id="location_hidden">
+
     <!-- موقعیت جزئی (اختیاری) -->
     <section aria-label="موقعیت جزئی">
       <label class="block text-gray-700 dark:text-gray-200 mb-1" for="location_detail">موقعیت جزئی / توضیح موقعیت</label>
       <input type="text" name="location_detail" id="location_detail"
              placeholder="مثلاً: دشت اول، نزدیک جاده اصلی"
              class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
-      <div class="text-[11px] text-gray-500 mt-1">این فیلد اختیاری است. شهر اصلی از بخش بالا تأمین می‌شود.</div>
+      <div class="text-[11px] text-gray-500 mt-1">این فیلد اختیاری است. شهر اصلی از بخش بالا تعیین می‌شود.</div>
     </section>
 
-    <!-- گروه/زیرشاخه -->
+    <!-- دسته‌بندی -->
     <section aria-label="دسته‌بندی">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -173,14 +181,45 @@
 
     <!-- اکشن‌ها (فوتر ثابت موبایل‌محور) -->
     <div class="h-16 sm:h-0"></div>
-    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-end">
-      <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded border">بازگشت</a>
-      <button type="submit" id="btnSubmit"
-              class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition">
-        تکمیل و ادامه
+    <div class="fixed bottom-0 inset-x-0 sm:static bg-white dark:bg-gray-900 border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-between">
+
+      <!-- گروه چپ: دکمه پاک‌کردن فرم (کلاینتی) -->
+      <button type="button" id="btnResetForm"
+              class="px-3 py-2 rounded border text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20">
+        پاک‌کردن فرم
+      </button>
+
+      <div class="flex items-center gap-3 sm:justify-end">
+        <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded border">بازگشت</a>
+        <button type="submit" id="btnSubmit"
+                class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition">
+          تکمیل و ادامه
+        </button>
+      </div>
+    </div>
+  </form>
+
+  {# فرم حذف آگهی (فقط حالت ویرایش) #}
+  {% if ad or ad_id %}
+  <form method="POST"
+        action="{{ url_for('main.ad_delete', ad_id=(ad.id if ad else ad_id)) }}"
+        class="p-4 sm:pt-4 border-t dark:border-gray-700"
+        onsubmit="return confirmDeleteAd(event)">
+    {% if csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% endif %}
+    <input type="hidden" name="_method" value="DELETE">
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-600 dark:text-gray-300">
+        حذف آگهی، غیرقابل‌برگشت است.
+      </div>
+      <button type="submit"
+              class="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white">
+        حذف آگهی
       </button>
     </div>
   </form>
+  {% endif %}
 </div>
 
 <!-- لایه فول‌اسکرین «در حال ثبت» -->
@@ -207,9 +246,10 @@
   /* =========================[ تنظیمات پایه ]========================= */
   const CONFIG = Object.freeze({
     UPLOAD_URL: '/api/uploads/images',
+    DELETE_UPLOAD_URL: '/api/uploads/delete',   // ← درصورت پشتیبانی سرور
     MAX_FILES: 10,
     MAX_FILE_SIZE_MB: 12,
-    SAVE_KEY: 'adFormDraftV2' // نسخه جدید پیش‌نویس
+    SAVE_KEY: 'adFormDraftV2'
   });
 
   /* =========================[ ارجاعات DOM ]========================== */
@@ -234,6 +274,8 @@
   const submitBtn           = document.getElementById('btnSubmit');
   const dropzone            = document.getElementById('dropzone');
   const overlay             = document.getElementById('loadingOverlay');
+  const resetBtn            = document.getElementById('btnResetForm');
+  const location_detail     = document.getElementById('location_detail');  // ← اضافه شد
 
   /* =========================[ ابزارهای کمکی ]========================= */
   const categoriesMap = {
@@ -269,7 +311,8 @@
 
   /* =========================[ شهر از localStorage ]==================== */
   const CITY_KEY = 'vinor_city';
-  const getCity = () => { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } };
+  const getCity = () => { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; }
+  };
   const setCityUI = () => {
     const c = getCity();
     cityInput.value = c || '';
@@ -281,7 +324,6 @@
       cityDisplay.classList.add('border-red-300');
     }
   };
-  // واکنش به تغییر شهر (از صفحه city_select.html)
   window.addEventListener('storage', (e) => { if (e.key === CITY_KEY) setCityUI(); });
   document.addEventListener('vinor:city-changed', setCityUI);
 
@@ -498,8 +540,8 @@
     }
     const resp = await fetch(CONFIG.UPLOAD_URL, { method:'POST', headers, body:fd, credentials:'same-origin' });
     if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const data = await resp.json();
-    return data.id || data.file_id || data.uuid || null;
+    const data = await resp.json().catch(()=> ({}));
+    return data.id || data.file_id || data.uuid || data.key || null;
   }
 
   function updateGlobalProgress(){
@@ -520,7 +562,6 @@
     const obj = {};
     fd.forEach((v,k)=>{ if(k !== 'images') obj[k]=v; });
     obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
-    // شهر را مستقیم از localStorage ذخیره می‌کنیم تا یکپارچه باشد
     obj.city = getCity();
     try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(obj)); } catch(_){}
   };
@@ -541,7 +582,6 @@
         }
       }catch(_){}
     }
-    // همیشه آخر، UI شهر را از localStorage ست می‌کنیم (منبع حقیقت)
     setCityUI();
     recalc();
   };
@@ -557,91 +597,107 @@
     setTimeout(()=>{ t.remove(); },1800);
   }
 
-  /* =====================[ اعتبار حداقلی سمت کلاینت ]=================== */
-  function isFormReady(){
-    const titleOk = !!document.getElementById('title').value.trim();
-    const sizeOk  = parseNumber(sizeInput.value) > 0;
-    const mainOk  = !!document.getElementById('category_main').value;
-    const subOk   = !subSelect.disabled && !!subSelect.value;
-    const hasImgs = imageItems.length > 0;
-    const uploadsDone = imageItems.every(x=>x.serverId) && imageItems.every(x=>!x.uploading);
-    const cityOk = !!getCity(); // شهر باید انتخاب شده باشد
-    return titleOk && sizeOk && mainOk && subOk && hasImgs && uploadsDone && cityOk;
+  /* =========================[ پاک‌کردن فرم ]========================== */
+  async function deleteUploadedOnServer(ids){
+    // اختیاری: اگر API حذف فایل دارید، این را فعال کنید
+    if(!ids || !ids.length || !CONFIG.DELETE_UPLOAD_URL) return;
+    const csrf = getCsrf();
+    try{
+      await fetch(CONFIG.DELETE_UPLOAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', ...(csrf ? {'X-CSRF-Token': csrf} : {}) },
+        body: JSON.stringify({ ids })
+      });
+    }catch(_){}
   }
 
+  function hardResetFormUI(){
+    // پاک‌کردن فیلدها
+    form.reset();
+    // پاک‌کردن نمایش‌ها
+    imageItems = []; totalUploads = 0; doneUploads = 0;
+    renderThumbs(); updateGlobalProgress();
+    // پاک‌کردن ذخیره محلی
+    try { localStorage.removeItem(CONFIG.SAVE_KEY); } catch(_){}
+    // شهر را نگه می‌داریم تا تجربه کاربر بهتر بماند
+    setCityUI();
+    // اعداد محاسبه‌شده
+    pricePerMeterInput.value = '';
+    priceWords.textContent = '';
+    // ورودی فایل
+    imagesInput.value = '';
+  }
+
+  resetBtn.addEventListener('click', async ()=>{
+    const hasData = imageItems.length || (localStorage.getItem(CONFIG.SAVE_KEY) != null);
+    const confirmMsg = hasData
+      ? 'کل فرم و پیش‌نویس و تصاویر پاک شوند؟ این عملیات قابل بازگشت نیست.'
+      : 'فرم پاک شود؟';
+
+    if(!confirm(confirmMsg)) return;
+
+    // تلاش برای حذف فایل‌های آپلودشده از سرور (اختیاری)
+    const uploadedIds = imageItems.map(x=>x.serverId).filter(Boolean);
+    if(uploadedIds.length){
+      await deleteUploadedOnServer(uploadedIds);
+    }
+
+    hardResetFormUI();
+    toast('فرم پاک شد');
+  });
+
   /* =========================[ ارسال فرم ]============================== */
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-
-    // باید شهر انتخاب شده باشد
-    if(!getCity()){
-      toast('لطفاً ابتدا شهر آگهی را انتخاب کنید.');
-      // برجسته‌سازی
+  form.addEventListener('submit', (e)=>{
+    // آماده‌سازی قبل از ارسال؛ ارسال توسط مرورگر انجام می‌شود (بدون preventDefault)
+    const city = getCity();
+    if (!city) {
       cityDisplay.classList.add('border-red-300');
-      return;
+      toast('بهتر است قبل از ارسال، شهر آگهی را انتخاب کنید.');
     }
-    // هشدار نرم اگر بخش‌های دیگر ناقص باشند
-    if(!isFormReady()){
-      toast('برخی فیلدها یا آپلود تصاویر ناقص است. لطفاً موارد را تکمیل کنید.');
-      return;
-    }
+    cityInput.value = city || '';
 
-    // پاکسازی اعداد و فیلدهای مخفی
-    sizeInput.value          = parseNumber(sizeInput.value);
-    totalPriceInput.value    = parseNumber(totalPriceInput.value);
+    // اعداد به شکل خام برای سرور
+    const sizeRaw  = parseNumber(sizeInput.value);
+    const totalRaw = parseNumber(totalPriceInput.value);
+    sizeInput.value          = sizeRaw;
+    totalPriceInput.value    = totalRaw;
     pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
 
-    // اطمینان از ست بودن شهر در فیلد مخفی
-    cityInput.value = getCity();
+    // نگاشت به فیلدهای مورد انتظار بک‌اند
+    document.getElementById('area_hidden').value     = sizeRaw || '';
+    document.getElementById('price_hidden').value    = totalRaw || '';
+    document.getElementById('location_hidden').value = (city || '') + (location_detail.value ? (' - ' + location_detail.value) : '');
 
+    // همگام‌سازی تصاویر
     if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover = true; }
     imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
     coverIndexInput.value  = imageItems.findIndex(x=>x.isCover);
     uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
 
-    // نمایش لایه «در حال ثبت»
+    // UI ارسال
     overlay.classList.remove('hidden');
+    submitBtn.disabled = true;
     submitBtn.textContent = 'در حال ارسال...';
 
-    try{
-      const fd = new FormData(form);
-      const resp = await fetch(form.action || window.location.href, {
-        method: 'POST',
-        body: fd,
-        credentials: 'same-origin'
-      });
-
-      if(resp.redirected){ window.location.href = resp.url; return; }
-
-      const ct = resp.headers.get('content-type') || '';
-      if(ct.includes('application/json')){
-        const data = await resp.json();
-        if(data.redirect_url){ window.location.href = data.redirect_url; return; }
-        if(data.success && data.location){ window.location.href = data.location; return; }
-        if(data.success){ toast('ثبت با موفقیت انجام شد'); setTimeout(()=>location.reload(), 900); return; }
-      }
-
-      const loc = resp.headers.get('Location') || resp.headers.get('location');
-      if(loc){ window.location.href = loc; return; }
-
-      if(resp.ok){
-        const html = await resp.text();
-        if(html && html.trim().length){
-          document.open(); document.write(html); document.close(); return;
-        }
-      }
-
-      throw new Error('ثبت ناموفق بود');
-    }catch(err){
-      console.error(err);
-      overlay.classList.add('hidden');
-      submitBtn.textContent = 'تکمیل و ادامه';
-      toast('خطا در ثبت آگهی. دوباره تلاش کنید.');
-    }
+    // اگر می‌خواهی ارسال فقط بعد از اتمام آپلود باشد، این بلاک را باز کن:
+    // if (imageItems.some(x=>x.uploading)) {
+    //   e.preventDefault();
+    //   toast('لطفاً منتظر اتمام آپلود تصاویر بمانید.');
+    //   overlay.classList.add('hidden');
+    //   submitBtn.disabled = false;
+    //   submitBtn.textContent = 'تکمیل و ادامه';
+    // }
   });
 
   /* =======================[ شروع: بارگذاری پیش‌نویس ]================== */
-  window.addEventListener('load', ()=>{ loadDraft(); });
+  window.addEventListener('load', loadDraft);
+
+  /* =======================[ حذف آگهی (فرم جدا) ]====================== */
+  window.confirmDeleteAd = function (ev){
+    const ok = confirm('آگهی به‌طور کامل حذف شود؟ این عملیات قابل بازگشت نیست.');
+    if(!ok){ ev.preventDefault(); return false; }
+    return true;
+  };
 })();
 </script>
 {% endblock %}
