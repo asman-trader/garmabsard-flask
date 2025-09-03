@@ -1,37 +1,59 @@
 {% extends "base.html" %}
-{% block title %}{{ land.title or "جزئیات آگهی" }} | املاک آسمان گرمابسرد{% endblock %}
+{% set _title = (land.title or "جزئیات آگهی") ~ " | وینور (Vinor)" %}
+{% block title %}{{ _title }}{% endblock %}
 
 {% block head %}
-  <meta name="description" content="جزئیات آگهی {{ land.title or '' }} در املاک آسمان گرمابسرد" />
+  <meta name="description" content="جزئیات آگهی {{ land.title or '' }} در وینور | بازار آنلاین ملک (vinor.ir)" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 {% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto mt-2 sm:mt-6 bg-white dark:bg-slate-800 rounded-xl shadow p-3 sm:p-6 pb-28">
 
-  {# ---------------- گالری تصاویر (ایمن برای رشته/لیست) ---------------- #}
-  {% set _images = [] %}
+  {# ---------------- نرمال‌سازی تصاویر (رشته/آرایه/آبجکت) ---------------- #}
+  {% set _images_raw = [] %}
   {% if land.images %}
     {% if land.images is string %}
-      {% set _images = [land.images] %}
+      {% set _images_raw = [land.images] %}
     {% elif land.images is iterable %}
-      {% set _images = land.images %}
+      {% set _images_raw = land.images %}
     {% endif %}
   {% endif %}
 
-  {% if _images and _images|length > 0 %}
+  {# Helper: خروجی URL هر آیتم تصویر #}
+  {% macro img_url(item) -%}
+    {%- if item is string -%}
+      {%- set _name = item|basename -%}
+      {{ url_for('main.uploaded_file', filename=_name) }}
+    {%- elif item.url -%}
+      {{ item.url }}
+    {%- elif item.id -%}
+      {{ url_for('main.uploaded_file', filename=item.id|string) }}
+    {%- else -%}
+      {{ '' }}
+    {%- endif -%}
+  {%- endmacro %}
+
+  {# ---------------- گالری تصاویر ---------------- #}
+  {% set _has_images = _images_raw and (_images_raw|length > 0) %}
   <div class="mb-6">
-    <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative">
+    {% if _has_images %}
+    <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative" id="land-swiper"
+         data-images='{{ _images_raw|tojson }}'
+         data-order='{{ (land.images_order or "")|string }}'
+         data-cover='{{ (land.cover_index if land.cover_index is not none else -1)|int }}'>
       <div class="swiper-wrapper">
-        {% for img in _images %}
-        {% set _name = img|basename %}
+        {# سرور-ساید: اگر ترتیب رعایت نشده باشد، جاوااسکریپت پایین مرتب می‌کند #}
+        {% for it in _images_raw %}
+        {% set src = img_url(it) %}
         <div class="swiper-slide">
           <img
-            src="{{ url_for('main.uploaded_file', filename=_name) }}"
+            src="{{ src }}"
             alt="تصویر {{ loop.index }} از {{ land.title or '' }}"
             class="w-full h-64 sm:h-96 object-cover cursor-zoom-in"
             loading="lazy"
-            onclick="openFullscreen('{{ url_for('main.uploaded_file', filename=_name) }}')"
+            onclick="openFullscreen('{{ src }}')"
+            onerror="this.src='/static/img/placeholder.jpg'; this.onclick=null;"
           />
         </div>
         {% endfor %}
@@ -40,24 +62,38 @@
       <div class="swiper-button-prev text-white"></div>
       <div class="swiper-pagination"></div>
     </div>
+    {% else %}
+    <div class="w-full h-48 sm:h-64 rounded-lg overflow-hidden border shadow bg-slate-100 dark:bg-slate-700 grid place-items-center">
+      <div class="text-center text-slate-500 dark:text-slate-300">
+        <div class="text-3xl mb-2">🖼️</div>
+        <div class="text-sm">برای این آگهی تصویری ثبت نشده است.</div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   <div id="fullscreenOverlay" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50" onclick="closeFullscreen()">
     <img id="fullscreenImage" src="" alt="نمایش تمام‌صفحه" class="max-w-[95vw] max-h-[95vh] rounded-lg shadow-2xl" />
   </div>
-  {% endif %}
 
-  <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">
-    {{ land.title or "بدون عنوان" }}
-  </h1>
+  {# ---------------- عنوان و وضعیت ---------------- #}
+  <div class="flex items-start justify-between gap-3">
+    <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">
+      {{ land.title or "بدون عنوان" }}
+    </h1>
+
+    {# علاقه‌مندی #}
+    <button id="favBtn"
+            class="shrink-0 px-3 py-2 rounded-full border text-sm bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300"
+            data-code="{{ land.code or '' }}"
+            title="افزودن به علاقه‌مندی‌ها">☆ علاقه‌مندی</button>
+  </div>
 
   {# ---------------- متادیتا ---------------- #}
-  <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+  <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-3 gap-y-1">
     <span class="inline-flex items-center gap-1"><i class="fas fa-clock"></i>{{ land.created_at | date_ymd }}</span>
-    <span class="mx-2">·</span>
-    <span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: {{ land.code or "?" }}</span>
+    {% if land.code %}<span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.code }}</span></span>{% endif %}
     {% if land.status %}
-      <span class="mx-2">·</span>
       {% if land.status == 'approved' %}
         <span class="inline-flex items-center gap-1 text-green-600"><i class="fas fa-check-circle"></i> تأیید شده</span>
       {% elif land.status == 'pending' %}
@@ -68,25 +104,42 @@
     {% endif %}
   </div>
 
-  {# ---------------- مشخصات ---------------- #}
+  {# ---------------- مشخصات/برچسب‌ها ---------------- #}
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mt-4 dark:text-gray-300">
     <p>🌏 <strong>متراژ:</strong>
-      {% set _sz = (land.size|int if land.size is not none else 0) %}
+      {% set _sz = (land.size|int if land.size is not none else (land.area|int if land.area is not none else 0)) %}
       {{ "{:,}".format(_sz).replace(",", "٫") if _sz else "نامشخص" }} متر
     </p>
-    <p>📍 <strong>موقعیت:</strong> {{ land.location or "نامشخص" }}</p>
+
+    {# موقعیت: از فرم ثبت، location = city + ' - ' + location_detail #}
+    <p>📍 <strong>موقعیت:</strong>
+      {% set _loc = land.location or ((land.city or "" ) ~ ((" - " ~ land.location_detail) if land.location_detail else "")) %}
+      {{ _loc or "نامشخص" }}
+    </p>
+
     <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
-    <p>🏮 <strong>دسته:</strong> {{ CATEGORY_MAP.get(land.category or '', 'نامشخص') }}</p>
+
+    <p>🏮 <strong>دسته:</strong>
+      {# اگر در دیتابیس به‌صورت جدا ذخیره شده: category_main / category_sub #}
+      {% if land.category_main or land.category_sub %}
+        {{ (land.category_main or "نامشخص") ~ ((" / " ~ land.category_sub) if land.category_sub else "") }}
+      {% else %}
+        {{ CATEGORY_MAP.get(land.category or '', 'نامشخص') }}
+      {% endif %}
+    </p>
+
     <p>💰 <strong>قیمت کل:</strong>
-      {% if land.price_total is not none %}
-        {{ "{:,}".format(land.price_total|int).replace(",", "٫") }} تومان
+      {% set _price_total = (land.price_total if land.price_total is not none else land.price) %}
+      {% if _price_total is not none %}
+        <span id="priceTotal">{{ "{:,}".format(_price_total|int).replace(",", "٫") }}</span> تومان
+        <span id="priceWords" class="text-[11px] text-gray-500 ml-2"></span>
       {% else %} نامشخص {% endif %}
     </p>
+
     <p>📊 <strong>قیمت متری:</strong>
-      {% if land.price_per_meter is not none %}
-        {{ "{:,}".format(land.price_per_meter|int).replace(",", "٫") }} تومان
-      {% elif land.price_total and land.size|int > 0 %}
-        {{ "{:,}".format((land.price_total|int)//(land.size|int)).replace(",", "٫") }} تومان
+      {% set _ppm = (land.price_per_meter if land.price_per_meter is not none else ( (_price_total|int)//(_sz|int) if (_price_total and _sz|int > 0) else None)) %}
+      {% if _ppm is not none %}
+        {{ "{:,}".format(_ppm|int).replace(",", "٫") }} تومان
       {% else %} نامشخص {% endif %}
     </p>
   </div>
@@ -129,7 +182,7 @@
   </div>
 </div>
 
-{# ---------------- دکمه‌های موبایل ---------------- #}
+{# ---------------- دکمه‌های موبایل (فوتر ثابت) ---------------- #}
 <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
     {% if land.owner %}
@@ -176,10 +229,72 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
+    // ————— توابع کمکی نمایش عدد به حروف فارسی (تقریبی، هماهنگ با فرم) —————
+    (function(){
+      const numfmt = new Intl.NumberFormat('fa-IR');
+      const formatNumber = n => n ? numfmt.format(n) : '';
+      function numberToWordsFa(n){
+        if(!n) return '';
+        const units=[,'هزار','میلیون','میلیارد','هزار میلیارد'];
+        let i=0; while(n>=1000 && i<units.length-1){ n=Math.round(n/1000); i++; }
+        return formatNumber(n)+' '+units[i]+' تومان';
+      }
+      const priceEl = document.getElementById('priceTotal');
+      const wordsEl = document.getElementById('priceWords');
+      if (priceEl && wordsEl){
+        const raw = String(priceEl.textContent||'').replace(/[^\d۰-۹]/g,'');
+        const persian = '۰۱۲۳۴۵۶۷۸۹';
+        const en = raw.replace(/[۰-۹]/g, d => String(persian.indexOf(d)));
+        const n = Number(en||0);
+        if (n) wordsEl.textContent = '≈ ' + numberToWordsFa(n);
+      }
+    })();
+
+    // ————— گالری: ترتیب طبق images_order و کاور طبق cover_index —————
     document.addEventListener("DOMContentLoaded", function(){
-      const sw = document.querySelector('.swiper');
+      const sw = document.getElementById('land-swiper');
       if (sw && window.Swiper){
-        new Swiper('.swiper', {
+        // بازچینی اسلایدها بر اساس داده‌های فرم
+        try{
+          const wrapper = sw.querySelector('.swiper-wrapper');
+          const nodes = Array.from(wrapper.children);
+          const images = JSON.parse(sw.dataset.images || '[]');
+          const order  = (sw.dataset.order || '').split(',').map(s=>s.trim()).filter(Boolean);
+          const cover  = parseInt(sw.dataset.cover ?? '-1', 10);
+
+          // ساخت map: id یا basename → index
+          const keyOf = (item) => {
+            if (typeof item === 'string') return item.split('/').pop();
+            if (item && item.id) return String(item.id);
+            if (item && item.url) return item.url.split('/').pop();
+            return '';
+          };
+          const keys = images.map(keyOf);
+
+          // اگر order معتبر بود، گره‌ها را به همان ترتیب بچین
+          if (order.length && keys.length === nodes.length){
+            const desired = [];
+            order.forEach(k=>{
+              const idx = keys.indexOf(k);
+              if (idx > -1) desired.push(nodes[idx]);
+            });
+            if (desired.length === nodes.length){
+              wrapper.innerHTML = '';
+              desired.forEach(n=>wrapper.appendChild(n));
+            }
+          }
+
+          // اگر cover مشخص است، اسلاید کاور را اولویت بده (به ابتدای لیست)
+          if (!isNaN(cover) && cover >= 0 && cover < nodes.length){
+            const freshNodes = Array.from(wrapper.children);
+            const coverNode = freshNodes[cover];
+            if (coverNode){
+              wrapper.insertBefore(coverNode, wrapper.firstChild);
+            }
+          }
+        }catch(e){ /* بی‌صدا */ }
+
+        new Swiper('#land-swiper', {
           loop: true,
           pagination: { el: '.swiper-pagination', clickable: true },
           navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
@@ -189,7 +304,7 @@
       }
     });
 
-    // فول‌اسکرین
+    // ————— فول‌اسکرین —————
     function openFullscreen(src){
       const img = document.getElementById('fullscreenImage');
       const ov  = document.getElementById('fullscreenOverlay');
@@ -205,7 +320,7 @@
       img.src = '';
     }
 
-    // پاپ‌آپ مشاوره
+    // ————— پاپ‌آپ مشاوره —————
     function openPopup(){
       const p = document.getElementById('popupForm');
       if (!p) return;
@@ -217,20 +332,59 @@
       p.classList.add('hidden'); p.classList.remove('flex');
     }
 
-    // اشتراک‌گذاری/کپی لینک
+    // ————— اشتراک‌گذاری/کپی لینک —————
     async function shareLand(url, title){
-      const data = { title: title || document.title, text: 'آگهی ملک - املاک آسمان گرمابسرد', url };
+      const data = {
+        title: title || document.title,
+        text: 'وینور، زمین‌های آینده‌دار.',
+        url
+      };
       try{
         if (navigator.share){ await navigator.share(data); return; }
         await navigator.clipboard.writeText(url);
         toast('لینک کپی شد ✅');
       }catch(_){}
     }
+    window.shareLand = shareLand;
+
+    // ————— علاقه‌مندی‌ها (LocalStorage) —————
+    (function(){
+      const btn = document.getElementById('favBtn');
+      if(!btn) return;
+      const code = btn.dataset.code || '';
+      if(!code) { btn.style.display='none'; return; }
+      const KEY = 'vinor:favs';
+      const read = () => {
+        try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; }
+      };
+      const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr)); } catch{} };
+      const paint = (active) => { btn.textContent = (active ? '★ در علاقه‌مندی' : '☆ علاقه‌مندی'); };
+
+      let favs = read();
+      let active = favs.includes(code);
+      paint(active);
+
+      btn.addEventListener('click', ()=>{
+        favs = read();
+        active = favs.includes(code);
+        if(active){ favs = favs.filter(c=>c!==code); } else { favs.push(code); }
+        write(favs);
+        paint(!active);
+        toast(!active ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد');
+      });
+    })();
+
+    // ————— Toast کوچک —————
     function toast(text){
       const t = document.createElement('div');
       t.textContent = text; t.dir='rtl';
       t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-green-600 text-white shadow z-[60]';
       document.body.appendChild(t); setTimeout(()=>t.remove(), 1800);
     }
+    window.openPopup = openPopup;
+    window.closePopup = closePopup;
+    window.openFullscreen = openFullscreen;
+    window.closeFullscreen = closeFullscreen;
+    window.toast = toast;
   </script>
 {% endblock %}
