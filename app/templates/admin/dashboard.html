@@ -1,79 +1,147 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" x-data="{ darkMode: false, sidebarOpen: true }" :class="{ 'dark': darkMode }" x-init="darkMode = localStorage.getItem('darkMode') === 'true'">
+<html lang="fa" dir="rtl"
+      x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true }"
+      :class="{ 'dark': darkMode }">
 <head>
-  <meta charset="UTF-8">
-  <title>داشبورد مدیریت | املاک آسمان گرمابسرد</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>داشبورد مدیریت | وینور (Vinor)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { vazir: ["Vazir", "sans-serif"] }
+          fontFamily: { sans: ['iranyekan', 'ui-sans-serif', 'system-ui'] },
+          colors: { vinor: { 600: '#0ea5e9', 700: '#0284c7' } }
         }
       }
-    };
+    }
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <style> body { font-family: 'Vazir', sans-serif; } </style>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ url_for('static', filename='fonts/iranyekan.woff2') }}">
+  <style>
+    @font-face {
+      font-family: 'iranyekan';
+      src: url('{{ url_for('static', filename='fonts/iranyekan.woff2') }}') format('woff2');
+      font-weight: 100 900; font-style: normal; font-display: swap;
+    }
+    body { font-family: 'iranyekan', ui-sans-serif, system-ui; }
+  </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex transition-all duration-300">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex transition-colors duration-300">
 
-  <!-- سایدبار از فایل مجزا -->
+  <!-- سایدبار -->
   {% include 'admin/partials/sidebar.html' %}
 
   <!-- محتوای اصلی -->
-  <main class="flex-1 p-6 pr-72 w-full relative">
+  <main class="flex-1 w-full p-4 sm:p-6 lg:pr-72 relative">
+
     <!-- نوار بالا -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
-        <i class="fas fa-home"></i> داشبورد مدیریت
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 flex items-center gap-2">
+        <i class="fas fa-home"></i>
+        داشبورد مدیریت
       </h1>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-                class="text-gray-500 hover:text-yellow-400 transition text-xl">
+                class="text-gray-500 hover:text-yellow-400 transition text-xl"
+                aria-label="تغییر حالت تیره">
           <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
         </button>
-        <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-green-500 transition text-xl">
+        <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-vinor-600 transition text-xl" aria-label="باز/بسته کردن منو">
           <i class="fas fa-bars"></i>
         </button>
       </div>
     </div>
 
     <!-- کارت‌ها -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="bg-white dark:bg-gray-800 rounded shadow p-6 flex items-center gap-4 hover:shadow-lg transition">
-        <i class="fas fa-map-marked-alt text-3xl text-green-600"></i>
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-300">تعداد کل زمین‌ها</p>
-          <p class="text-xl font-bold">{{ lands_count }}</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <!-- کل آگهی‌ها -->
+      <a href="{{ url_for('admin.lands') }}"
+         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
+        <div class="shrink-0 rounded-xl p-3 bg-vinor-600/10 text-vinor-700 dark:text-vinor-600">
+          <i class="fas fa-map-marked-alt text-2xl"></i>
         </div>
-      </div>
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-300">تعداد کل آگهی‌ها</p>
+          <p class="text-2xl font-extrabold">{{ lands_count or 0 }}</p>
+        </div>
+        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-vinor-600"></i>
+      </a>
 
-      <div class="bg-white dark:bg-gray-800 rounded shadow p-6 flex items-center gap-4 hover:shadow-lg transition">
-        <i class="fas fa-clock text-3xl text-yellow-500"></i>
+      <!-- در انتظار تأیید -->
+      <a href="{{ url_for('admin.pending_lands') }}"
+         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
+        <div class="shrink-0 rounded-xl p-3 bg-yellow-500/10 text-yellow-600">
+          <i class="fas fa-clock text-2xl"></i>
+        </div>
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-300">آگهی‌های در انتظار</p>
-          <p class="text-xl font-bold">{{ pending_count }}</p>
+          <p class="text-2xl font-extrabold">{{ pending_count or 0 }}</p>
         </div>
-      </div>
+        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-yellow-600"></i>
+      </a>
 
-      <div class="bg-white dark:bg-gray-800 rounded shadow p-6 flex items-center gap-4 hover:shadow-lg transition">
-        <i class="fas fa-user-headset text-3xl text-blue-500"></i>
+      <!-- درخواست‌های مشاوره -->
+      <a href="{{ url_for('admin.consults') }}"
+         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
+        <div class="shrink-0 rounded-xl p-3 bg-blue-500/10 text-blue-600">
+          <i class="fas fa-user-headset text-2xl"></i>
+        </div>
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-300">درخواست‌های مشاوره</p>
-          <p class="text-xl font-bold">{{ consults_count }}</p>
+          <p class="text-2xl font-extrabold">{{ consults_count or 0 }}</p>
         </div>
-      </div>
+        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-blue-600"></i>
+      </a>
     </div>
+
+    <!-- میان‌برهای سریع -->
+    <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <a href="{{ url_for('admin.add_land') }}"
+         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <i class="fas fa-plus-circle text-vinor-600 text-xl"></i>
+        <div class="mt-1 text-sm">افزودن آگهی</div>
+      </a>
+      <a href="{{ url_for('admin.approved_lands') }}"
+         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <i class="fas fa-badge-check text-emerald-600 text-xl"></i>
+        <div class="mt-1 text-sm">تأیید شده‌ها</div>
+      </a>
+      <a href="{{ url_for('admin.rejected_lands') }}"
+         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <i class="fas fa-ban text-rose-600 text-xl"></i>
+        <div class="mt-1 text-sm">رد شده‌ها</div>
+      </a>
+      <a href="{{ url_for('admin.consults') }}"
+         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <i class="fas fa-phone-volume text-blue-600 text-xl"></i>
+        <div class="mt-1 text-sm">مشاوره‌ها</div>
+      </a>
+      <a href="{{ url_for('admin.settings') }}"
+         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <i class="fas fa-sliders-h text-amber-600 text-xl"></i>
+        <div class="mt-1 text-sm">تنظیمات</div>
+      </a>
+      <form method="post" action="{{ url_for('admin.logout') }}"
+            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="w-full">
+          <i class="fas fa-door-open text-red-600 text-xl"></i>
+          <div class="mt-1 text-sm">خروج</div>
+        </button>
+      </form>
+    </div>
+
   </main>
 
-  <!-- دکمه شناور برای باز کردن سایدبار -->
+  <!-- دکمه شناور برای باز کردن سایدبار (موبایل) -->
   <button x-show="!sidebarOpen"
           @click="sidebarOpen = true"
-          class="fixed top-4 right-4 z-30 bg-green-600 text-white p-3 rounded-full shadow-lg lg:hidden"
-          x-cloak>
+          class="fixed top-4 right-4 z-30 bg-vinor-600 text-white p-3 rounded-full shadow-lg lg:hidden"
+          x-cloak aria-label="نمایش منو">
     <i class="fas fa-bars"></i>
   </button>
 
