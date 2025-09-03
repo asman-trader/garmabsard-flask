@@ -1,29 +1,22 @@
-# پوشه‌های دیتایی و لاگ
+# داده و لاگ
 app/data/
-uploads/
-app/static/uploads/
-logs/
+data/
 instance/
+instance/logs/
+instance/data/
+app/data/uploads/
 
-# دیتابیس
+# DB و لاگ‌ها و تنظیمات
 *.db
 *.sqlite
 *.sqlite3
-
-# فایل‌های تنظیمات حساس
+*.log
 .env
 *.env
 
-# فایل‌های موقت
-*.log
-*.tmp
-*.bak
-
-# پایتون
+# کش و IDE
 __pycache__/
 *.pyc
-
-# محیط مجازی
-.venv/
-venv/
-env/
+*.tmp
+*.bak
+.idea/
