@@ -2,108 +2,172 @@
 <html lang="fa" dir="rtl"
       x-data="{ darkMode: false, sidebarOpen: true }"
       :class="{ 'dark': darkMode }"
-      x-init="darkMode = localStorage.getItem('darkMode') === 'true'">
+      x-init="
+        darkMode = localStorage.getItem('darkMode') === 'true';
+        // اگر عرض کم بود، منو پیش‌فرض بسته باشد
+        if (window.innerWidth < 1024) sidebarOpen = false;
+      ">
 <head>
   <meta charset="UTF-8">
-  <title>آگهی‌ها | پنل مدیریت وینور</title>
+  <title>آگهی‌ها | پنل مدیریت وینور (Vinor)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { vazir: ["Vazir", "sans-serif"] },
-          colors: { vinor: { 600: '#0ea5e9', 700: '#0284c7' } }
+          fontFamily: { vazir: ["Vazir", "ui-sans-serif", "system-ui"] },
+          colors: {
+            vinor: { 50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', 300:'#93c5fd', 400:'#60a5fa', 500:'#3b82f6', 600:'#0ea5e9', 700:'#0284c7', 800:'#1e40af', 900:'#1e3a8a' }
+          },
+          boxShadow: { card: '0 6px 24px rgba(2,132,199,.12)' }
         }
       }
     };
   </script>
+
+  <!-- Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Font (اختیاری: اگر فونت vazir را دارید) -->
   <style> body { font-family: 'Vazir', sans-serif; } </style>
 </head>
+
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex transition-all duration-300">
 
+  <!-- سایدبار -->
   {% include 'admin/partials/sidebar.html' %}
 
-  <main class="flex-1 p-4 sm:p-6 lg:pr-72 w-full relative">
+  <!-- اوورلی موبایل برای بستن منو -->
+  <div class="fixed inset-0 bg-black/40 lg:hidden z-10"
+       x-show="sidebarOpen"
+       x-transition.opacity
+       @click="sidebarOpen=false"
+       aria-hidden="true"></div>
 
+  <!-- محتوای اصلی -->
+  <main class="flex-1 p-4 sm:p-6 lg:pr-72 w-full relative">
     <!-- نوار بالا -->
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 flex items-center gap-2">
-        <i class="fas fa-layer-group"></i> مدیریت آگهی‌ها
+      <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-300 flex items-center gap-2">
+        <i class="fas fa-layer-group"></i>
+        مدیریت آگهی‌ها
       </h1>
-      <div class="flex items-center gap-4">
+
+      <div class="flex items-center gap-3">
+        <!-- حالت تیره/روشن -->
         <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-                class="text-gray-500 hover:text-yellow-400 transition text-xl" aria-label="تغییر حالت تیره">
-          <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+                class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-md transition"
+                aria-label="تغییر حالت تیره/روشن" title="تغییر حالت تیره/روشن">
+          <i class="fas text-gray-600 dark:text-yellow-300 text-lg"
+             :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
         </button>
+
+        <!-- دکمه منو در موبایل -->
         <button @click="sidebarOpen = !sidebarOpen"
-                class="lg:hidden text-gray-500 hover:text-vinor-600 transition text-xl" aria-label="باز/بسته کردن منو">
-          <i class="fas fa-bars"></i>
+                class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-md transition"
+                aria-label="باز/بسته کردن منو" title="منو">
+          <i class="fas fa-bars text-gray-600 dark:text-gray-200 text-lg"></i>
         </button>
       </div>
     </div>
 
-    <!-- تب‌ها -->
+    <!-- تب‌ها (active براساس endpoint) -->
     <div class="flex gap-4 mb-6 border-b pb-2 text-sm sm:text-base">
-      <a href="{{ url_for('admin.pending_lands') }}" class="text-vinor-700 font-bold border-b-2 border-vinor-700 pb-1">در انتظار تأیید</a>
-      <a href="{{ url_for('admin.approved_lands') }}" class="text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-600">تأیید شده</a>
-      <a href="{{ url_for('admin.rejected_lands') }}" class="text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-600">رد شده / نیاز به اصلاح</a>
+      <a href="{{ url_for('admin.pending_lands') }}"
+         class="pb-2 -mb-[1px] border-b-2 transition
+                {% if request.endpoint == 'admin.pending_lands' %} text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold
+                {% else %} text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent {% endif %}">
+        در انتظار تأیید
+      </a>
+
+      <a href="{{ url_for('admin.approved_lands') }}"
+         class="pb-2 -mb-[1px] border-b-2 transition
+                {% if request.endpoint == 'admin.approved_lands' %} text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold
+                {% else %} text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent {% endif %}">
+        تأیید شده
+      </a>
+
+      <a href="{{ url_for('admin.rejected_lands') }}"
+         class="pb-2 -mb-[1px] border-b-2 transition
+                {% if request.endpoint == 'admin.rejected_lands' %} text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold
+                {% else %} text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent {% endif %}">
+        رد شده / نیاز به اصلاح
+      </a>
     </div>
 
+    <!-- پیام‌ها -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
-        {% for category, msg in messages %}
-          <div class="mb-4 text-sm rounded-lg px-3 py-2
-                      {% if category in ['success'] %}bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-200
-                      {% elif category in ['warning'] %}bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-200
-                      {% elif category in ['info'] %}bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200
-                      {% else %}bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200{% endif %}">
-            {{ msg }}
-          </div>
-        {% endfor %}
+        <div class="space-y-3 mb-5">
+          {% for category, msg in messages %}
+            <div class="text-sm rounded-lg px-3 py-2 shadow-card
+                        {% if category in ['success'] %} bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200
+                        {% elif category in ['warning'] %} bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200
+                        {% elif category in ['info'] %} bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200
+                        {% else %} bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200 {% endif %}">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
       {% endif %}
     {% endwith %}
 
+    <!-- جدول آگهی‌ها -->
     {% if lands %}
-      <div class="overflow-x-auto">
-        <table class="w-full text-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow rounded">
+      <div class="overflow-x-auto rounded-xl shadow-card">
+        <table class="w-full text-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
           <thead class="bg-gray-50 dark:bg-gray-700/60 text-xs sm:text-sm">
-            <tr>
-              <th class="p-2 border">کد</th>
-              <th class="p-2 border">عنوان</th>
-              <th class="p-2 border">موقعیت</th>
-              <th class="p-2 border">متراژ</th>
-              <th class="p-2 border">تاریخ ثبت</th>
-              <th class="p-2 border">عملیات</th>
+            <tr class="text-gray-700 dark:text-gray-200">
+              <th scope="col" class="p-2 border">کد</th>
+              <th scope="col" class="p-2 border min-w-40">عنوان</th>
+              <th scope="col" class="p-2 border min-w-36">موقعیت</th>
+              <th scope="col" class="p-2 border">متراژ</th>
+              <th scope="col" class="p-2 border min-w-32">تاریخ ثبت</th>
+              <th scope="col" class="p-2 border min-w-44">عملیات</th>
             </tr>
           </thead>
           <tbody class="text-xs sm:text-sm">
             {% for land in lands %}
-              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td class="p-2 border">{{ land.code }}</td>
-                <td class="p-2 border">{{ land.title }}</td>
-                <td class="p-2 border">{{ land.location }}</td>
-                <td class="p-2 border">{{ land.size }} متر</td>
-                <td class="p-2 border">{{ land.created_at }}</td>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+                <td class="p-2 border text-gray-700 dark:text-gray-100">{{ land.code }}</td>
+                <td class="p-2 border text-gray-800 dark:text-gray-100">
+                  <div class="flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-file-lines hidden sm:inline"></i>
+                    <span class="line-clamp-1">{{ land.title }}</span>
+                  </div>
+                </td>
+                <td class="p-2 border text-gray-700 dark:text-gray-100">{{ land.location }}</td>
+                <td class="p-2 border text-gray-700 dark:text-gray-100">{{ land.size }} متر</td>
+                <td class="p-2 border text-gray-600 dark:text-gray-200">{{ land.created_at }}</td>
                 <td class="p-2 border">
                   <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
                     <!-- فرم تأیید (POST + CSRF) -->
-                    <form method="post" action="{{ url_for('admin.approve_land', code=land.code) }}">
+                    <form method="post"
+                          action="{{ url_for('admin.approve_land', code=land.code) }}"
+                          class="contents"
+                          x-data>
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit"
-                              class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs sm:text-sm whitespace-nowrap">
-                        تأیید
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» تأیید شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md text-xs sm:text-sm whitespace-nowrap">
+                        <i class="fa-solid fa-check"></i> تأیید
                       </button>
                     </form>
 
                     <!-- فرم رد (POST + CSRF) -->
-                    <form method="post" action="{{ url_for('admin.reject_land', code=land.code) }}">
+                    <form method="post"
+                          action="{{ url_for('admin.reject_land', code=land.code) }}"
+                          class="contents"
+                          x-data>
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit"
-                              class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded text-xs sm:text-sm whitespace-nowrap">
-                        رد
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» رد شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-md text-xs sm:text-sm whitespace-nowrap">
+                        <i class="fa-solid fa-xmark"></i> رد
                       </button>
                     </form>
                   </div>
@@ -114,12 +178,14 @@
         </table>
       </div>
     {% else %}
-      <div class="bg-yellow-100 dark:bg-yellow-200 border border-yellow-300 text-yellow-900 p-4 rounded">
+      <div class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300/70 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100 p-4 rounded-xl shadow-card">
+        <i class="fa-regular fa-circle-info ms-1"></i>
         هیچ آگهی در انتظار تأیید وجود ندارد.
       </div>
     {% endif %}
   </main>
 
+  <!-- Alpine -->
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>
