@@ -6,6 +6,11 @@
   <meta charset="UTF-8" />
   <title>داشبورد مدیریت | وینور (Vinor)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0ea5e9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b3a57" media="(prefers-color-scheme: dark)">
+
+  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -13,12 +18,17 @@
       theme: {
         extend: {
           fontFamily: { sans: ['iranyekan', 'ui-sans-serif', 'system-ui'] },
-          colors: { vinor: { 600: '#0ea5e9', 700: '#0284c7' } }
+          colors: { vinor: { 600: '#0ea5e9', 700: '#0284c7' } },
+          boxShadow: {
+            'vinor': '0 10px 15px -3px rgb(14 165 233 / 0.15), 0 4px 6px -4px rgb(14 165 233 / 0.12)'
+          }
         }
       }
     }
   </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- فونت -->
   <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ url_for('static', filename='fonts/iranyekan.woff2') }}">
   <style>
@@ -27,7 +37,9 @@
       src: url('{{ url_for('static', filename='fonts/iranyekan.woff2') }}') format('woff2');
       font-weight: 100 900; font-style: normal; font-display: swap;
     }
+    html, body { height: 100%; }
     body { font-family: 'iranyekan', ui-sans-serif, system-ui; }
+    [x-cloak] { display: none !important; }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex transition-colors duration-300">
@@ -35,117 +47,158 @@
   <!-- سایدبار -->
   {% include 'admin/partials/sidebar.html' %}
 
+  <!-- لایه پشت‌زمینه برای موبایل -->
+  <div
+    class="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
+    x-show="sidebarOpen"
+    x-transition.opacity
+    @click="sidebarOpen = false"
+    x-cloak
+    aria-hidden="true"></div>
+
   <!-- محتوای اصلی -->
   <main class="flex-1 w-full p-4 sm:p-6 lg:pr-72 relative">
-
     <!-- نوار بالا -->
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 flex items-center gap-2">
-        <i class="fas fa-home"></i>
-        داشبورد مدیریت
-      </h1>
-      <div class="flex items-center gap-3">
-        <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-                class="text-gray-500 hover:text-yellow-400 transition text-xl"
-                aria-label="تغییر حالت تیره">
-          <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
-        </button>
-        <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-vinor-600 transition text-xl" aria-label="باز/بسته کردن منو">
-          <i class="fas fa-bars"></i>
-        </button>
+    <header class="sticky top-0 z-20 -mt-4 -mx-4 sm:-mx-6 lg:pr-72 p-4 sm:p-6 bg-gray-100/70 dark:bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-100/60 dark:supports-[backdrop-filter]:bg-gray-900/60 border-b border-gray-200/60 dark:border-gray-800/60">
+      <div class="max-w-screen-xl mx-auto flex items-center justify-between">
+        <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 flex items-center gap-2">
+          <i class="fas fa-home"></i>
+          داشبورد مدیریت
+        </h1>
+        <div class="flex items-center gap-3">
+          <button
+            @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
+            class="inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-gray-300/60 dark:ring-gray-700/60 hover:ring-vinor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition"
+            aria-label="تغییر حالت تیره"
+            title="حالت تیره/روشن">
+            <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+          </button>
+          <button
+            @click="sidebarOpen = !sidebarOpen"
+            class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-gray-300/60 dark:ring-gray-700/60 hover:ring-vinor-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition"
+            aria-controls="admin-sidebar"
+            :aria-expanded="sidebarOpen"
+            aria-label="باز/بسته کردن منو">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
       </div>
+    </header>
+
+    <div class="max-w-screen-xl mx-auto mt-6">
+      <!-- کارت‌های شاخص‌ها -->
+      <section aria-labelledby="stats-title">
+        <h2 id="stats-title" class="sr-only">آمار کلیدی</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <!-- کل آگهی‌ها -->
+          <a href="{{ url_for('admin.lands') }}"
+             class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-vinor transition">
+            <div class="shrink-0 rounded-xl p-3 bg-vinor-600/10 text-vinor-700 dark:text-vinor-600">
+              <i class="fas fa-map-marked-alt text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-300">تعداد کل آگهی‌ها</p>
+              <p class="text-2xl font-extrabold" aria-live="polite">{{ lands_count or 0 }}</p>
+            </div>
+            <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-vinor-600"></i>
+          </a>
+
+          <!-- در انتظار تأیید -->
+          <a href="{{ url_for('admin.pending_lands') }}"
+             class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-vinor transition">
+            <div class="shrink-0 rounded-xl p-3 bg-yellow-500/10 text-yellow-600">
+              <i class="fas fa-clock text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-300">آگهی‌های در انتظار</p>
+              <p class="text-2xl font-extrabold" aria-live="polite">{{ pending_count or 0 }}</p>
+            </div>
+            <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-yellow-600"></i>
+          </a>
+
+          <!-- درخواست‌های مشاوره -->
+          <a href="{{ url_for('admin.consults') }}"
+             class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-vinor transition">
+            <div class="shrink-0 rounded-xl p-3 bg-blue-500/10 text-blue-600">
+              <i class="fas fa-user-headset text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-300">درخواست‌های مشاوره</p>
+              <p class="text-2xl font-extrabold" aria-live="polite">{{ consults_count or 0 }}</p>
+            </div>
+            <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-blue-600"></i>
+          </a>
+        </div>
+      </section>
+
+      <!-- میان‌برهای سریع -->
+      <section class="mt-6" aria-labelledby="shortcuts-title">
+        <h2 id="shortcuts-title" class="sr-only">میان‌برهای سریع</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <a href="{{ url_for('admin.add_land') }}"
+             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition">
+            <i class="fas fa-plus-circle text-vinor-600 text-xl"></i>
+            <div class="mt-1 text-sm">افزودن آگهی</div>
+          </a>
+          <a href="{{ url_for('admin.approved_lands') }}"
+             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition">
+            <i class="fas fa-badge-check text-emerald-600 text-xl"></i>
+            <div class="mt-1 text-sm">تأیید شده‌ها</div>
+          </a>
+          <a href="{{ url_for('admin.rejected_lands') }}"
+             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition">
+            <i class="fas fa-ban text-rose-600 text-xl"></i>
+            <div class="mt-1 text-sm">رد شده‌ها</div>
+          </a>
+          <a href="{{ url_for('admin.consults') }}"
+             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition">
+            <i class="fas fa-phone-volume text-blue-600 text-xl"></i>
+            <div class="mt-1 text-sm">مشاوره‌ها</div>
+          </a>
+          <a href="{{ url_for('admin.settings') }}"
+             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600 transition">
+            <i class="fas fa-sliders-h text-amber-600 text-xl"></i>
+            <div class="mt-1 text-sm">تنظیمات</div>
+          </a>
+
+          <!-- خروج -->
+          <form method="post" action="{{ url_for('admin.logout') }}"
+                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md focus-within:outline-none focus-within:ring-2 focus-within:ring-vinor-600 transition">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="w-full">
+              <i class="fas fa-door-open text-red-600 text-xl"></i>
+              <div class="mt-1 text-sm">خروج</div>
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
 
-    <!-- کارت‌ها -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      <!-- کل آگهی‌ها -->
-      <a href="{{ url_for('admin.lands') }}"
-         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
-        <div class="shrink-0 rounded-xl p-3 bg-vinor-600/10 text-vinor-700 dark:text-vinor-600">
-          <i class="fas fa-map-marked-alt text-2xl"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-300">تعداد کل آگهی‌ها</p>
-          <p class="text-2xl font-extrabold">{{ lands_count or 0 }}</p>
-        </div>
-        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-vinor-600"></i>
-      </a>
+    <!-- دکمه شناور برای باز کردن سایدبار (موبایل) -->
+    <button x-show="!sidebarOpen"
+            @click="sidebarOpen = true"
+            class="fixed top-4 right-4 z-40 bg-vinor-600 text-white p-3 rounded-full shadow-lg lg:hidden"
+            x-cloak aria-label="نمایش منو">
+      <i class="fas fa-bars"></i>
+    </button>
 
-      <!-- در انتظار تأیید -->
-      <a href="{{ url_for('admin.pending_lands') }}"
-         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
-        <div class="shrink-0 rounded-xl p-3 bg-yellow-500/10 text-yellow-600">
-          <i class="fas fa-clock text-2xl"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-300">آگهی‌های در انتظار</p>
-          <p class="text-2xl font-extrabold">{{ pending_count or 0 }}</p>
-        </div>
-        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-yellow-600"></i>
-      </a>
-
-      <!-- درخواست‌های مشاوره -->
-      <a href="{{ url_for('admin.consults') }}"
-         class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-5 flex items-center gap-4 hover:shadow-lg transition">
-        <div class="shrink-0 rounded-xl p-3 bg-blue-500/10 text-blue-600">
-          <i class="fas fa-user-headset text-2xl"></i>
-        </div>
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-300">درخواست‌های مشاوره</p>
-          <p class="text-2xl font-extrabold">{{ consults_count or 0 }}</p>
-        </div>
-        <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-blue-600"></i>
-      </a>
-    </div>
-
-    <!-- میان‌برهای سریع -->
-    <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-      <a href="{{ url_for('admin.add_land') }}"
-         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <i class="fas fa-plus-circle text-vinor-600 text-xl"></i>
-        <div class="mt-1 text-sm">افزودن آگهی</div>
-      </a>
-      <a href="{{ url_for('admin.approved_lands') }}"
-         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <i class="fas fa-badge-check text-emerald-600 text-xl"></i>
-        <div class="mt-1 text-sm">تأیید شده‌ها</div>
-      </a>
-      <a href="{{ url_for('admin.rejected_lands') }}"
-         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <i class="fas fa-ban text-rose-600 text-xl"></i>
-        <div class="mt-1 text-sm">رد شده‌ها</div>
-      </a>
-      <a href="{{ url_for('admin.consults') }}"
-         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <i class="fas fa-phone-volume text-blue-600 text-xl"></i>
-        <div class="mt-1 text-sm">مشاوره‌ها</div>
-      </a>
-      <a href="{{ url_for('admin.settings') }}"
-         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <i class="fas fa-sliders-h text-amber-600 text-xl"></i>
-        <div class="mt-1 text-sm">تنظیمات</div>
-      </a>
-      <form method="post" action="{{ url_for('admin.logout') }}"
-            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center hover:shadow-md transition">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="w-full">
-          <i class="fas fa-door-open text-red-600 text-xl"></i>
-          <div class="mt-1 text-sm">خروج</div>
-        </button>
-      </form>
-    </div>
-
+    <!-- پابرگ کوچک برند -->
+    <footer class="mt-12 text-center text-xs text-gray-500 dark:text-gray-400">
+      <span>وینور، زمین‌های آینده‌دار.</span>
+      <span class="mx-2">•</span>
+      <a href="https://vinor.ir" class="underline decoration-dotted hover:text-vinor-600">vinor.ir</a>
+    </footer>
   </main>
-
-  <!-- دکمه شناور برای باز کردن سایدبار (موبایل) -->
-  <button x-show="!sidebarOpen"
-          @click="sidebarOpen = true"
-          class="fixed top-4 right-4 z-30 bg-vinor-600 text-white p-3 rounded-full shadow-lg lg:hidden"
-          x-cloak aria-label="نمایش منو">
-    <i class="fas fa-bars"></i>
-  </button>
 
   <!-- Alpine.js -->
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- بهبود دسترس‌پذیری و ترجیحات کاربر -->
+  <script>
+    // احترام به prefers-reduced-motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('motion-reduce')
+    }
+  </script>
 </body>
 </html>
