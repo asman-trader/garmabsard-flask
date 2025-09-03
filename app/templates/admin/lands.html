@@ -1,62 +1,93 @@
 {% extends 'admin/base_admin.html' %}
 
-
 {% block content %}
-<div class="max-w-6xl mx-auto">
+<div class="max-w-6xl mx-auto p-4 sm:p-6">
 
   <!-- عنوان صفحه -->
-  <h1 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-6 flex items-center gap-2">
-    <i class="fas fa-layer-group"></i> لیست آگهی‌های ثبت‌شده
+  <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 mb-6 flex items-center gap-2">
+    <i class="fas fa-layer-group"></i>
+    لیست آگهی‌های ثبت‌شده
   </h1>
 
+  <!-- پیام‌ها -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="mb-4 text-sm rounded-lg px-3 py-2
+                    {% if category in ['success'] %}bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-200
+                    {% elif category in ['warning'] %}bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-200
+                    {% elif category in ['info'] %}bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200
+                    {% else %}bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200{% endif %}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   <!-- لیست آگهی‌ها -->
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
     {% for land in lands %}
-    <div class="bg-white dark:bg-gray-800 rounded shadow p-4 flex flex-col justify-between h-full border dark:border-gray-700">
-      <div>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-4 flex flex-col justify-between">
+
         <!-- تصویر ملک -->
-        {% if land.images and land.images[0] %}
-          <img src="{{ url_for('static', filename=land.images[0]) }}" alt="تصویر ملک" class="w-full h-40 object-cover rounded mb-3">
+        {% set cover = (land.images[0] if land.images and land.images|length > 0 else None) %}
+        {% if cover %}
+          <img src="{{ url_for('static', filename=cover) }}"
+               alt="تصویر ملک"
+               class="w-full h-40 object-cover rounded-xl mb-3">
         {% else %}
-          <div class="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 rounded mb-3">
+          <div class="w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-xl mb-3 flex items-center justify-center text-gray-400">
             بدون تصویر
           </div>
         {% endif %}
 
         <!-- اطلاعات ملک -->
-        <h2 class="text-lg font-bold text-green-700 dark:text-green-400">{{ land.title }}</h2>
-        <p class="text-sm mt-1">📏 متراژ: {{ land.size }} متر</p>
-        <p class="text-sm">📍 موقعیت: {{ land.location }}</p>
-        {% if land.code %}
-          <p class="text-sm">🆔 کد ملک: {{ land.code }}</p>
-        {% endif %}
-        {% if land.description %}
-          <p class="text-sm mt-2">📝 توضیحات: {{ land.description }}</p>
-        {% endif %}
-      </div>
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">
+            {{ land.title or 'بدون عنوان' }}
+          </h2>
+          <p class="text-sm mt-1 text-gray-600 dark:text-gray-300">📏 متراژ: {{ land.size }} متر</p>
+          <p class="text-sm text-gray-600 dark:text-gray-300">📍 موقعیت: {{ land.location }}</p>
+          {% if land.code %}
+            <p class="text-xs mt-1 text-gray-500 dark:text-gray-400">🆔 کد ملک: {{ land.code }}</p>
+          {% endif %}
+          {% if land.description %}
+            <p class="text-sm mt-2 text-gray-700 dark:text-gray-300 line-clamp-3">📝 {{ land.description }}</p>
+          {% endif %}
+        </div>
 
-      <!-- دکمه‌های عملیات -->
-      <div class="mt-4 flex gap-2">
-        <a href="{{ url_for('admin.edit_land', land_id=loop.index0) }}"
-           class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 rounded text-center transition-all">
-          <i class="fas fa-edit"></i> ویرایش
-        </a>
-        <a href="{{ url_for('admin.delete_land', land_id=loop.index0) }}"
-           onclick="return confirm('آیا از حذف این آگهی مطمئن هستید؟')"
-           class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 rounded text-center transition-all">
-          <i class="fas fa-trash"></i> حذف
-        </a>
+        <!-- دکمه‌های عملیات -->
+        <div class="mt-4 flex gap-2">
+          <a href="{{ url_for('admin.edit_land', land_id=loop.index0) }}"
+             class="flex-1 inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition">
+            <i class="fas fa-edit"></i>
+            ویرایش
+          </a>
+
+          <!-- حذف: POST + CSRF -->
+          <form method="post" action="{{ url_for('admin.delete_land', land_id=loop.index0) }}" class="flex-1"
+                onsubmit="return confirm('آیا از حذف این آگهی مطمئن هستید؟')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition">
+              <i class="fas fa-trash"></i>
+              حذف
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
     {% else %}
-    <p class="text-center text-gray-500 dark:text-gray-400 col-span-3">هیچ آگهی‌ای ثبت نشده است.</p>
+      <p class="text-center text-gray-500 dark:text-gray-400 col-span-1 md:col-span-2 lg:col-span-3">
+        هیچ آگهی‌ای ثبت نشده است.
+      </p>
     {% endfor %}
   </div>
 
   <!-- بازگشت -->
   <div class="mt-8 text-center">
-    <a href="{{ url_for('admin.dashboard') }}" class="text-green-600 dark:text-green-400 hover:underline">
-      <i class="fas fa-arrow-right"></i> بازگشت به داشبورد
+    <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 text-vinor-700 dark:text-vinor-600 hover:underline">
+      <i class="fas fa-arrow-right"></i>
+      بازگشت به داشبورد
     </a>
   </div>
 
