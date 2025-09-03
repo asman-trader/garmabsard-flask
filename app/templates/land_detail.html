@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% set _title = (land.title or "جزئیات آگهی") ~ " | وینور (Vinor)" %}
+{% set _title = (land.get('title') or "جزئیات آگهی") ~ " | وینور (Vinor)" %}
 {% block title %}{{ _title }}{% endblock %}
 
 {% block head %}
-  <meta name="description" content="جزئیات آگهی {{ land.title or '' }} در وینور | بازار آنلاین ملک (vinor.ir)" />
+  <meta name="description" content="جزئیات آگهی {{ land.get('title') or '' }} در وینور | بازار آنلاین ملک (vinor.ir)" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 {% endblock %}
 
@@ -12,11 +12,11 @@
 
   {# ---------------- نرمال‌سازی تصاویر (رشته/آرایه/آبجکت) ---------------- #}
   {% set _images_raw = [] %}
-  {% if land.images %}
-    {% if land.images is string %}
-      {% set _images_raw = [land.images] %}
-    {% elif land.images is iterable %}
-      {% set _images_raw = land.images %}
+  {% if land.get('images') %}
+    {% if land.get('images') is string %}
+      {% set _images_raw = [land.get('images')] %}
+    {% elif land.get('images') is iterable %}
+      {% set _images_raw = land.get('images') %}
     {% endif %}
   {% endif %}
 
@@ -40,16 +40,16 @@
     {% if _has_images %}
     <div class="swiper w-full h-64 sm:h-96 rounded-lg overflow-hidden border shadow relative" id="land-swiper"
          data-images='{{ _images_raw|tojson }}'
-         data-order='{{ (land.images_order or "")|string }}'
-         data-cover='{{ (land.cover_index if land.cover_index is not none else -1)|int }}'>
+         data-order='{{ (land.get("images_order") or "")|string }}'
+         data-cover='{{ (land.get("cover_index") if land.get("cover_index") is not none else -1)|int }}'>
       <div class="swiper-wrapper">
-        {# سرور-ساید: اگر ترتیب رعایت نشده باشد، جاوااسکریپت پایین مرتب می‌کند #}
+        {# اگر ترتیب رعایت نشده باشد، اسکریپت پایین مرتب می‌کند #}
         {% for it in _images_raw %}
         {% set src = img_url(it) %}
         <div class="swiper-slide">
           <img
             src="{{ src }}"
-            alt="تصویر {{ loop.index }} از {{ land.title or '' }}"
+            alt="تصویر {{ loop.index }} از {{ land.get('title') or '' }}"
             class="w-full h-64 sm:h-96 object-cover cursor-zoom-in"
             loading="lazy"
             onclick="openFullscreen('{{ src }}')"
@@ -79,57 +79,59 @@
   {# ---------------- عنوان و وضعیت ---------------- #}
   <div class="flex items-start justify-between gap-3">
     <h1 class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-400">
-      {{ land.title or "بدون عنوان" }}
+      {{ land.get('title') or "بدون عنوان" }}
     </h1>
 
     {# علاقه‌مندی #}
     <button id="favBtn"
             class="shrink-0 px-3 py-2 rounded-full border text-sm bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300"
-            data-code="{{ land.code or '' }}"
+            data-code="{{ land.get('code') or '' }}"
             title="افزودن به علاقه‌مندی‌ها">☆ علاقه‌مندی</button>
   </div>
 
   {# ---------------- متادیتا ---------------- #}
   <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-3 gap-y-1">
-    <span class="inline-flex items-center gap-1"><i class="fas fa-clock"></i>{{ land.created_at | date_ymd }}</span>
-    {% if land.code %}<span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.code }}</span></span>{% endif %}
-    {% if land.status %}
-      {% if land.status == 'approved' %}
+    <span class="inline-flex items-center gap-1"><i class="fas fa-clock"></i>{{ land.get('created_at') | date_ymd }}</span>
+    {% if land.get('code') %}
+      <span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.get('code') }}</span></span>
+    {% endif %}
+    {% if land.get('status') %}
+      {% if land.get('status') == 'approved' %}
         <span class="inline-flex items-center gap-1 text-green-600"><i class="fas fa-check-circle"></i> تأیید شده</span>
-      {% elif land.status == 'pending' %}
+      {% elif land.get('status') == 'pending' %}
         <span class="inline-flex items-center gap-1 text-yellow-600"><i class="fas fa-hourglass-half"></i> در انتظار</span>
-      {% elif land.status == 'rejected' %}
+      {% elif land.get('status') == 'rejected' %}
         <span class="inline-flex items-center gap-1 text-red-600"><i class="fas fa-times-circle"></i> رد شده</span>
       {% endif %}
     {% endif %}
   </div>
 
   {# ---------------- مشخصات/برچسب‌ها ---------------- #}
+  {% set _sz = (land.get('size')|int if land.get('size') is not none else (land.get('area')|int if land.get('area') is not none else 0)) %}
+  {% set _price_total = (land.get('price_total') if land.get('price_total') is not none else land.get('price')) %}
+
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mt-4 dark:text-gray-300">
     <p>🌏 <strong>متراژ:</strong>
-      {% set _sz = (land.size|int if land.size is not none else (land.area|int if land.area is not none else 0)) %}
       {{ "{:,}".format(_sz).replace(",", "٫") if _sz else "نامشخص" }} متر
     </p>
 
     {# موقعیت: از فرم ثبت، location = city + ' - ' + location_detail #}
     <p>📍 <strong>موقعیت:</strong>
-      {% set _loc = land.location or ((land.city or "" ) ~ ((" - " ~ land.location_detail) if land.location_detail else "")) %}
+      {% set _loc = land.get('location') or ((land.get('city') or "" ) ~ ((" - " ~ land.get('location_detail')) if land.get('location_detail') else "")) %}
       {{ _loc or "نامشخص" }}
     </p>
 
-    <p>📄 <strong>نوع سند:</strong> {{ land.document_type or "نامشخص" }}</p>
+    <p>📄 <strong>نوع سند:</strong> {{ land.get('document_type') or "نامشخص" }}</p>
 
     <p>🏮 <strong>دسته:</strong>
-      {# اگر در دیتابیس به‌صورت جدا ذخیره شده: category_main / category_sub #}
-      {% if land.category_main or land.category_sub %}
-        {{ (land.category_main or "نامشخص") ~ ((" / " ~ land.category_sub) if land.category_sub else "") }}
+      {% if land.get('category_main') or land.get('category_sub') %}
+        {{ (land.get('category_main') or "نامشخص") ~ ((" / " ~ land.get('category_sub')) if land.get('category_sub') else "") }}
       {% else %}
-        {{ CATEGORY_MAP.get(land.category or '', 'نامشخص') }}
+        {{ CATEGORY_MAP.get(land.get('category') or '', 'نامشخص') }}
       {% endif %}
     </p>
 
     <p>💰 <strong>قیمت کل:</strong>
-      {% set _price_total = (land.price_total if land.price_total is not none else land.price) %}
       {% if _price_total is not none %}
         <span id="priceTotal">{{ "{:,}".format(_price_total|int).replace(",", "٫") }}</span> تومان
         <span id="priceWords" class="text-[11px] text-gray-500 ml-2"></span>
@@ -137,7 +139,8 @@
     </p>
 
     <p>📊 <strong>قیمت متری:</strong>
-      {% set _ppm = (land.price_per_meter if land.price_per_meter is not none else ( (_price_total|int)//(_sz|int) if (_price_total and _sz|int > 0) else None)) %}
+      {% set _ppm_raw = land.get('price_per_meter') %}
+      {% set _ppm = (_ppm_raw if _ppm_raw is not none else ( (_price_total|int)//(_sz|int) if (_price_total and (_sz|int) > 0) else None )) %}
       {% if _ppm is not none %}
         {{ "{:,}".format(_ppm|int).replace(",", "٫") }} تومان
       {% else %} نامشخص {% endif %}
@@ -146,11 +149,11 @@
 
   {# ---------------- امکانات ---------------- #}
   {% set _features = [] %}
-  {% if land.features %}
-    {% if land.features is string %}
-      {% set _features = [land.features] %}
-    {% elif land.features is iterable %}
-      {% set _features = land.features %}
+  {% if land.get('features') %}
+    {% if land.get('features') is string %}
+      {% set _features = [land.get('features')] %}
+    {% elif land.get('features') is iterable %}
+      {% set _features = land.get('features') %}
     {% endif %}
   {% endif %}
   {% if _features and _features|length > 0 %}
@@ -168,29 +171,29 @@
 
   {# ---------------- توضیحات ---------------- #}
   <div class="mt-6 whitespace-pre-line text-gray-700 leading-relaxed border-t pt-4 dark:text-gray-300 dark:border-slate-600">
-    {{ land.description or "توضیحاتی برای این آگهی ثبت نشده است." }}
+    {{ land.get('description') or "توضیحاتی برای این آگهی ثبت نشده است." }}
   </div>
 
   {# ---------------- دکمه‌های دسکتاپ ---------------- #}
   <div class="mt-8 hidden sm:flex flex-wrap gap-3">
-    {% if land.owner %}
-    <a href="tel:{{ land.owner }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
+    {% if land.get('owner') %}
+    <a href="tel:{{ land.get('owner') }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📞 تماس</a>
     {% endif %}
     <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-full shadow transition">📩 مشاوره</button>
     <button type="button" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm px-6 py-2 rounded-full shadow transition"
-            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">🔗 اشتراک</button>
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.get("code"), _external=True) }}', '{{ (land.get("title") or "آگهی ملک")|e }}')">🔗 اشتراک</button>
   </div>
 </div>
 
 {# ---------------- دکمه‌های موبایل (فوتر ثابت) ---------------- #}
 <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
   <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-md">
-    {% if land.owner %}
-    <a href="tel:{{ land.owner }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
+    {% if land.get('owner') %}
+    <a href="tel:{{ land.get('owner') }}" class="flex-1 text-center bg-green-600 hover:bg-green-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
     {% endif %}
     <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 مشاوره</button>
     <button type="button" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-sm py-2 rounded-full"
-            onclick="shareLand('{{ url_for('main.land_detail', code=land.code, _external=True) }}', '{{ (land.title or "آگهی ملک")|e }}')">🔗 اشتراک</button>
+            onclick="shareLand('{{ url_for('main.land_detail', code=land.get("code"), _external=True) }}', '{{ (land.get("title") or "آگهی ملک")|e }}')">🔗 اشتراک</button>
   </div>
 </div>
 
@@ -201,7 +204,7 @@
       <h3 class="text-base font-bold">درخواست مشاوره</h3>
       <button onclick="closePopup()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
     </div>
-    <form method="POST" action="{{ url_for('main.consult', code=land.code) }}" class="space-y-3">
+    <form method="POST" action="{{ url_for('main.consult', code=land.get('code')) }}" class="space-y-3">
       <div>
         <label class="text-xs text-gray-500">نام</label>
         <input name="name" class="w-full mt-1 rounded-lg border px-3 py-2 dark:bg-slate-900 dark:border-slate-600" required />
@@ -229,7 +232,7 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // ————— توابع کمکی نمایش عدد به حروف فارسی (تقریبی، هماهنگ با فرم) —————
+    // ————— توابع کمکی نمایشِ عدد به حروف فارسی (تقریبی، هماهنگ با فرم) —————
     (function(){
       const numfmt = new Intl.NumberFormat('fa-IR');
       const formatNumber = n => n ? numfmt.format(n) : '';
@@ -262,7 +265,7 @@
           const order  = (sw.dataset.order || '').split(',').map(s=>s.trim()).filter(Boolean);
           const cover  = parseInt(sw.dataset.cover ?? '-1', 10);
 
-          // ساخت map: id یا basename → index
+          // ساخت کلید: id یا basename → هم‌ترازی با order
           const keyOf = (item) => {
             if (typeof item === 'string') return item.split('/').pop();
             if (item && item.id) return String(item.id);
@@ -271,7 +274,7 @@
           };
           const keys = images.map(keyOf);
 
-          // اگر order معتبر بود، گره‌ها را به همان ترتیب بچین
+          // اعمال ترتیب دلخواه اگر طول‌ها برابر بود
           if (order.length && keys.length === nodes.length){
             const desired = [];
             order.forEach(k=>{
@@ -284,13 +287,10 @@
             }
           }
 
-          // اگر cover مشخص است، اسلاید کاور را اولویت بده (به ابتدای لیست)
-          if (!isNaN(cover) && cover >= 0 && cover < nodes.length){
-            const freshNodes = Array.from(wrapper.children);
-            const coverNode = freshNodes[cover];
-            if (coverNode){
-              wrapper.insertBefore(coverNode, wrapper.firstChild);
-            }
+          // اعمال کاور به ابتدای لیست
+          const freshNodes = Array.from(wrapper.children);
+          if (!isNaN(cover) && cover >= 0 && cover < freshNodes.length){
+            wrapper.insertBefore(freshNodes[cover], wrapper.firstChild);
           }
         }catch(e){ /* بی‌صدا */ }
 
@@ -334,11 +334,7 @@
 
     // ————— اشتراک‌گذاری/کپی لینک —————
     async function shareLand(url, title){
-      const data = {
-        title: title || document.title,
-        text: 'وینور، زمین‌های آینده‌دار.',
-        url
-      };
+      const data = { title: title || document.title, text: 'وینور، زمین‌های آینده‌دار.', url };
       try{
         if (navigator.share){ await navigator.share(data); return; }
         await navigator.clipboard.writeText(url);
@@ -354,9 +350,7 @@
       const code = btn.dataset.code || '';
       if(!code) { btn.style.display='none'; return; }
       const KEY = 'vinor:favs';
-      const read = () => {
-        try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; }
-      };
+      const read = () => { try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; } };
       const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr)); } catch{} };
       const paint = (active) => { btn.textContent = (active ? '★ در علاقه‌مندی' : '☆ علاقه‌مندی'); };
 
