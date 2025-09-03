@@ -1,0 +1,156 @@
+{# templates/admin/partials/ads_macros.html #}
+{% macro render_tabs(active) -%}
+  <div class="flex gap-4 mb-6 border-b pb-2 text-sm sm:text-base">
+    <a href="{{ url_for('admin.pending_lands') }}"
+       class="pb-2 -mb-[1px] border-b-2 transition
+              {{ 'text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold' if active=='pending'
+                 else 'text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent' }}">
+      در انتظار تأیید
+    </a>
+
+    <a href="{{ url_for('admin.approved_lands') }}"
+       class="pb-2 -mb-[1px] border-b-2 transition
+              {{ 'text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold' if active=='approved'
+                 else 'text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent' }}">
+      تأیید شده
+    </a>
+
+    <a href="{{ url_for('admin.rejected_lands') }}"
+       class="pb-2 -mb-[1px] border-b-2 transition
+              {{ 'text-vinor-700 border-vinor-700 dark:text-vinor-300 dark:border-vinor-300 font-bold' if active=='rejected'
+                 else 'text-gray-600 hover:text-vinor-700 dark:text-gray-300 dark:hover:text-vinor-300 border-transparent' }}">
+      رد شده / نیاز به اصلاح
+    </a>
+  </div>
+{%- endmacro %}
+
+
+{% macro render_table(lands, mode) -%}
+  {% set has_data = lands and lands|length > 0 %}
+  {% if has_data %}
+    <div class="overflow-x-auto rounded-xl shadow-card">
+      <table class="w-full text-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
+        <thead class="bg-gray-50 dark:bg-gray-700/60 text-xs sm:text-sm">
+          <tr class="text-gray-700 dark:text-gray-200">
+            <th scope="col" class="p-2 border">کد</th>
+            <th scope="col" class="p-2 border min-w-40">عنوان</th>
+            <th scope="col" class="p-2 border min-w-36">موقعیت</th>
+            <th scope="col" class="p-2 border">متراژ</th>
+            {% if mode=='pending' %}
+              <th scope="col" class="p-2 border min-w-32">تاریخ ثبت</th>
+            {% elif mode=='approved' %}
+              <th scope="col" class="p-2 border min-w-32">تاریخ تأیید</th>
+            {% elif mode=='rejected' %}
+              <th scope="col" class="p-2 border min-w-32">تاریخ رد/آخرین اصلاح</th>
+              <th scope="col" class="p-2 border min-w-64">علت رد</th>
+            {% endif %}
+            <th scope="col" class="p-2 border min-w-52">عملیات</th>
+          </tr>
+        </thead>
+
+        <tbody class="text-xs sm:text-sm">
+          {% for land in lands %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+              <td class="p-2 border">{{ land.code }}</td>
+              <td class="p-2 border">
+                <div class="flex items-center justify-center gap-2">
+                  <i class="fa-regular fa-file-lines hidden sm:inline"></i>
+                  <span class="line-clamp-1">{{ land.title }}</span>
+                </div>
+              </td>
+              <td class="p-2 border">{{ land.location }}</td>
+              <td class="p-2 border">{{ land.size }} متر</td>
+
+              {% if mode=='pending' %}
+                <td class="p-2 border">{{ land.created_at }}</td>
+              {% elif mode=='approved' %}
+                <td class="p-2 border">{{ land.approved_at or land.created_at }}</td>
+              {% elif mode=='rejected' %}
+                <td class="p-2 border">{{ land.rejected_at or land.updated_at or land.created_at }}</td>
+                <td class="p-2 border text-right">
+                  <div class="max-w-80 mx-auto text-justify leading-relaxed">
+                    {{ land.reject_reason or '—' }}
+                  </div>
+                </td>
+              {% endif %}
+
+              <td class="p-2 border">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+                  {% if mode=='pending' %}
+                    <form method="post" action="{{ url_for('admin.approve_land', code=land.code) }}" class="contents" x-data>
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» تأیید شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md">
+                        <i class="fa-solid fa-check"></i> تأیید
+                      </button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.reject_land', code=land.code) }}" class="contents" x-data>
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» رد شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-md">
+                        <i class="fa-solid fa-xmark"></i> رد
+                      </button>
+                    </form>
+
+                  {% elif mode=='approved' %}
+                    <a href="{{ url_for('admin.view_land', code=land.code) }}"
+                       class="inline-flex items-center gap-1 bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-md">
+                      <i class="fa-regular fa-eye"></i> مشاهده
+                    </a>
+                    <a href="{{ url_for('admin.edit_land', code=land.code) }}"
+                       class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-md">
+                      <i class="fa-regular fa-pen-to-square"></i> ویرایش
+                    </a>
+                    <form method="post" action="{{ url_for('admin.reject_land', code=land.code) }}" class="contents" x-data>
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» به «رد شده/نیاز به اصلاح» منتقل شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-md">
+                        <i class="fa-solid fa-xmark"></i> رد/نیاز به اصلاح
+                      </button>
+                    </form>
+
+                  {% elif mode=='rejected' %}
+                    <a href="{{ url_for('admin.view_land', code=land.code) }}"
+                       class="inline-flex items-center gap-1 bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-md">
+                      <i class="fa-regular fa-eye"></i> مشاهده
+                    </a>
+                    <a href="{{ url_for('admin.edit_land', code=land.code) }}"
+                       class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-md">
+                      <i class="fa-regular fa-pen-to-square"></i> ویرایش
+                    </a>
+                    <form method="post" action="{{ url_for('admin.approve_land', code=land.code) }}" class="contents" x-data>
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit"
+                              @click.prevent="if (confirm('آگهی «{{ land.title }}» تأیید شود؟')) $el.closest('form').submit()"
+                              class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md">
+                        <i class="fa-solid fa-check"></i> تأیید
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    {# پیام خالی بر اساس mode #}
+    {% if mode=='pending' %}
+      <div class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300/70 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100 p-4 rounded-xl shadow-card">
+        هیچ آگهی در انتظار تأیید وجود ندارد.
+      </div>
+    {% elif mode=='approved' %}
+      <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-300/70 dark:border-blue-700 text-blue-900 dark:text-blue-100 p-4 rounded-xl shadow-card">
+        هنوز آگهی تأیید‌شده‌ای ثبت نشده است.
+      </div>
+    {% elif mode=='rejected' %}
+      <div class="bg-rose-50 dark:bg-rose-900/30 border border-rose-300/70 dark:border-rose-700 text-rose-900 dark:text-rose-100 p-4 rounded-xl shadow-card">
+        موردی در وضعیت رد شده/نیاز به اصلاح وجود ندارد.
+      </div>
+    {% endif %}
+  {% endif %}
+{%- endmacro %}

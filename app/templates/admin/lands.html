@@ -3,89 +3,190 @@
 {% block content %}
 <div class="max-w-6xl mx-auto p-4 sm:p-6">
 
-  <!-- عنوان صفحه -->
-  <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 mb-6 flex items-center gap-2">
-    <i class="fas fa-layer-group"></i>
-    لیست آگهی‌های ثبت‌شده
-  </h1>
+  <!-- عنوان صفحه + میانبر ثبت -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-300 flex items-center gap-2">
+      <i class="fas fa-layer-group"></i>
+      لیست آگهی‌های ثبت‌شده
+    </h1>
+    <a href="{{ url_for('admin.add_land') }}"
+       class="inline-flex items-center gap-2 bg-vinor-600 hover:bg-vinor-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2 rounded-xl shadow transition">
+      <i class="fas fa-plus-circle"></i>
+      ثبت ملک جدید
+    </a>
+  </div>
 
   <!-- پیام‌ها -->
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
-      {% for category, msg in messages %}
-        <div class="mb-4 text-sm rounded-lg px-3 py-2
-                    {% if category in ['success'] %}bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-200
-                    {% elif category in ['warning'] %}bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-200
-                    {% elif category in ['info'] %}bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200
-                    {% else %}bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200{% endif %}">
-          {{ msg }}
-        </div>
-      {% endfor %}
+      <div class="space-y-3 mb-5">
+        {% for category, msg in messages %}
+          <div class="text-sm rounded-lg px-3 py-2 shadow
+                      {% if category in ['success'] %}bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200
+                      {% elif category in ['warning'] %}bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200
+                      {% elif category in ['info'] %}bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200
+                      {% else %}bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200{% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
   {% endwith %}
 
-  <!-- لیست آگهی‌ها -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-    {% for land in lands %}
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow p-4 flex flex-col justify-between">
-
-        <!-- تصویر ملک -->
-        {% set cover = (land.images[0] if land.images and land.images|length > 0 else None) %}
-        {% if cover %}
-          <img src="{{ url_for('static', filename=cover) }}"
-               alt="تصویر ملک"
-               class="w-full h-40 object-cover rounded-xl mb-3">
-        {% else %}
-          <div class="w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-xl mb-3 flex items-center justify-center text-gray-400">
-            بدون تصویر
-          </div>
+  <!-- کارت‌های آگهی -->
+  {% if lands and lands|length > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {% for land in lands %}
+        {# نرمال‌سازی تصویر کاور: رشته/آرایه/URL مطلق #}
+        {% set _imgs = [] %}
+        {% if land.images %}
+          {% if land.images is string %}
+            {% set _imgs = [land.images] %}
+          {% elif land.images is iterable %}
+            {% set _imgs = land.images %}
+          {% endif %}
         {% endif %}
+        {% set cover = (_imgs[0] if _imgs and _imgs|length > 0 else None) %}
 
-        <!-- اطلاعات ملک -->
-        <div>
-          <h2 class="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">
-            {{ land.title or 'بدون عنوان' }}
-          </h2>
-          <p class="text-sm mt-1 text-gray-600 dark:text-gray-300">📏 متراژ: {{ land.size }} متر</p>
-          <p class="text-sm text-gray-600 dark:text-gray-300">📍 موقعیت: {{ land.location }}</p>
-          {% if land.code %}
-            <p class="text-xs mt-1 text-gray-500 dark:text-gray-400">🆔 کد ملک: {{ land.code }}</p>
+        <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col">
+          <!-- تصویر ملک -->
+          {% if cover %}
+            {% if '://' in cover %}
+              <img src="{{ cover }}" alt="تصویر {{ land.title or 'ملک' }}"
+                   loading="lazy" class="w-full h-40 object-cover rounded-xl mb-3">
+            {% else %}
+              <img src="{{ url_for('static', filename=cover) }}" alt="تصویر {{ land.title or 'ملک' }}"
+                   loading="lazy" class="w-full h-40 object-cover rounded-xl mb-3">
+            {% endif %}
+          {% else %}
+            <div class="w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-xl mb-3 flex items-center justify-center text-gray-400">
+              بدون تصویر
+            </div>
           {% endif %}
-          {% if land.description %}
-            <p class="text-sm mt-2 text-gray-700 dark:text-gray-300 line-clamp-3">📝 {{ land.description }}</p>
-          {% endif %}
-        </div>
 
-        <!-- دکمه‌های عملیات -->
-        <div class="mt-4 flex gap-2">
-          <a href="{{ url_for('admin.edit_land', land_id=loop.index0) }}"
-             class="flex-1 inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition">
-            <i class="fas fa-edit"></i>
-            ویرایش
+          <!-- هدر کارت: عنوان + وضعیت -->
+          <header class="flex items-start justify-between gap-3">
+            <h2 class="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100 line-clamp-2">
+              {{ land.title or 'بدون عنوان' }}
+            </h2>
+            {% if land.status %}
+              {% set _st = land.status|string %}
+              {% if _st == 'approved' %}
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">تأیید شده</span>
+              {% elif _st == 'rejected' %}
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200">رد شده</span>
+              {% else %}
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">در انتظار</span>
+              {% endif %}
+            {% endif %}
+          </header>
+
+          <!-- اطلاعات -->
+          <div class="mt-2 space-y-1.5 text-sm">
+            <p class="text-gray-600 dark:text-gray-300">📏 متراژ: {{ land.size }} متر</p>
+            <p class="text-gray-600 dark:text-gray-300">📍 موقعیت: {{ land.location }}</p>
+            {% if land.code %}
+              <p class="text-xs text-gray-500 dark:text-gray-400">🆔 کد ملک: {{ land.code }}</p>
+            {% endif %}
+            {% if land.description %}
+              <p class="text-gray-700 dark:text-gray-300 line-clamp-3 leading-6">📝 {{ land.description }}</p>
+            {% endif %}
+          </div>
+
+          <!-- اکشن‌ها -->
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            {% if land.code %}
+              <a href="{{ url_for('admin.view_land', code=land.code) }}"
+                 class="inline-flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm py-2 rounded-lg transition">
+                <i class="fa-regular fa-eye"></i>
+                مشاهده
+              </a>
+              <a href="{{ url_for('admin.edit_land', code=land.code) }}"
+                 class="inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition">
+                <i class="fas fa-edit"></i>
+                ویرایش
+              </a>
+              <form method="post" action="{{ url_for('admin.delete_land', code=land.code) }}" class="col-span-2"
+                    onsubmit="return confirm('آیا از حذف آگهی «{{ land.title or 'بدون عنوان' }}» مطمئن هستید؟')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition">
+                  <i class="fas fa-trash"></i>
+                  حذف
+                </button>
+              </form>
+            {% else %}
+              {# fallback بر اساس index در صورت نبودن code #}
+              <a href="{{ url_for('admin.view_land', land_id=loop.index0) }}"
+                 class="inline-flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm py-2 rounded-lg transition">
+                <i class="fa-regular fa-eye"></i>
+                مشاهده
+              </a>
+              <a href="{{ url_for('admin.edit_land', land_id=loop.index0) }}"
+                 class="inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition">
+                <i class="fas fa-edit"></i>
+                ویرایش
+              </a>
+              <form method="post" action="{{ url_for('admin.delete_land', land_id=loop.index0) }}" class="col-span-2"
+                    onsubmit="return confirm('آیا از حذف آگهی «{{ land.title or 'بدون عنوان' }}» مطمئن هستید؟')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition">
+                  <i class="fas fa-trash"></i>
+                  حذف
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {# صفحه‌بندی اختیاری #}
+    {% if pagination and pagination.pages > 1 %}
+      <nav class="mt-8 flex items-center justify-center gap-1 text-sm" aria-label="صفحه‌بندی">
+        {% if pagination.page > 1 %}
+          <a href="{{ url_for('admin.lands', page=pagination.page-1) }}"
+             class="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+            قبلی
           </a>
-
-          <!-- حذف: POST + CSRF -->
-          <form method="post" action="{{ url_for('admin.delete_land', land_id=loop.index0) }}" class="flex-1"
-                onsubmit="return confirm('آیا از حذف این آگهی مطمئن هستید؟')">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit"
-                    class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition">
-              <i class="fas fa-trash"></i>
-              حذف
-            </button>
-          </form>
-        </div>
+        {% endif %}
+        {% for p in range(1, pagination.pages + 1) %}
+          <a href="{{ url_for('admin.lands', page=p) }}"
+             class="px-3 py-2 rounded-lg border
+                    {% if p == pagination.page %}
+                      bg-vinor-600 text-white border-vinor-600
+                    {% else %}
+                      bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700
+                    {% endif %}">
+            {{ p }}
+          </a>
+        {% endfor %}
+        {% if pagination.page < pagination.pages %}
+          <a href="{{ url_for('admin.lands', page=pagination.page+1) }}"
+             class="px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+            بعدی
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <!-- بدون آگهی -->
+    <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-300/70 dark:border-blue-700 text-blue-900 dark:text-blue-100 p-6 rounded-2xl text-center shadow">
+      هنوز آگهی‌ای ثبت نشده است.
+      <div class="mt-4">
+        <a href="{{ url_for('admin.add_land') }}"
+           class="inline-flex items-center gap-2 bg-vinor-600 hover:bg-vinor-700 text-white px-4 py-2 rounded-xl transition">
+          <i class="fas fa-plus-circle"></i>
+          ثبت اولین آگهی
+        </a>
       </div>
-    {% else %}
-      <p class="text-center text-gray-500 dark:text-gray-400 col-span-1 md:col-span-2 lg:col-span-3">
-        هیچ آگهی‌ای ثبت نشده است.
-      </p>
-    {% endfor %}
-  </div>
+    </div>
+  {% endif %}
 
   <!-- بازگشت -->
   <div class="mt-8 text-center">
-    <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 text-vinor-700 dark:text-vinor-600 hover:underline">
+    <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 text-vinor-700 dark:text-vinor-300 hover:underline">
       <i class="fas fa-arrow-right"></i>
       بازگشت به داشبورد
     </a>

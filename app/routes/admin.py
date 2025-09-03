@@ -1,28 +1,49 @@
 # app/admin/routes.py
 # -*- coding: utf-8 -*-
-from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, flash
-from functools import wraps
+from __future__ import annotations
+
 import os
 import json
-from werkzeug.utils import secure_filename
 from datetime import datetime
+from functools import wraps
+from typing import List, Dict, Any, Optional
+
+from flask import (
+    Blueprint, render_template, request, redirect, url_for,
+    session, current_app, flash, abort
+)
+from werkzeug.utils import secure_filename
+
+# اختیاری: ارسال OTP برای توسعه‌های بعدی
 import requests
 
-# اگر CSRFProtect را در app factory فعال کرده‌اید، می‌توانیم موقتاً فقط روی روت لاگین غیرفعالش کنیم
+# اگر CSRFProtect در app factory فعال است، فقط روی روت لاگین موقتاً معاف می‌کنیم
 try:
     from flask_wtf.csrf import csrf  # LocalProxy
 except Exception:
-    csrf = None  # اگر Flask-WTF موجود نبود، معاف‌سازی CSRF را انجام نمی‌دهیم
+    csrf = None
 
-admin_bp = Blueprint('admin', __name__)
+# -----------------------------------------------------------------------------
+# Blueprint
+# -----------------------------------------------------------------------------
+# نام blueprint = 'admin' تا url_for('admin.*') صحیح باشد؛
+# متغیر در کد: admin_bp (مطابق ساختار پروژه).
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-# ====== پیکربندی ساده ادمین (برای شروع) ======
-# بعد از اولین ورود، حتماً رمز را تغییر دهید یا به سیستم کاربر/نقش مهاجرت کنید.
+# -----------------------------------------------------------------------------
+# پیکربندی ساده ادمین (برای شروع)
+# -----------------------------------------------------------------------------
+# نکته امنیتی: پس از استقرار، این‌ها را از config/DB بخوانید یا به سیستم کاربران/نقش‌ها مهاجرت کنید.
 ADMIN_USERNAME = 'masood1528014@gmail.com'
 ADMIN_PASSWORD = 'm430128185'
 
-# ---------- ابزار پیامک OTP (برای توسعه‌های بعدی آماده است) ----------
-def send_otp_sms(phone, code):
+# پیش‌فرض صفحه‌بندی برای گرید 3 ستونه
+PER_PAGE_DEFAULT = 9
+
+# -----------------------------------------------------------------------------
+# ابزار پیامک OTP (رزرو برای آینده)
+# -----------------------------------------------------------------------------
+def send_otp_sms(phone: str, code: str):
     url = "https://api.sms.ir/v1/send/verify"
     headers = {
         "Content-Type": "application/json",
@@ -34,50 +55,62 @@ def send_otp_sms(phone, code):
         "templateId": 753422,
         "parameters": [{"name": "CODE", "value": str(code)}]
     }
-    response = requests.post(url, json=payload, headers=headers, timeout=15)
     try:
-        body = response.json()
-    except Exception:
-        body = {"raw": response.text}
-    return response.status_code, body
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        body = response.json() if response.headers.get('Content-Type', '').startswith('application/json') else {"raw": response.text}
+        return response.status_code, body
+    except Exception as e:
+        return 0, {"error": str(e)}
 
-# ---------- توابع کمکی JSON ----------
-def load_json(path):
-    if os.path.exists(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return []
-    return []
-
-def save_json(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-# ---------- مسیرها با fallback ایمن روی instance/data ----------
-def _settings_path():
-    # اگر در app.config ست شده باشد همان را استفاده کن؛
-    # در غیر اینصورت روی instance/data/settings.json ذخیره می‌کند.
+# -----------------------------------------------------------------------------
+# مسیرهای فایل‌ها (instance/data با fallback)
+# -----------------------------------------------------------------------------
+def _settings_path() -> str:
     return current_app.config.get(
         'SETTINGS_FILE',
         os.path.join(current_app.instance_path, 'data', 'settings.json')
     )
 
-def _lands_path():
-    return current_app.config.get(
+def _lands_path() -> str:
+    # مسیر اصلی: instance/data/lands.json
+    primary = current_app.config.get(
         "LANDS_FILE",
         os.path.join(current_app.instance_path, "data", "lands.json")
     )
+    if os.path.exists(primary):
+        return primary
+    # fallback: مسیر قدیمی داخل app/data/lands.json
+    fallback = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "lands.json")
+    return fallback
 
-def _consults_path():
+def _consults_path() -> str:
     return current_app.config.get(
         "CONSULTS_FILE",
         os.path.join(current_app.instance_path, "data", "consults.json")
     )
 
-def get_settings():
+# -----------------------------------------------------------------------------
+# توابع کمکی JSON
+# -----------------------------------------------------------------------------
+def load_json(path: str):
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                return data if isinstance(data, (list, dict)) else []
+            except json.JSONDecodeError:
+                return []
+    return []
+
+def save_json(path: str, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# -----------------------------------------------------------------------------
+# تنظیمات سیستم
+# -----------------------------------------------------------------------------
+def get_settings() -> Dict[str, Any]:
     settings_file = _settings_path()
     if os.path.exists(settings_file):
         with open(settings_file, 'r', encoding='utf-8') as f:
@@ -87,7 +120,40 @@ def get_settings():
                 pass
     return {'approval_method': 'manual'}
 
-# ---------- دکوراتور لاگین ----------
+# -----------------------------------------------------------------------------
+# کمکی‌های لیست آگهی
+# -----------------------------------------------------------------------------
+def counts_by_status(lands: List[Dict[str, Any]]):
+    pending = sum(1 for l in lands if str(l.get("status", "pending")) == "pending")
+    approved = sum(1 for l in lands if str(l.get("status")) == "approved")
+    rejected = sum(1 for l in lands if str(l.get("status")) == "rejected")
+    return pending, approved, rejected
+
+def paginate(items: List[Any], page: int, per_page: int):
+    total = len(items)
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, pages))
+    start = (page - 1) * per_page
+    end = start + per_page
+    return {
+        "items": items[start:end],
+        "page": page,
+        "pages": pages,
+        "per_page": per_page,
+        "total": total,
+    }
+
+def find_by_code(lands: List[Dict[str, Any]], code: str) -> Optional[Dict[str, Any]]:
+    return next((l for l in lands if str(l.get("code")) == str(code)), None)
+
+def find_by_index(lands: List[Dict[str, Any]], idx: int) -> Optional[Dict[str, Any]]:
+    if 0 <= idx < len(lands):
+        return lands[idx]
+    return None
+
+# -----------------------------------------------------------------------------
+# دکوراتور لاگین
+# -----------------------------------------------------------------------------
 def login_required(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
@@ -96,15 +162,16 @@ def login_required(view):
         return view(*args, **kwargs)
     return wrapper
 
-# ---------- احراز هویت ----------
+# -----------------------------------------------------------------------------
+# احراز هویت
+# -----------------------------------------------------------------------------
 @admin_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     """
     نکته امنیتی:
     - در تمپلیت admin/login.html حتماً CSRF token بگذارید:
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    - تا قبل از اضافه شدن توکن در فرم، می‌توانید موقتاً این روت را CSRF-exempt کنید
-      (چند خط پایین‌تر انجام شده). بعد از اصلاح تمپلیت، آن را بردارید.
+    - تا قبل از اضافه شدن توکن در فرم، می‌توانید موقتاً این روت را CSRF-exempt کنید.
     """
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -116,8 +183,7 @@ def login():
         flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
     return render_template('admin/login.html')
 
-# اگر CSRF فعال است، فقط همین روت لاگین را موقتاً معاف کن (برای عبور از خطای CSRF در مرحله تست)
-# مهم: پس از افزودن توکن CSRF در فرم لاگین، این خط را کامنت/حذف کنید.
+# معافیت موقت CSRF فقط برای لاگین (پس از افزودن توکن، این را حذف کنید)
 if csrf is not None:
     admin_bp.view_functions['login'] = csrf.exempt(admin_bp.view_functions['login'])
 
@@ -127,22 +193,41 @@ def logout():
     flash('خروج انجام شد.', 'info')
     return redirect(url_for('admin.login'))
 
-# ---------- داشبورد ----------
-@admin_bp.route('/')
+# -----------------------------------------------------------------------------
+# داشبورد و صفحات کلی
+# -----------------------------------------------------------------------------
+@admin_bp.route('/', endpoint='dashboard')
 @login_required
 def dashboard():
     lands = load_json(_lands_path())
     consults = load_json(_consults_path())
-    return render_template('admin/dashboard.html',
-                           lands_count=len(lands),
-                           consults_count=len(consults))
+    pending_count, approved_count, rejected_count = counts_by_status(lands)
+    return render_template(
+        'admin/dashboard.html',
+        lands_count=len(lands),
+        consults_count=len(consults),
+        pending_count=pending_count,
+        approved_count=approved_count,
+        rejected_count=rejected_count
+    )
 
-# ---------- آگهی‌ها ----------
-@admin_bp.route('/lands')
+@admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
-def lands():
+def settings():
+    settings_file = _settings_path()
+
+    if request.method == 'POST':
+        approval_method = request.form.get('approval_method', 'manual')
+        save_json(settings_file, {'approval_method': approval_method})
+        flash('تنظیمات با موفقیت ذخیره شد.', 'success')
+        return redirect(url_for('admin.settings'))
+
     lands = load_json(_lands_path())
-    return render_template('admin/lands.html', lands=lands)
+    p, a, r = counts_by_status(lands)
+    settings_data = get_settings()
+    return render_template('admin/settings.html',
+                           settings=settings_data,
+                           pending_count=p, approved_count=a, rejected_count=r)
 
 @admin_bp.route('/consults')
 @login_required
@@ -150,83 +235,227 @@ def consults():
     consults = load_json(_consults_path())
     lands = load_json(_lands_path())
     land_map = {str(l.get('code')): l for l in lands}
-    for c in consults:
+    for c in consults if isinstance(consults, list) else []:
         c['land'] = land_map.get(str(c.get('code')))
-    return render_template('admin/consults.html', consults=consults)
+    p, a, r = counts_by_status(lands)
+    return render_template('admin/consults.html',
+                           consults=consults if isinstance(consults, list) else [],
+                           pending_count=p, approved_count=a, rejected_count=r)
 
-@admin_bp.route('/lands/add', methods=['GET', 'POST'])
+# -----------------------------------------------------------------------------
+# فهرست آگهی‌ها (با صفحه‌بندی)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/lands')
+@login_required
+def lands():
+    lands = load_json(_lands_path())
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
+    pagination = paginate(lands if isinstance(lands, list) else [], page, per_page)
+    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
+    return render_template(
+        'admin/lands.html',
+        lands=pagination["items"],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]},
+        pending_count=p, approved_count=a, rejected_count=r
+    )
+
+@admin_bp.route('/pending-lands')
+@login_required
+def pending_lands():
+    lands = load_json(_lands_path())
+    subset = [l for l in lands if str(l.get("status", "pending")) == "pending"]
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
+    pagination = paginate(subset, page, per_page)
+    p, a, r = counts_by_status(lands)
+    return render_template(
+        'admin/pending_lands.html',
+        lands=pagination["items"],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]},
+        pending_count=p, approved_count=a, rejected_count=r
+    )
+
+@admin_bp.route('/approved-lands')
+@login_required
+def approved_lands():
+    lands = load_json(_lands_path())
+    subset = [l for l in lands if str(l.get("status")) == "approved"]
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
+    pagination = paginate(subset, page, per_page)
+    p, a, r = counts_by_status(lands)
+    return render_template(
+        'admin/approved_lands.html',
+        lands=pagination["items"],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]},
+        pending_count=p, approved_count=a, rejected_count=r
+    )
+
+@admin_bp.route('/rejected-lands')
+@login_required
+def rejected_lands():
+    lands = load_json(_lands_path())
+    subset = [l for l in lands if str(l.get("status")) == "rejected"]
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
+    pagination = paginate(subset, page, per_page)
+    p, a, r = counts_by_status(lands)
+    return render_template(
+        'admin/rejected_lands.html',
+        lands=pagination["items"],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]},
+        pending_count=p, approved_count=a, rejected_count=r
+    )
+
+# -----------------------------------------------------------------------------
+# مشاهده آگهی
+# -----------------------------------------------------------------------------
+@admin_bp.route('/land/<string:code>')
+@login_required
+def view_land(code):
+    lands = load_json(_lands_path())
+    land = find_by_code(lands, code)
+    if not land:
+        abort(404)
+    p, a, r = counts_by_status(lands)
+    return render_template('admin/land_view.html', land=land,
+                           pending_count=p, approved_count=a, rejected_count=r)
+
+@admin_bp.route('/land/index/<int:land_id>')
+@login_required
+def view_land_by_index(land_id):
+    lands = load_json(_lands_path())
+    land = find_by_index(lands, land_id)
+    if not land:
+        abort(404)
+    p, a, r = counts_by_status(lands)
+    return render_template('admin/land_view.html', land=land,
+                           pending_count=p, approved_count=a, rejected_count=r)
+
+# -----------------------------------------------------------------------------
+# ثبت/ویرایش/حذف آگهی (پشتیبانی همزمان از آپلود فایل و ورودی متنی تصاویر)
+# -----------------------------------------------------------------------------
+def _next_numeric_code(lands: List[Dict[str, Any]]) -> str:
+    existing_codes = [
+        int(l['code']) for l in lands
+        if isinstance(l, dict) and 'code' in l and str(l['code']).isdigit()
+    ]
+    return str(max(existing_codes) + 1) if existing_codes else '100'
+
+def _normalize_images_from_form(form, files) -> List[str]:
+    """
+    پذیرش هر دو ورودی:
+    - images[] متنی (URL/مسیر)
+    - images فایل
+    ذخیره فایل‌ها در static/uploads و برگرداندن مسیر نسبی مثل 'uploads/filename.jpg'
+    """
+    image_urls: List[str] = []
+
+    # متنی
+    text_list = form.getlist('images') or []
+    for t in text_list:
+        t = (t or '').strip()
+        if t:
+            image_urls.append(t)
+
+    # فایل
+    upload_files = files.getlist('images')
+    if upload_files:
+        upload_folder = os.path.join(current_app.static_folder, 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        for f in upload_files:
+            if f and f.filename:
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{f.filename}")
+                f.save(os.path.join(upload_folder, filename))
+                image_urls.append(f'uploads/{filename}')
+
+    return image_urls
+
+@admin_bp.route('/add-land', methods=['GET', 'POST'])
 @login_required
 def add_land():
+    lands = load_json(_lands_path())
+    if not isinstance(lands, list):
+        lands = []
+
     if request.method == 'POST':
         form = request.form
-        images = request.files.getlist('images')
 
         settings = get_settings()
         approval_method = settings.get('approval_method', 'manual')
         status = 'approved' if approval_method == 'auto' else 'pending'
 
-        lands = load_json(_lands_path())
-        existing_codes = [int(l['code']) for l in lands if 'code' in l and str(l['code']).isdigit()]
-        new_code = str(max(existing_codes) + 1) if existing_codes else '100'
+        new_code = form.get("code") or _next_numeric_code(lands)
+        images = _normalize_images_from_form(request.form, request.files)
 
-        # مسیر آپلود
-        upload_folder = os.path.join(current_app.static_folder, 'uploads')
-        os.makedirs(upload_folder, exist_ok=True)
-
-        image_urls = []
-        for image in images:
-            if image and image.filename:
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{image.filename}")
-                image.save(os.path.join(upload_folder, filename))
-                image_urls.append(f"uploads/{filename}")
-
-        lands.append({
-            'title': form.get('title', '').strip(),
+        new_land = {
+            'code': str(new_code),
+            'title': form.get('title', '').strip() or 'بدون عنوان',
             'size': form.get('size', '').strip(),
             'location': form.get('location', '').strip(),
-            'code': new_code,
             'category': form.get('category', '').strip(),
             'document_type': form.get('document_type', '').strip(),
             'description': form.get('description', '').strip(),
             'features': form.getlist('features'),
             'price_total': form.get('price_total', '').strip(),
             'price_per_meter': form.get('price_per_meter', '').strip(),
-            'images': image_urls,
+            'images': images,
             'approval_method': approval_method,
             'status': status,
             'created_at': datetime.now().strftime('%Y-%m-%d')
-        })
+        }
 
+        lands.append(new_land)
         save_json(_lands_path(), lands)
         flash(f'آگهی با کد {new_code} با موفقیت ثبت شد.', 'success')
         return redirect(url_for('admin.lands'))
 
-    return render_template('admin/add-land.html')
+    # شمارش وضعیت‌ها برای هدر صفحه
+    p, a, r = counts_by_status(lands)
+    return render_template('admin/add_land.html',
+                           pending_count=p, approved_count=a, rejected_count=r)
 
+# ویرایش – سازگاری با هر دو الگو: querystring code/land_id و مسیر <int:land_id>
+@admin_bp.route('/edit-land', methods=['GET', 'POST'])
 @admin_bp.route('/edit-land/<int:land_id>', methods=['GET', 'POST'])
 @login_required
-def edit_land(land_id):
+def edit_land(land_id: Optional[int] = None):
     lands = load_json(_lands_path())
-    if land_id < 0 or land_id >= len(lands):
+    if not isinstance(lands, list):
+        lands = []
+
+    code = request.args.get("code") or request.form.get("code")
+    land = None
+
+    if code:
+        land = find_by_code(lands, code)
+        land_index = lands.index(land) if land in lands else None
+    elif land_id is not None:
+        land = find_by_index(lands, land_id)
+        land_index = land_id
+    else:
+        land_index = None
+
+    if not land or land_index is None:
         flash('آگهی مورد نظر پیدا نشد.', 'warning')
         return redirect(url_for('admin.lands'))
 
-    land = lands[land_id]
-
     if request.method == 'POST':
         form = request.form
+        # فیلدها
         land.update({
-            'title': form.get('title', '').strip(),
-            'size': form.get('size', '').strip(),
-            'location': form.get('location', '').strip(),
-            'code': form.get('code', str(land.get('code', ''))).strip(),
-            'category': form.get('category', '').strip(),
-            'document_type': form.get('document_type', '').strip(),
-            'description': form.get('description', '').strip(),
-            'features': form.getlist('features'),
-            'price_total': form.get('price_total', '').strip(),
-            'price_per_meter': form.get('price_per_meter', '').strip(),
-            'approval_method': form.get('approval_method', land.get('approval_method', 'manual'))
+            'title': form.get('title', '').strip() or land.get('title', ''),
+            'size': form.get('size', '').strip() or land.get('size', ''),
+            'location': form.get('location', '').strip() or land.get('location', ''),
+            'code': str(form.get('code', land.get('code', ''))).strip() or land.get('code', ''),
+            'category': form.get('category', '').strip() or land.get('category', ''),
+            'document_type': form.get('document_type', '').strip() or land.get('document_type', ''),
+            'description': form.get('description', '').strip() or land.get('description', ''),
+            'features': form.getlist('features') or land.get('features', []),
+            'price_total': form.get('price_total', '').strip() or land.get('price_total', ''),
+            'price_per_meter': form.get('price_per_meter', '').strip() or land.get('price_per_meter', ''),
+            'status': form.get('status', land.get('status', 'pending'))
         })
 
         # حذف همه تصاویر (اختیاری)
@@ -240,31 +469,45 @@ def edit_land(land_id):
                         pass
             land['images'] = []
 
-        # آپلود تصاویر جدید
-        new_images = request.files.getlist('images')
-        upload_folder = os.path.join(current_app.static_folder, 'uploads')
-        os.makedirs(upload_folder, exist_ok=True)
-        for image in new_images:
-            if image and image.filename:
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{image.filename}")
-                image.save(os.path.join(upload_folder, filename))
-                land.setdefault('images', []).append(f'uploads/{filename}')
+        # افزودن تصاویر جدید (متنی/فایل)
+        new_images = _normalize_images_from_form(request.form, request.files)
+        if new_images:
+            land.setdefault('images', []).extend(new_images)
 
         save_json(_lands_path(), lands)
-        flash('آگهی با موفقیت ویرایش شد.', 'success')
+        flash('آگهی ویرایش شد.', 'success')
         return redirect(url_for('admin.lands'))
 
-    return render_template('admin/edit-land.html', land=land, land_id=land_id)
+    p, a, r = counts_by_status(lands)
+    return render_template('admin/edit_land.html', land=land, land_id=land_index,
+                           pending_count=p, approved_count=a, rejected_count=r)
 
+# حذف – سازگاری با هر دو الگو: querystring/route
+@admin_bp.route('/delete-land', methods=['POST'])
 @admin_bp.route('/delete-land/<int:land_id>', methods=['POST'])
 @login_required
-def delete_land(land_id):
+def delete_land(land_id: Optional[int] = None):
     lands = load_json(_lands_path())
-    if land_id < 0 or land_id >= len(lands):
-        flash('آگهی مورد نظر پیدا نشد.', 'warning')
-        return redirect(url_for('admin.lands'))
+    if not isinstance(lands, list):
+        lands = []
 
-    land = lands.pop(land_id)
+    code = request.args.get("code") or request.form.get("code")
+    idx_to_delete = None
+
+    if code:
+        for i, l in enumerate(lands):
+            if str(l.get("code")) == str(code):
+                idx_to_delete = i
+                break
+    elif land_id is not None:
+        if 0 <= land_id < len(lands):
+            idx_to_delete = land_id
+
+    if idx_to_delete is None:
+        abort(404)
+
+    land = lands.pop(idx_to_delete)
+    # حذف فایل‌های تصویر روی دیسک
     for img in land.get('images', []):
         path = os.path.join(current_app.static_folder, img)
         if os.path.exists(path):
@@ -277,68 +520,38 @@ def delete_land(land_id):
     flash('آگهی با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.lands'))
 
-# ---------- وضعیت‌ها ----------
-@admin_bp.route('/pending-lands')
-@login_required
-def pending_lands():
-    lands = load_json(_lands_path())
-    return render_template('admin/pending-lands.html',
-                           lands=[l for l in lands if l.get('status') == 'pending'])
-
-@admin_bp.route('/approved-lands')
-@login_required
-def approved_lands():
-    lands = load_json(_lands_path())
-    return render_template('admin/pending-lands.html',
-                           lands=[l for l in lands if l.get('status') == 'approved'])
-
-@admin_bp.route('/rejected-lands')
-@login_required
-def rejected_lands():
-    lands = load_json(_lands_path())
-    return render_template('admin/pending-lands.html',
-                           lands=[l for l in lands if l.get('status') == 'rejected'])
-
-# ---------- تایید و رد ----------
-@admin_bp.route('/approve-land/<code>', methods=['POST'])
+# -----------------------------------------------------------------------------
+# تغییر وضعیت: تأیید/رد (سازگار با هر دو نام‌گذاری URL)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/approve/<string:code>', methods=['POST'])
+@admin_bp.route('/approve-land/<string:code>', methods=['POST'])
 @login_required
 def approve_land(code):
     lands = load_json(_lands_path())
-    updated = False
-    for land in lands:
-        if str(land.get('code')) == str(code):
-            land['status'] = 'approved'
-            updated = True
-            break
+    land = find_by_code(lands, code)
+    if not land:
+        flash('آگهی یافت نشد.', 'warning')
+        return redirect(request.referrer or url_for('admin.pending_lands'))
+    land['status'] = 'approved'
     save_json(_lands_path(), lands)
-    flash('آگهی تأیید شد.' if updated else 'آگهی یافت نشد.', 'success' if updated else 'warning')
-    return redirect(url_for('admin.pending_lands'))
+    flash('آگهی تأیید شد.', 'success')
+    return redirect(request.referrer or url_for('admin.approved_lands'))
 
-@admin_bp.route('/reject-land/<code>', methods=['POST'])
+@admin_bp.route('/reject/<string:code>', methods=['POST'])
+@admin_bp.route('/reject-land/<string:code>', methods=['POST'])
 @login_required
 def reject_land(code):
     lands = load_json(_lands_path())
-    updated = False
-    for land in lands:
-        if str(land.get('code')) == str(code):
-            land['status'] = 'rejected'
-            updated = True
-            break
+    land = find_by_code(lands, code)
+    if not land:
+        flash('آگهی یافت نشد.', 'warning')
+        return redirect(request.referrer or url_for('admin.pending_lands'))
+
+    land['status'] = 'rejected'
+    reason = request.form.get("reject_reason")
+    if reason:
+        land["reject_reason"] = reason
+
     save_json(_lands_path(), lands)
-    flash('آگهی رد شد.' if updated else 'آگهی یافت نشد.', 'info' if updated else 'warning')
-    return redirect(url_for('admin.pending_lands'))
-
-# ---------- تنظیمات ----------
-@admin_bp.route('/settings', methods=['GET', 'POST'])
-@login_required
-def settings():
-    settings_file = _settings_path()
-
-    if request.method == 'POST':
-        approval_method = request.form.get('approval_method', 'manual')
-        save_json(settings_file, {'approval_method': approval_method})
-        flash('تنظیمات با موفقیت ذخیره شد.', 'success')
-        return redirect(url_for('admin.settings'))
-
-    settings_data = get_settings()
-    return render_template('admin/settings.html', settings=settings_data)
+    flash('آگهی رد شد / نیاز به اصلاح دارد.', 'info')
+    return redirect(request.referrer or url_for('admin.rejected_lands'))
