@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import List, Dict, Any, Optional
 
@@ -89,6 +89,10 @@ def _consults_path() -> str:
         os.path.join(current_app.instance_path, "data", "consults.json")
     )
 
+# ریشه آپلود تصاویر (static/uploads)
+def _uploads_root() -> str:
+    return os.path.join(current_app.static_folder, 'uploads')
+
 # -----------------------------------------------------------------------------
 # توابع کمکی JSON
 # -----------------------------------------------------------------------------
@@ -110,15 +114,53 @@ def save_json(path: str, data):
 # -----------------------------------------------------------------------------
 # تنظیمات سیستم
 # -----------------------------------------------------------------------------
+def _default_settings() -> Dict[str, Any]:
+    return {
+        'approval_method': 'manual',
+        'ad_expiry_days': 30,  # مدت اعتبار آگهی (روز)
+    }
+
 def get_settings() -> Dict[str, Any]:
     settings_file = _settings_path()
+    data = {}
     if os.path.exists(settings_file):
         with open(settings_file, 'r', encoding='utf-8') as f:
             try:
-                return json.load(f)
+                data = json.load(f) or {}
             except json.JSONDecodeError:
-                pass
-    return {'approval_method': 'manual'}
+                data = {}
+    # اعمال پیش‌فرض‌ها در صورت نبود
+    defaults = _default_settings()
+    for k, v in defaults.items():
+        data.setdefault(k, v)
+    return data
+
+def save_settings(new_data: Dict[str, Any]) -> None:
+    # پیش‌فرض‌ها را با ورودی ادغام کن تا چیزی حذف نشود
+    data = get_settings()
+    data.update({k: v for k, v in new_data.items() if v is not None})
+    save_json(_settings_path(), data)
+
+# -----------------------------------------------------------------------------
+# تاریخ/زمان
+# -----------------------------------------------------------------------------
+def utcnow() -> datetime:
+    return datetime.utcnow()
+
+def iso_z(dt: datetime) -> str:
+    # ISO 8601 به همراه Z
+    return dt.replace(microsecond=0).isoformat() + "Z"
+
+def parse_iso_to_naive_utc(s: str) -> Optional[datetime]:
+    if not s:
+        return None
+    try:
+        # پشتیبانی از ...Z و با/بی‌میلی‌ثانیه
+        s2 = s.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(s2)
+        return dt.replace(tzinfo=None)
+    except Exception:
+        return None
 
 # -----------------------------------------------------------------------------
 # کمکی‌های لیست آگهی
@@ -150,6 +192,71 @@ def find_by_index(lands: List[Dict[str, Any]], idx: int) -> Optional[Dict[str, A
     if 0 <= idx < len(lands):
         return lands[idx]
     return None
+
+# -----------------------------------------------------------------------------
+# پاکسازی آگهی‌های منقضی (حذف کامل + حذف تصاویر)
+# -----------------------------------------------------------------------------
+def _safe_unlink(path: str):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except Exception:
+        pass
+
+def _delete_ad_images(ad: Dict[str, Any]):
+    imgs = ad.get("images") or []
+    if isinstance(imgs, str):
+        imgs = [imgs]
+    for img in imgs:
+        if not isinstance(img, str) or not img:
+            continue
+        # فقط داخل static/uploads حذف شود
+        # مسیرهای احتمالی: 'uploads/xxx', '/abs/...uploads/xxx', 'static/uploads/xxx'
+        candidates = []
+        if os.path.isabs(img):
+            candidates.append(img)
+        else:
+            candidates.append(os.path.join(_uploads_root(), img))
+            candidates.append(os.path.join(_uploads_root(), os.path.basename(img)))
+            if img.startswith('static/'):
+                candidates.append(os.path.join(current_app.root_path, img))
+        for c in candidates:
+            try:
+                abs_c = os.path.abspath(c)
+                uploads_root = os.path.abspath(_uploads_root())
+                if abs_c.startswith(uploads_root) or ('/static/uploads/' in abs_c.replace('\\', '/')):
+                    _safe_unlink(abs_c)
+            except Exception:
+                pass
+
+def cleanup_expired_ads() -> None:
+    """حذف کامل آگهی‌های منقضی‌شده از JSON و حذف تصاویرشان."""
+    lands_path = _lands_path()
+    lands = load_json(lands_path)
+    if not isinstance(lands, list) or not lands:
+        return
+
+    now = utcnow()
+    kept: List[Dict[str, Any]] = []
+    changed = False
+
+    for ad in lands:
+        exp_str = ad.get("expires_at")
+        expired_flag = False
+        if exp_str:
+            exp_dt = parse_iso_to_naive_utc(exp_str)
+            if exp_dt is None or exp_dt < now:
+                expired_flag = True
+        # اگر فیلد expires_at وجود ندارد ولی created_at خیلی قدیمی است، می‌شود اینجا سیاستی اعمال کرد (فعلاً خیر)
+
+        if expired_flag:
+            _delete_ad_images(ad)
+            changed = True
+            continue
+        kept.append(ad)
+
+    if changed:
+        save_json(lands_path, kept)
 
 # -----------------------------------------------------------------------------
 # دکوراتور لاگین
@@ -199,13 +306,14 @@ def logout():
 @admin_bp.route('/', endpoint='dashboard')
 @login_required
 def dashboard():
+    cleanup_expired_ads()
     lands = load_json(_lands_path())
     consults = load_json(_consults_path())
-    pending_count, approved_count, rejected_count = counts_by_status(lands)
+    pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template(
         'admin/dashboard.html',
-        lands_count=len(lands),
-        consults_count=len(consults),
+        lands_count=len(lands) if isinstance(lands, list) else 0,
+        consults_count=len(consults) if isinstance(consults, list) else 0,
         pending_count=pending_count,
         approved_count=approved_count,
         rejected_count=rejected_count
@@ -218,12 +326,23 @@ def settings():
 
     if request.method == 'POST':
         approval_method = request.form.get('approval_method', 'manual')
-        save_json(settings_file, {'approval_method': approval_method})
+        try:
+            ad_expiry_days = int(request.form.get('ad_expiry_days', 30))
+            if ad_expiry_days < 1:
+                ad_expiry_days = 1
+        except Exception:
+            ad_expiry_days = 30
+
+        save_settings({
+            'approval_method': approval_method,
+            'ad_expiry_days': ad_expiry_days
+        })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
 
+    cleanup_expired_ads()
     lands = load_json(_lands_path())
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     settings_data = get_settings()
     return render_template('admin/settings.html',
                            settings=settings_data,
@@ -232,12 +351,13 @@ def settings():
 @admin_bp.route('/consults')
 @login_required
 def consults():
+    cleanup_expired_ads()
     consults = load_json(_consults_path())
     lands = load_json(_lands_path())
-    land_map = {str(l.get('code')): l for l in lands}
+    land_map = {str(l.get('code')): l for l in lands} if isinstance(lands, list) else {}
     for c in consults if isinstance(consults, list) else []:
         c['land'] = land_map.get(str(c.get('code')))
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/consults.html',
                            consults=consults if isinstance(consults, list) else [],
                            pending_count=p, approved_count=a, rejected_count=r)
@@ -248,11 +368,13 @@ def consults():
 @admin_bp.route('/lands')
 @login_required
 def lands():
-    lands = load_json(_lands_path())
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
-    pagination = paginate(lands if isinstance(lands, list) else [], page, per_page)
-    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
+    pagination = paginate(lands_list, page, per_page)
+    p, a, r = counts_by_status(lands_list)
     return render_template(
         'admin/lands.html',
         lands=pagination["items"],
@@ -263,12 +385,14 @@ def lands():
 @admin_bp.route('/pending-lands')
 @login_required
 def pending_lands():
-    lands = load_json(_lands_path())
-    subset = [l for l in lands if str(l.get("status", "pending")) == "pending"]
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    subset = [l for l in lands_list if str(l.get("status", "pending")) == "pending"]
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands_list)
     return render_template(
         'admin/pending_lands.html',
         lands=pagination["items"],
@@ -279,12 +403,14 @@ def pending_lands():
 @admin_bp.route('/approved-lands')
 @login_required
 def approved_lands():
-    lands = load_json(_lands_path())
-    subset = [l for l in lands if str(l.get("status")) == "approved"]
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    subset = [l for l in lands_list if str(l.get("status")) == "approved"]
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands_list)
     return render_template(
         'admin/approved_lands.html',
         lands=pagination["items"],
@@ -295,12 +421,14 @@ def approved_lands():
 @admin_bp.route('/rejected-lands')
 @login_required
 def rejected_lands():
-    lands = load_json(_lands_path())
-    subset = [l for l in lands if str(l.get("status")) == "rejected"]
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    subset = [l for l in lands_list if str(l.get("status")) == "rejected"]
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands_list)
     return render_template(
         'admin/rejected_lands.html',
         lands=pagination["items"],
@@ -314,22 +442,26 @@ def rejected_lands():
 @admin_bp.route('/land/<string:code>')
 @login_required
 def view_land(code):
-    lands = load_json(_lands_path())
-    land = find_by_code(lands, code)
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    land = find_by_code(lands_list, code)
     if not land:
         abort(404)
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands_list)
     return render_template('admin/land_view.html', land=land,
                            pending_count=p, approved_count=a, rejected_count=r)
 
 @admin_bp.route('/land/index/<int:land_id>')
 @login_required
 def view_land_by_index(land_id):
-    lands = load_json(_lands_path())
-    land = find_by_index(lands, land_id)
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    land = find_by_index(lands_list, land_id)
     if not land:
         abort(404)
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands_list)
     return render_template('admin/land_view.html', land=land,
                            pending_count=p, approved_count=a, rejected_count=r)
 
@@ -362,7 +494,7 @@ def _normalize_images_from_form(form, files) -> List[str]:
     # فایل
     upload_files = files.getlist('images')
     if upload_files:
-        upload_folder = os.path.join(current_app.static_folder, 'uploads')
+        upload_folder = _uploads_root()
         os.makedirs(upload_folder, exist_ok=True)
         for f in upload_files:
             if f and f.filename:
@@ -386,6 +518,11 @@ def add_land():
         approval_method = settings.get('approval_method', 'manual')
         status = 'approved' if approval_method == 'auto' else 'pending'
 
+        # محاسبه تاریخ‌ها
+        created_at_dt = utcnow()
+        expiry_days = int(settings.get('ad_expiry_days', 30)) or 30
+        expires_at_dt = created_at_dt + timedelta(days=expiry_days)
+
         new_code = form.get("code") or _next_numeric_code(lands)
         images = _normalize_images_from_form(request.form, request.files)
 
@@ -403,7 +540,9 @@ def add_land():
             'images': images,
             'approval_method': approval_method,
             'status': status,
-            'created_at': datetime.now().strftime('%Y-%m-%d')
+            # تاریخ‌ها
+            'created_at': iso_z(created_at_dt),     # ISO با Z
+            'expires_at': iso_z(expires_at_dt),     # انقضا برای پاکسازی
         }
 
         lands.append(new_land)
@@ -411,8 +550,10 @@ def add_land():
         flash(f'آگهی با کد {new_code} با موفقیت ثبت شد.', 'success')
         return redirect(url_for('admin.lands'))
 
+    # GET: قبل از نمایش فرم، پاکسازی را انجام بده
+    cleanup_expired_ads()
     # شمارش وضعیت‌ها برای هدر صفحه
-    p, a, r = counts_by_status(lands)
+    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/add_land.html',
                            pending_count=p, approved_count=a, rejected_count=r)
 
@@ -421,6 +562,7 @@ def add_land():
 @admin_bp.route('/edit-land/<int:land_id>', methods=['GET', 'POST'])
 @login_required
 def edit_land(land_id: Optional[int] = None):
+    cleanup_expired_ads()
     lands = load_json(_lands_path())
     if not isinstance(lands, list):
         lands = []
@@ -508,13 +650,7 @@ def delete_land(land_id: Optional[int] = None):
 
     land = lands.pop(idx_to_delete)
     # حذف فایل‌های تصویر روی دیسک
-    for img in land.get('images', []):
-        path = os.path.join(current_app.static_folder, img)
-        if os.path.exists(path):
-            try:
-                os.remove(path)
-            except Exception:
-                pass
+    _delete_ad_images(land)
 
     save_json(_lands_path(), lands)
     flash('آگهی با موفقیت حذف شد.', 'success')
@@ -527,8 +663,9 @@ def delete_land(land_id: Optional[int] = None):
 @admin_bp.route('/approve-land/<string:code>', methods=['POST'])
 @login_required
 def approve_land(code):
+    cleanup_expired_ads()
     lands = load_json(_lands_path())
-    land = find_by_code(lands, code)
+    land = find_by_code(lands if isinstance(lands, list) else [], code)
     if not land:
         flash('آگهی یافت نشد.', 'warning')
         return redirect(request.referrer or url_for('admin.pending_lands'))
@@ -541,8 +678,9 @@ def approve_land(code):
 @admin_bp.route('/reject-land/<string:code>', methods=['POST'])
 @login_required
 def reject_land(code):
+    cleanup_expired_ads()
     lands = load_json(_lands_path())
-    land = find_by_code(lands, code)
+    land = find_by_code(lands if isinstance(lands, list) else [], code)
     if not land:
         flash('آگهی یافت نشد.', 'warning')
         return redirect(request.referrer or url_for('admin.pending_lands'))
