@@ -114,19 +114,18 @@ def save_json(path: str, data):
 def _default_settings() -> Dict[str, Any]:
     return {
         'approval_method': 'manual',
-        'ad_expiry_days': 30,  # مدت اعتبار آگهی (روز) — 0 = نامحدود
+        'ad_expiry_days': 30,  # 0 = نامحدود
     }
 
 def get_settings() -> Dict[str, Any]:
     settings_file = _settings_path()
-    data = {}
+    data: Dict[str, Any] = {}
     if os.path.exists(settings_file):
         with open(settings_file, 'r', encoding='utf-8') as f:
             try:
                 data = json.load(f) or {}
             except json.JSONDecodeError:
                 data = {}
-    # اعمال پیش‌فرض‌ها در صورت نبود
     defaults = _default_settings()
     for k, v in defaults.items():
         data.setdefault(k, v)
@@ -157,7 +156,7 @@ def parse_iso_to_naive_utc(s: str) -> Optional[datetime]:
         return None
 
 # -----------------------------------------------------------------------------
-# کمکی‌های لیست آگهی
+# کمکی‌های لیست آگهی + متای انقضا
 # -----------------------------------------------------------------------------
 def counts_by_status(lands: List[Dict[str, Any]]):
     pending = sum(1 for l in lands if str(l.get("status", "pending")) == "pending")
@@ -186,6 +185,25 @@ def find_by_index(lands: List[Dict[str, Any]], idx: int) -> Optional[Dict[str, A
     if 0 <= idx < len(lands):
         return lands[idx]
     return None
+
+def expiry_meta(ad: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    خروجی:
+      status: 'unlimited' | 'today' | 'days'
+      days_left: int | None
+      label: متن آماده نمایش
+    """
+    exp_str = ad.get("expires_at")
+    if not exp_str:
+        return {"status": "unlimited", "days_left": None, "label": "نامحدود"}
+    exp_dt = parse_iso_to_naive_utc(exp_str)
+    if not exp_dt:
+        return {"status": "unlimited", "days_left": None, "label": "نامحدود"}
+    now = utcnow()
+    days_left = (exp_dt.date() - now.date()).days
+    if days_left <= 0:
+        return {"status": "today", "days_left": 0, "label": "امروز منقضی می‌شود"}
+    return {"status": "days", "days_left": days_left, "label": f"{days_left} روز مانده"}
 
 # -----------------------------------------------------------------------------
 # پاکسازی آگهی‌های منقضی (حذف کامل + حذف تصاویر)
@@ -322,7 +340,6 @@ def settings():
             ad_expiry_days = int(raw_exp)
         except Exception:
             ad_expiry_days = 30
-        # جلوگیری از مقادیر منفی و محدودسازی به گزینه‌های موجود UI
         if ad_expiry_days < 0:
             ad_expiry_days = 0
         if ad_expiry_days not in (0, 30, 60, 90):
@@ -366,6 +383,10 @@ def lands():
     cleanup_expired_ads()
     lands_data = load_json(_lands_path())
     lands_list = lands_data if isinstance(lands_data, list) else []
+    # متای نمایش اعتبار
+    for ad in lands_list:
+        ad["_expiry"] = expiry_meta(ad)
+
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(lands_list, page, per_page)
@@ -384,6 +405,9 @@ def pending_lands():
     lands_data = load_json(_lands_path())
     lands_list = lands_data if isinstance(lands_data, list) else []
     subset = [l for l in lands_list if str(l.get("status", "pending")) == "pending"]
+    for ad in subset:
+        ad["_expiry"] = expiry_meta(ad)
+
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)
@@ -402,6 +426,9 @@ def approved_lands():
     lands_data = load_json(_lands_path())
     lands_list = lands_data if isinstance(lands_data, list) else []
     subset = [l for l in lands_list if str(l.get("status")) == "approved"]
+    for ad in subset:
+        ad["_expiry"] = expiry_meta(ad)
+
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)
@@ -420,6 +447,9 @@ def rejected_lands():
     lands_data = load_json(_lands_path())
     lands_list = lands_data if isinstance(lands_data, list) else []
     subset = [l for l in lands_list if str(l.get("status")) == "rejected"]
+    for ad in subset:
+        ad["_expiry"] = expiry_meta(ad)
+
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
     pagination = paginate(subset, page, per_page)

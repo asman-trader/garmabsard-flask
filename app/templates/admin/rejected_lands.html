@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="فا" dir="rtl"
+<html lang="fa" dir="rtl"
       x-data="{ darkMode: false, sidebarOpen: true }"
       :class="{ 'dark': darkMode }"
       x-init="
@@ -10,6 +10,7 @@
   <meta charset="UTF-8">
   <title>رد شده / نیاز به اصلاح | پنل مدیریت وینور – بازار آنلاین ملک</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,7 +18,9 @@
       theme: {
         extend: {
           fontFamily: { vazir: ["Vazir", "ui-sans-serif", "system-ui"] },
-          colors: { vinor: {50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#0ea5e9',700:'#0284c7',800:'#1e40af',900:'#1e3a8a'} },
+          colors: {
+            vinor: {50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#0ea5e9',700:'#0284c7',800:'#1e40af',900:'#1e3a8a'}
+          },
           boxShadow: { card: '0 6px 24px rgba(2,132,199,.12)' }
         }
       }
@@ -65,6 +68,19 @@
         </div>
       {% endif %}
     {% endwith %}
+
+    <!-- Legend وضعیت اعتبار -->
+    <div class="mb-4 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+        <i class="fa-solid fa-infinity"></i> نامحدود
+      </span>
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200">
+        <i class="fa-solid fa-hourglass-end"></i> امروز منقضی می‌شود
+      </span>
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+        <i class="fa-solid fa-clock"></i> N روز مانده
+      </span>
+    </div>
 
     {{ render_table(lands, 'rejected') }}
   </main>

@@ -18,7 +18,9 @@
       theme: {
         extend: {
           fontFamily: { vazir: ["Vazir", "ui-sans-serif", "system-ui"] },
-          colors: { vinor: {50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#0ea5e9',700:'#0284c7',800:'#1e40af',900:'#1e3a8a'} },
+          colors: {
+            vinor: {50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#0ea5e9',700:'#0284c7',800:'#1e40af',900:'#1e3a8a'}
+          },
           boxShadow: { card: '0 6px 24px rgba(2,132,199,.12)' }
         }
       }
@@ -48,9 +50,11 @@
       </div>
     </div>
 
+    {# تب‌ها و جدول با ماکروهای مشترک #}
     {% from 'admin/partials/ads_macros.html' import render_tabs, render_table %}
     {{ render_tabs('pending') }}
 
+    {# پیام‌ها #}
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
         <div class="space-y-3 mb-5">
@@ -66,6 +70,19 @@
         </div>
       {% endif %}
     {% endwith %}
+
+    {# راهنمای کوچک نشان اعتبار (legend) #}
+    <div class="mb-4 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+        <i class="fa-solid fa-infinity"></i> نامحدود
+      </span>
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200">
+        <i class="fa-solid fa-hourglass-end"></i> امروز منقضی می‌شود
+      </span>
+      <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+        <i class="fa-solid fa-clock"></i> N روز مانده
+      </span>
+    </div>
 
     {{ render_table(lands, 'pending') }}
   </main>

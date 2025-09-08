@@ -36,6 +36,7 @@
             <th scope="col" class="p-2 border min-w-40">عنوان</th>
             <th scope="col" class="p-2 border min-w-36">موقعیت</th>
             <th scope="col" class="p-2 border">متراژ</th>
+            <th scope="col" class="p-2 border min-w-40">اعتبار</th>
             {% if mode=='pending' %}
               <th scope="col" class="p-2 border min-w-32">تاریخ ثبت</th>
             {% elif mode=='approved' %}
@@ -60,6 +61,25 @@
               </td>
               <td class="p-2 border">{{ land.location }}</td>
               <td class="p-2 border">{{ land.size }} متر</td>
+
+              {# ستون «اعتبار» با توجه به متای بک‌اند (land._expiry) #}
+              <td class="p-2 border">
+                {% if land._expiry %}
+                  {% set e = land._expiry %}
+                  <span class="
+                      inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold
+                      {% if e.status == 'unlimited' %} bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200
+                      {% elif e.status == 'today' %} bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200
+                      {% else %} bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200 {% endif %}
+                    "
+                    aria-label="وضعیت اعتبار آگهی: {{ e.label }}">
+                    <i class="fa-solid {% if e.status == 'unlimited' %}fa-infinity{% elif e.status == 'today' %}fa-hourglass-end{% else %}fa-clock{% endif %}"></i>
+                    {{ e.label }}
+                  </span>
+                {% else %}
+                  <span class="text-gray-500">—</span>
+                {% endif %}
+              </td>
 
               {% if mode=='pending' %}
                 <td class="p-2 border">{{ land.created_at }}</td>
