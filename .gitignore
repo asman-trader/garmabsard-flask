@@ -1,22 +1,40 @@
-# داده و لاگ
-app/data/
-data/
-instance/
-instance/logs/
-instance/data/
-app/data/uploads/
+# ============================
+# Vinor Project - .gitignore
+# جلوگیری از پوش شدن دیتا و تنظیمات لوکال
+# ============================
 
-# DB و لاگ‌ها و تنظیمات
+# دیتای آگهی‌ها و تنظیمات
+instance/data/
+
+# لاگ‌ها
+instance/logs/
+*.log
+
+# دیتابیس‌های لوکال
 *.db
 *.sqlite
 *.sqlite3
-*.log
+
+# فایل‌های محیطی (تنظیمات حساس)
 .env
 *.env
 
-# کش و IDE
+# کش پایتون
 __pycache__/
 *.pyc
-*.tmp
-*.bak
+*.pyo
+*.pyd
+
+# فایل‌های سیستم
+.DS_Store
+Thumbs.db
+
+# پوشه‌های مجازی‌سازی پایتون
+venv/
+env/
+.venv/
+virtualenv/
+
+# VSCode / IDE
+.vscode/
 .idea/
