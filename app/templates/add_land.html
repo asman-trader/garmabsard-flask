@@ -117,15 +117,6 @@
     <input type="hidden" name="price" id="price_hidden">
     <input type="hidden" name="location" id="location_hidden">
 
-    <!-- موقعیت جزئی (اختیاری) -->
-    <section aria-label="موقعیت جزئی" class="space-y-2">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="location_detail">موقعیت جزئی / توضیح موقعیت</label>
-      <input type="text" name="location_detail" id="location_detail"
-             placeholder="مثلاً: دشت اول، نزدیک جاده اصلی"
-             class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500" autocomplete="off">
-      <p class="text-[11px] text-gray-500">این فیلد اختیاری است. شهر اصلی از بخش بالا تعیین می‌شود.</p>
-    </section>
-
     <!-- دسته‌بندی -->
     <section aria-label="دسته‌بندی" class="space-y-2">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -181,12 +172,21 @@
     </section>
 
     <!-- اکشن‌ها (فوتر ثابت موبایل‌محور) -->
-    <div class="h-16 sm:h-0"></div>
-    <div class="fixed bottom-0 inset-x-0 sm:static bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t dark:border-gray-700 p-3 flex items-center gap-3 sm:justify-between">
-      <button type="button" id="btnResetForm" class="px-3 py-2 rounded-lg border text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20">پاک‌کردن فرم</button>
-      <div class="flex items-center gap-3 sm:justify-end">
-        <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700">بازگشت</a>
-        <button type="submit" id="btnSubmit" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition">تکمیل و ادامه</button>
+    <div class="h-20 sm:h-0"></div>
+    <div class="fixed bottom-0 inset-x-0 sm:static bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-t dark:border-gray-700 p-3 sm:p-4 flex items-center gap-3 sm:justify-between shadow-[0_-6px_20px_rgba(0,0,0,0.06)]"
+         role="toolbar" aria-label="اقدامات ثبت آگهی" style="padding-bottom:calc(env(safe-area-inset-bottom,0px)+12px)">
+      <button type="button" id="btnResetForm" class="px-3 py-2 rounded-xl border text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+        <i class="fas fa-rotate-left ml-2"></i> پاک‌کردن فرم
+      </button>
+      <div class="ms-auto flex items-center gap-2 sm:gap-3 sm:justify-end">
+        <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+          <i class="fas fa-arrow-right"></i> بازگشت
+        </a>
+        <button type="submit" id="btnSubmit"
+                class="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-medium shadow-md active:scale-[.99] transition flex items-center gap-2">
+          <i class="fas fa-check-circle"></i>
+          تکمیل و ادامه
+        </button>
       </div>
     </div>
   </form>
@@ -224,12 +224,12 @@
 </style>
 
 <script>
-// ⚠️ توجه: بدون هیچ تغییری در منطق/روت — همین اسکریپت اصلی شماست.
+// بدون تغییر روت و منطق بک‌اند
 (() => {
   /* =========================[ تنظیمات پایه ]========================= */
   const CONFIG = Object.freeze({
     UPLOAD_URL: '/api/uploads/images',
-    DELETE_UPLOAD_URL: '/api/uploads/delete',   // ← درصورت پشتیبانی سرور
+    DELETE_UPLOAD_URL: '/api/uploads/delete',
     MAX_FILES: 10,
     MAX_FILE_SIZE_MB: 12,
     SAVE_KEY: 'adFormDraftV2'
@@ -257,8 +257,6 @@
   const submitBtn           = document.getElementById('btnSubmit');
   const dropzone            = document.getElementById('dropzone');
   const overlay             = document.getElementById('loadingOverlay');
-  const resetBtn            = document.getElementById('btnResetForm');
-  const location_detail     = document.getElementById('location_detail');
 
   /* =========================[ ابزارهای کمکی ]========================= */
   const categoriesMap = {
@@ -322,9 +320,14 @@
     const def = document.createElement('option');
     def.value=''; def.disabled=true; def.selected=true; def.textContent='زیرشاخه را انتخاب کنید...';
     subSelect.appendChild(def);
-    (categoriesMap[main] || []).forEach(item=>{ const opt=document.createElement('option'); opt.value=item; opt.textContent=item; subSelect.appendChild(opt); });
+    (categoriesMap[main] || []).forEach(item=>{
+      const opt=document.createElement('option'); opt.value=item; opt.textContent=item; subSelect.appendChild(opt);
+    });
     subSelect.disabled = !(categoriesMap[main]||[]).length;
-    if(setValue && !subSelect.disabled){ subSelect.value = setValue; if(!subSelect.value) subSelect.selectedIndex = 0; }
+    if(setValue && !subSelect.disabled){
+      subSelect.value = setValue;
+      if(!subSelect.value) subSelect.selectedIndex = 0;
+    }
   }
   mainSelect.addEventListener('change', e=>fillSub(e.target.value));
 
@@ -332,79 +335,281 @@
   let imageItems = []; // {id,url,file,isCover,serverId,uploading}
   let totalUploads = 0, doneUploads = 0;
   const cryptoRandom = () => (self.crypto || window.crypto).getRandomValues(new Uint32Array(1))[0].toString(16);
-  const fileToDataURL = (file) => new Promise(res => { const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
-  function compressImage(file, maxW=1600, quality=0.82){ return new Promise((res,rej)=>{ const img = new Image(); img.onload = ()=>{ const scale = Math.min(1, maxW/img.width); const c=document.createElement('canvas'); c.width = Math.round(img.width*scale); c.height= Math.round(img.height*scale); c.getContext('2d').drawImage(img,0,0,c.width,c.height); c.toBlob(b => b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')), 'image/jpeg', quality); }; img.onerror = () => rej(new Error('Invalid image')); img.src = URL.createObjectURL(file); }); }
+  const fileToDataURL = (file) =>
+    new Promise(res => { const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
+
+  function compressImage(file, maxW=1600, quality=0.82){
+    return new Promise((res,rej)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxW/img.width);
+        const c=document.createElement('canvas');
+        c.width = Math.round(img.width*scale);
+        c.height= Math.round(img.height*scale);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        c.toBlob(b => b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')), 'image/jpeg', quality);
+      };
+      img.onerror = () => rej(new Error('Invalid image'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   function renderThumbs(){
     previewContainer.innerHTML='';
     imageItems.forEach((it,idx)=>{
       const d=document.createElement('div'); d.className='thumb border rounded-xl overflow-hidden'; d.draggable=true; d.dataset.id=it.id; d.setAttribute('aria-label','تصویر '+(idx+1));
       const img=document.createElement('img'); img.src=it.url; img.className='w-full h-28 object-cover'; img.loading='lazy'; img.alt='تصویر آگهی';
       const rm=document.createElement('button'); rm.type='button'; rm.className='remove'; rm.title='حذف تصویر'; rm.innerHTML='<i class="fas fa-times"></i>';
-      rm.addEventListener('click', ()=>{ imageItems=imageItems.filter(x=>x.id!==it.id); if(it.isCover && imageItems[0]) imageItems[0].isCover=true; renderThumbs(); syncImageHiddenInputs(); });
+      rm.addEventListener('click', ()=>{
+        imageItems=imageItems.filter(x=>x.id!==it.id);
+        if(it.isCover && imageItems[0]) imageItems[0].isCover=true;
+        renderThumbs(); syncImageHiddenInputs();
+      });
       const star=document.createElement('button'); star.type='button'; star.className='star'; star.title='انتخاب به‌عنوان کاور'; star.innerHTML = it.isCover ? '⭐' : '☆';
-      star.addEventListener('click', ()=>{ imageItems.forEach(x=>x.isCover=false); it.isCover=true; renderThumbs(); syncImageHiddenInputs(); });
+      star.addEventListener('click', ()=>{
+        imageItems.forEach(x=>x.isCover=false); it.isCover=true;
+        renderThumbs(); syncImageHiddenInputs();
+      });
       d.addEventListener('dragstart', ev=>{ d.classList.add('dragging'); ev.dataTransfer.setData('text/plain', it.id); });
       d.addEventListener('dragend',   ()=> d.classList.remove('dragging'));
       d.addEventListener('dragover',  ev=>ev.preventDefault());
-      d.addEventListener('drop', ev=>{ ev.preventDefault(); const fromId = ev.dataTransfer.getData('text/plain'); if(fromId === it.id) return; const fromIdx=imageItems.findIndex(x=>x.id===fromId); const toIdx=imageItems.findIndex(x=>x.id===it.id); const [moved]=imageItems.splice(fromIdx,1); imageItems.splice(toIdx,0,moved); renderThumbs(); syncImageHiddenInputs(); });
+      d.addEventListener('drop', ev=>{
+        ev.preventDefault();
+        const fromId = ev.dataTransfer.getData('text/plain');
+        if(fromId === it.id) return;
+        const fromIdx=imageItems.findIndex(x=>x.id===fromId);
+        const toIdx  =imageItems.findIndex(x=>x.id===it.id);
+        const [moved]=imageItems.splice(fromIdx,1);
+        imageItems.splice(toIdx,0,moved);
+        renderThumbs(); syncImageHiddenInputs();
+      });
       d.append(img, rm, star);
-      if (it.uploading) { const sp=document.createElement('div'); sp.className='spinner'; sp.textContent='در حال آپلود...'; d.appendChild(sp); }
-      if(it.isCover){ const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور'; d.appendChild(lab); }
+      if (it.uploading) {
+        const sp=document.createElement('div'); sp.className='spinner'; sp.textContent='در حال آپلود...'; d.appendChild(sp);
+      }
+      if(it.isCover){
+        const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور'; d.appendChild(lab);
+      }
       previewContainer.appendChild(d);
     });
     syncImageHiddenInputs();
   }
-  function syncImageHiddenInputs(){ imagesOrderInput.value = imageItems.map(x=>x.id).join(','); coverIndexInput.value  = imageItems.findIndex(x=>x.isCover); uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(','); }
-  function validateFile(f){ if(!f.type.startsWith('image/')){ toast('فقط فایل تصویری مجاز است'); return false; } if(f.size > CONFIG.MAX_FILE_SIZE_MB*1024*1024){ toast('حجم هر تصویر حداکثر '+CONFIG.MAX_FILE_SIZE_MB+' مگابایت'); return false; } return true; }
-  clearImagesBtn.addEventListener('click', ()=>{ imageItems = []; totalUploads=0; doneUploads=0; renderThumbs(); updateGlobalProgress(); imagesInput.value=''; uploadedIdsInput.value=''; });
+
+  function syncImageHiddenInputs(){
+    imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
+    coverIndexInput.value  = imageItems.findIndex(x=>x.isCover);
+    uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
+  }
+
+  function validateFile(f){
+    if(!f.type.startsWith('image/')){ toast('فقط فایل تصویری مجاز است'); return false; }
+    if(f.size > CONFIG.MAX_FILE_SIZE_MB*1024*1024){ toast('حجم هر تصویر حداکثر '+CONFIG.MAX_FILE_SIZE_MB+' مگابایت'); return false; }
+    return true;
+  }
+
+  clearImagesBtn.addEventListener('click', ()=>{
+    imageItems = []; totalUploads=0; doneUploads=0;
+    renderThumbs(); updateGlobalProgress();
+    imagesInput.value=''; uploadedIdsInput.value='';
+  });
+
   async function handleFiles(files){
-    const arr = Array.from(files||[]); if(!arr.length) return;
-    if(arr.length + imageItems.length > CONFIG.MAX_FILES){ toast('حداکثر '+CONFIG.MAX_FILES+' تصویر مجاز است'); return; }
-    uploadStatus.classList.remove('hidden'); progressContainer.classList.remove('hidden'); totalUploads += arr.length; updateGlobalProgress();
+    const arr = Array.from(files||[]);
+    if(!arr.length) return;
+
+    if(arr.length + imageItems.length > CONFIG.MAX_FILES){
+      toast('حداکثر '+CONFIG.MAX_FILES+' تصویر مجاز است'); return;
+    }
+
+    uploadStatus.classList.remove('hidden');
+    progressContainer.classList.remove('hidden');
+
+    totalUploads += arr.length;
+    updateGlobalProgress();
+
     const tasks = arr.map(async (f) => {
       if(!validateFile(f)){ doneUploads++; updateGlobalProgress(); return; }
-      try{ const compressed = await compressImage(f, 1600, 0.82); const url = await fileToDataURL(compressed); const item = { id: cryptoRandom(), url, file: compressed, isCover:false, serverId:null, uploading:true }; imageItems.push(item); if (!imageItems.some(x=>x.isCover)) item.isCover = true; renderThumbs(); try{ const serverId = await uploadOne(compressed); item.serverId = serverId; }catch(err){ console.error('Upload failed:', err); toast('آپلود یک تصویر ناموفق بود'); }finally{ item.uploading = false; doneUploads++; renderThumbs(); updateGlobalProgress(); } }catch(err){ console.error(err); doneUploads++; updateGlobalProgress(); toast('پردازش یک تصویر ناموفق بود'); }
+      try{
+        const compressed = await compressImage(f, 1600, 0.82);
+        const url = await fileToDataURL(compressed);
+        const item = { id: cryptoRandom(), url, file: compressed, isCover:false, serverId:null, uploading:true };
+        imageItems.push(item);
+        if (!imageItems.some(x=>x.isCover)) item.isCover = true;
+        renderThumbs();
+
+        try{
+          const serverId = await uploadOne(compressed);
+          item.serverId = serverId;
+        }catch(err){
+          console.error('Upload failed:', err);
+          toast('آپلود یک تصویر ناموفق بود');
+        }finally{
+          item.uploading = false;
+          doneUploads++;
+          renderThumbs();
+          updateGlobalProgress();
+        }
+      }catch(err){
+        console.error(err);
+        doneUploads++;
+        updateGlobalProgress();
+        toast('پردازش یک تصویر ناموفق بود');
+      }
     });
+
     await Promise.all(tasks);
     uploadStatus.textContent = imageItems.every(x=>x.serverId) ? 'همه تصاویر آپلود شدند' : 'برخی تصاویر آپلود نشدند';
   }
+
   imagesInput.addEventListener('change', (e)=>handleFiles(e.target.files));
-  ;['dragenter','dragover'].forEach(evt=>{ dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); }); });
-  ;['dragleave','drop'].forEach(evt=>{ dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); }); });
-  dropzone.addEventListener('drop', e=>{ e.preventDefault(); const dt = e.dataTransfer; if(dt?.files) handleFiles(dt.files); });
-  async function uploadOne(file){ const fd = new FormData(); fd.append('file', file, 'image.jpg'); const csrf = getCsrf(); const headers = {}; if(csrf){ headers['X-CSRF-Token'] = csrf; headers['X-CSRFToken']  = csrf; headers['X-XSRF-TOKEN'] = csrf; } const resp = await fetch(CONFIG.UPLOAD_URL, { method:'POST', headers, body:fd, credentials:'same-origin' }); if(!resp.ok) throw new Error('HTTP '+resp.status); const data = await resp.json().catch(()=> ({})); return data.id || data.file_id || data.uuid || data.key || null; }
-  function updateGlobalProgress(){ const total = Math.max(totalUploads, 1); const percent = Math.round((doneUploads/total)*100); progressBar.style.width = percent+'%'; if (doneUploads >= total){ setTimeout(()=>{ progressContainer.classList.add('hidden'); uploadStatus.classList.add('hidden'); }, 600); } else { progressContainer.classList.remove('hidden'); uploadStatus.classList.remove('hidden'); } }
+  ['dragenter','dragover'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); });
+  });
+  dropzone.addEventListener('drop', e=>{
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if(dt?.files) handleFiles(dt.files);
+  });
+
+  async function uploadOne(file){
+    const fd = new FormData();
+    fd.append('file', file, 'image.jpg');
+    const csrf = getCsrf();
+    const headers = {};
+    if(csrf){
+      headers['X-CSRF-Token'] = csrf;
+      headers['X-CSRFToken']  = csrf;
+      headers['X-XSRF-TOKEN'] = csrf;
+    }
+    const resp = await fetch(CONFIG.UPLOAD_URL, { method:'POST', headers, body:fd, credentials:'same-origin' });
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data = await resp.json().catch(()=> ({}));
+    return data.id || data.file_id || data.uuid || data.key || null;
+  }
+
+  function updateGlobalProgress(){
+    const total = Math.max(totalUploads, 1);
+    const percent = Math.round((doneUploads/total)*100);
+    progressBar.style.width = percent+'%';
+    if (doneUploads >= total){
+      setTimeout(()=>{ progressContainer.classList.add('hidden'); uploadStatus.classList.add('hidden'); }, 600);
+    } else {
+      progressContainer.classList.remove('hidden');
+      uploadStatus.classList.remove('hidden');
+    }
+  }
 
   /* =====================[ پیش‌نویس LocalStorage ]===================== */
-  const saveDraft = () => { const fd = new FormData(form); const obj = {}; fd.forEach((v,k)=>{ if(k !== 'images') obj[k]=v; }); obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId})); obj.city = getCity(); try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(obj)); } catch(_){} };
-  const loadDraft = () => { const raw = localStorage.getItem(CONFIG.SAVE_KEY); if(raw){ try{ const obj = JSON.parse(raw); Object.entries(obj).forEach(([k,v])=>{ if(k==='_images_meta') return; const el = form.elements[k]; if(el) el.value = v; }); if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); } if(obj._images_meta){ imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false})); renderThumbs(); } }catch(_){} } setCityUI(); recalc(); };
+  const saveDraft = () => {
+    const fd = new FormData(form);
+    const obj = {};
+    fd.forEach((v,k)=>{ if(k !== 'images') obj[k]=v; });
+    obj._images_meta = imageItems.map(x=>({id:x.id,url:x.url,isCover:x.isCover,serverId:x.serverId}));
+    obj.city = getCity();
+    try { localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(obj)); } catch(_){}
+  };
+
+  const loadDraft = () => {
+    const raw = localStorage.getItem(CONFIG.SAVE_KEY);
+    if(raw){
+      try{
+        const obj = JSON.parse(raw);
+        Object.entries(obj).forEach(([k,v])=>{
+          if(k==='_images_meta') return;
+          const el = form.elements[k]; if(el) el.value = v;
+        });
+        if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
+        if(obj._images_meta){
+          imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
+          renderThumbs();
+        }
+      }catch(_){}
+    }
+    setCityUI();
+    recalc();
+  };
+
   form.addEventListener('input', debounce(saveDraft, 800));
 
   /* =========================[ Toast کوچک ]============================ */
-  function toast(msg){ const t=document.createElement('div'); t.textContent=msg; t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl shadow z-[9999]'; document.body.appendChild(t); setTimeout(()=>{ t.remove(); },1800); }
+  function toast(msg){
+    const t=document.createElement('div');
+    t.textContent=msg;
+    t.className='fixed bottom-20 right-3 bg-gray-900 text-white text-xs px-3 py-2 rounded-xl shadow z-[9999]';
+    document.body.appendChild(t);
+    setTimeout(()=>{ t.remove(); },1800);
+  }
 
   /* =========================[ پاک‌کردن فرم ]========================== */
-  async function deleteUploadedOnServer(ids){ if(!ids || !ids.length || !CONFIG.DELETE_UPLOAD_URL) return; const csrf = getCsrf(); try{ await fetch(CONFIG.DELETE_UPLOAD_URL, { method: 'POST', headers: { 'Content-Type':'application/json', ...(csrf ? {'X-CSRF-Token': csrf} : {}) }, body: JSON.stringify({ ids }) }); }catch(_){} }
-  function hardResetFormUI(){ form.reset(); imageItems = []; totalUploads = 0; doneUploads = 0; renderThumbs(); updateGlobalProgress(); try { localStorage.removeItem(CONFIG.SAVE_KEY); } catch(_){} setCityUI(); pricePerMeterInput.value = ''; priceWords.textContent = ''; imagesInput.value = ''; }
-  resetBtn.addEventListener('click', async ()=>{ const hasData = imageItems.length || (localStorage.getItem(CONFIG.SAVE_KEY) != null); const confirmMsg = hasData ? 'کل فرم و پیش‌نویس و تصاویر پاک شوند؟ این عملیات قابل بازگشت نیست.' : 'فرم پاک شود؟'; if(!confirm(confirmMsg)) return; const uploadedIds = imageItems.map(x=>x.serverId).filter(Boolean); if(uploadedIds.length){ await deleteUploadedOnServer(uploadedIds); } hardResetFormUI(); toast('فرم پاک شد'); });
+  async function deleteUploadedOnServer(ids){
+    if(!ids || !ids.length || !CONFIG.DELETE_UPLOAD_URL) return;
+    const csrf = getCsrf();
+    try{
+      await fetch(CONFIG.DELETE_UPLOAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', ...(csrf ? {'X-CSRF-Token': csrf} : {}) },
+        body: JSON.stringify({ ids })
+      });
+    }catch(_){}
+  }
+
+  function hardResetFormUI(){
+    form.reset();
+    imageItems = []; totalUploads = 0; doneUploads = 0;
+    renderThumbs(); updateGlobalProgress();
+    try { localStorage.removeItem(CONFIG.SAVE_KEY); } catch(_){}
+    setCityUI();
+    pricePerMeterInput.value = '';
+    priceWords.textContent = '';
+    imagesInput.value = '';
+  }
+
+  clearImagesBtn.addEventListener('click', async ()=>{
+    const hasData = imageItems.length || (localStorage.getItem(CONFIG.SAVE_KEY) != null);
+    const confirmMsg = hasData
+      ? 'کل فرم و پیش‌نویس و تصاویر پاک شوند؟ این عملیات قابل بازگشت نیست.'
+      : 'فرم پاک شود؟';
+    if(!confirm(confirmMsg)) return;
+
+    const uploadedIds = imageItems.map(x=>x.serverId).filter(Boolean);
+    if(uploadedIds.length){ await deleteUploadedOnServer(uploadedIds); }
+
+    hardResetFormUI();
+    toast('فرم پاک شد');
+  });
 
   /* =========================[ ارسال فرم ]============================== */
   form.addEventListener('submit', (e)=>{
+    // شهر
     const city = getCity();
-    if (!city) { cityDisplay.classList.add('border-red-300'); toast('بهتر است قبل از ارسال، شهر آگهی را انتخاب کنید.'); }
+    if (!city) {
+      cityDisplay.classList.add('border-red-300');
+      toast('بهتر است قبل از ارسال، شهر آگهی را انتخاب کنید.');
+    }
     cityInput.value = city || '';
+
+    // اعداد به شکل خام
     const sizeRaw  = parseNumber(sizeInput.value);
     const totalRaw = parseNumber(totalPriceInput.value);
     sizeInput.value          = sizeRaw;
     totalPriceInput.value    = totalRaw;
     pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
+
+    // نگاشت بک‌اند
     document.getElementById('area_hidden').value     = sizeRaw || '';
     document.getElementById('price_hidden').value    = totalRaw || '';
-    document.getElementById('location_hidden').value = (city || '') + (location_detail.value ? (' - ' + location_detail.value) : '');
+    document.getElementById('location_hidden').value = (city || ''); // ← فقط شهر؛ موقعیت جزئی حذف شد
+
+    // تصاویر
     if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover = true; }
     imagesOrderInput.value = imageItems.map(x=>x.id).join(',');
     coverIndexInput.value  = imageItems.findIndex(x=>x.isCover);
     uploadedIdsInput.value = imageItems.map(x=>x.serverId||'').join(',');
+
+    // UI ارسال
     overlay.classList.remove('hidden');
     submitBtn.disabled = true;
     submitBtn.textContent = 'در حال ارسال...';
@@ -412,7 +617,13 @@
 
   /* =======================[ شروع: بارگذاری پیش‌نویس ]================== */
   window.addEventListener('load', loadDraft);
-  window.confirmDeleteAd = function (ev){ const ok = confirm('آگهی به‌طور کامل حذف شود؟ این عملیات قابل بازگشت نیست.'); if(!ok){ ev.preventDefault(); return false; } return true; };
+
+  /* =======================[ حذف آگهی (فرم جدا) ]====================== */
+  window.confirmDeleteAd = function (ev){
+    const ok = confirm('آگهی به‌طور کامل حذف شود؟ این عملیات قابل بازگشت نیست.');
+    if(!ok){ ev.preventDefault(); return false; }
+    return true;
+  };
 })();
 </script>
 {% endblock %}
