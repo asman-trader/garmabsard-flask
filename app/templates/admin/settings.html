@@ -48,20 +48,27 @@
       </p>
     </div>
 
-    <!-- مدت اعتبار آگهی (روز) -->
-    <div class="space-y-2">
-      <label for="ad_expiry_days" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-        مدت اعتبار آگهی (روز)
-      </label>
-      <input type="number" id="ad_expiry_days" name="ad_expiry_days" min="1" step="1"
-             value="{{ settings.ad_expiry_days or 30 }}"
-             class="block w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600
-                    text-gray-800 dark:text-gray-100 rounded-lg px-3 py-2
-                    focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent">
-      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-        پس از گذشت این مدت، آگهی به‌صورت خودکار از سایت حذف خواهد شد.
-      </p>
-    </div>
+<!-- مدت اعتبار آگهی -->
+<div class="space-y-2">
+  <label for="ad_expiry_days" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+    مدت اعتبار آگهی
+  </label>
+
+  <select id="ad_expiry_days" name="ad_expiry_days"
+          class="block w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600
+                 text-gray-800 dark:text-gray-100 rounded-lg px-3 py-2
+                 focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent">
+    <option value="0"  {% if (settings.ad_expiry_days|int) == 0 %}selected{% endif %}>نامحدود</option>
+    <option value="30" {% if (settings.ad_expiry_days|int) == 30 %}selected{% endif %}>۳۰ روز</option>
+    <option value="60" {% if (settings.ad_expiry_days|int) == 60 %}selected{% endif %}>۶۰ روز</option>
+    <option value="90" {% if (settings.ad_expiry_days|int) == 90 %}selected{% endif %}>۹۰ روز</option>
+  </select>
+
+  <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+    اگر «نامحدود» را انتخاب کنید، آگهی تاریخ انقضا نخواهد داشت و حذف خودکار نمی‌شود.
+  </p>
+</div>
+
 
     <div class="flex items-center justify-end">
       <button type="submit"

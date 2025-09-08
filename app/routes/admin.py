@@ -26,8 +26,6 @@ except Exception:
 # -----------------------------------------------------------------------------
 # Blueprint
 # -----------------------------------------------------------------------------
-# نام blueprint = 'admin' تا url_for('admin.*') صحیح باشد؛
-# متغیر در کد: admin_bp (مطابق ساختار پروژه).
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # -----------------------------------------------------------------------------
@@ -72,7 +70,6 @@ def _settings_path() -> str:
     )
 
 def _lands_path() -> str:
-    # مسیر اصلی: instance/data/lands.json
     primary = current_app.config.get(
         "LANDS_FILE",
         os.path.join(current_app.instance_path, "data", "lands.json")
@@ -117,7 +114,7 @@ def save_json(path: str, data):
 def _default_settings() -> Dict[str, Any]:
     return {
         'approval_method': 'manual',
-        'ad_expiry_days': 30,  # مدت اعتبار آگهی (روز)
+        'ad_expiry_days': 30,  # مدت اعتبار آگهی (روز) — 0 = نامحدود
     }
 
 def get_settings() -> Dict[str, Any]:
@@ -136,7 +133,6 @@ def get_settings() -> Dict[str, Any]:
     return data
 
 def save_settings(new_data: Dict[str, Any]) -> None:
-    # پیش‌فرض‌ها را با ورودی ادغام کن تا چیزی حذف نشود
     data = get_settings()
     data.update({k: v for k, v in new_data.items() if v is not None})
     save_json(_settings_path(), data)
@@ -148,14 +144,12 @@ def utcnow() -> datetime:
     return datetime.utcnow()
 
 def iso_z(dt: datetime) -> str:
-    # ISO 8601 به همراه Z
     return dt.replace(microsecond=0).isoformat() + "Z"
 
 def parse_iso_to_naive_utc(s: str) -> Optional[datetime]:
     if not s:
         return None
     try:
-        # پشتیبانی از ...Z و با/بی‌میلی‌ثانیه
         s2 = s.replace("Z", "+00:00")
         dt = datetime.fromisoformat(s2)
         return dt.replace(tzinfo=None)
@@ -210,8 +204,6 @@ def _delete_ad_images(ad: Dict[str, Any]):
     for img in imgs:
         if not isinstance(img, str) or not img:
             continue
-        # فقط داخل static/uploads حذف شود
-        # مسیرهای احتمالی: 'uploads/xxx', '/abs/...uploads/xxx', 'static/uploads/xxx'
         candidates = []
         if os.path.isabs(img):
             candidates.append(img)
@@ -247,7 +239,6 @@ def cleanup_expired_ads() -> None:
             exp_dt = parse_iso_to_naive_utc(exp_str)
             if exp_dt is None or exp_dt < now:
                 expired_flag = True
-        # اگر فیلد expires_at وجود ندارد ولی created_at خیلی قدیمی است، می‌شود اینجا سیاستی اعمال کرد (فعلاً خیر)
 
         if expired_flag:
             _delete_ad_images(ad)
@@ -322,15 +313,19 @@ def dashboard():
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    settings_file = _settings_path()
-
     if request.method == 'POST':
         approval_method = request.form.get('approval_method', 'manual')
+
+        # مقدار انتخابی از UI: 0 (نامحدود) یا 30/60/90
+        raw_exp = request.form.get('ad_expiry_days', '30')
         try:
-            ad_expiry_days = int(request.form.get('ad_expiry_days', 30))
-            if ad_expiry_days < 1:
-                ad_expiry_days = 1
+            ad_expiry_days = int(raw_exp)
         except Exception:
+            ad_expiry_days = 30
+        # جلوگیری از مقادیر منفی و محدودسازی به گزینه‌های موجود UI
+        if ad_expiry_days < 0:
+            ad_expiry_days = 0
+        if ad_expiry_days not in (0, 30, 60, 90):
             ad_expiry_days = 30
 
         save_settings({
@@ -518,10 +513,14 @@ def add_land():
         approval_method = settings.get('approval_method', 'manual')
         status = 'approved' if approval_method == 'auto' else 'pending'
 
-        # محاسبه تاریخ‌ها
+        # محاسبه تاریخ‌ها (۰ = نامحدود → expires_at ست نمی‌شود)
         created_at_dt = utcnow()
-        expiry_days = int(settings.get('ad_expiry_days', 30)) or 30
-        expires_at_dt = created_at_dt + timedelta(days=expiry_days)
+        try:
+            expiry_days = int(settings.get('ad_expiry_days', 30))
+        except Exception:
+            expiry_days = 30
+        if expiry_days < 0:
+            expiry_days = 0
 
         new_code = form.get("code") or _next_numeric_code(lands)
         images = _normalize_images_from_form(request.form, request.files)
@@ -540,19 +539,20 @@ def add_land():
             'images': images,
             'approval_method': approval_method,
             'status': status,
-            # تاریخ‌ها
-            'created_at': iso_z(created_at_dt),     # ISO با Z
-            'expires_at': iso_z(expires_at_dt),     # انقضا برای پاکسازی
+            'created_at': iso_z(created_at_dt),
         }
+
+        if expiry_days > 0:
+            expires_at_dt = created_at_dt + timedelta(days=expiry_days)
+            new_land['expires_at'] = iso_z(expires_at_dt)
 
         lands.append(new_land)
         save_json(_lands_path(), lands)
         flash(f'آگهی با کد {new_code} با موفقیت ثبت شد.', 'success')
         return redirect(url_for('admin.lands'))
 
-    # GET: قبل از نمایش فرم، پاکسازی را انجام بده
+    # GET
     cleanup_expired_ads()
-    # شمارش وضعیت‌ها برای هدر صفحه
     p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/add_land.html',
                            pending_count=p, approved_count=a, rejected_count=r)
@@ -657,7 +657,7 @@ def delete_land(land_id: Optional[int] = None):
     return redirect(url_for('admin.lands'))
 
 # -----------------------------------------------------------------------------
-# تغییر وضعیت: تأیید/رد (سازگار با هر دو نام‌گذاری URL)
+# تغییر وضعیت: تأیید/رد
 # -----------------------------------------------------------------------------
 @admin_bp.route('/approve/<string:code>', methods=['POST'])
 @admin_bp.route('/approve-land/<string:code>', methods=['POST'])
