@@ -17,10 +17,18 @@
           <p class="text-[11px] text-gray-500">وینور – بازار آنلاین ملک</p>
         </div>
       </div>
-      <a href="{{ url_for('main.index') }}" class="hidden sm:inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700">
-        <i class="fas fa-arrow-right"></i>
-        بازگشت
-      </a>
+
+      <!-- اکشن‌های هدر: بازگشت + پاک‌کردن فرم -->
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('main.index') }}" class="hidden sm:inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700">
+          <i class="fas fa-arrow-right"></i>
+          بازگشت
+        </a>
+        <button type="button" id="btnResetForm" class="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl border text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+          <i class="fas fa-rotate-left"></i>
+          پاک‌کردن فرم
+        </button>
+      </div>
     </div>
   </header>
 
@@ -66,6 +74,8 @@
           افزودن تصویر
           <input type="file" name="images" id="imagesInput" accept="image/*" multiple class="hidden" aria-label="انتخاب تصاویر">
         </label>
+
+        <!-- فقط تصاویر را حذف می‌کند -->
         <button type="button" id="clearImages"
                 class="px-3 py-2 text-xs border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 aria-label="حذف همه تصاویر">حذف همه</button>
@@ -175,9 +185,7 @@
     <div class="h-20 sm:h-0"></div>
     <div class="fixed bottom-0 inset-x-0 sm:static bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-t dark:border-gray-700 p-3 sm:p-4 flex items-center gap-3 sm:justify-between shadow-[0_-6px_20px_rgba(0,0,0,0.06)]"
          role="toolbar" aria-label="اقدامات ثبت آگهی" style="padding-bottom:calc(env(safe-area-inset-bottom,0px)+12px)">
-      <button type="button" id="btnResetForm" class="px-3 py-2 rounded-xl border text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
-        <i class="fas fa-rotate-left ml-2"></i> پاک‌کردن فرم
-      </button>
+      <!-- دکمه پاک‌کردن فرم از فوتر حذف شده؛ فقط در هدر است -->
       <div class="ms-auto flex items-center gap-2 sm:gap-3 sm:justify-end">
         <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
           <i class="fas fa-arrow-right"></i> بازگشت
@@ -257,6 +265,7 @@
   const submitBtn           = document.getElementById('btnSubmit');
   const dropzone            = document.getElementById('dropzone');
   const overlay             = document.getElementById('loadingOverlay');
+  const resetBtn            = document.getElementById('btnResetForm'); // ← دکمه هدر
 
   /* =========================[ ابزارهای کمکی ]========================= */
   const categoriesMap = {
@@ -334,6 +343,7 @@
   /* =======================[ منطق تصاویر/آپلود ]======================= */
   let imageItems = []; // {id,url,file,isCover,serverId,uploading}
   let totalUploads = 0, doneUploads = 0;
+
   const cryptoRandom = () => (self.crypto || window.crypto).getRandomValues(new Uint32Array(1))[0].toString(16);
   const fileToDataURL = (file) =>
     new Promise(res => { const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
@@ -384,12 +394,8 @@
         renderThumbs(); syncImageHiddenInputs();
       });
       d.append(img, rm, star);
-      if (it.uploading) {
-        const sp=document.createElement('div'); sp.className='spinner'; sp.textContent='در حال آپلود...'; d.appendChild(sp);
-      }
-      if(it.isCover){
-        const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور'; d.appendChild(lab);
-      }
+      if (it.uploading) { const sp=document.createElement('div'); sp.className='spinner'; sp.textContent='در حال آپلود...'; d.appendChild(sp); }
+      if(it.isCover){ const lab=document.createElement('span'); lab.className='cover'; lab.textContent='کاور'; d.appendChild(lab); }
       previewContainer.appendChild(d);
     });
     syncImageHiddenInputs();
@@ -407,10 +413,23 @@
     return true;
   }
 
+  // فقط تصاویر را پاک می‌کند (بدون ریست کل فرم)
   clearImagesBtn.addEventListener('click', ()=>{
-    imageItems = []; totalUploads=0; doneUploads=0;
-    renderThumbs(); updateGlobalProgress();
+    if(!imageItems.length){ toast('تصویری برای حذف وجود ندارد'); return; }
+    if(!confirm('همه تصاویر حذف شوند؟')) return;
+    const uploadedIds = imageItems.map(x=>x.serverId).filter(Boolean);
+    imageItems = []; renderThumbs();
     imagesInput.value=''; uploadedIdsInput.value='';
+    updateGlobalProgress();
+    if(uploadedIds.length){
+      // اختیاری: اعلام حذف به سرور اگر API دارید
+      fetch(CONFIG.DELETE_UPLOAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ ids: uploadedIds })
+      }).catch(()=>{});
+    }
+    toast('همه تصاویر حذف شدند');
   });
 
   async function handleFiles(files){
@@ -543,7 +562,7 @@
     setTimeout(()=>{ t.remove(); },1800);
   }
 
-  /* =========================[ پاک‌کردن فرم ]========================== */
+  /* =========================[ پاک‌کردن فرم (هدر) ]==================== */
   async function deleteUploadedOnServer(ids){
     if(!ids || !ids.length || !CONFIG.DELETE_UPLOAD_URL) return;
     const csrf = getCsrf();
@@ -567,7 +586,7 @@
     imagesInput.value = '';
   }
 
-  clearImagesBtn.addEventListener('click', async ()=>{
+  resetBtn.addEventListener('click', async ()=>{
     const hasData = imageItems.length || (localStorage.getItem(CONFIG.SAVE_KEY) != null);
     const confirmMsg = hasData
       ? 'کل فرم و پیش‌نویس و تصاویر پاک شوند؟ این عملیات قابل بازگشت نیست.'
@@ -601,7 +620,7 @@
     // نگاشت بک‌اند
     document.getElementById('area_hidden').value     = sizeRaw || '';
     document.getElementById('price_hidden').value    = totalRaw || '';
-    document.getElementById('location_hidden').value = (city || ''); // ← فقط شهر؛ موقعیت جزئی حذف شد
+    document.getElementById('location_hidden').value = (city || '');
 
     // تصاویر
     if(imageItems.length && imageItems.every(x=>!x.isCover)){ imageItems[0].isCover = true; }
