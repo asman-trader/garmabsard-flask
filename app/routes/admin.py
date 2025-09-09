@@ -24,6 +24,95 @@ except Exception:
     csrf = None
 
 # -----------------------------------------------------------------------------
+# اعلان‌ها (Vinor Notifications)
+# -----------------------------------------------------------------------------
+from app.services.notifications import add_notification
+
+def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
+    """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
+    return ad.get('owner') or ad.get('user_phone') or ad.get('phone')
+
+def _safe_action_url(ad_code: str) -> str:
+    """اگر روت جزئیات آگهی نبود، به آگهی‌های من برگرد."""
+    try:
+        return url_for('main.land_detail', code=ad_code)
+    except Exception:
+        try:
+            return url_for('main.my_lands')
+        except Exception:
+            return '/my-lands'
+
+def notify_status_change(ad: Dict[str, Any], status: str, reason: Optional[str] = None):
+    """ارسال اعلان براساس تغییر وضعیت."""
+    uid = _ad_owner_id(ad)
+    if not uid:
+        return
+    code = str(ad.get('code') or '')
+    action_url = _safe_action_url(code)
+
+    if status == 'approved':
+        add_notification(
+            user_id=uid,
+            title="آگهی شما تأیید شد",
+            body="آگهی شما در وینور منتشر شد.",
+            ntype="success",
+            ad_id=code,
+            action_url=action_url
+        )
+    elif status == 'rejected':
+        body = "آگهی شما نیاز به اصلاح دارد."
+        if reason:
+            body += f" دلیل: {reason}"
+        add_notification(
+            user_id=uid,
+            title="آگهی شما رد شد / نیاز به اصلاح",
+            body=body,
+            ntype="warning",
+            ad_id=code,
+            action_url=action_url
+        )
+    elif status == 'expired':
+        add_notification(
+            user_id=uid,
+            title="آگهی شما منقضی شد",
+            body="برای تمدید از بخش آگهی‌های من اقدام کنید.",
+            ntype="info",
+            ad_id=code,
+            action_url=url_for('main.my_lands')
+        )
+
+def notify_admin_edit(ad: Dict[str, Any]):
+    """اعلان بعد از ویرایش توسط ادمین."""
+    uid = _ad_owner_id(ad)
+    if not uid:
+        return
+    code = str(ad.get('code') or '')
+    add_notification(
+        user_id=uid,
+        title="ویرایش آگهی انجام شد",
+        body="تغییرات آگهی شما توسط پشتیبانی وینور اعمال شد.",
+        ntype="info",
+        ad_id=code,
+        action_url=_safe_action_url(code)
+    )
+
+def notify_admin_create(ad: Dict[str, Any]):
+    """اعلان بعد از ثبت آگهی توسط ادمین (در صورت وجود صاحب)."""
+    uid = _ad_owner_id(ad)
+    if not uid:
+        return
+    code = str(ad.get('code') or '')
+    st = str(ad.get('status') or 'pending')
+    if st == 'approved':
+        title, body, ntype = "آگهی شما منتشر شد", "آگهی شما توسط پشتیبانی وینور ثبت و منتشر شد.", "success"
+    else:
+        title, body, ntype = "آگهی شما ثبت شد", "وضعیت: در انتظار تأیید.", "status"
+    add_notification(
+        user_id=uid, title=title, body=body, ntype=ntype,
+        ad_id=code, action_url=_safe_action_url(code)
+    )
+
+# -----------------------------------------------------------------------------
 # Blueprint
 # -----------------------------------------------------------------------------
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -570,6 +659,8 @@ def add_land():
             'approval_method': approval_method,
             'status': status,
             'created_at': iso_z(created_at_dt),
+            # اگر ادمین به اسم کاربر خاص ثبت می‌کند، می‌تواند owner را نیز ست کند:
+            'owner': form.get('owner', '').strip() or None,
         }
 
         if expiry_days > 0:
@@ -578,6 +669,10 @@ def add_land():
 
         lands.append(new_land)
         save_json(_lands_path(), lands)
+
+        # ✅ اعلان (در صورت داشتن owner)
+        notify_admin_create(new_land)
+
         flash(f'آگهی با کد {new_code} با موفقیت ثبت شد.', 'success')
         return redirect(url_for('admin.lands'))
 
@@ -647,6 +742,10 @@ def edit_land(land_id: Optional[int] = None):
             land.setdefault('images', []).extend(new_images)
 
         save_json(_lands_path(), lands)
+
+        # ✅ اعلان: ویرایش توسط ادمین
+        notify_admin_edit(land)
+
         flash('آگهی ویرایش شد.', 'success')
         return redirect(url_for('admin.lands'))
 
@@ -701,6 +800,10 @@ def approve_land(code):
         return redirect(request.referrer or url_for('admin.pending_lands'))
     land['status'] = 'approved'
     save_json(_lands_path(), lands)
+
+    # ✅ اعلان: تأیید شد
+    notify_status_change(land, 'approved')
+
     flash('آگهی تأیید شد.', 'success')
     return redirect(request.referrer or url_for('admin.approved_lands'))
 
@@ -716,10 +819,14 @@ def reject_land(code):
         return redirect(request.referrer or url_for('admin.pending_lands'))
 
     land['status'] = 'rejected'
-    reason = request.form.get("reject_reason")
+    reason = request.form.get("reject_reason", "").strip()
     if reason:
         land["reject_reason"] = reason
 
     save_json(_lands_path(), lands)
+
+    # ✅ اعلان: رد شد + دلیل
+    notify_status_change(land, 'rejected', reason=reason or None)
+
     flash('آگهی رد شد / نیاز به اصلاح دارد.', 'info')
     return redirect(request.referrer or url_for('admin.rejected_lands'))

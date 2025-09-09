@@ -1,78 +1,66 @@
-# app/routes/notifications.py
 # -*- coding: utf-8 -*-
-from typing import List, Dict, Any
-from flask import render_template, session, redirect, url_for, flash
+"""
+Vinor User Notifications Routes on main_bp
+"""
+from flask import jsonify, request, render_template, session, redirect, url_for
 from . import main_bp
-from ..utils.storage import load_notifications, save_notifications
+from app.services.notifications import (
+    get_user_notifications,
+    unread_count,
+    mark_read,
+    mark_all_read,
+)
 
-
-# ---------- Helpers ----------
-def _user_phone() -> str | None:
+# -- کمک‌تابع: شناسه کاربر جاری
+def current_user_id():
+    # در پروژه‌ی شما کلید سشن برای تلفن کاربر "user_phone" است
     return session.get("user_phone")
 
-def _user_items(phone: str | None) -> List[Dict[str, Any]]:
-    if not phone:
-        return []
-    return [n for n in load_notifications() if n.get("to") == phone]
+def ensure_logged_in(redirect_if_needed: bool = False):
+    """
+    اگر لاگین نیست:
+      - در حالت redirect_if_needed=True: ریدایرکت به لاگین + تنظیم next
+      - در حالت False: فقط False برمی‌گرداند (برای APIها)
+    """
+    if not current_user_id():
+        if redirect_if_needed:
+            session['next'] = url_for("main.notifications")
+            return redirect(url_for("main.login"))
+        return False
+    return True
 
-def user_unread_notifications_count(phone: str | None) -> int:
-    if not phone:
-        return 0
-    return sum(1 for n in _user_items(phone) if not n.get("read"))
+# ============= صفحات =============
+@main_bp.route("/notifications", methods=["GET"], endpoint="notifications")
+def notifications_page():
+    guard = ensure_logged_in(redirect_if_needed=True)
+    if guard is not True:
+        return guard  # ریدایرکت به لاگین
+    uid = current_user_id()
+    items = get_user_notifications(uid, limit=100)
+    return render_template("notifications.html", items=items)
 
+# ============= API =============
+@main_bp.route("/api/notifications/unread-count", methods=["GET"], endpoint="api_notifications_unread_count")
+def api_unread_count():
+    uid = current_user_id()
+    if not uid:
+        return jsonify({"count": 0})
+    return jsonify({"count": unread_count(uid)})
 
-# این مقدار به همهٔ تمپلیت‌ها تزریق می‌شود (برای نشان‌دادن Badge)
-@main_bp.app_context_processor
-def inject_notifications_count():
-    phone = _user_phone()
-    return {"notif_count": user_unread_notifications_count(phone)}
+@main_bp.route("/api/notifications/mark-read", methods=["POST"], endpoint="api_notifications_mark_read")
+def api_mark_read():
+    if not ensure_logged_in():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    uid = current_user_id()
+    payload = request.get_json(silent=True) or {}
+    notif_id = payload.get("id")
+    ok = bool(notif_id) and mark_read(uid, notif_id)
+    return jsonify({"ok": ok})
 
-
-# ---------- Routes ----------
-@main_bp.route("/notifications")
-def notifications():
-    phone = _user_phone()
-    if not phone:
-        flash("برای دیدن اعلان‌ها ابتدا وارد شوید.", "warning")
-        return redirect(url_for("main.send_otp"))
-
-    items = _user_items(phone)
-    # مرتب‌سازی: اول بر اساس created_at (در صورت وجود)، بعد id
-    items.sort(
-        key=lambda n: (
-            0 if n.get("created_at") is None else 1,
-            n.get("created_at") or n.get("id") or 0
-        ),
-        reverse=True,
-    )
-
-    # enable_push_ui -> صفحه می‌تواند دکمه‌های «اجازه اعلان» و «آزمایش» را نشان دهد
-    return render_template(
-        "notifications.html",
-        items=items,
-        enable_push_ui=True,
-        page_title="اعلان‌ها | وینور (Vinor)"
-    )
-
-
-@main_bp.route("/notifications/read-all", methods=["POST"])
-def notifications_read_all():
-    phone = _user_phone()
-    if not phone:
-        flash("ابتدا وارد شوید.", "warning")
-        return redirect(url_for("main.send_otp"))
-
-    items = load_notifications()
-    changed = False
-    for n in items:
-        if n.get("to") == phone and not n.get("read"):
-            n["read"] = True
-            changed = True
-
-    if changed:
-        save_notifications(items)
-        flash("همه اعلان‌ها خوانده شد.", "success")
-    else:
-        flash("اعلان خوانده‌نشده‌ای یافت نشد.", "info")
-
-    return redirect(url_for("main.notifications"))
+@main_bp.route("/api/notifications/mark-all-read", methods=["POST"], endpoint="api_notifications_mark_all_read")
+def api_mark_all_read():
+    if not ensure_logged_in():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    uid = current_user_id()
+    updated = mark_all_read(uid)
+    return jsonify({"ok": True, "updated": updated})

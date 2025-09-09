@@ -28,10 +28,10 @@
                  border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between">
       <!-- فقط آیکن پروفایل (لینک‌دار) -->
-      <a href="{{ url_for('main.profile') if session.get('user_id') else url_for('main.login') }}"
+      <a href="{{ url_for('main.profile') if session.get('user_phone') else url_for('main.login') }}"
          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-         title="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}"
-         aria-label="{{ 'پروفایل من' if session.get('user_id') else 'ورود / ثبت‌نام' }}">
+         title="{{ 'پروفایل من' if session.get('user_phone') else 'ورود / ثبت‌نام' }}"
+         aria-label="{{ 'پروفایل من' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
       </a>
 
@@ -47,16 +47,19 @@
           <span id="cityChipText">انتخاب شهر</span>
         </a>
 
-        <!-- Notifications icon with badge -->
-        <a href="{{ url_for('main.notifications') if session.get('user_id') else url_for('main.login') }}"
-           class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-           title="اعلان‌ها" aria-label="اعلان‌ها">
+        <!-- Notifications icon with badge (زنده) -->
+        <a id="notifLink"
+           href="{{ url_for('main.notifications') if session.get('user_phone') else url_for('main.login') }}"
+           class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition
+                  {{ '' if session.get('user_phone') else 'require-login' }}"
+           title="اعلان‌ها" aria-label="اعلان‌ها"
+           data-require-login="{{ '0' if session.get('user_phone') else '1' }}">
           <i class="fas fa-bell text-[18px] text-gray-700 dark:text-gray-200"></i>
-          {% if notif_count is defined and notif_count|int > 0 %}
-            <span class="absolute -top-1 -left-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-              {{ notif_count }}
-            </span>
-          {% endif %}
+          <!-- Badge همیشه رندر می‌شود، با JS مقدار می‌گیرد -->
+          <span id="notif-badge"
+                class="hidden absolute -top-1 -left-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+            0
+          </span>
         </a>
 
         <!-- Close (mobile) -->
@@ -81,9 +84,9 @@
 
     <!-- User bundle -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.my_lands'),   'fa-list',             'آگهی‌های من', True) }}
-      {{ MenuItem(url_for('main.favorites'),  'fa-heart',            'علاقه‌مندی‌ها', True) }}
-      {{ MenuItem(url_for('main.settings'),   'fa-cog',              'تنظیمات', True) }}
+      {{ MenuItem(url_for('main.my_lands'),   'fa-list',   'آگهی‌های من', True) }}
+      {{ MenuItem(url_for('main.favorites'),  'fa-heart',  'علاقه‌مندی‌ها', True) }}
+      {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
       <!-- Help accordion -->
       <div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -113,7 +116,7 @@
 
     <!-- Auth -->
     <div class="pt-2">
-      {% if session.get('user_id') %}
+      {% if session.get('user_phone') %}
         <a href="{{ url_for('main.logout') }}"
            class="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-100 dark:hover:bg-red-800">
           <i class="fas fa-sign-out-alt"></i>
@@ -174,6 +177,7 @@
     const overlay      = document.getElementById('menuOverlay');
     const closeBtn     = document.getElementById('closeMenu');
     const cityChipText = document.getElementById('cityChipText');
+    const notifBadge   = document.getElementById('notif-badge');
 
     // Open/Close
     const openMenu = () => {
@@ -198,10 +202,10 @@
       a.addEventListener('click', () => setTimeout(closeMenu, 0));
     });
 
-    // Require-login guard
+    // Require-login guard (برای لینک‌های حساس از جمله اعلان‌ها)
     document.querySelectorAll('#sideMenu a.require-login, #sideMenu a[data-require-login="1"]').forEach(a => {
       a.addEventListener('click', (e) => {
-        const loggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+        const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
         if (!loggedIn) {
           e.preventDefault();
           window.location.href = "{{ url_for('main.login') }}";
@@ -267,6 +271,31 @@
       helpOpen = !helpOpen;
       setHelpOpen(helpOpen);
     });
+
+    // ===== Notifications Badge (زنده) =====
+    async function refreshNotifBadge(){
+      try{
+        const r = await fetch("{{ url_for('main.api_notifications_unread_count') }}", { credentials: 'same-origin' });
+        const j = await r.json();
+        if(!notifBadge) return;
+        const c = parseInt(j.count || 0, 10);
+        if(c > 0){
+          notifBadge.textContent = c > 99 ? '99+' : String(c);
+          notifBadge.classList.remove('hidden');
+        } else {
+          notifBadge.classList.add('hidden');
+        }
+      } catch(e){
+        // سکوت: خطای شبکه‌ای نادیده گرفته می‌شود
+      }
+    }
+    const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
+    if (loggedIn) {
+      window.addEventListener('load', refreshNotifBadge);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshNotifBadge(); });
+      setInterval(refreshNotifBadge, 60000); // هر ۶۰ ثانیه
+    }
+    // ================================
 
   })();
 </script>

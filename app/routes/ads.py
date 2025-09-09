@@ -1,4 +1,5 @@
 # app/routes/ads.py
+# -*- coding: utf-8 -*-
 import os
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session
@@ -7,6 +8,15 @@ from . import main_bp
 from ..utils.storage import data_dir, load_ads, save_ads, load_consults, save_consults, load_settings
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
+
+# ✅ سرویس اعلان‌ها
+try:
+    from app.services.notifications import add_notification
+except Exception:
+    # اگر سرویس اعلان هنوز اضافه نشده باشد، جلوی کرش را می‌گیریم.
+    def add_notification(*args, **kwargs):
+        return None
+
 
 def _to_int(x, default=0):
     try:
@@ -21,14 +31,16 @@ def _safe_remove_file(path: str) -> None:
     except FileNotFoundError:
         pass
     except Exception:
-        # ترجیحاً لاگ کنید
+        # TODO: بهتر است لاگ شود
         pass
+
 
 # ⚠️ قبلاً endpoint پیش‌فرض «submit_ad» باعث تداخل شده بود.
 # با endpoint یکتا مشکل رفع می‌شود.
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
 def submit_ad_redirect():
     return redirect(url_for('main.add_land'))
+
 
 @main_bp.route('/lands/add', methods=['GET','POST'], endpoint='add_land')
 def add_land():
@@ -74,6 +86,7 @@ def add_land():
 
     return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP)
 
+
 @main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')
 def add_land_step3():
     if 'user_phone' not in session:
@@ -90,6 +103,7 @@ def add_land_step3():
         return redirect(url_for('main.finalize_land'))
     return render_template('add_land_step3.html')
 
+
 @main_bp.route('/lands/finalize', methods=['GET'], endpoint='finalize_land')
 def finalize_land():
     keys = ['land_code','land_temp','land_images','land_ad_type']
@@ -99,6 +113,7 @@ def finalize_land():
 
     settings = load_settings()
     status = 'approved' if settings.get('approval_method','manual') == 'auto' else 'pending'
+
     lands = load_ads()
     lt = session['land_temp']
     new_land = {
@@ -117,11 +132,42 @@ def finalize_land():
     }
     lands.append(new_land)
     save_ads(lands)
+
+    # ✅ اعلان سمت کاربر بعد از ذخیره آگهی
+    try:
+        user_id = session.get('user_phone')
+        if user_id:
+            if status == 'approved':
+                # تأیید خودکار
+                add_notification(
+                    user_id=user_id,
+                    title="آگهی شما تأیید و منتشر شد",
+                    body="آگهی شما هم‌اکنون در وینور منتشر شده است.",
+                    ntype="success",
+                    ad_id=new_land['code'],
+                    action_url=url_for('main.land_detail', code=new_land['code'])
+                )
+            else:
+                # در انتظار تأیید
+                add_notification(
+                    user_id=user_id,
+                    title="آگهی شما ثبت شد",
+                    body="وضعیت: در انتظار تأیید. به‌محض بررسی، نتیجه اطلاع‌رسانی می‌شود.",
+                    ntype="status",
+                    ad_id=new_land['code'],
+                    action_url=url_for('main.land_detail', code=new_land['code'])
+                )
+    except Exception:
+        # سکوت در صورت نبود سرویس اعلان یا خطای غیرمنتظره
+        pass
+
+    # پاکسازی سشن مراحل
     for k in keys:
         session.pop(k, None)
 
     flash("✅ آگهی شما ثبت شد." + (" منتشر شد." if status=='approved' else " و منتظر تأیید است."))
     return redirect(url_for('main.my_lands'))
+
 
 @main_bp.route('/my-lands', methods=['GET'], endpoint='my_lands')
 def my_lands():
@@ -176,6 +222,7 @@ def my_lands():
     }
     return render_template('my_lands.html', lands=items, pagination=pagination, page_url=page_url, CATEGORY_MAP=CATEGORY_MAP)
 
+
 @main_bp.route('/lands/edit/<code>', methods=['GET','POST'], endpoint='edit_land')
 def edit_land(code):
     if 'user_phone' not in session:
@@ -220,6 +267,7 @@ def edit_land(code):
 
     return render_template('edit_land.html', land=land, CATEGORY_MAP=CATEGORY_MAP)
 
+
 @main_bp.route('/lands/delete/<code>', methods=['POST'], endpoint='delete_land')
 def delete_land(code):
     if 'user_phone' not in session:
@@ -243,6 +291,7 @@ def delete_land(code):
     flash("🗑️ آگهی حذف شد.")
     return redirect(url_for('main.my_lands'))
 
+
 @main_bp.route('/consult/<code>', methods=['POST'], endpoint='consult')
 def consult(code):
     consults = load_consults()
@@ -256,6 +305,7 @@ def consult(code):
     save_consults(consults)
     flash("✅ درخواست مشاوره ثبت شد.")
     return redirect(url_for('main.land_detail', code=code))
+
 
 # حذف آگهی با مسیر دوم (سازگار با فرم‌های جدید)
 @main_bp.route('/ads/<code>/delete', methods=['POST'], endpoint='ad_delete')
