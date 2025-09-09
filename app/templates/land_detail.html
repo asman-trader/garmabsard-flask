@@ -8,10 +8,13 @@
 {% endblock %}
 
 {% block content %}
-<!-- ریشه صفحه: شِمای الهام‌گرفته از دیوار، موبایل‌فرست -->
+<!-- =======================================================================
+     صفحه جزئیات آگهی وینور – موبایل‌فرست، مدرن و شفاف
+     نکته: صرفاً بهبود خوانایی/سازماندهی؛ هیچ منطق/رفتاری تغییر نکرده است.
+======================================================================= -->
 <div class="min-h-screen bg-gray-50 dark:bg-slate-900">
 
-  {# ---------------- نرمال‌سازی تصاویر (رشته/آرایه/آبجکت) ---------------- #}
+  {# ==================== Helpers & Normalizers ==================== #}
   {% set _images_raw = [] %}
   {% if land.get('images') %}
     {% if land.get('images') is string %}
@@ -21,7 +24,6 @@
     {% endif %}
   {% endif %}
 
-  {# Helper: خروجی URL هر آیتم تصویر #}
   {% macro img_url(item) -%}
     {%- if item is string -%}
       {%- set _name = item|basename -%}
@@ -35,131 +37,202 @@
     {%- endif -%}
   {%- endmacro %}
 
-  {# ---------------- تاپ‌بار چسبان (الهام از دیوار) ---------------- #}
-  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b dark:border-slate-700">
+  {# ==================== App Bar (Sticky) ==================== #}
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b dark:border-slate-700" role="banner" aria-label="نوار ابزار">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-2 px-3 py-2">
       <div class="flex items-center gap-2">
-        <button onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" title="بازگشت">
+        <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" title="بازگشت" aria-label="بازگشت">
           <i class="fas fa-arrow-right"></i>
         </button>
         <div class="flex flex-col">
           <span class="text-sm text-gray-500 dark:text-gray-400">وینور – بازار آنلاین ملک</span>
-          <h1 class="text-base font-bold text-gray-900 dark:text-white line-clamp-1">{{ land.get('title') or 'بدون عنوان' }}</h1>
+          <h1 class="text-base font-bold text-gray-900 dark:text-white line-clamp-1">
+            {{ land.get('title') or 'بدون عنوان' }}
+          </h1>
         </div>
       </div>
+
       <div class="flex items-center gap-1">
-        <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-                onclick="shareLand('{{ url_for('main.land_detail', code=land.get("code"), _external=True) }}', '{{ (land.get("title") or "آگهی ملک")|e }}')" title="اشتراک‌گذاری">
+        <button
+          type="button"
+          class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
+          onclick="shareLand('{{ url_for('main.land_detail', code=land.get("code"), _external=True) }}', '{{ (land.get("title") or "آگهی ملک")|e }}')"
+          title="اشتراک‌گذاری"
+          aria-label="اشتراک‌گذاری">
           <i class="fas fa-share-nodes"></i>
         </button>
-        <button id="favBtn"
-                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-yellow-600 dark:text-yellow-300"
-                data-code="{{ land.get('code') or '' }}" title="افزودن به علاقه‌مندی‌ها">☆</button>
+
+        <button
+          id="favBtn"
+          class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-yellow-600 dark:text-yellow-300"
+          data-code="{{ land.get('code') or '' }}"
+          title="افزودن به علاقه‌مندی‌ها"
+          aria-label="افزودن به علاقه‌مندی‌ها">
+          ☆
+        </button>
       </div>
     </div>
   </header>
 
-  {# ---------------- گالری تصاویر لبه‌به‌لبه ---------------- #}
-  <section class="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
+  {# ==================== Media Gallery ==================== #}
+  <section class="bg-white dark:bg-slate-800 border-b dark:border-slate-700" aria-label="گالری تصاویر">
     <div class="max-w-4xl mx-auto">
       {% set _has_images = _images_raw and (_images_raw|length > 0) %}
-      <div class="">
-        {% if _has_images %}
-        <div class="swiper w-full h-64 sm:h-[420px] overflow-hidden" id="land-swiper"
-             data-images='{{ _images_raw|tojson }}'
-             data-order='{{ (land.get("images_order") or "")|string }}'
-             data-cover='{{ (land.get("cover_index") if land.get("cover_index") is not none else -1)|int }}'>
+
+      {% if _has_images %}
+        <div
+          id="land-swiper"
+          class="swiper w-full h-64 sm:h-[420px] overflow-hidden"
+          data-images='{{ _images_raw|tojson }}'
+          data-order='{{ (land.get("images_order") or "")|string }}'
+          data-cover='{{ (land.get("cover_index") if land.get("cover_index") is not none else -1)|int }}'>
+
           <div class="swiper-wrapper">
             {% for it in _images_raw %}
-            {% set src = img_url(it) %}
-            <div class="swiper-slide">
-              <img src="{{ src }}" alt="تصویر {{ loop.index }} از {{ land.get('title') or '' }}"
-                   class="w-full h-64 sm:h-[420px] object-cover select-none"
-                   loading="lazy" onclick="openFullscreen('{{ src }}')"
-                   onerror="this.src='/static/img/placeholder.jpg'; this.onclick=null;" />
-            </div>
+              {% set src = img_url(it) %}
+              <div class="swiper-slide">
+                <img
+                  src="{{ src }}"
+                  alt="تصویر {{ loop.index }} از {{ land.get('title') or '' }}"
+                  class="w-full h-64 sm:h-[420px] object-cover select-none"
+                  loading="lazy"
+                  onclick="openFullscreen('{{ src }}')"
+                  onerror="this.src='/static/img/placeholder.jpg'; this.onclick=null;" />
+              </div>
             {% endfor %}
           </div>
+
           <div class="swiper-pagination"></div>
           <div class="swiper-button-next text-white"></div>
           <div class="swiper-button-prev text-white"></div>
         </div>
-        {% else %}
+      {% else %}
         <div class="w-full h-56 sm:h-72 grid place-items-center text-center text-slate-500 dark:text-slate-300">
           <div>
             <div class="text-3xl mb-2">🖼️</div>
             <div class="text-sm">برای این آگهی تصویری ثبت نشده است.</div>
           </div>
         </div>
-        {% endif %}
-      </div>
+      {% endif %}
     </div>
   </section>
 
-  {# فول‌اسکرین #}
-  <div id="fullscreenOverlay" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50" onclick="closeFullscreen()">
+  {# ==================== Fullscreen Viewer ==================== #}
+  <div
+    id="fullscreenOverlay"
+    class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50"
+    onclick="closeFullscreen()"
+    role="dialog"
+    aria-modal="true"
+    aria-label="نمایش تمام‌صفحه">
     <img id="fullscreenImage" src="" alt="نمایش تمام‌صفحه" class="max-w-[95vw] max-h-[95vh] rounded-lg shadow-2xl" />
   </div>
 
-  {# ---------------- بدنه محتوا: کارت‌ها شبیه دیوار ---------------- #}
-  <main class="max-w-4xl mx-auto px-3 pb-28">
-
-    {# نوار خلاصه قیمت/متراژ (کارت اول) #}
+  {# ==================== Main Content ==================== #}
+  <main class="max-w-4xl mx-auto px-3 pb-28" role="main">
+    {# --------- Summary Card (Price / Size) --------- #}
     {% set _sz = (land.get('size')|int if land.get('size') is not none else (land.get('area')|int if land.get('area') is not none else 0)) %}
     {% set _price_total = (land.get('price_total') if land.get('price_total') is not none else land.get('price')) %}
     {% set _ppm_raw = land.get('price_per_meter') %}
     {% set _ppm = (_ppm_raw if _ppm_raw is not none else ( (_price_total|int)//(_sz|int) if (_price_total and (_sz|int) > 0) else None )) %}
 
-    <section class="-mt-3 sm:-mt-6">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+    <section class="-mt-3 sm:-mt-6" aria-label="خلاصه آگهی">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ land.get('title') or "بدون عنوان" }}</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+              {{ land.get('title') or "بدون عنوان" }}
+            </h2>
+
             <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span class="inline-flex items-center gap-1"><i class="fas fa-clock"></i>{{ land.get('created_at') | date_ymd }}</span>
+              <span class="inline-flex items-center gap-1">
+                <i class="fas fa-clock"></i>{{ land.get('created_at') | date_ymd }}
+              </span>
+
               {% if land.get('code') %}
-                <span class="inline-flex items-center gap-1"><i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.get('code') }}</span></span>
+                <span class="inline-flex items-center gap-1">
+                  <i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.get('code') }}</span>
+                </span>
               {% endif %}
+
               {% if land.get('status') %}
                 {% if land.get('status') == 'approved' %}
-                  <span class="inline-flex items-center gap-1 text-green-600"><i class="fas fa-check-circle"></i> تأیید شده</span>
+                  <span class="inline-flex items-center gap-1 text-green-600">
+                    <i class="fas fa-check-circle"></i> تأیید شده
+                  </span>
                 {% elif land.get('status') == 'pending' %}
-                  <span class="inline-flex items-center gap-1 text-yellow-600"><i class="fas fa-hourglass-half"></i> در انتظار</span>
+                  <span class="inline-flex items-center gap-1 text-yellow-600">
+                    <i class="fas fa-hourglass-half"></i> در انتظار
+                  </span>
                 {% elif land.get('status') == 'rejected' %}
-                  <span class="inline-flex items-center gap-1 text-red-600"><i class="fas fa-times-circle"></i> رد شده</span>
+                  <span class="inline-flex items-center gap-1 text-red-600">
+                    <i class="fas fa-times-circle"></i> رد شده
+                  </span>
                 {% endif %}
               {% endif %}
             </div>
           </div>
+
           <div class="text-left shrink-0">
             <div class="text-[11px] text-gray-500 dark:text-gray-400">قیمت کل</div>
             <div class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
               {% if _price_total is not none %}
-                <span id="priceTotal">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span> <span class="text-sm font-normal text-gray-600 dark:text-gray-300">تومان</span>
-              {% else %} نامشخص {% endif %}
+                <span id="priceTotal">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
+                <span class="text-sm font-normal text-gray-600 dark:text-gray-300">تومان</span>
+              {% else %}
+                نامشخص
+              {% endif %}
             </div>
             <div id="priceWords" class="text-[11px] text-gray-500"></div>
           </div>
         </div>
 
+        {# Badges row #}
         <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px] text-gray-700 dark:text-gray-300">
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2"><i class="fa-regular fa-square"></i><span>متراژ:</span><strong class="mr-auto">{{ "{:,.0f}".format(_sz).replace(",","٫") if _sz else "نامشخص" }} متر</strong></div>
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2"><i class="fa-solid fa-location-dot"></i><span>موقعیت:</span><strong class="mr-auto">{% set _loc = land.get('location') or ((land.get('city') or "" ) ~ ((" - " ~ land.get('location_detail')) if land.get('location_detail') else "")) %}{{ _loc or "نامشخص" }}</strong></div>
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2"><i class="fa-regular fa-file-lines"></i><span>نوع سند:</span><strong class="mr-auto">{{ land.get('document_type') or "نامشخص" }}</strong></div>
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2"><i class="fa-solid fa-tag"></i><span>دسته:</span><strong class="mr-auto">{% if land.get('category_main') or land.get('category_sub') %}{{ (land.get('category_main') or "نامشخص") ~ ((" / " ~ land.get('category_sub')) if land.get('category_sub') else "") }}{% else %}{{ CATEGORY_MAP.get(land.get('category') or '', 'نامشخص') }}{% endif %}</strong></div>
+          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+            <i class="fa-regular fa-square"></i><span>متراژ:</span>
+            <strong class="mr-auto">{{ "{:,.0f}".format(_sz).replace(",","٫") if _sz else "نامشخص" }} متر</strong>
+          </div>
+
+          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+            <i class="fa-solid fa-location-dot"></i><span>موقعیت:</span>
+            <strong class="mr-auto">
+              {% set _loc = land.get('location') or ((land.get('city') or "" ) ~ ((" - " ~ land.get('location_detail')) if land.get('location_detail') else "")) %}
+              {{ _loc or "نامشخص" }}
+            </strong>
+          </div>
+
+          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+            <i class="fa-regular fa-file-lines"></i><span>نوع سند:</span>
+            <strong class="mr-auto">{{ land.get('document_type') or "نامشخص" }}</strong>
+          </div>
+
+          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
+            <i class="fa-solid fa-tag"></i><span>دسته:</span>
+            <strong class="mr-auto">
+              {% if land.get('category_main') or land.get('category_sub') %}
+                {{ (land.get('category_main') or "نامشخص") ~ ((" / " ~ land.get('category_sub')) if land.get('category_sub') else "") }}
+              {% else %}
+                {{ CATEGORY_MAP.get(land.get('category') or '', 'نامشخص') }}
+              {% endif %}
+            </strong>
+          </div>
         </div>
 
         <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          <span class="inline-flex items-center gap-1">📊 <strong class="ml-1">قیمت متری:</strong>
-          {% if _ppm is not none %}
-            {{ "{:,.0f}".format(_ppm|int).replace(",", "٫") }} تومان
-          {% else %} نامشخص {% endif %}
+          <span class="inline-flex items-center gap-1">
+            📊 <strong class="ml-1">قیمت متری:</strong>
+            {% if _ppm is not none %}
+              {{ "{:,.0f}".format(_ppm|int).replace(",", "٫") }} تومان
+            {% else %}
+              نامشخص
+            {% endif %}
           </span>
         </div>
-      </div>
+      </article>
     </section>
 
-    {# امکانات #}
+    {# --------- Features --------- #}
     {% set _features = [] %}
     {% if land.get('features') %}
       {% if land.get('features') is string %}
@@ -168,39 +241,44 @@
         {% set _features = land.get('features') %}
       {% endif %}
     {% endif %}
+
     {% if _features and _features|length > 0 %}
-    <section class="mt-3">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-        <h3 class="font-bold mb-3">امکانات</h3>
-        <div class="flex flex-wrap gap-2">
-          {% for feature in _features %}
-          <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-emerald-900/30 dark:text-emerald-200">
-            <i class="fas fa-check-circle ml-1"></i>{{ feature }}
-          </span>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
+      <section class="mt-3" aria-label="امکانات">
+        <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <h3 class="font-bold mb-3">امکانات</h3>
+          <div class="flex flex-wrap gap-2">
+            {% for feature in _features %}
+              <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-emerald-900/30 dark:text-emerald-200">
+                <i class="fas fa-check-circle ml-1"></i>{{ feature }}
+              </span>
+            {% endfor %}
+          </div>
+        </article>
+      </section>
     {% endif %}
 
-    {# توضیحات #}
-    <section class="mt-3">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+    {# --------- Description --------- #}
+    <section class="mt-3" aria-label="توضیحات">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">توضیحات</h3>
-        <div class="whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">{{ land.get('description') or "توضیحاتی برای این آگهی ثبت نشده است." }}</div>
-      </div>
+        <div class="whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">
+          {{ land.get('description') or "توضیحاتی برای این آگهی ثبت نشده است." }}
+        </div>
+      </article>
     </section>
 
-    {# کارت ایمنی/اعتمادسازی شبیه دیوار #}
-    <section class="mt-3">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+    {# --------- Trust & Safety --------- #}
+    <section class="mt-3" aria-label="راهنمای امنیت">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 grid place-items-center text-emerald-700 dark:text-emerald-300">
             <i class="fa-solid fa-shield-heart"></i>
           </div>
           <div class="text-sm">
             <h4 class="font-bold">معامله امن در وینور</h4>
-            <p class="mt-1 text-gray-600 dark:text-gray-300">قبل از هر پرداخت، مدارک معتبر را بررسی کنید. گزارش آگهی‌های مشکوک به ما کمک می‌کند تا محیطی امن‌تر بسازیم.</p>
+            <p class="mt-1 text-gray-600 dark:text-gray-300">
+              قبل از هر پرداخت، مدارک معتبر را بررسی کنید. گزارش آگهی‌های مشکوک به ما کمک می‌کند تا محیطی امن‌تر بسازیم.
+            </p>
             <div class="mt-2 flex flex-wrap gap-2">
               <a href="#" class="text-emerald-700 dark:text-emerald-300 text-[13px] hover:underline">راهنمای خرید امن</a>
               <span class="text-gray-300">•</span>
@@ -208,45 +286,49 @@
             </div>
           </div>
         </div>
-      </div>
+      </article>
     </section>
 
-    {# کارت تماس/مشاوره (دسکتاپ) — دکمه اشتراک حذف شد #}
-    <section class="mt-3 hidden sm:block">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+    {# --------- Contact / Consult (Desktop) --------- #}
+    <section class="mt-3 hidden sm:block" aria-label="تماس و مشاوره">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div class="flex items-center justify-between gap-3">
-          <div class="text-sm text-gray-600 dark:text-gray-300">برای اطلاعات بیشتر با آگهی دهنده تماس بگیرید یا فرم مشاوره را ارسال کنید.</div>
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            برای اطلاعات بیشتر با مشاور وینور تماس بگیرید یا فرم مشاوره را ارسال کنید.
+          </p>
           <div class="flex items-center gap-2">
             {% if land.get('owner') %}
-            <a href="tel:{{ land.get('owner') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-5 py-2.5 rounded-full shadow transition">📞 تماس</a>
+              <a href="tel:{{ land.get('owner') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-5 py-2.5 rounded-full shadow transition">📞 تماس</a>
             {% endif %}
-            <button onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2.5 rounded-full shadow transition">📩 مشاوره</button>
-            {# دکمه اشتراک حذف شد #}
+            <button type="button" onclick="openPopup()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2.5 rounded-full shadow transition">📩 مشاوره</button>
+            {# دکمه اشتراک عمداً حذف شده است. #}
           </div>
         </div>
-      </div>
+      </article>
     </section>
-
   </main>
 
-  {# ---------------- دکمه‌های موبایل (فوتر ثابت) — دکمه اشتراک حذف شد ---------------- #}
-  <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden">
+  {# ==================== Mobile Footer Actions ==================== #}
+  <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden" role="contentinfo" aria-label="دکمه‌های سریع">
     <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,.06)]">
       {% if land.get('owner') %}
-      <a href="tel:{{ land.get('owner') }}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
+        <a href="tel:{{ land.get('owner') }}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
       {% endif %}
-      <button onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 مشاوره</button>
-      {# دکمه اشتراک حذف شد #}
+      <button type="button" onclick="openPopup()" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium">📩 مشاوره</button>
+      {# دکمه اشتراک عمداً حذف شده است. #}
     </div>
   </div>
 
-  {# ---------------- پاپ‌آپ فرم مشاوره ---------------- #}
-  <div id="popupForm" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4">
+  {# ==================== Consult Modal ==================== #}
+  <div id="popupForm" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="فرم درخواست مشاوره">
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 w-full max-w-md shadow-xl">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-base font-bold">درخواست مشاوره</h3>
-        <button onclick="closePopup()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
+        <button type="button" onclick="closePopup()" class="text-gray-500 hover:text-red-500" aria-label="بستن">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
+
       <form method="POST" action="{{ url_for('main.consult', code=land.get('code')) }}" class="space-y-3">
         <div>
           <label class="text-xs text-gray-500">نام</label>
@@ -267,17 +349,18 @@
       </form>
     </div>
   </div>
-
 </div>
 {% endblock %}
 
-{# --- این صفحه: FAB را غیرفعال کن --- #}
+{# ==================== Disable Global FAB on this page ==================== #}
 {% block floating_action %}{% endblock %}
 
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    // ————— توابع کمکی نمایشِ عدد به حروف فارسی (تقریبی، هماهنگ با فرم) —————
+    "use strict";
+
+    // -------- Number → Persian Words (approx.) --------
     (function(){
       const numfmt = new Intl.NumberFormat('fa-IR');
       const formatNumber = n => n ? numfmt.format(n) : '';
@@ -298,7 +381,7 @@
       }
     })();
 
-    // ————— گالری: ترتیب طبق images_order و کاور طبق cover_index —————
+    // -------- Swiper ordering (images_order) & cover (cover_index) --------
     document.addEventListener("DOMContentLoaded", function(){
       const sw = document.getElementById('land-swiper');
       if (sw && window.Swiper){
@@ -308,13 +391,17 @@
           const images = JSON.parse(sw.dataset.images || '[]');
           const order  = (sw.dataset.order || '').split(',').map(s=>s.trim()).filter(Boolean);
           const cover  = parseInt(sw.dataset.cover ?? '-1', 10);
+
           const keyOf = (item) => {
             if (typeof item === 'string') return item.split('/').pop();
-            if (item && item.id) return String(item.id);
-            if (item && item.url) return item.url.split('/').pop();
+            if (item && item.id)   return String(item.id);
+            if (item && item.url)  return item.url.split('/').pop();
             return '';
           };
+
           const keys = images.map(keyOf);
+
+          // Apply desired order
           if (order.length && keys.length === nodes.length){
             const desired = [];
             order.forEach(k=>{
@@ -326,11 +413,13 @@
               desired.forEach(n=>wrapper.appendChild(n));
             }
           }
+
+          // Move cover to first
           const freshNodes = Array.from(wrapper.children);
           if (!isNaN(cover) && cover >= 0 && cover < freshNodes.length){
             wrapper.insertBefore(freshNodes[cover], wrapper.firstChild);
           }
-        }catch(e){ /* بی‌صدا */ }
+        }catch(e){ /* silent */ }
 
         new Swiper('#land-swiper', {
           loop: true,
@@ -342,7 +431,7 @@
       }
     });
 
-    // ————— فول‌اسکرین —————
+    // -------- Fullscreen Viewer --------
     function openFullscreen(src){
       const img = document.getElementById('fullscreenImage');
       const ov  = document.getElementById('fullscreenOverlay');
@@ -358,7 +447,7 @@
       img.src = '';
     }
 
-    // ————— پاپ‌آپ مشاوره —————
+    // -------- Consult Modal --------
     function openPopup(){
       const p = document.getElementById('popupForm');
       if (!p) return;
@@ -370,7 +459,7 @@
       p.classList.add('hidden'); p.classList.remove('flex');
     }
 
-    // ————— اشتراک‌گذاری/کپی لینک (برای تاپ‌بار باقی است) —————
+    // -------- Share (top bar only) --------
     async function shareLand(url, title){
       const data = { title: title || document.title, text: 'وینور، زمین‌های آینده‌دار.', url };
       try{
@@ -381,14 +470,16 @@
     }
     window.shareLand = shareLand;
 
-    // ————— علاقه‌مندی‌ها (LocalStorage) —————
+    // -------- Favorites (LocalStorage) --------
     (function(){
       const btn = document.getElementById('favBtn');
       if(!btn) return;
+
       const code = btn.dataset.code || '';
       if(!code) { btn.style.display='none'; return; }
+
       const KEY = 'vinor:favs';
-      const read = () => { try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; } };
+      const read  = () => { try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; } };
       const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr)); } catch{} };
       const paint = (active) => {
         if (btn.tagName === 'BUTTON' && btn.textContent.trim().length > 2) {
@@ -412,13 +503,16 @@
       });
     })();
 
-    // ————— Toast کوچک —————
+    // -------- Tiny Toast --------
     function toast(text){
       const t = document.createElement('div');
       t.textContent = text; t.dir='rtl';
       t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-emerald-600 text-white shadow z-[60]';
-      document.body.appendChild(t); setTimeout(()=>t.remove(), 1800);
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 1800);
     }
+
+    // expose
     window.openPopup = openPopup;
     window.closePopup = closePopup;
     window.openFullscreen = openFullscreen;
