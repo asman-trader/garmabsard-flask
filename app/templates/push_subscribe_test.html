@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}تست سابسکرایب پوش | وینور{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto p-4 sm:p-6">
+  <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-300 mb-3">
+    تست عضویت در اعلان‌های وینور
+  </h1>
+  <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+    با زدن دکمهٔ زیر، مرورگر شما در اعلان‌های پوش عضو می‌شود.
+  </p>
+  <button id="btn" class="px-4 py-2 rounded-xl bg-vinor-600 hover:bg-vinor-700 text-white">
+    عضویت در اعلان‌ها
+  </button>
+  <pre id="log" class="mt-4 text-xs p-3 rounded-xl bg-gray-50 dark:bg-gray-800 overflow-x-auto"></pre>
+</div>
+
+<script>
+(async () => {
+  const log = (t) => { document.getElementById('log').textContent += t + "\n"; };
+  const btn = document.getElementById('btn');
+
+  if (!('serviceWorker' in navigator)) { log('ServiceWorker پشتیبانی نمی‌شود.'); return; }
+  if (!('PushManager' in window)) { log('PushManager پشتیبانی نمی‌شود.'); return; }
+
+  const vapidKeyB64 = "{{ config.get('VAPID_PUBLIC_KEY','') }}";
+  if (!vapidKeyB64) { log('VAPID_PUBLIC_KEY تنظیم نشده.'); return; }
+
+  const b64ToUint8 = (b64) => {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const base64 = (b64 + pad).replace(/\-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+    return out;
+  };
+
+  btn.addEventListener('click', async () => {
+    try {
+      log('در حال ثبت Service Worker...');
+      const reg = await navigator.serviceWorker.register('/static/sw.js');
+      log('SW ثبت شد.');
+
+      log('درخواست اجازه نوتیفیکیشن...');
+      const perm = await Notification.requestPermission();
+      log('وضعیت مجوز: ' + perm);
+      if (perm !== 'granted') { log('مجوز داده نشد.'); return; }
+
+      log('در حال Subscribe...');
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64ToUint8(vapidKeyB64)
+      });
+      log('Subscribe موفق.');
+
+      log('ارسال سابسکرپشن به سرور...');
+      const resp = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub)
+      });
+      const data = await resp.json().catch(()=>({}));
+      log('نتیجه سرور: ' + JSON.stringify(data));
+      log('انجام شد. حالا از پنل ادمین، تست اعلان را بزنید.');
+    } catch (e) {
+      log('خطا: ' + (e && e.message || e));
+    }
+  });
+})();
+</script>
+{% endblock %}

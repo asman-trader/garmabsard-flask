@@ -3,7 +3,7 @@
 """
 Vinor (vinor.ir) – Flask App Factory (Final)
 - Mobile-first، امن و شفاف
-- رجیستر بلوپرینت‌ها: main, admin, webhook, lands, uploads_api (آپلود) و push (اختیاری)
+- رجیستر بلوپرینت‌ها: main, admin, webhook, lands (اختیاری), uploads_api (اختیاری), push (اختیاری)
 - سرو sw.js و manifest.webmanifest از ریشه (با fallback)
 - گِیت پیمایش مهمان/کاربر
 """
@@ -45,11 +45,7 @@ def _setup_logging(app: Flask) -> None:
 
 
 def _register_jinja_filters(app: Flask) -> None:
-    """
-    ثبت فیلترهای Jinja موردنیاز پروژه.
-    شامل time_ago، date_ymd، your_time_filter و basename.
-    """
-
+    """ثبت فیلترهای Jinja موردنیاز پروژه: time_ago، date_ymd، your_time_filter، basename."""
     def _parse_dt(value):
         if not value:
             return None
@@ -108,7 +104,6 @@ def _register_jinja_filters(app: Flask) -> None:
     def your_time_filter(value):
         return time_ago(value)
 
-    # ✅ فیلتر مورد نیاز land_detail.html
     @app.template_filter("basename")
     def basename_filter(value):
         try:
@@ -131,6 +126,7 @@ def create_app() -> Flask:
     )
 
     cookie_secure = os.environ.get("SESSION_COOKIE_SECURE", "0") == "1"
+    vapid_sub = os.environ.get("VAPID_SUB", "mailto:admin@vinor.ir")
 
     app.config.update(
         SESSION_COOKIE_NAME=SESSION_COOKIE_NAME,
@@ -145,7 +141,9 @@ def create_app() -> Flask:
         MAX_CONTENT_LENGTH=20 * 1024 * 1024,  # 20MB
         VAPID_PUBLIC_KEY=os.environ.get("VAPID_PUBLIC_KEY", ""),
         VAPID_PRIVATE_KEY=os.environ.get("VAPID_PRIVATE_KEY", ""),
-        VAPID_CLAIMS={"sub": os.environ.get("VAPID_SUB", "mailto:admin@vinor.ir")},
+        # هر دو کلید برای سازگاری: dict و زیرکلید متنی
+        VAPID_CLAIMS={"sub": vapid_sub},
+        VAPID_CLAIMS_SUB=vapid_sub,
         PUSH_STORE_PATH=os.environ.get("PUSH_STORE_PATH", default_push_store),
         APP_BRAND_NAME="وینور | Vinor",
         WTF_CSRF_ENABLED=True,
@@ -190,20 +188,22 @@ def create_app() -> Flask:
 
     push_bp = None
     try:
+        # سازگاری با alias
         from .api.push import push_bp as _push_bp
         push_bp = _push_bp
     except Exception as e:
         app.logger.warning(f"Push API disabled: {e}")
 
+    # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
-    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(admin_bp)
     app.register_blueprint(webhook_bp)
     if lands_bp is not None:
         app.register_blueprint(lands_bp)
     if uploads_bp is not None:
         app.register_blueprint(uploads_bp)
     if push_bp is not None:
-        app.register_blueprint(push_bp, url_prefix="/api/push")
+        app.register_blueprint(push_bp)
 
     # ---------- CSRF ----------
     if CSRFProtect is not None:
@@ -253,6 +253,7 @@ def create_app() -> Flask:
     # ---------- فایل‌های PWA ----------
     @app.get("/sw.js")
     def service_worker():
+        # برای سازگاری: سرو sw.js از static
         static_dir = os.path.join(app.root_path, "static")
         return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
 

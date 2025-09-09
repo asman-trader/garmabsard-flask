@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>اعلان‌ها | وینور – بازار آنلاین ملک</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10b981">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -13,7 +14,7 @@
     <header class="flex items-center justify-between mb-4">
       <h1 class="text-lg font-bold">اعلان‌های من</h1>
       <button id="mark-all"
-              class="text-sm px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700">
+              class="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700">
         علامت‌گذاری همه به‌عنوان خوانده‌شده
       </button>
     </header>
@@ -22,18 +23,20 @@
     <ul class="space-y-3">
       {% if items and items|length %}
         {% for n in items %}
+          {% set ntype = n.ntype or n.type %}
+          {% set is_read = (n.is_read if n.is_read is not none else n.read) %}
           <li class="p-3 rounded-2xl bg-white dark:bg-gray-800 shadow flex gap-3 items-start">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center
-              {% if n.type == 'success' %} bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300
-              {% elif n.type == 'warning' %} bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300
-              {% elif n.type == 'error' %} bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300
-              {% elif n.type == 'status' %} bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300
+              {% if ntype == 'success' %} bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300
+              {% elif ntype == 'warning' %} bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300
+              {% elif ntype == 'error' %} bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300
+              {% elif ntype == 'status' or ntype == 'info' %} bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300
               {% else %} bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200{% endif %}">
               <i class="fa-solid
-                {% if n.type=='success' %}fa-circle-check
-                {% elif n.type=='warning' %}fa-triangle-exclamation
-                {% elif n.type=='error' %}fa-circle-xmark
-                {% elif n.type=='status' %}fa-bullhorn
+                {% if ntype=='success' %}fa-circle-check
+                {% elif ntype=='warning' %}fa-triangle-exclamation
+                {% elif ntype=='error' %}fa-circle-xmark
+                {% elif ntype=='status' or ntype=='info' %}fa-bullhorn
                 {% else %}fa-bell{% endif %}"></i>
             </div>
 
@@ -41,7 +44,6 @@
               <div class="flex items-center justify-between gap-3">
                 <h3 class="font-semibold text-sm line-clamp-2">{{ n.title }}</h3>
                 <span class="text-[11px] text-gray-400 shrink-0">{{ n.created_at | time_ago }}</span>
-                {# اگر لازم بود، می‌توانید از your_time_filter هم استفاده کنید: {{ n.created_at | your_time_filter }} #}
               </div>
 
               <p class="text-sm mt-1 leading-6">{{ n.body }}</p>
@@ -54,12 +56,12 @@
                   </a>
                 {% endif %}
 
-                {% if not n.is_read %}
-                  <button class="text-xs px-2 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 mark-read"
+                {% if not is_read %}
+                  <button class="mark-read text-xs px-2 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                           data-id="{{ n.id }}">
                     علامت‌گذاری به‌عنوان خوانده‌شده
                   </button>
-                  <span class="text-[10px] text-red-500">● جدید</span>
+                  <span class="dot-new text-[10px] text-red-500">● جدید</span>
                 {% else %}
                   <span class="text-[10px] text-gray-400">خوانده‌شده</span>
                 {% endif %}
@@ -75,42 +77,191 @@
     </ul>
   </main>
 
+  <!-- صدای اعلان -->
+  <audio id="notif-audio" preload="auto">
+    <source src="{{ url_for('static', filename='sounds/notify.mp3') }}" type="audio/mpeg">
+  </audio>
+
   <script>
-    // خواندن کوکی برای CSRF
+    // ===== Config injected from server =====
+    const MARK_ALL_READ_URL = {{ mark_all_read_url|default('')|tojson }};
+    const MARK_ONE_READ_URL = {{ mark_one_read_url|default('')|tojson }};
+    const UNREAD_COUNT_URL  = {{ unread_count_url|default('')|tojson }};
+    const VAPID_PUBLIC_KEY  = {{ VAPID_PUBLIC_KEY|default('')|tojson }};
+
+    // ===== Utils =====
     function getCookie(name){
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop().split(';').shift();
     }
-
     async function postJSON(url, data){
-      const csrf = getCookie("XSRF-TOKEN");
+      const csrf = getCookie("XSRF-TOKEN") || getCookie("csrf_token");
       const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type":"application/json",
-          // سازگار با Flask-WTF CSRF
-          "X-CSRFToken": csrf || "",
-          "X-CSRF-Token": csrf || ""
+          ...(csrf ? {"X-CSRFToken": csrf, "X-CSRF-Token": csrf} : {})
         },
         body: JSON.stringify(data||{})
       });
       try { return await res.json(); } catch { return { ok: res.ok }; }
     }
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+      return outputArray;
+    }
 
-    // علامت‌گذاری همه
-    document.getElementById("mark-all")?.addEventListener("click", async ()=>{
-      const res = await postJSON("{{ url_for('main.api_notifications_mark_all_read') }}");
-      if(res.ok){ location.reload(); }
-    });
+    // ===== Sound unlock on first interaction =====
+    let soundEnabled = false;
+    const audioEl = document.getElementById('notif-audio');
+    function enableSoundOnce(){
+      if (soundEnabled) return;
+      audioEl.play().then(() => {
+        audioEl.pause();
+        soundEnabled = true;
+        window.removeEventListener('pointerdown', enableSoundOnce, { once:true });
+      }).catch(() => {});
+    }
+    enableSoundOnce();
+    window.addEventListener('pointerdown', enableSoundOnce, { once:true });
 
-    // علامت‌گذاری تکی
-    document.querySelectorAll(".mark-read").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        const id = btn.dataset.id;
-        const res = await postJSON("{{ url_for('main.api_notifications_mark_read') }}", {id});
-        if(res.ok){ location.reload(); }
+    function playNotifySound(){
+      if (!soundEnabled) return;
+      audioEl.currentTime = 0;
+      audioEl.play().catch(()=>{});
+    }
+
+    // ===== Service Worker =====
+    async function ensureSW(){
+      if (!('serviceWorker' in navigator)) return null;
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' });
+      try { await reg.update(); } catch {}
+      return reg;
+    }
+
+    // ===== Push =====
+    let _publicKeyCache = VAPID_PUBLIC_KEY || '';
+    let _publicKeyPromise = null;
+    async function fetchPublicKey(){
+      if (_publicKeyCache) return _publicKeyCache;
+      if (_publicKeyPromise) return _publicKeyPromise;
+      _publicKeyPromise = (async () => {
+        try {
+          const r = await fetch('/api/push/config', { cache: 'no-store' });
+          const d = await r.json();
+          _publicKeyCache = d.publicKey || '';
+          return _publicKeyCache;
+        } catch { _publicKeyCache = ''; return ''; }
+        finally { _publicKeyPromise = null; }
+      })();
+      return _publicKeyPromise;
+    }
+
+    const NOTIF_DENIED_KEY = 'vinor_notif_denied_at';
+    function shouldAskPermission(){
+      if (!('Notification' in window)) return false;
+      if (Notification.permission !== 'default') return false;
+      const t = localStorage.getItem(NOTIF_DENIED_KEY);
+      if (!t) return true;
+      return (Date.now() - parseInt(t,10)) > 12*60*60*1000; // 12h
+    }
+
+    async function requestNotificationPermissionIfNeeded(){
+      if (!('Notification' in window)) return 'denied';
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') return 'denied';
+      if (!shouldAskPermission()) return 'default';
+      const p = await Notification.requestPermission();
+      if (p === 'denied') localStorage.setItem(NOTIF_DENIED_KEY, String(Date.now()));
+      return p;
+    }
+
+    const PUSH_LOCAL_FLAG = 'vinor_push_registered';
+    async function ensurePushSubscription(reg){
+      if (!reg || !('pushManager' in reg)) return null;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const publicKey = await fetchPublicKey();
+        if (!publicKey) return null;
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+      }
+      if (!localStorage.getItem(PUSH_LOCAL_FLAG)) {
+        const res = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub)
+        }).then(r=>r.json()).catch(()=>({}));
+        if (res && res.ok) localStorage.setItem(PUSH_LOCAL_FLAG, '1');
+      }
+      return sub;
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (e)=>{
+        if (e?.data?.type === 'PUSH_RECEIVED') playNotifySound();
       });
+    }
+
+    // ===== Auto flow (silent) =====
+    (async ()=>{
+      const perm = await requestNotificationPermissionIfNeeded();
+      const reg  = await ensureSW();
+      if (perm === 'granted' && reg) await ensurePushSubscription(reg);
+    })();
+
+    // ===== خوانده‌شدن‌ها =====
+    function disableBtn(btn, on=true){
+      if (!btn) return;
+      btn.disabled = on;
+      btn.classList.toggle('opacity-60', on);
+      btn.classList.toggle('cursor-not-allowed', on);
+    }
+    async function markAllAPI(){
+      const btn = document.getElementById("mark-all");
+      if (btn?.disabled) return;
+      disableBtn(btn, true);
+      const url = MARK_ALL_READ_URL || '/api/notifications/mark-all-read';
+      const res = await postJSON(url, {});
+      if(res && (res.ok || res.status === 'ok')){
+        document.querySelectorAll(".mark-read").forEach(el=>{
+          const tag = document.createElement('span');
+          tag.className = 'text-[10px] text-gray-400';
+          tag.textContent = 'خوانده‌شده';
+          const dot = el.parentElement?.querySelector('.dot-new');
+          if (dot) dot.remove();
+          el.replaceWith(tag);
+        });
+      } else {
+        disableBtn(btn, false);
+      }
+    }
+    async function markOneAPI(id, btn){
+      if(!id || btn?.disabled) return;
+      disableBtn(btn, true);
+      const url = MARK_ONE_READ_URL || '/api/notifications/mark-read';
+      const res = await postJSON(url, { id });
+      if(res && (res.ok || res.status === 'ok')){
+        const tag = document.createElement('span');
+        tag.className = 'text-[10px] text-gray-400';
+        tag.textContent = 'خوانده‌شده';
+        const dot = btn.parentElement?.querySelector('.dot-new');
+        if (dot) dot.remove();
+        btn.replaceWith(tag);
+      } else {
+        disableBtn(btn, false);
+      }
+    }
+    document.getElementById("mark-all")?.addEventListener("click", markAllAPI);
+    document.querySelectorAll(".mark-read").forEach(btn=>{
+      btn.addEventListener("click", ()=> markOneAPI(btn.dataset.id, btn));
     });
   </script>
 </body>

@@ -1,0 +1,151 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}تست اعلان پوش | پنل مدیریت وینور – بازار آنلاین ملک{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto p-4 sm:p-6">
+
+  <!-- عنوان صفحه -->
+  <div class="mb-4 sm:mb-6">
+    <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-300 flex items-center gap-2">
+      <i class="fas fa-bell"></i>
+      تست اعلان پوش (Web Push)
+    </h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      از این فرم برای ارسال اعلان آزمایشی به همهٔ مشترکین پوش استفاده کنید.
+    </p>
+  </div>
+
+  <!-- کارت فرم -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow border border-gray-100 dark:border-gray-800">
+    <form id="pushForm" class="p-4 sm:p-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- عنوان -->
+      <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">عنوان اعلان</label>
+      <input name="title" type="text" dir="rtl"
+             class="w-full mb-4 rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-vinor-500 focus:border-vinor-500"
+             placeholder="مثال: وینور – اعلان آزمایشی" />
+
+      <!-- متن -->
+      <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">متن اعلان</label>
+      <textarea name="body" rows="3" dir="rtl"
+                class="w-full mb-4 rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-vinor-500 focus:border-vinor-500"
+                placeholder="مثال: این یک پیام آزمایشی از پنل ادمین وینور است."></textarea>
+
+      <!-- آدرس اقدام -->
+      <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">لینک اقدام (اختیاری)</label>
+      <input name="url" type="text" dir="ltr"
+             class="w-full mb-6 rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-vinor-500 focus:border-vinor-500"
+             placeholder="/notifications" />
+
+      <!-- دکمه‌ها -->
+      <div class="flex items-center gap-3">
+        <button id="sendBtn" type="submit"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-vinor-600 hover:bg-vinor-700 text-white shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed">
+          <i class="fas fa-paper-plane"></i>
+          ارسال اعلان آزمایشی
+        </button>
+        <button id="resetBtn" type="button"
+                class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition">
+          پاکسازی فرم
+        </button>
+      </div>
+    </form>
+
+    <!-- باکس نتیجه -->
+    <div id="resultBox" class="hidden p-4 sm:p-6 border-t border-gray-100 dark:border-gray-800">
+      <div id="resultAlert" class="rounded-xl p-3 text-sm"></div>
+
+      <div id="stats" class="hidden mt-4 grid grid-cols-3 gap-3 text-center">
+        <div class="rounded-xl bg-green-50 dark:bg-green-900/20 p-3">
+          <div class="text-xs text-green-700 dark:text-green-300">ارسال‌شده</div>
+          <div id="sent" class="mt-1 text-lg font-bold text-green-800 dark:text-green-200">0</div>
+        </div>
+        <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/20 p-3">
+          <div class="text-xs text-yellow-700 dark:text-yellow-300">حذف‌شده</div>
+          <div id="removed" class="mt-1 text-lg font-bold text-yellow-800 dark:text-yellow-200">0</div>
+        </div>
+        <div class="rounded-xl bg-red-50 dark:bg-red-900/20 p-3">
+          <div class="text-xs text-red-700 dark:text-red-300">ناموفق</div>
+          <div id="failed" class="mt-1 text-lg font-bold text-red-800 dark:text-red-200">0</div>
+        </div>
+      </div>
+
+      <p id="remaining" class="hidden mt-3 text-xs text-gray-500 dark:text-gray-400 text-center"></p>
+    </div>
+  </div>
+
+  <!-- نکات -->
+  <div class="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-6">
+    • برای دریافت اعلان، کاربر باید قبلاً اجازهٔ Notifications داده و در سرویس پوش مشترک شده باشد.<br>
+    • درصورت نمایش خطای <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">NO_SUBSCRIBERS</code> یعنی هنوز مشترکی ثبت نشده است.
+  </div>
+
+</div>
+
+<!-- اسکریپت ارسال -->
+<script>
+  const form     = document.getElementById('pushForm');
+  const sendBtn  = document.getElementById('sendBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultBox   = document.getElementById('resultBox');
+  const resultAlert = document.getElementById('resultAlert');
+  const statsBox    = document.getElementById('stats');
+  const sentEl      = document.getElementById('sent');
+  const removedEl   = document.getElementById('removed');
+  const failedEl    = document.getElementById('failed');
+  const remainingEl = document.getElementById('remaining');
+
+  resetBtn.addEventListener('click', () => {
+    form.reset();
+    resultBox.classList.add('hidden');
+    statsBox.classList.add('hidden');
+    remainingEl.classList.add('hidden');
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال...';
+
+    resultBox.classList.remove('hidden');
+    statsBox.classList.add('hidden');
+    remainingEl.classList.add('hidden');
+    resultAlert.className = 'rounded-xl p-3 text-sm bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300';
+    resultAlert.textContent = 'در حال ارسال به مشترکین...';
+
+    try {
+      const formData = new FormData(form);
+      const resp = await fetch('{{ url_for("admin.admin_push_test_send") }}', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'fetch' },
+        body: formData
+      });
+
+      const isJson = resp.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await resp.json() : { ok: false, error: 'BAD_RESPONSE' };
+
+      if (resp.ok && data.ok) {
+        resultAlert.className = 'rounded-xl p-3 text-sm bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300';
+        resultAlert.textContent = 'اعلان با موفقیت ارسال شد.';
+        statsBox.classList.remove('hidden');
+        sentEl.textContent    = data.sent ?? 0;
+        removedEl.textContent = data.removed ?? 0;
+        failedEl.textContent  = data.failed ?? 0;
+        remainingEl.classList.remove('hidden');
+        remainingEl.textContent = `مشترکین فعال باقی‌مانده: ${data.remaining ?? 0}`;
+      } else {
+        const err = (data && (data.error || data.message)) || 'خطای ناشناخته';
+        resultAlert.className = 'rounded-xl p-3 text-sm bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300';
+        resultAlert.textContent = `ارسال ناموفق بود: ${err}`;
+      }
+    } catch (ex) {
+      resultAlert.className = 'rounded-xl p-3 text-sm bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300';
+      resultAlert.textContent = 'خطا در ارتباط با سرور.';
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ارسال اعلان آزمایشی';
+    }
+  });
+</script>
+{% endblock %}

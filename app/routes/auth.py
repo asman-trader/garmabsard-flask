@@ -107,3 +107,7 @@ def logout():
         session.pop(k, None)
     flash("از حساب خارج شدید.", "info")
     return redirect(url_for("main.login"))
+
+@main_bp.route('/push-subscribe-test')
+def push_subscribe_test():
+    return render_template('push_subscribe_test.html')
