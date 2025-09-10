@@ -173,18 +173,7 @@
             </div>
           </div>
 
-          <div class="text-left shrink-0">
-            <div class="text-[11px] text-gray-500 dark:text-gray-400">قیمت کل</div>
-            <div class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
-              {% if _price_total is not none %}
-                <span id="priceTotal">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
-                <span class="text-sm font-normal text-gray-600 dark:text-gray-300">تومان</span>
-              {% else %}
-                نامشخص
-              {% endif %}
-            </div>
-            <div id="priceWords" class="text-[11px] text-gray-500"></div>
-          </div>
+          
         </div>
 
         {# Badges row #}
@@ -228,6 +217,17 @@
               نامشخص
             {% endif %}
           </span>
+          <span class="mx-2 text-gray-300">•</span>
+          <span class="inline-flex items-center gap-1">
+            💰 <strong class="ml-1">قیمت کل:</strong>
+            {% if _price_total is not none %}
+              <span id="priceTotal">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
+              <span>تومان</span>
+            {% else %}
+              نامشخص
+            {% endif %}
+          </span>
+          <div id="priceWords" class="text-[11px] text-gray-500 mt-1"></div>
         </div>
       </article>
     </section>

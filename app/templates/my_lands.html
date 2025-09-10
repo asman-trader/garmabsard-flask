@@ -160,6 +160,7 @@
             </a>
             <form method="POST" action="{{ url_for('main.delete_land', code=land.code) }}"
                   onsubmit="return confirm('آیا از حذف این آگهی مطمئن هستید؟')">
+              {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
               <button type="submit"
                       class="flex-1 text-center bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg w-full">
                 🗑️ حذف
