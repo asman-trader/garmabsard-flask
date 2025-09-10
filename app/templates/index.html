@@ -56,11 +56,12 @@
     document.querySelectorAll(".land-card").forEach(card => {
       const code = card.dataset.code;
       const btn = card.querySelector(".favorite-btn");
-      const svg = btn.querySelector("svg");
+      const icon = btn.querySelector("i") || btn; // آیکن داخل دکمه (FontAwesome)
 
       const updateHeart = () => {
-        svg.classList.toggle("text-red-500", favorites.includes(code));
-        svg.classList.toggle("text-white", !favorites.includes(code));
+        const isFav = favorites.includes(code);
+        icon.classList.toggle("text-red-500", isFav);
+        icon.classList.toggle("text-white", !isFav);
       };
 
       updateHeart();
