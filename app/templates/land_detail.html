@@ -68,7 +68,7 @@
           data-code="{{ land.get('code') or '' }}"
           title="ذخیره آگهی"
           aria-label="ذخیره آگهی">
-          <i class="fas fa-bookmark text-lg"></i>
+          <i class="far fa-bookmark text-lg"></i>
         </button>
       </div>
     </div>
@@ -470,7 +470,7 @@
     }
     window.shareLand = shareLand;
 
-    // -------- Favorites (LocalStorage) --------
+    // -------- Favorites (LocalStorage) — bookmark icon (regular ↔ solid) --------
     (function(){
       const btn = document.getElementById('favBtn');
       if(!btn) return;
@@ -478,28 +478,41 @@
       const code = btn.dataset.code || '';
       if(!code) { btn.style.display='none'; return; }
 
-      const KEY = 'vinor:favs';
-      const read  = () => { try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; } };
-      const write = (arr) => { try{ localStorage.setItem(KEY, JSON.stringify(arr)); } catch{} };
-      const paint = (active) => {
-        if (btn.tagName === 'BUTTON' && btn.textContent.trim().length > 2) {
-          btn.textContent = (active ? '★ در علاقه‌مندی' : '☆ علاقه‌مندی');
-        } else {
-          btn.textContent = active ? '★' : '☆';
-        }
+      const icon = btn.querySelector('i') || btn;
+      const KEY_NEW = 'favoriteLands';
+      const KEY_OLD = 'vinor:favs';
+
+      const readKey = (k) => { try { return (JSON.parse(localStorage.getItem(k) || '[]')||[]).map(String); } catch { return []; } };
+      const writeNew = (arr) => { try { localStorage.setItem(KEY_NEW, JSON.stringify(arr)); } catch {}
       };
 
-      let favs = read();
-      let active = favs.includes(code);
+      // migrate old key → new key if needed
+      let favs = readKey(KEY_NEW);
+      if (!Array.isArray(favs) || favs.length === 0) {
+        const old = readKey(KEY_OLD);
+        if (old.length) {
+          favs = Array.from(new Set(old));
+          writeNew(favs);
+          try { localStorage.removeItem(KEY_OLD); } catch {}
+        }
+      }
+
+      const paint = (active) => {
+        icon.classList.toggle('fas', active);   // solid
+        icon.classList.toggle('far', !active);  // regular (outline)
+      };
+
+      let active = favs.includes(String(code));
       paint(active);
 
       btn.addEventListener('click', ()=>{
-        favs = read();
-        active = favs.includes(code);
-        if(active){ favs = favs.filter(c=>c!==code); } else { favs.push(code); }
-        write(favs);
-        paint(!active);
-        toast(!active ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد');
+        favs = readKey(KEY_NEW);
+        const idx = favs.indexOf(String(code));
+        if (idx > -1) { favs.splice(idx, 1); active = false; }
+        else { favs.push(String(code)); active = true; }
+        writeNew(favs);
+        paint(active);
+        toast(active ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد');
       });
     })();
 
