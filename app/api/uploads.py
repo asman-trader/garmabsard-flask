@@ -12,6 +12,7 @@ import imghdr
 from datetime import datetime
 from typing import Tuple
 from flask import Blueprint, current_app, request, jsonify, send_from_directory
+from app.utils.storage import legacy_dir
 from werkzeug.utils import secure_filename
 
 uploads_bp = Blueprint("uploads", __name__)
@@ -105,8 +106,13 @@ def serve_uploads(filename: str):
     سرو فایل‌های آپلود شده از UPLOAD_FOLDER.
     """
     base_dir = current_app.config.get("UPLOAD_FOLDER")
-    if not base_dir:
-        return jsonify({"success": False, "error": "UPLOAD_FOLDER not set"}), 500
-    # جلوگیری از خروج از دایرکتوری
+    if base_dir:
+        safe_path = os.path.normpath(filename).replace("\\", "/")
+        try:
+            return send_from_directory(base_dir, safe_path)
+        except Exception:
+            pass
+    # فالبک به مسیر قدیمی کنار کد
+    legacy_base = os.path.join(legacy_dir(current_app), "uploads")
     safe_path = os.path.normpath(filename).replace("\\", "/")
-    return send_from_directory(base_dir, safe_path)
+    return send_from_directory(legacy_base, safe_path)

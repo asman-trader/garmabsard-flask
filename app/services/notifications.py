@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Vinor Notifications Service (JSON-based)
+Vinor Notifications Service – instance/data backend via utils.storage
 """
-import json, os, time, uuid
+import time, uuid
 from typing import List, Dict, Any
 
-DATA_DIR = os.path.join("app", "data")
-FILE_PATH = os.path.join(DATA_DIR, "notifications.json")
-BACKUP_PATH = os.path.join(DATA_DIR, "notifications.backup.json")
+from app.utils.storage import load_notifications, save_notifications
 
-
-def _ensure_store():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    if not os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "w", encoding="utf-8") as f:
-            json.dump({}, f, ensure_ascii=False, indent=2)
 
 def _normalize_loaded(raw) -> Dict[str, List[Dict[str, Any]]]:
     """
@@ -47,33 +39,11 @@ def _normalize_loaded(raw) -> Dict[str, List[Dict[str, Any]]]:
     return {}
 
 def _load() -> Dict[str, List[Dict[str, Any]]]:
-    _ensure_store()
-    try:
-        with open(FILE_PATH, "r", encoding="utf-8") as f:
-            raw = json.load(f)
-    except Exception:
-        # فایل خراب → ریست
-        try:
-            if os.path.exists(FILE_PATH):
-                os.replace(FILE_PATH, BACKUP_PATH)  # بکاپ
-        except Exception:
-            pass
-        return {}
-
-    data = _normalize_loaded(raw)
-
-    # اگر ساختار اصلاح شد، بازنویسی کن تا برای دفعات بعدی سالم باشه
-    try:
-        with open(FILE_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
-
-    return data
+    raw = load_notifications()
+    return _normalize_loaded(raw)
 
 def _save(data: Dict[str, List[Dict[str, Any]]]):
-    with open(FILE_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_notifications(data)
 
 def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
                      ad_id: str | None = None, action_url: str | None = None) -> Dict[str, Any]:

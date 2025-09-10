@@ -7,7 +7,7 @@
     {% set images = land.get('images') or [] %}
     {% set img = images[0] if images else None %}
 
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition" data-code="{{ land.code }}">
 
       <!-- تصویر اصلی -->
       <div class="relative">
@@ -52,6 +52,9 @@
 <!-- اسکریپت علاقه‌مندی -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // ذخیره فهرست فعلی آگهی‌ها برای استفاده صفحه علاقه‌مندی‌ها
+    try { localStorage.setItem("allLandsData", JSON.stringify({{ lands | tojson }})); } catch (e) {}
+
     const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
 
     document.querySelectorAll(".land-card").forEach(card => {

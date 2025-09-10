@@ -8,8 +8,8 @@
   {# --- Favicon & PWA --- #}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  {# مانیفست از روت اختصاصی با MIME صحیح #}
-  <link rel="manifest" href="{{ url_for('main.pwa_manifest') }}">
+  {# مانیفست: روت سراسری که در app/__init__.py تعریف شده است #}
+  <link rel="manifest" href="{{ url_for('serve_manifest') }}">
   <meta name="theme-color" content="#16a34a">
 
   {# iOS PWA #}
@@ -132,9 +132,9 @@
         if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
       });
 
-      // ثبت Service Worker (PWA) از روت صحیح
+      // ثبت Service Worker (PWA) از روت سراسری
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ url_for("main.pwa_sw") }}', { scope: '/' }).catch(()=>{});
+        navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' }).catch(()=>{});
       }
     })();
   </script>
@@ -166,7 +166,7 @@
         const reg = await navigator.serviceWorker.getRegistration('/');
         if (reg) return reg;
         // تلاش برای رجیستر اگر هنوز انجام نشده
-        return await navigator.serviceWorker.register('{{ url_for("main.pwa_sw") }}', { scope: '/' });
+        return await navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' });
       }
 
       async function subscribePush() {

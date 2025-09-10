@@ -20,23 +20,26 @@
     const favoritesContainer = document.getElementById("favoritesContainer");
     const noFavorites = document.getElementById("noFavorites");
 
-    // دریافت لیست کامل آگهی‌ها از localStorage
-    const allLands = JSON.parse(localStorage.getItem("allLandsData") || "[]");
+    // دریافت لیست آگهی‌ها: ابتدا از localStorage، درصورت نبود از API
+    let allLands = [];
+    try { allLands = JSON.parse(localStorage.getItem("allLandsData") || "[]"); } catch (e) { allLands = []; }
     const favoriteCodes = (JSON.parse(localStorage.getItem("favoriteLands") || "[]")).map(String); // تبدیل به رشته
 
-    // فیلتر کردن آگهی‌های مورد علاقه
-    const favoriteLands = allLands.filter(land => favoriteCodes.includes(String(land.code)));
-
-    if (favoriteLands.length === 0) {
-      noFavorites.classList.remove("hidden");
-    } else {
+    function render(list){
+      const favoriteLands = list.filter(land => favoriteCodes.includes(String(land.code)));
+      if (favoriteLands.length === 0) {
+        noFavorites.classList.remove("hidden");
+        return;
+      }
       favoriteLands.forEach(land => {
         const card = document.createElement("div");
         card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-xl transition-transform hover:scale-[1.02] duration-300 overflow-hidden";
 
-        const imageHTML = (land.images && land.images.length > 0)
-          ? `<img src="/static/${land.images[0]}" class="w-full h-48 object-cover rounded-t-2xl" loading="lazy" alt="تصویر زمین">`
-          : `<div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">بدون تصویر</div>`;
+        const firstImg = (land.images && land.images.length > 0) ? land.images[0] : null;
+        const imgSrc = firstImg ? `/uploads/${firstImg.replace(/^\/+/, '')}` : null;
+        const imageHTML = imgSrc
+          ? `<img src="${imgSrc}" class="w-full h-48 object-cover rounded-t-2xl" loading="lazy" alt="تصویر زمین">`
+          : `<div class=\"w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400\">بدون تصویر</div>`;
 
         card.innerHTML = `
           <a href="/land/${land.code}">${imageHTML}</a>
@@ -45,15 +48,31 @@
               <h3 class="text-lg font-bold text-green-700 dark:text-green-400 hover:underline truncate">${land.title || "عنوان ندارد"}</h3>
             </a>
             <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              📏 ${land.size ? land.size.toLocaleString() : "?"} متر | 📍 ${land.location || "?"}
+              📏 ${land.size ? (Number(land.size)||0).toLocaleString() : "?"} متر | 📍 ${land.location || "?"}
             </p>
             <p class="text-sm text-gray-800 dark:text-gray-200 font-semibold mt-3">
-              💰 ${land.price_total ? land.price_total.toLocaleString() : "نامشخص"} تومان
+              💰 ${land.price_total ? (Number(land.price_total)||0).toLocaleString() : "نامشخص"} تومان
             </p>
           </div>
         `;
         favoritesContainer.appendChild(card);
       });
+    }
+
+    if (allLands.length > 0){
+      render(allLands);
+    } else {
+      fetch('/api/lands/approved', { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => {
+          if (j && j.ok && Array.isArray(j.items)) {
+            try { localStorage.setItem('allLandsData', JSON.stringify(j.items)); } catch(e) {}
+            render(j.items);
+          } else {
+            noFavorites.classList.remove('hidden');
+          }
+        })
+        .catch(()=> noFavorites.classList.remove('hidden'));
     }
   });
 </script>

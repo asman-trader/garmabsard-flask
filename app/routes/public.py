@@ -222,6 +222,29 @@ def search_results():
         domain="vinor.ir",
     )
 
+# -------------------------
+# API: لیست آگهی‌های تأییدشده (برای کلاینت فرانت/صفحه علاقه‌مندی)
+# -------------------------
+@main_bp.get("/api/lands/approved")
+def api_lands_approved():
+    try:
+        items = _sort_by_created_at_desc(_get_approved_ads())
+        # حداقل فیلدهای مورد نیاز صفحه علاقه‌مندی
+        data = [
+            {
+                "code": x.get("code"),
+                "title": x.get("title"),
+                "size": x.get("size"),
+                "location": x.get("location"),
+                "price_total": x.get("price_total"),
+                "images": x.get("images") or [],
+            }
+            for x in items
+        ]
+        return {"ok": True, "items": data}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
+
 @main_bp.route("/city", endpoint="city_select")
 def city_select():
     """
@@ -260,34 +283,7 @@ def faq():
 # -------------------------
 # PWA Routes (Manifest, SW, Offline)
 # -------------------------
-@main_bp.route("/manifest.webmanifest", endpoint="pwa_manifest")
-def pwa_manifest():
-    """
-    سرو مانیفست با MIME صحیح.
-    فایل باید در static/manifest.webmanifest موجود باشد.
-    """
-    resp = make_response(send_from_directory(current_app.static_folder, "manifest.webmanifest"))
-    resp.headers["Content-Type"] = "application/manifest+json; charset=utf-8"
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    return resp
-
-@main_bp.route("/sw.js", endpoint="pwa_sw")
-def pwa_sw():
-    """
-    سرو سرویس‌ورکر با MIME صحیح.
-    فایل باید در static/sw.js موجود باشد.
-    """
-    resp = make_response(send_from_directory(current_app.static_folder, "sw.js"))
-    resp.headers["Content-Type"] = "application/javascript; charset=utf-8"
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    return resp
-
-@main_bp.route("/offline", endpoint="pwa_offline")
-def pwa_offline():
-    """
-    صفحهٔ آفلاین PWA
-    """
-    return send_from_directory(current_app.static_folder, "offline.html")
+## روت‌های PWA در app/__init__.py پیاده‌سازی شده‌اند؛ برای جلوگیری از تداخل حذف شدند.
 
 # -------------------------
 # Optional: Web Share Target & Protocol Handler
