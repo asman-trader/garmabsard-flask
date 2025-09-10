@@ -109,6 +109,13 @@
             <i class="fas fa-question-circle text-sm text-green-600 dark:text-green-400"></i>
             سوالات پرتکرار
           </a>
+          {# دکمه ساده تماس با ما #}
+          {% set PHONE = (contact_phone|default('+989121234567')) %}
+          <a href="tel:{{ PHONE }}"
+             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
+            <i class="fas fa-phone text-sm text-green-600 dark:text-green-400"></i>
+            تماس با ما
+          </a>
         </div>
       </div>
       <!-- /Help accordion -->
@@ -133,42 +140,7 @@
 
   </div>
 
-  <!-- Bottom quick actions -->
-  <footer
-    class="shrink-0 sticky bottom-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
-           border-t border-gray-200 dark:border-gray-700"
-    style="padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);"
-    role="toolbar" aria-label="اقدامات سریع">
-
-    {% set PHONE = (contact_phone if contact_phone is defined and contact_phone) or '+989121234567' %}
-    {% set WA    = (contact_whatsapp if contact_whatsapp is defined and contact_whatsapp) or PHONE %}
-    {% set WA_INT = WA|replace('+','')|replace(' ','')|replace('-','') %}
-    {% set SHARE_TEXT = (share_text if share_text is defined and share_text) or 'وینور | خرید و فروش ملک' %}
-
-    <div class="grid grid-cols-3 gap-2 text-center">
-      <a id="qaCall" href="tel:{{ PHONE }}"
-         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-         aria-label="تماس تلفنی" rel="nofollow">
-        <i class="fas fa-phone" aria-hidden="true"></i>
-        <span class="block text-xs mt-1">تماس</span>
-      </a>
-
-      <a id="qaWhatsapp" href="https://wa.me/{{ WA_INT }}"
-         class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-         aria-label="گفتگو در واتساپ" target="_blank" rel="noopener noreferrer"
-         data-wa="{{ WA_INT }}" data-wa-text="{{ SHARE_TEXT }}">
-        <i class="fab fa-whatsapp" aria-hidden="true"></i>
-        <span class="block text-xs mt-1">واتساپ</span>
-      </a>
-
-      <button id="qaShare" type="button"
-              class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
-              aria-label="اشتراک‌گذاری">
-        <i class="fas fa-share-alt" aria-hidden="true"></i>
-        <span class="block text-xs mt-1">اشتراک</span>
-      </button>
-    </div>
-  </footer>
+  
 </aside>
 
 <script>
