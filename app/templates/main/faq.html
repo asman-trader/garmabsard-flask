@@ -1,56 +1,42 @@
-{# templates/main/faq.html - صفحه سوالات پرتکرار وینور #}
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>سوالات پرتکرار | وینور</title>
-  <meta name="description" content="سوالات پرتکرار درباره وینور، اپلیکیشن خرید و فروش ملک در ایران.">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
-  <!-- هدر -->
-  <header class="bg-green-600 text-white p-4 text-center text-lg font-bold shadow">
-    سوالات پرتکرار
-  </header>
+{% extends "base.html" %}
 
-  <!-- محتوای اصلی -->
-  <main class="p-5 max-w-3xl mx-auto space-y-6 leading-7">
+{% block title %}سوالات پرتکرار | وینور{% endblock %}
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
-      <h2 class="text-lg font-semibold mb-3">وینور چیست؟</h2>
-      <p>وینور یک اپلیکیشن موبایل‌محور برای خرید و فروش زمین، باغ، ویلا و آپارتمان است که تجربه‌ای سریع، امن و شفاف برای معاملات ملکی فراهم می‌کند.</p>
-    </section>
+{% block content %}
+<div class="p-5 max-w-3xl mx-auto space-y-6 leading-7">
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
-      <h2 class="text-lg font-semibold mb-3">چطور آگهی ثبت کنم؟</h2>
-      <p>با ورود به حساب کاربری، از منوی اصلی گزینه <strong>ثبت آگهی رایگان</strong> را انتخاب کنید. اطلاعات ملک را وارد کرده و تصاویر مربوطه را آپلود کنید.</p>
-    </section>
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
+    <h2 class="text-lg font-semibold mb-3">وینور چیست؟</h2>
+    <p>وینور یک اپلیکیشن موبایل‌محور برای خرید و فروش زمین، باغ، ویلا و آپارتمان است که تجربه‌ای سریع، امن و شفاف برای معاملات ملکی فراهم می‌کند.</p>
+  </section>
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
-      <h2 class="text-lg font-semibold mb-3">آگهی چه زمانی نمایش داده می‌شود؟</h2>
-      <p>آگهی‌های شما پس از بررسی و تأیید تیم وینور نمایش داده می‌شوند. اگر تنظیمات سایت در حالت «تأیید خودکار» باشد، آگهی بلافاصله فعال خواهد شد.</p>
-    </section>
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
+    <h2 class="text-lg font-semibold mb-3">چطور آگهی ثبت کنم؟</h2>
+    <p>با ورود به حساب کاربری، از منوی اصلی گزینه <strong>ثبت آگهی رایگان</strong> را انتخاب کنید. اطلاعات ملک را وارد کرده و تصاویر مربوطه را آپلود کنید.</p>
+  </section>
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
-      <h2 class="text-lg font-semibold mb-3">چطور مطمئن شوم مدارک معتبر هستند؟</h2>
-      <p>وینور تنها آگهی‌هایی را نمایش می‌دهد که دارای مدارک معتبر مانند <strong>سند مادر، کد رهگیری، بنچاق و قولنامه</strong> باشند. این موضوع باعث افزایش امنیت معاملات می‌شود.</p>
-    </section>
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
+    <h2 class="text-lg font-semibold mb-3">آگهی چه زمانی نمایش داده می‌شود؟</h2>
+    <p>آگهی‌های شما پس از بررسی و تأیید تیم وینور نمایش داده می‌شوند. اگر تنظیمات سایت در حالت «تأیید خودکار» باشد، آگهی بلافاصله فعال خواهد شد.</p>
+  </section>
 
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
-      <h2 class="text-lg font-semibold mb-3">چگونه با پشتیبانی وینور تماس بگیرم؟</h2>
-      <ul class="mt-2 space-y-1">
-        <li>📞 تلفن: <a href="tel:+989121234567" class="text-green-600 hover:underline">09121234567</a></li>
-        <li>💬 واتساپ: <a href="https://wa.me/989121234567" target="_blank" class="text-green-600 hover:underline">ارسال پیام</a></li>
-        <li>🌐 وب‌سایت: <a href="https://vinor.ir" class="text-green-600 hover:underline">vinor.ir</a></li>
-      </ul>
-    </section>
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
+    <h2 class="text-lg font-semibold mb-3">چطور مطمئن شوم مدارک معتبر هستند؟</h2>
+    <p>وینور تنها آگهی‌هایی را نمایش می‌دهد که دارای مدارک معتبر مانند <strong>سند مادر، کد رهگیری، بنچاق و قولنامه</strong> باشند. این موضوع باعث افزایش امنیت معاملات می‌شود.</p>
+  </section>
 
-  </main>
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
+    <h2 class="text-lg font-semibold mb-3">چگونه با پشتیبانی وینور تماس بگیرم؟</h2>
+    <ul class="mt-2 space-y-1">
+      <li>📞 تلفن: <a href="tel:+989121234567" class="text-green-600 hover:underline">09121234567</a></li>
+      <li>💬 واتساپ: <a href="https://wa.me/989121234567" target="_blank" class="text-green-600 hover:underline">ارسال پیام</a></li>
+      <li>🌐 وب‌سایت: <a href="https://vinor.ir" class="text-green-600 hover:underline">vinor.ir</a></li>
+    </ul>
+  </section>
 
-  <!-- فوتر -->
-  <footer class="text-center text-xs text-gray-500 dark:text-gray-400 py-4">
+  <div class="text-center text-xs text-gray-500 dark:text-gray-400">
     © {{ current_year|default(2025) }} وینور | vinor.ir
-  </footer>
-</body>
-</html>
+  </div>
+
+</div>
+{% endblock %}
