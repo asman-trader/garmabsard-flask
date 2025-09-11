@@ -76,7 +76,7 @@
           <div id="cityDisplay" class="px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus-within:ring-2 focus-within:ring-green-500"
                aria-live="polite">در حال بارگذاری شهر...</div>
           <input type="hidden" name="city" id="cityInput">
-          <p class="text-[11px] text-gray-500 mt-1">شهر را از صفحهٔ انتخاب شهر تعیین کنید. (در حافظهٔ دستگاه ذخیره می‌شود)</p>
+          <p class="text-[11px] text-gray-500 mt-1">فقط انتخاب موقعیت (شهر) کافی است؛ نیازی به وارد کردن آدرس دقیق نیست. (در حافظهٔ دستگاه ذخیره می‌شود)</p>
         </div>
         <a href="{{ url_for('main.city_select') }}"
            class="px-3 py-2 rounded-xl border border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition whitespace-nowrap"
@@ -125,22 +125,7 @@
       <p class="text-[11px] text-gray-500">عنوان واضح و مختصر اعتماد ایجاد می‌کند.</p>
     </section>
 
-    <!-- موقعیت و آدرس -->
-    <section aria-label="موقعیت و آدرس" class="space-y-2">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="district">محله / منطقه</label>
-          <input type="text" id="district" name="district" placeholder="مثلاً: نیاوران، بلوار امام" autocomplete="off"
-                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-        </div>
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="address">آدرس دقیق (اختیاری)</label>
-          <input type="text" id="address" name="address" placeholder="نام خیابان، کوچه، پلاک..." autocomplete="off"
-                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-        </div>
-      </div>
-      <p class="text-[11px] text-gray-500">آدرس دقیق منتشر نمی‌شود؛ فقط برای تطبیق و دسترسی استفاده می‌شود.</p>
-    </section>
+    
 
     <!-- ابعاد و قیمت -->
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="ابعاد و قیمت">
