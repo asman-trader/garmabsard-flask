@@ -211,6 +211,55 @@
     </div>
   </div>
 
+  <!-- جاب‌ها: در حال انجام و تکمیل‌شده -->
+  {% if jobs %}
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow p-4">
+      <h3 class="font-bold mb-2">عملیات‌های در حال انجام</h3>
+      <div class="space-y-2 text-sm">
+        {% set running = jobs | selectattr('status','equalto','running') | list %}
+        {% if running and running|length %}
+          {% for j in running %}
+          <div class="p-2 rounded border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold text-gray-700 dark:text-gray-200 truncate">{{ j.id }}</div>
+              <span class="text-xs text-emerald-600">در حال اجرا</span>
+            </div>
+            <div class="mt-2 w-full h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden">
+              {% set p = (100 * (j.sent or 0) // (j.total or 1)) %}
+              <div class="h-full bg-vinor-600" style="width: {{ p }}%"></div>
+            </div>
+            <div class="mt-1 text-xs text-gray-500">{{ j.sent or 0 }} / {{ j.total or 0 }} ارسال‌شده • ناموفق: {{ j.failed or 0 }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-xs text-gray-500">موردی در حال اجرا نیست.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow p-4">
+      <h3 class="font-bold mb-2">عملیات‌های تکمیل‌شده</h3>
+      <div class="space-y-2 text-sm">
+        {% set done = jobs | rejectattr('status','equalto','running') | list %}
+        {% if done and done|length %}
+          {% for j in done %}
+          <div class="p-2 rounded border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold text-gray-700 dark:text-gray-200 truncate">{{ j.id }}</div>
+              <span class="text-xs text-gray-500">اتمام</span>
+            </div>
+            <div class="mt-1 text-xs text-gray-500">موفق: {{ j.sent or 0 }} • ناموفق: {{ j.failed or 0 }} • کل: {{ j.total or 0 }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-xs text-gray-500">هنوز عملیاتی ثبت نشده است.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if summary %}
     <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
       <h3 class="font-bold mb-2">نتیجه:</h3>
