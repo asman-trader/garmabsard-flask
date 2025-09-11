@@ -1,114 +1,309 @@
 {% extends "base.html" %}
-{% block title %}گام ۴ از ۴: بررسی و انتشار آگهی{% endblock %}
+
+{% block title %}ثبت آگهی - مرحله ۴{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6">
-  <div class="flex items-center gap-3 mb-4">
-    <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-seedling"></i></span>
-    <h2 class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">بررسی و انتشار آگهی</h2>
-    <span class="ms-auto text-xs text-gray-500">گام ۴ از ۴</span>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 sm:pb-0">
+  <!-- Header -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-0 z-10">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <a href="{{ url_for('main.add_land_details') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+        <i class="fas fa-arrow-right text-lg"></i>
+      </a>
+      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۴ از ۴</h1>
+      <div class="w-6"></div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="px-4 pb-3">
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+        <span>بررسی و انتشار</span>
+        <span>۱۰۰٪</span>
+      </div>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Stepper -->
-  <div class="mb-4">
-    <div class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">1</span><span class="hidden sm:inline">انتخاب دسته</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">2</span><span class="hidden sm:inline">تصاویر و عنوان</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">3</span><span class="hidden sm:inline">جزئیات</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">4</span><span class="hidden sm:inline">بررسی و انتشار</span></div>
-    </div>
-    <div class="mt-3 h-1 bg-gray-200 dark:bg-gray-700 rounded">
-      <div class="h-1 bg-emerald-600 rounded" style="width:100%"></div>
-    </div>
+  <!-- Main Content -->
+  <div class="px-4 py-6 space-y-6">
+    <!-- Step 4: Review and Publish -->
+    <form id="step4Form" method="POST" class="space-y-6" action="{{ request.path }}">
+      {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+      <!-- Ad Summary Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-eye text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">خلاصه آگهی</h2>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- Ad Preview Card -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-700">
+            <div class="flex items-start gap-3">
+              <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                <i class="fas fa-image text-2xl text-gray-400"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-gray-900 dark:text-white text-lg" id="summaryTitle">عنوان آگهی</div>
+                <div class="text-sm text-gray-600 dark:text-gray-300 mt-1" id="summaryMeta">شهر • متراژ • دسته</div>
+                <div class="mt-2 text-sm text-gray-700 dark:text-gray-200" id="summaryDescription">توضیحات آگهی...</div>
+              </div>
+              <div class="text-right">
+                <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400" id="summaryPrice">قیمت</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400" id="summaryType">نوع معامله</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publication Options Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-broadcast-tower text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">انتخاب نوع انتشار</h2>
+        </div>
+        
+        <div class="space-y-3">
+          <label class="relative cursor-pointer">
+            <input type="radio" name="ad_type" value="site" required class="sr-only peer">
+            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <i class="fas fa-globe text-blue-600"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 dark:text-white">انتشار در سایت</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">آگهی شما در سایت برای عموم قابل نمایش خواهد بود</div>
+                  <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium">رایگان</div>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="relative cursor-pointer">
+            <input type="radio" name="ad_type" value="broadcast" required class="sr-only peer">
+            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <i class="fas fa-users text-purple-600"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 dark:text-white">ارسال به مشاوران املاک</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">آگهی شما به صورت اختصاصی برای مشاورین املاک منطقه ارسال می‌شود</div>
+                  <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium">رایگان</div>
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Terms and Conditions Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-shield-alt text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">قوانین و مقررات</h2>
+        </div>
+        
+        <div class="space-y-3">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="terms_accepted" required class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 mt-1">
+            <span class="text-sm text-gray-700 dark:text-gray-300">با <a href="#" class="text-emerald-600 hover:text-emerald-700 underline">قوانین و مقررات</a> سایت موافقم</span>
+          </label>
+          
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="privacy_accepted" required class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 mt-1">
+            <span class="text-sm text-gray-700 dark:text-gray-300">با <a href="#" class="text-emerald-600 hover:text-emerald-700 underline">حریم خصوصی</a> موافقم</span>
+          </label>
+        </div>
+      </div>
+    </form>
   </div>
 
-  <!-- خلاصه آگهی -->
-  <section class="border rounded-xl p-4 mb-4">
-    <div class="flex items-start gap-3">
-      <div class="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-700 grid place-items-center text-emerald-600"><i class="fas fa-image"></i></div>
-      <div class="flex-1">
-        <div class="font-bold text-gray-900 dark:text-white" id="sumTitle">عنوان آگهی</div>
-        <div class="text-xs text-gray-600 dark:text-gray-300 mt-1" id="sumMeta">شهر • متراژ • دسته</div>
-        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200" id="sumDesc"></div>
-      </div>
-      <div class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400" id="sumPrice">—</div>
+  <!-- Bottom Action Bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-4 py-3 sm:static sm:border-t-0 sm:bg-transparent sm:dark:bg-transparent">
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('main.add_land_details') }}" class="flex-1 px-4 py-3 text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        قبلی
+      </a>
+      <button type="submit" form="step4Form" id="publishBtn" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+        انتشار آگهی
+      </button>
     </div>
-  </section>
-
-  <!-- فرم مرحله ۳ با CSRF -->
-  <form method="POST" id="finalAdForm" action="{{ request.path }}" autocomplete="off" novalidate>
-    {% if csrf_token %}
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    {% endif %}
-
-    <div class="space-y-4">
-      <div class="border rounded-lg p-4 hover:border-blue-500 transition">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="radio" name="ad_type" value="site" class="accent-blue-600" required>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">انتشار در سایت</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-300">
-              آگهی شما در سایت برای عموم قابل نمایش خواهد بود. (رایگان)
-            </p>
-          </div>
-        </label>
-      </div>
-
-      <div class="border rounded-lg p-4 hover:border-blue-500 transition">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="radio" name="ad_type" value="broadcast" class="accent-blue-600" required>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">ارسال به مشاوران املاک منطقه</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-300">
-              آگهی شما به صورت اختصاصی برای مشاورین املاک منطقه ارسال می‌شود. (رایگان)
-            </p>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <button type="submit"
-            class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-lg transition">
-      ثبت نهایی آگهی
-    </button>
-  </form>
+  </div>
 </div>
 
-<script>
-  // پاک کردن پیش‌نویس بعد از ثبت نهایی
-  const finalForm = document.getElementById('finalAdForm');
-  if (finalForm) {
-    finalForm.addEventListener('submit', function () {
-      try {
-        localStorage.removeItem('adFormDraftV1');
-        localStorage.removeItem('adFormDraftV2'); // اگر نسخه جدید ذخیره شده
-      } catch (e) {}
-    });
-  }
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-  // خلاصه از LocalStorage (گام‌های قبل)
-  (function(){
-    try{
+<style>
+  .toast {
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .toast.success {
+    background: #10b981;
+  }
+  
+  .toast.error {
+    background: #ef4444;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .fixed.bottom-0 {
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+  }
+  
+  /* Keyboard handling */
+  @media (max-width: 640px) {
+    body.kb-open .fixed.bottom-0 {
+      position: static;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('step4Form');
+  const publishBtn = document.getElementById('publishBtn');
+  const toastContainer = document.getElementById('toastContainer');
+  
+  // Show toast message
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 4000);
+  }
+  
+  // Update publish button state
+  function updatePublishButton() {
+    const adType = document.querySelector('input[name="ad_type"]:checked');
+    const termsAccepted = document.querySelector('input[name="terms_accepted"]').checked;
+    const privacyAccepted = document.querySelector('input[name="privacy_accepted"]').checked;
+    
+    publishBtn.disabled = !adType || !termsAccepted || !privacyAccepted;
+  }
+  
+  // Load summary from localStorage
+  function loadSummary() {
+    try {
       const raw = localStorage.getItem('adFormDraftV2') || localStorage.getItem('adFormDraftV1');
-      if(!raw) return;
-      const d = JSON.parse(raw);
-      const fmt = new Intl.NumberFormat('fa-IR');
-      const sumTitle = document.getElementById('sumTitle');
-      const sumMeta  = document.getElementById('sumMeta');
-      const sumPrice = document.getElementById('sumPrice');
-      const sumDesc  = document.getElementById('sumDesc');
-      if (sumTitle) sumTitle.textContent = d.title || 'عنوان آگهی';
-      const city = d.city || 'شهر';
-      const size = d.size ? (fmt.format(Number(String(d.size).replace(/\D/g,''))) + ' متر') : '';
-      const cat  = d.category_sub || d.category_main || '';
-      if (sumMeta) sumMeta.textContent = [city, size, cat].filter(Boolean).join(' • ');
-      const priceNum = Number(String(d.price_total||'').replace(/\D/g,''));
-      sumPrice && (sumPrice.textContent = priceNum ? (fmt.format(priceNum) + ' تومان') : (d.is_negotiable ? 'توافقی' : '—'));
-      sumDesc && (sumDesc.textContent = d.description || '');
-    }catch(_){}
-  })();
+      if (!raw) return;
+      
+      const data = JSON.parse(raw);
+      const formatter = new Intl.NumberFormat('fa-IR');
+      
+      // Update title
+      const titleEl = document.getElementById('summaryTitle');
+      if (titleEl && data.title) {
+        titleEl.textContent = data.title;
+      }
+      
+      // Update meta info
+      const metaEl = document.getElementById('summaryMeta');
+      if (metaEl) {
+        const city = data.city || 'شهر';
+        const size = data.size ? (formatter.format(Number(String(data.size).replace(/\D/g, ''))) + ' متر') : '';
+        const category = data.category_sub || data.category_main || '';
+        metaEl.textContent = [city, size, category].filter(Boolean).join(' • ');
+      }
+      
+      // Update description
+      const descEl = document.getElementById('summaryDescription');
+      if (descEl && data.description) {
+        descEl.textContent = data.description;
+      }
+      
+      // Update price
+      const priceEl = document.getElementById('summaryPrice');
+      if (priceEl) {
+        const priceNum = Number(String(data.price_total || '').replace(/\D/g, ''));
+        if (priceNum) {
+          priceEl.textContent = formatter.format(priceNum) + ' تومان';
+        } else if (data.is_negotiable) {
+          priceEl.textContent = 'توافقی';
+        } else {
+          priceEl.textContent = 'قیمت مشخص نشده';
+        }
+      }
+      
+      // Update type
+      const typeEl = document.getElementById('summaryType');
+      if (typeEl) {
+        const tradeType = data.trade_type === 'sale' ? 'فروش' : 'اجاره';
+        const propertyType = data.property_type === 'apartment' ? 'آپارتمان' : 
+                           data.property_type === 'villa' ? 'ویلا' :
+                           data.property_type === 'land' ? 'زمین' :
+                           data.property_type === 'garden' ? 'باغ' :
+                           data.property_type === 'shop' ? 'مغازه' :
+                           data.property_type === 'office' ? 'اداری' : '';
+        typeEl.textContent = `${tradeType} ${propertyType}`;
+      }
+      
+    } catch (error) {
+      console.error('Error loading summary:', error);
+    }
+  }
+  
+  // Event listeners
+  document.querySelectorAll('input[name="ad_type"], input[name="terms_accepted"], input[name="privacy_accepted"]').forEach(input => {
+    input.addEventListener('change', updatePublishButton);
+  });
+  
+  // Form submission
+  form.addEventListener('submit', function(e) {
+    // Clear draft from localStorage
+    try {
+      localStorage.removeItem('adFormDraftV1');
+      localStorage.removeItem('adFormDraftV2');
+    } catch (error) {
+      console.error('Error clearing draft:', error);
+    }
+    
+    showToast('آگهی شما در حال انتشار است...', 'success');
+  });
+  
+  // Keyboard handling for mobile
+  ['focusin', 'focusout'].forEach(ev => {
+    document.addEventListener(ev, (e) => {
+      const t = e.target;
+      const isInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA');
+      if (isInput && ev === 'focusin') document.body.classList.add('kb-open');
+      if (isInput && ev === 'focusout') document.body.classList.remove('kb-open');
+    });
+  });
+  
+  // Initialize
+  loadSummary();
+  updatePublishButton();
+});
 </script>
 {% endblock %}

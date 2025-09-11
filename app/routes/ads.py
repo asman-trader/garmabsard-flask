@@ -40,6 +40,8 @@ def _safe_remove_file(path: str) -> None:
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
 def submit_ad_redirect():
     return redirect(url_for('main.add_land_step1'))
+
+
 @main_bp.route('/lands/add/step1', methods=['GET','POST'], endpoint='add_land_step1')
 def add_land_step1():
     if 'user_phone' not in session:
@@ -75,6 +77,7 @@ def add_land():
     # Guard: اگر دسته انتخاب نشده باشد کاربر را به گام ۱ بفرست
     if request.method == 'GET':
         if not session.get('ad_category'):
+            flash('لطفاً ابتدا دسته ملک را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         # رندر گام ۲ جدید
         return render_template('add_land_step2.html', ad_category=session.get('ad_category'))
@@ -88,8 +91,8 @@ def add_land():
             flash("عنوان آگهی الزامی است.")
             return redirect(url_for('main.add_land'))
 
-        # Prefer uploaded_ids collected by client-side uploader
-        uploaded_ids_raw = (request.form.get('uploaded_ids') or '').strip(',')
+        # Prefer uploaded_image_ids collected by client-side uploader
+        uploaded_ids_raw = (request.form.get('uploaded_image_ids') or '').strip(',')
         image_names = [x for x in uploaded_ids_raw.split(',') if x]
 
         if not image_names:
@@ -113,8 +116,6 @@ def add_land():
             'land_images': image_names,
         })
         return redirect(url_for('main.add_land_details'))
-
-    return render_template('add_land_step2.html', ad_category=session.get('ad_category'))
 
 
 @main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')
@@ -154,6 +155,10 @@ def add_land_details():
         if category and category not in CATEGORY_KEYS:
             category = ""
 
+        # Handle amenities from checkboxes
+        amenities = request.form.getlist('amenities') or []
+        conditions = request.form.getlist('conditions') or []
+        
         extras = {
             'deposit': request.form.get('deposit') or None,
             'rent': request.form.get('rent') or None,
@@ -161,16 +166,20 @@ def add_land_details():
             'year_built': request.form.get('year_built') or None,
             'floor': request.form.get('floor') or None,
             'rooms': request.form.get('rooms') or None,
-            'elevator': request.form.get('elevator') if request.form.get('elevator') in {'0','1'} else None,
-            'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
-            'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
+            'bathrooms': request.form.get('bathrooms') or None,
+            'elevator': 'elevator' in amenities,
+            'parking': 'parking' in amenities,
+            'warehouse': 'storage' in amenities,
+            'balcony': 'balcony' in amenities,
+            'yard': 'yard' in amenities,
+            'pool': 'pool' in amenities,
             'frontage': request.form.get('frontage') or None,
             'length': request.form.get('length') or None,
             'street_width': request.form.get('street_width') or None,
             'is_negotiable': bool(request.form.get('is_negotiable')),
-            'accept_exchange': bool(request.form.get('accept_exchange')),
-            'installment': bool(request.form.get('installment')),
-            'urgent': bool(request.form.get('urgent')),
+            'accept_exchange': 'exchange' in conditions,
+            'installment': 'installment' in conditions,
+            'urgent': 'immediate' in conditions,
             'features': request.form.getlist('features') or [],
             'document_type': request.form.get('document_type') or None,
             # Apartment
