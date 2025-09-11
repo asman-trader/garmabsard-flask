@@ -76,6 +76,8 @@ def add_land():
     if request.method == 'GET':
         if not session.get('ad_category'):
             return redirect(url_for('main.add_land_step1'))
+        # رندر گام ۲ جدید
+        return render_template('add_land_step2.html', ad_category=session.get('ad_category'))
 
     if request.method == 'POST':
         # Step 2 (Basics): only images + title + description
@@ -112,7 +114,7 @@ def add_land():
         })
         return redirect(url_for('main.add_land_details'))
 
-    return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP, ad_category=session.get('ad_category'))
+    return render_template('add_land_step2.html', ad_category=session.get('ad_category'))
 
 
 @main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')
