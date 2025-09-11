@@ -26,8 +26,12 @@
 
   {% macro img_url(item) -%}
     {%- if item is string -%}
-      {%- set _name = item|basename -%}
-      {{ url_for('main.uploaded_file', filename=_name) }}
+      {#- اگر مسیر کامل /uploads/2025/.. است همان را برگردان؛ وگرنه از uploaded_file سرو کن -#}
+      {%- if item.startswith('/uploads/') -%}
+        {{ item }}
+      {%- else -%}
+        {{ url_for('main.uploaded_file', filename=item) }}
+      {%- endif -%}
     {%- elif item.url -%}
       {{ item.url }}
     {%- elif item.id -%}

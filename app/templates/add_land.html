@@ -84,7 +84,7 @@
                class="flex-1 cursor-pointer flex items-center justify-center border-2 border-dashed border-green-500 rounded-2xl p-4 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition">
           <i class="fas fa-upload text-base ml-2"></i>
           افزودن تصویر
-          <input type="file" name="images" id="imagesInput" accept="image/*" capture="environment" multiple aria-label="انتخاب تصاویر"
+          <input type="file" name="images" id="imagesInput" accept="image/*" multiple aria-label="انتخاب تصاویر"
                  style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
         </label>
 
@@ -585,8 +585,9 @@
           try{
             if (xhr.status >= 200 && xhr.status < 300) {
               const data = xhr.response || {};
-              const id = (data && (data.id || data.file_id || data.uuid || data.key)) || null;
-              if (!id) return reject(new Error('Invalid upload response'));
+              const ok = (data && (data.ok === true || data.success === true));
+              const id = (data && (data.id || data.filename || data.file_id || data.uuid || data.key)) || null;
+              if (!ok || !id) return reject(new Error(data && data.error ? data.error : 'Invalid upload response'));
               return resolve(id);
             }
             const txt = (()=>{ try { return xhr.responseText; } catch(_) { return ''; } })();

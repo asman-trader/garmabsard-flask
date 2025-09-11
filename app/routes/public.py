@@ -159,8 +159,27 @@ def land_detail(code):
 @main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")
 def uploaded_file(filename):
     """
-    فایل‌های آپلود را از دو محل data و legacy سرو می‌کند.
+    سرو فایل‌های آپلود:
+      1) ابتدا از UPLOAD_FOLDER (مسیر جدید تاریخ‌محور)
+      2) سپس از instance/data/uploads
+      3) سپس از <root>/data/uploads (legacy)
     """
+    # اول مسیر تنظیم‌شده در کانفیگ
+    try:
+        base_cfg = current_app.config.get("UPLOAD_FOLDER")
+        if base_cfg:
+            fp_cfg = os.path.join(base_cfg, filename)
+            if os.path.isfile(fp_cfg):
+                resp = send_from_directory(base_cfg, filename)
+                try:
+                    resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+                except Exception:
+                    pass
+                return resp
+    except Exception:
+        pass
+
+    # سپس مسیر instance/data/uploads
     upload_roots = (
         os.path.join(data_dir(), "uploads"),
         os.path.join(legacy_dir(), "uploads"),
