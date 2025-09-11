@@ -305,10 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (xhr.status === 200) {
           try {
             const response = JSON.parse(xhr.responseText);
-            if (response.ok && response.id) {
-              resolve(response.id);
+            const isOk = (response && (response.ok === true || response.success === true));
+            const id = response && (response.id || response.filename || response.file_id || response.uuid);
+            if (isOk && id) {
+              resolve(id);
             } else {
-              reject(new Error(response.error || 'آپلود ناموفق'));
+              reject(new Error((response && response.error) || 'آپلود ناموفق'));
             }
           } catch (e) {
             reject(new Error('خطا در پردازش پاسخ سرور'));

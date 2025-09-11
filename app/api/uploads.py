@@ -95,10 +95,10 @@ def upload_image():
         rel_path = os.path.join(rel_dir, filename).replace("\\", "/")
         url = f"/uploads/{rel_path}"
 
-        return jsonify({"success": True, "id": rel_path, "url": url})
+        return jsonify({"success": True, "ok": True, "id": rel_path, "url": url})
     except Exception as e:
         current_app.logger.exception("Upload failed")
-        return jsonify({"success": False, "error": str(e)}), 400
+        return jsonify({"success": False, "ok": False, "error": str(e)}), 400
 
 @uploads_bp.get("/uploads/<path:filename>")
 def serve_uploads(filename: str):
