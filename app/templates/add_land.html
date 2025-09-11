@@ -80,11 +80,12 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">تصاویر</label>
       <div class="flex items-center gap-2">
         <!-- Dropzone -->
-        <label id="dropzone" title="تصاویر را انتخاب یا اینجا رها کنید"
+        <label id="dropzone" title="تصاویر را انتخاب یا اینجا رها کنید" role="button"
                class="flex-1 cursor-pointer flex items-center justify-center border-2 border-dashed border-green-500 rounded-2xl p-4 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition">
           <i class="fas fa-upload text-base ml-2"></i>
           افزودن تصویر
-          <input type="file" name="images" id="imagesInput" accept="image/*" multiple class="hidden" aria-label="انتخاب تصاویر">
+          <input type="file" name="images" id="imagesInput" accept="image/*" capture="environment" multiple aria-label="انتخاب تصاویر"
+                 style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
         </label>
 
         <!-- فقط تصاویر را حذف می‌کند -->
@@ -408,18 +409,32 @@
     new Promise(res => { const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
 
   function compressImage(file, maxW=1600, quality=0.82){
-    return new Promise((res,rej)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const scale = Math.min(1, maxW/img.width);
-        const c=document.createElement('canvas');
-        c.width = Math.round(img.width*scale);
-        c.height= Math.round(img.height*scale);
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b => b ? res(new File([b],'img.jpg',{type:'image/jpeg'})) : rej(new Error('Compression failed')), 'image/jpeg', quality);
-      };
-      img.onerror = () => rej(new Error('Invalid image'));
-      img.src = URL.createObjectURL(file);
+    return new Promise((res)=>{
+      try{
+        const img = new Image();
+        img.onload = ()=>{
+          try{
+            const scale = Math.min(1, maxW/img.width);
+            const c=document.createElement('canvas');
+            c.width = Math.round(img.width*scale);
+            c.height= Math.round(img.height*scale);
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img,0,0,c.width,c.height);
+            if (c.toBlob) {
+              c.toBlob(b => {
+                if (b) { res(new File([b],'image.jpg',{type:'image/jpeg'})); }
+                else { res(file); }
+              }, 'image/jpeg', quality);
+            } else {
+              // Fallback برای مرورگرهایی که toBlob ندارند
+              const dataUrl = c.toDataURL('image/jpeg', quality);
+              fetch(dataUrl).then(r=>r.blob()).then(b=>res(new File([b],'image.jpg',{type:'image/jpeg'}))).catch(()=>res(file));
+            }
+          }catch(e){ res(file); }
+        };
+        img.onerror = () => res(file);
+        img.src = URL.createObjectURL(file);
+      }catch(e){ res(file); }
     });
   }
 
@@ -520,7 +535,8 @@
           item.serverId = serverId;
         }catch(err){
           console.error('Upload failed:', err);
-          toast('آپلود یک تصویر ناموفق بود');
+          toast('آپلود ناموفق: '+(err && err.message ? err.message : ''));
+          imageItems = imageItems.filter(x=>x.id !== item.id);
         }finally{
           item.uploading = false;
           doneUploads++;
@@ -540,6 +556,8 @@
   }
 
   imagesInput.addEventListener('change', (e)=>handleFiles(e.target.files));
+  // روی خود Dropzone کلیک → باز کردن فایل‌چوoser در برخی مرورگرهای موبایل
+  dropzone.addEventListener('click', ()=> imagesInput?.click());
   ['dragenter','dragover'].forEach(evt=>{
     dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
   });
@@ -553,19 +571,32 @@
   });
 
   async function uploadOne(file){
-    const fd = new FormData();
-    fd.append('file', file, 'image.jpg');
-    const csrf = getCsrf();
-    const headers = {};
-    if(csrf){
-      headers['X-CSRF-Token'] = csrf;
-      headers['X-CSRFToken']  = csrf;
-      headers['X-XSRF-TOKEN'] = csrf;
-    }
-    const resp = await fetch(CONFIG.UPLOAD_URL, { method:'POST', headers, body:fd, credentials:'same-origin' });
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const data = await resp.json().catch(()=> ({}));
-    return data.id || data.file_id || data.uuid || data.key || null;
+    // XHR برای پشتیبانی progress و سازگاری بیشتر
+    return await new Promise((resolve, reject)=>{
+      try{
+        const fd = new FormData();
+        fd.append('file', file, 'image.jpg');
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', CONFIG.UPLOAD_URL, true);
+        xhr.withCredentials = true;
+        xhr.responseType = 'json';
+        xhr.setRequestHeader('Accept','application/json');
+        xhr.onload = () => {
+          try{
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const data = xhr.response || {};
+              const id = (data && (data.id || data.file_id || data.uuid || data.key)) || null;
+              if (!id) return reject(new Error('Invalid upload response'));
+              return resolve(id);
+            }
+            const txt = (()=>{ try { return xhr.responseText; } catch(_) { return ''; } })();
+            reject(new Error('HTTP '+xhr.status+' '+(txt||'')));
+          }catch(e){ reject(e); }
+        };
+        xhr.onerror = () => reject(new Error('NETWORK_ERROR'));
+        xhr.send(fd);
+      }catch(e){ reject(e); }
+    });
   }
 
   function updateGlobalProgress(){
