@@ -9,48 +9,39 @@
 {% macro LandCard(land) -%}
   {% set images = land.get('images') or [] %}
   {% set img = images[0] if images else None %}
-  <article class="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition group">
-    <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
-      <div class="relative">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}">
+    <div class="relative">
+      <a href="{{ url_for('main.land_detail', code=land.code) }}">
         {% if img %}
-          <img src="{{ url_for('main.uploaded_file', filename=img) }}"
-               alt="زمین {{ land.title }}"
-               class="w-full h-52 sm:h-48 object-cover group-hover:scale-[1.02] transition">
+        <img src="{{ url_for('main.uploaded_file', filename=img) }}"
+             alt="زمین {{ land.title }}"
+             class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
         {% else %}
-          <div class="w-full h-52 sm:h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-            <i class="fas fa-image text-3xl"></i>
-          </div>
-        {% endif %}
-        {% if land.get('created_at') %}
-          <span class="absolute top-2 right-2 text-[11px] bg-white/90 dark:bg-gray-900/80 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-700">
-            {{ land.get('created_at') }}
-          </span>
-        {% endif %}
-      </div>
-      <div class="p-3">
-        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">{{ land.title }}</h3>
-        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-          {% if land.get('location') %}<span><i class="fas fa-map-marker-alt text-green-600"></i> {{ land.location }}</span>{% endif %}
-          {% if land.get('size') %}<span><i class="fas fa-vector-square text-green-600"></i> {{ land.size }} متر</span>{% endif %}
+        <div class="w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-base">
+          <i class="fas fa-seedling text-2xl text-green-600/70"></i>
         </div>
-        <div class="mt-2 font-extrabold text-green-700 dark:text-green-400 text-sm">
-          {% if land.get('price_total') %}{{ "{:,.0f}".format(land.price_total) }} تومان{% else %}قیمت توافقی{% endif %}
-        </div>
-      </div>
-    </a>
+        {% endif %}
+      </a>
 
-    <!-- اکشن‌های سریع موبایل -->
-    <div class="absolute bottom-2 left-2 flex gap-2">
-      <button class="px-2 py-1 text-[11px] rounded-lg bg-white/90 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700">
-        <i class="far fa-heart"></i>
+      <!-- دکمه علاقه‌مندی -->
+      <button type="button" class="absolute top-3 right-3 favorite-btn z-10" data-code="{{ land.code }}" title="ذخیره آگهی">
+        <i class="fas fa-bookmark text-white text-2xl drop-shadow-md"></i>
       </button>
-      {% if land.get('owner') %}
-        <a href="tel:{{ land.owner }}" class="px-2 py-1 text-[11px] rounded-lg bg-green-600 text-white">
-          تماس
-        </a>
-      {% endif %}
     </div>
-  </article>
+
+    <!-- بخش اطلاعات -->
+    <div class="p-4">
+      <a href="{{ url_for('main.land_detail', code=land.code) }}">
+        <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
+      </a>
+      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+        📍 {{ land.location or "?" }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر
+      </p>
+      <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">
+        💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+      </p>
+    </div>
+  </div>
 {%- endmacro %}
 
 <!-- نوار جستجوی سرتاسری زیر هدر (چسبان) -->
@@ -155,7 +146,7 @@
         نتیجه‌ای پیدا نشد. فیلترها را سبک‌تر کن یا کلمه دیگری امتحان کن.
       </div>
     {% else %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="searchResultsGrid">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="searchResultsGrid">
         {% for land in results %}
           {{ LandCard(land) }}
         {% endfor %}
@@ -194,7 +185,7 @@
       هنوز آگهی‌ای ثبت نشده است.
     </div>
   {% else %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landListAll">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landListAll">
       {% for land in all_list %}
         {{ LandCard(land) }}
       {% endfor %}
@@ -217,6 +208,31 @@
 </main>
 
 <script>
+// اسکریپت علاقه‌مندی مشابه صفحه اصلی
+document.addEventListener("DOMContentLoaded", () => {
+  try { localStorage.setItem("allLandsData", JSON.stringify({{ (lands or []) | tojson }})); } catch (e) {}
+  const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+  document.querySelectorAll(".land-card").forEach(card => {
+    const code = card.dataset.code;
+    const btn = card.querySelector(".favorite-btn");
+    if (!btn) return;
+    const icon = btn.querySelector("i") || btn;
+    const updateHeart = () => {
+      const isFav = favorites.includes(code);
+      icon.classList.toggle("text-red-500", isFav);
+      icon.classList.toggle("text-white", !isFav);
+    };
+    updateHeart();
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      const i = favorites.indexOf(code);
+      if (i > -1) favorites.splice(i, 1); else favorites.push(code);
+      localStorage.setItem("favoriteLands", JSON.stringify(favorites));
+      updateHeart();
+    });
+  });
+});
+
 /* =============== تاریخچه جستجو (LocalStorage) =============== */
 function storeSearchQuery(q) {
   q = (q || "").trim();

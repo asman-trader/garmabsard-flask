@@ -97,6 +97,7 @@
     document.querySelectorAll(".land-card").forEach(card => {
       const code = card.dataset.code;
       const btn = card.querySelector(".favorite-btn");
+      if (!btn) return;
       const icon = btn.querySelector("i") || btn; // آیکن داخل دکمه (FontAwesome)
 
       const updateHeart = () => {
