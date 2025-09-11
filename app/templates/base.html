@@ -102,7 +102,7 @@
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
     {% if not hide_header and request.endpoint != 'main.my_lands' %}
-      <a href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint == 'main.index' else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
+      <a href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index','main.app_home'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>
     {% endif %}
