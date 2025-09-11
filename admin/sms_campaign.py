@@ -9,6 +9,27 @@ import time
 import threading
 import uuid
 import random
+def _normalize_for_sms_ir(mobile: str) -> str:
+    """Convert various Iran mobile formats to 09xxxxxxxxx expected by sms.ir verify API."""
+    if not mobile:
+        return ''
+    s = str(mobile).strip().replace(' ', '').replace('-', '')
+    # +98XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('+98') and len(s) == 13 and s[3:].startswith('9'):
+        return '0' + s[3:]
+    # 0098XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('0098') and len(s) == 14 and s[4:].startswith('9'):
+        return '0' + s[4:]
+    # 98XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('98') and len(s) == 12 and s[2:].startswith('9'):
+        return '0' + s[2:]
+    # 9XXXXXXXXX → 09XXXXXXXXX
+    if s.startswith('9') and len(s) == 10:
+        return '0' + s
+    # already 09XXXXXXXXX
+    if s.startswith('0') and len(s) == 11:
+        return s
+    return s
 
 
 @admin_bp.route('/sms-campaign', methods=['GET', 'POST'])
@@ -124,9 +145,10 @@ def sms_campaign():
     _create_job(job_id, total=len(numbers), template_id=template_id, mode=mode,
                 delay_ms=delay_ms, min_ms=min_ms, max_ms=max_ms)
 
+    app_obj = current_app._get_current_object()
     t = threading.Thread(
         target=_run_sms_job,
-        args=(job_id, numbers, template_id, params, mode, delay_ms, min_ms, max_ms, dry_run),
+        args=(app_obj, job_id, numbers, template_id, params, mode, delay_ms, min_ms, max_ms, dry_run),
         daemon=True
     )
     t.start()
@@ -279,35 +301,58 @@ def _list_jobs(limit: int = 10) -> list:
     jobs.sort(key=lambda j: j.get('created_at', 0), reverse=True)
     return jobs[:limit]
 
-def _run_sms_job(job_id: str, numbers: list[str], template_id: int, params: dict, mode: str,
+def _run_sms_job(app, job_id: str, numbers: list[str], template_id: int, params: dict, mode: str,
                  delay_ms: int, min_ms, max_ms, dry_run: bool) -> None:
-    sent = failed = 0
-    for mobile in numbers:
+    # Ensure we have Flask application context inside the thread
+    with app.app_context():
+        sent = failed = 0
         try:
-            if dry_run:
-                resp = {"ok": True, "status": 200}
-            else:
-                resp = send_sms_template(mobile=mobile, template_id=template_id, parameters=params)
-            if resp.get('ok'):
-                sent += 1
-            else:
-                failed += 1
-        except Exception:
-            failed += 1
+            app.logger.info("[SMS_JOB %s] start: total=%d, mode=%s, dry_run=%s", job_id, len(numbers), mode, dry_run)
+            for mobile in numbers:
+                try:
+                    to_send = _normalize_for_sms_ir(mobile)
+                    if dry_run:
+                        resp = {"ok": True, "status": 200}
+                    else:
+                        resp = send_sms_template(mobile=to_send, template_id=template_id, parameters=params)
+                    if resp.get('ok'):
+                        sent += 1
+                    else:
+                        failed += 1
+                        try:
+                            app.logger.error(
+                                "[SMS_JOB %s] api failure to %s (norm=%s): status=%s body=%s",
+                                job_id, mobile, to_send, resp.get('status'), str(resp.get('body'))[:800]
+                            )
+                        except Exception:
+                            pass
+                except Exception as e:
+                    failed += 1
+                    try:
+                        app.logger.error("[SMS_JOB %s] error sending to %s: %s", job_id, mobile, e)
+                    except Exception:
+                        pass
 
-        _update_job(job_id, sent=sent, failed=failed)
+                _update_job(job_id, sent=sent, failed=failed)
 
-        if mode == 'fixed':
-            if delay_ms and delay_ms > 0:
-                time.sleep(delay_ms / 1000.0)
-        else:
-            lo = min_ms or 0
-            hi = max_ms or lo
-            wait_ms = random.randint(lo, hi) if hi >= lo else lo
-            if wait_ms > 0:
-                time.sleep(wait_ms / 1000.0)
+                if mode == 'fixed':
+                    if delay_ms and delay_ms > 0:
+                        time.sleep(delay_ms / 1000.0)
+                else:
+                    lo = min_ms or 0
+                    hi = max_ms or lo
+                    wait_ms = random.randint(lo, hi) if hi >= lo else lo
+                    if wait_ms > 0:
+                        time.sleep(wait_ms / 1000.0)
 
-    _update_job(job_id, status='completed')
+            _update_job(job_id, status='completed')
+            app.logger.info("[SMS_JOB %s] completed: sent=%d, failed=%d", job_id, sent, failed)
+        except Exception as e:
+            _update_job(job_id, status='failed')
+            try:
+                app.logger.error("[SMS_JOB %s] fatal error: %s", job_id, e)
+            except Exception:
+                pass
 
 
 @admin_bp.get('/sms-campaign/job/<string:job_id>')

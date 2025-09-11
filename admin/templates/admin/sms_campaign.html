@@ -111,8 +111,8 @@
       </div>
       <div id="paramsList" class="grid sm:grid-cols-2 gap-3">
         <div class="param-row grid grid-cols-2 gap-2 items-center">
-          <input name="p[code]" placeholder="نام (مثلاً code)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-          <input name="p[value]" placeholder="مقدار (مثلاً 12345)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input name="p[]" placeholder="نام پارامتر" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input name="p_value[]" placeholder="مقدار" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
         </div>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید به‌صورت <code>p[key]</code> هر تعداد کلید دلخواه اضافه کنید.</p>
@@ -303,6 +303,7 @@
   function updateDelayUI(){
     const mode = document.querySelector('input[name="delay_mode"]:checked')?.value;
     delayRange.style.display = (mode === 'random') ? '' : 'none';
+    updateSummary();
   }
   radios.forEach(r => r.addEventListener('change', updateDelayUI));
   updateDelayUI();
@@ -378,6 +379,25 @@
   });
   // هنگام ارسال، ورودی‌های p[]/p_value[] را به p[key] نگاشت کنیم
   document.getElementById('smsForm')?.addEventListener('submit', (e) => {
+    // اطمینان از اضافه شدن گروه‌های انتخاب‌شده به textarea قبل از ارسال فرم
+    try {
+      const ta = document.getElementsByName('numbers_text')[0];
+      if (ta) {
+        const picks = Array.from(document.querySelectorAll('.group-check:checked'));
+        if (picks.length) {
+          let addText = '';
+          picks.forEach(ch => {
+            const card = ch.closest('[data-count]');
+            const textarea = card?.querySelector('textarea[id^=group_]');
+            const txt = textarea?.value || '';
+            addText += (addText ? '\n' : '') + txt;
+          });
+          const prefix = ta.value && !ta.value.endsWith('\n') ? '\n' : '';
+          ta.value = (ta.value || '') + prefix + addText;
+        }
+      }
+    } catch(_) {}
+
     const keys = Array.from(document.querySelectorAll('input[name="p[]"]'));
     const vals = Array.from(document.querySelectorAll('input[name="p_value[]"]'));
     keys.forEach((k, i) => {
@@ -510,10 +530,30 @@
   function copyGroup(idx){
     const hidden = document.getElementById('group_'+idx);
     if (!hidden) return;
-    hidden.type = 'text';
-    hidden.select();
-    try { document.execCommand('copy'); } catch(_) {}
-    hidden.type = 'hidden';
+    const text = hidden.value || '';
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try { document.execCommand('copy'); } catch(_) {}
+        document.body.removeChild(ta);
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); } catch(_) {}
+      document.body.removeChild(ta);
+    }
   }
   // انتخاب همه / جستجو
   document.getElementById('checkAllGroups')?.addEventListener('change', (e) => {
@@ -547,6 +587,8 @@
     ta.value = (ta.value || '') + prefix + addText;
     const selInfo = document.getElementById('selectedInfo');
     if (selInfo) selInfo.textContent = picks.length + ' گروه اضافه شد.';
+    // جلوگیری از دوباره‌شماری: پس از افزودن، انتخاب‌ها را بردار
+    picks.forEach(ch => { ch.checked = false; });
     updateSummary();
   });
 
