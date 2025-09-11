@@ -66,6 +66,30 @@
     <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="parking">پارکینگ</label><select id="parking" name="parking" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
     <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="warehouse">انباری</label><select id="warehouse" name="warehouse" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
   </div>
+
+  {# Villa-specific #}
+  <div id="villaFields" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="villa_land_area">متراژ زمین (متر)</label><input inputmode="numeric" type="text" id="villa_land_area" name="villa_land_area" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="villa_built_area">متراژ بنا (متر)</label><input inputmode="numeric" type="text" id="villa_built_area" name="villa_built_area" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="villa_bedrooms">تعداد اتاق خواب</label><input inputmode="numeric" type="text" id="villa_bedrooms" name="villa_bedrooms" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="villa_pool">استخر</label><select id="villa_pool" name="villa_pool" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+  </div>
+
+  {# Land/Garden specific #}
+  <div id="landFields" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="land_shape">شکل زمین</label><select id="land_shape" name="land_shape" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="مستطیل">مستطیل</option><option value="مربع">مربع</option><option value="هندسی">دیگر</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="land_use">کاربری</label><select id="land_use" name="land_use" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="مسکونی">مسکونی</option><option value="کشاورزی">کشاورزی</option><option value="باغ/ویلایی">باغ/ویلایی</option><option value="تجاری">تجاری</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="irrigation">سیستم آبیاری</label><select id="irrigation" name="irrigation" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="قطره‌ای">قطره‌ای</option><option value="غرقابی">غرقابی</option><option value="آبیاری سنتی">سنتی</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="tree_count">تعداد درخت</label><input inputmode="numeric" type="text" id="tree_count" name="tree_count" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+  </div>
+
+  {# Shop/Office specific #}
+  <div id="commercialFields" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="front_width">ویترین/بر (متر)</label><input inputmode="numeric" type="text" id="front_width" name="front_width" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="commercial_floor">طبقه</label><input inputmode="numeric" type="text" id="commercial_floor" name="commercial_floor" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="has_license">مجوز کسب</label><select id="has_license" name="has_license" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="commercial_type">نوع کاربری تجاری</label><input type="text" id="commercial_type" name="commercial_type" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" placeholder="مثلاً: پوشاک، رستوران..."></div>
+  </div>
 </section>
 
 {# --- Document Type --- #}
@@ -158,8 +182,14 @@
     const catWrap = document.getElementById('categorySpecific');
     const rent = document.getElementById('rentFields');
     const apt  = document.getElementById('apartmentFields');
+    const villa= document.getElementById('villaFields');
+    const land = document.getElementById('landFields');
+    const comm = document.getElementById('commercialFields');
     if(tradeType==='rent' && catWrap && rent){ catWrap.classList.remove('hidden'); rent.classList.remove('hidden'); }
     if(property==='apartment' && catWrap && apt){ catWrap.classList.remove('hidden'); apt.classList.remove('hidden'); }
+    if(property==='villa' && catWrap && villa){ catWrap.classList.remove('hidden'); villa.classList.remove('hidden'); }
+    if((property==='land'||property==='garden') && catWrap && land){ catWrap.classList.remove('hidden'); land.classList.remove('hidden'); }
+    if((property==='shop'||property==='office') && catWrap && comm){ catWrap.classList.remove('hidden'); comm.classList.remove('hidden'); }
   }catch(_){ }
 })();
 </script>

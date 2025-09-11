@@ -216,6 +216,13 @@ def create_app() -> Flask:
         except Exception:
             csrf.exempt(webhook_bp)
 
+        # APIهایی که از طریق AJAX فراخوانی می‌شوند را از CSRF مستثنا می‌کنیم (آپلود تصاویر)
+        try:
+            if uploads_bp is not None:
+                csrf.exempt(uploads_bp)
+        except Exception:
+            pass
+
         @app.after_request
         def set_csrf_cookie(resp):
             try:

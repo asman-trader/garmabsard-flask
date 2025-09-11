@@ -171,6 +171,36 @@ def add_land_details():
             'urgent': bool(request.form.get('urgent')),
             'features': request.form.getlist('features') or [],
             'document_type': request.form.get('document_type') or None,
+            # Apartment
+            'apartment': {
+                'year_built': request.form.get('year_built') or None,
+                'floor': request.form.get('floor') or None,
+                'rooms': request.form.get('rooms') or None,
+                'elevator': request.form.get('elevator') if request.form.get('elevator') in {'0','1'} else None,
+                'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
+                'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
+            },
+            # Villa
+            'villa': {
+                'land_area': request.form.get('villa_land_area') or None,
+                'built_area': request.form.get('villa_built_area') or None,
+                'bedrooms': request.form.get('villa_bedrooms') or None,
+                'pool': request.form.get('villa_pool') if request.form.get('villa_pool') in {'0','1'} else None,
+            },
+            # Land / Garden
+            'land': {
+                'shape': request.form.get('land_shape') or None,
+                'use': request.form.get('land_use') or None,
+                'irrigation': request.form.get('irrigation') or None,
+                'tree_count': request.form.get('tree_count') or None,
+            },
+            # Commercial
+            'commercial': {
+                'front_width': request.form.get('front_width') or None,
+                'floor': request.form.get('commercial_floor') or None,
+                'has_license': request.form.get('has_license') if request.form.get('has_license') in {'0','1'} else None,
+                'type': request.form.get('commercial_type') or None,
+            },
         }
 
         lt = session.get('land_temp') or {}

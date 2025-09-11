@@ -64,6 +64,11 @@ self.addEventListener('fetch', (event) => {
 
   // ===== Background Sync for JSON POSTs (e.g., /api/push/subscribe) =====
   if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
+    // مهم: آپلود فایل‌ها را دستکاری نکن؛ مستقیم عبور بده
+    if (url.pathname.startsWith('/api/uploads/')) {
+      event.respondWith(fetch(req));
+      return;
+    }
     event.respondWith(handleJsonPostWithQueue(req));
     return;
   }
