@@ -1,9 +1,26 @@
 {% extends "base.html" %}
-{% block title %}مرحله سوم: نوع ثبت آگهی{% endblock %}
+{% block title %}گام ۳ از ۳: بررسی و انتشار آگهی{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6">
-  <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">انتخاب نوع ثبت آگهی</h2>
+<div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow mt-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-seedling"></i></span>
+    <h2 class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">بررسی و انتشار آگهی</h2>
+    <span class="ms-auto text-xs text-gray-500">گام ۳ از ۳</span>
+  </div>
+
+  <!-- خلاصه آگهی -->
+  <section class="border rounded-xl p-4 mb-4">
+    <div class="flex items-start gap-3">
+      <div class="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-700 grid place-items-center text-emerald-600"><i class="fas fa-image"></i></div>
+      <div class="flex-1">
+        <div class="font-bold text-gray-900 dark:text-white" id="sumTitle">عنوان آگهی</div>
+        <div class="text-xs text-gray-600 dark:text-gray-300 mt-1" id="sumMeta">شهر • متراژ • دسته</div>
+        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200" id="sumDesc"></div>
+      </div>
+      <div class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400" id="sumPrice">—</div>
+    </div>
+  </section>
 
   <!-- فرم مرحله ۳ با CSRF -->
   <form method="POST" id="finalAdForm" action="{{ request.path }}" autocomplete="off" novalidate>
@@ -16,7 +33,7 @@
         <label class="flex items-center gap-3 cursor-pointer">
           <input type="radio" name="ad_type" value="site" class="accent-blue-600" required>
           <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">درج در سایت</h3>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">انتشار در سایت</h3>
             <p class="text-sm text-gray-500 dark:text-gray-300">
               آگهی شما در سایت برای عموم قابل نمایش خواهد بود. (رایگان)
             </p>
@@ -55,5 +72,27 @@
       } catch (e) {}
     });
   }
+
+  // خلاصه از LocalStorage (گام‌های قبل)
+  (function(){
+    try{
+      const raw = localStorage.getItem('adFormDraftV2') || localStorage.getItem('adFormDraftV1');
+      if(!raw) return;
+      const d = JSON.parse(raw);
+      const fmt = new Intl.NumberFormat('fa-IR');
+      const sumTitle = document.getElementById('sumTitle');
+      const sumMeta  = document.getElementById('sumMeta');
+      const sumPrice = document.getElementById('sumPrice');
+      const sumDesc  = document.getElementById('sumDesc');
+      if (sumTitle) sumTitle.textContent = d.title || 'عنوان آگهی';
+      const city = d.city || 'شهر';
+      const size = d.size ? (fmt.format(Number(String(d.size).replace(/\D/g,''))) + ' متر') : '';
+      const cat  = d.category_sub || d.category_main || '';
+      if (sumMeta) sumMeta.textContent = [city, size, cat].filter(Boolean).join(' • ');
+      const priceNum = Number(String(d.price_total||'').replace(/\D/g,''));
+      sumPrice && (sumPrice.textContent = priceNum ? (fmt.format(priceNum) + ' تومان') : (d.is_negotiable ? 'توافقی' : '—'));
+      sumDesc && (sumDesc.textContent = d.description || '');
+    }catch(_){}
+  })();
 </script>
 {% endblock %}

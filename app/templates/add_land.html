@@ -32,6 +32,29 @@
     </div>
   </header>
 
+  <!-- Stepper (1 → 2 → 3) -->
+  <div class="px-4 sm:px-6 py-3 border-b dark:border-gray-700 bg-white/70 dark:bg-gray-900/70">
+    <div class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">1</span>
+        <span class="hidden sm:inline">انتخاب دسته</span>
+      </div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">2</span>
+        <span class="hidden sm:inline">اطلاعات آگهی</span>
+      </div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">3</span>
+        <span class="hidden sm:inline">بررسی و انتشار</span>
+      </div>
+    </div>
+    <div class="mt-3 h-1 bg-gray-200 dark:bg-gray-700 rounded">
+      <div id="progressBarStep" class="h-1 bg-emerald-600 rounded" style="width:66%"></div>
+    </div>
+  </div>
+
   <!-- فرم ثبت/ویرایش آگهی -->
   <form method="POST" enctype="multipart/form-data" class="space-y-6 p-4 sm:p-6" id="adForm" novalidate
         action="{{ form_action if form_action else request.path }}">
@@ -241,14 +264,14 @@
     <section aria-label="امکانات" class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">امکانات</label>
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="آب"> آب</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="برق"> برق</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="گاز"> گاز</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="فاضلاب"> فاضلاب</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="تلفن"> تلفن</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="اینترنت"> اینترنت</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="درخت"> درخت</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="دیوارکشی"> دیوارکشی</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="آب"> آب</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="برق"> برق</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="گاز"> گاز</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="فاضلاب"> فاضلاب</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="تلفن"> تلفن</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="اینترنت"> اینترنت</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="درخت"> درخت</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="دیوارکشی"> دیوارکشی</label>
       </div>
     </section>
 
@@ -258,10 +281,10 @@
         <i class="fas fa-handshake"></i> شرایط معامله
       </h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="is_negotiable" value="1"> قیمت توافقی</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="accept_exchange" value="1"> معاوضه</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="installment" value="1"> اقساط</label>
-        <label class="inline-flex items-center gap-2"><input type="checkbox" name="urgent" value="1"> فوری</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="is_negotiable" value="1"> قیمت توافقی</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="accept_exchange" value="1"> معاوضه</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="installment" value="1"> اقساط</label>
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="urgent" value="1"> فوری</label>
       </div>
     </section>
 
@@ -296,8 +319,8 @@
         <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
           <i class="fas fa-arrow-right"></i> بازگشت
         </a>
-        <button type="submit" id="btnSubmit"
-                class="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-medium shadow-md active:scale-[.99] transition flex items-center gap-2">
+        <button type="submit" id="btnSubmit" disabled
+                class="px-5 py-2.5 rounded-2xl bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 text-white font-medium shadow-md active:scale-[.99] transition flex items-center gap-2">
           <i class="fas fa-check-circle"></i>
           تکمیل و ادامه
         </button>
@@ -372,6 +395,7 @@
   const dropzone            = document.getElementById('dropzone');
   const overlay             = document.getElementById('loadingOverlay');
   const resetBtn            = document.getElementById('btnResetForm'); // ← دکمه هدر
+  const progressBarStep     = document.getElementById('progressBarStep');
 
   /* =========================[ ابزارهای کمکی ]========================= */
   const categoriesMap = {
@@ -443,6 +467,12 @@
             <div class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">${price}</div>
           </div>`;
       }
+    }catch(_){}
+
+    // فعال‌سازی دکمه ادامه وقتی حداقل فیلدهای ضروری پر است
+    try{
+      const ok = Boolean((document.getElementById('title')?.value||'').trim()) && s > 0;
+      if (submitBtn) submitBtn.disabled = !ok;
     }catch(_){}
   }
   sizeInput.addEventListener('input', recalc);
@@ -779,6 +809,8 @@
 
   /* =======================[ شروع: بارگذاری پیش‌نویس ]================== */
   window.addEventListener('load', loadDraft);
+  // تنظیم استپ‌بار
+  try{ if(progressBarStep) progressBarStep.style.width = '66%'; }catch(_){ }
 
   /* =======================[ حذف آگهی (فرم جدا) ]====================== */
   window.confirmDeleteAd = function (ev){
