@@ -17,7 +17,7 @@
 
     <!-- Search & Quick Actions -->
     <div class="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
-      <form action="{{ url_for('main.search_results') }}" method="get" class="sm:col-span-3">
+      <form action="{{ url_for('main.search_page') }}" method="get" class="sm:col-span-3">
         <label class="sr-only" for="q">جستجو</label>
         <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
           <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."

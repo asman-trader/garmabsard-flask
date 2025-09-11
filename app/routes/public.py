@@ -198,21 +198,64 @@ def uploaded_file(filename):
 @main_bp.route("/search", endpoint="search_page")
 def search_page():
     """
-    صفحهٔ جستجو با فیلتر دسته‌بندی
+    صفحهٔ جستجو با فیلترها و مرتب‌سازی واحد (نتایج و لیست کامل)
+    پارامترها: q, category, min_price, max_price, min_size, max_size, sort
     """
-    active_category = (request.args.get("category") or "").strip()
-    if active_category not in CATEGORY_MAP:
-        active_category = ""
+    # ورودی‌ها
+    q = (request.args.get("q") or "").strip().lower()
+    category = (request.args.get("category") or "").strip()
+    if category not in CATEGORY_MAP:
+        category = ""
 
-    ads = _get_approved_ads()
-    if active_category:
-        ads = [ad for ad in ads if (ad.get("category", "") == active_category)]
+    def _to_int_safe(v):
+        try:
+            return int(str(v).replace(",", "").strip())
+        except Exception:
+            return None
 
-    ads = _sort_by_created_at_desc(ads)
+    min_price = _to_int_safe(request.args.get("min_price"))
+    max_price = _to_int_safe(request.args.get("max_price"))
+    min_size  = _to_int_safe(request.args.get("min_size"))
+    max_size  = _to_int_safe(request.args.get("max_size"))
+    sort      = (request.args.get("sort") or "newest").strip()
+
+    # استخر کامل برای بخش «همه آگهی‌ها»
+    all_pool = _sort_by_created_at_desc(_get_approved_ads())
+
+    # اعمال فیلترها برای نتایج
+    results = all_pool
+    if category:
+        results = [ad for ad in results if (ad.get("category", "") == category)]
+    if min_price is not None:
+        results = [ad for ad in results if _to_int(ad.get("price_total"), 0) >= min_price]
+    if max_price is not None:
+        results = [ad for ad in results if _to_int(ad.get("price_total"), 0) <= max_price]
+    if min_size is not None:
+        results = [ad for ad in results if _to_int(ad.get("size"), 0) >= min_size]
+    if max_size is not None:
+        results = [ad for ad in results if _to_int(ad.get("size"), 0) <= max_size]
+    if q:
+        def _hit(ad):
+            title = (ad.get("title") or "").lower()
+            loc   = (ad.get("location") or "").lower()
+            desc  = (ad.get("description") or "").lower()
+            code  = str(ad.get("code") or "")
+            return (q in title) or (q in loc) or (q in desc) or (q == code.lower())
+        results = [ad for ad in results if _hit(ad)]
+
+    # مرتب‌سازی
+    if sort == "price_asc":
+        results.sort(key=lambda x: _to_int(x.get("price_total"), 0) or 0)
+    elif sort == "size_desc":
+        results.sort(key=lambda x: _to_int(x.get("size"), 0) or 0, reverse=True)
+    else:
+        results = _sort_by_created_at_desc(results)
+
     return render_template(
         "search.html",
-        ads=ads,
-        category=active_category,
+        lands=results,
+        all_lands=all_pool,
+        category=category,
         CATEGORY_MAP=CATEGORY_MAP,
         brand="وینور",
         domain="vinor.ir",
@@ -221,30 +264,16 @@ def search_page():
 @main_bp.route("/search-results", endpoint="search_results")
 def search_results():
     """
-    نتایج جستجو با تطبیق ساده روی عنوان/موقعیت/توضیحات
+    مسیر قدیمی → هدایت به /search با همان پارامترها (یکپارچه‌سازی تجربه)
     """
-    q = (request.args.get("q", "") or "").strip().lower()
-    pool = _get_approved_ads()
-    if q:
-        results: List[Dict[str, Any]] = []
-        for ad in pool:
-            title = (ad.get("title") or "").lower()
-            loc = (ad.get("location") or "").lower()
-            desc = (ad.get("description") or "").lower()
-            if q in title or q in loc or q in desc:
-                results.append(ad)
-    else:
-        results = pool
-
-    results = _sort_by_created_at_desc(results)
-    return render_template(
-        "search_results.html",
-        results=results,
-        query=q,
-        CATEGORY_MAP=CATEGORY_MAP,
-        brand="وینور",
-        domain="vinor.ir",
-    )
+    try:
+        qs = request.query_string.decode("utf-8") if request.query_string else ""
+    except Exception:
+        qs = ""
+    target = url_for("main.search_page")
+    if qs:
+        target = f"{target}?{qs}"
+    return redirect(target)
 
 # -------------------------
 # API: لیست آگهی‌های تأییدشده (برای کلاینت فرانت/صفحه علاقه‌مندی)
