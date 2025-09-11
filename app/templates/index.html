@@ -2,12 +2,53 @@
 {% block title %}لیست زمین‌ها | املاک آسمان گرمابسرد{% endblock %}
 
 {% block content %}
+<!-- Hero: VINOR PWA Home -->
+<section class="max-w-6xl mx-auto px-2 sm:px-4 pt-4">
+  <div class="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 sm:p-6 shadow">
+    <div class="flex items-center gap-3">
+      <span class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur grid place-items-center shadow-inner">
+        <i class="fas fa-seedling text-2xl"></i>
+      </span>
+      <div>
+        <div class="text-lg sm:text-2xl font-black">وینور – بازار آنلاین ملک</div>
+        <div class="text-white/80 text-xs sm:text-sm">جستجو و ثبت آسان آگهی؛ تجربه‌ای سریع و روان</div>
+      </div>
+    </div>
+
+    <!-- Search & Quick Actions -->
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
+      <form action="{{ url_for('main.search_results') }}" method="get" class="sm:col-span-3">
+        <label class="sr-only" for="q">جستجو</label>
+        <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
+          <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
+                 class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
+          <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+      <div class="sm:col-span-2 grid grid-cols-3 gap-2">
+        <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-plus-circle"></i> ثبت آگهی
+        </a>
+        <a href="{{ url_for('main.favorites') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-bookmark"></i> علاقه‌مندی
+        </a>
+        <a href="{{ url_for('main.notifications') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-bell"></i> اعلان‌ها
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Listings -->
 <main class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landList">
   {% for land in lands %}
     {% set images = land.get('images') or [] %}
     {% set img = images[0] if images else None %}
 
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition" data-code="{{ land.code }}">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}">
 
       <!-- تصویر اصلی -->
       <div class="relative">
@@ -17,8 +58,8 @@
                alt="زمین {{ land.title }}"
                class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
           {% else %}
-          <div class="w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 text-base">
-            بدون تصویر
+          <div class="w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-base">
+            <i class="fas fa-seedling text-2xl text-green-600/70"></i>
           </div>
           {% endif %}
         </a>
