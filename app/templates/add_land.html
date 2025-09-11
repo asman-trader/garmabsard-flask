@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-sm sm:shadow rounded-none sm:rounded-2xl mt-0 sm:mt-6 overflow-hidden">
 
-  <!-- هدر فرم -->
+  <!-- هدر فرم (Step 2 of 3) -->
   <header class="px-4 sm:px-6 py-4 bg-gradient-to-l from-green-50 to-white dark:from-gray-800 dark:to-gray-800 border-b dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -14,7 +14,7 @@
         </div>
         <div>
           <h1 class="text-base sm:text-lg font-bold text-gray-800 dark:text-white">ثبت آگهی جدید</h1>
-          <p class="text-[11px] text-gray-500">وینور – بازار آنلاین ملک</p>
+          <p class="text-[11px] text-gray-500">گام ۲ از ۳ — اطلاعات آگهی</p>
         </div>
       </div>
 
@@ -174,7 +174,7 @@
     <input type="hidden" name="price" id="price_hidden">
     <input type="hidden" name="location" id="location_hidden">
 
-    <!-- دسته‌بندی -->
+    <!-- دسته‌بندی (از گام ۱) -->
     <section aria-label="دسته‌بندی" class="space-y-2">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="space-y-2">
@@ -195,6 +195,33 @@
             <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
           </select>
         </div>
+      </div>
+    </section>
+
+    <!-- فیلدهای خاص بر اساس دسته (مانند دیوار) -->
+    <section id="categorySpecific" class="space-y-2 hidden" aria-label="فیلدهای اختصاصی دسته">
+      <div id="rentFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="deposit">رهن (تومان)</label>
+          <input inputmode="numeric" type="text" id="deposit" name="deposit" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="rent">اجاره ماهانه (تومان)</label>
+          <input inputmode="numeric" type="text" id="rent" name="rent" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off">
+        </div>
+        <div class="space-y-2 sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">ودیعه و اجاره قابل تبدیل</label>
+          <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="convertible" value="1"> قابل تبدیل</label>
+        </div>
+      </div>
+
+      <div id="apartmentFields" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden">
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="year_built">سال ساخت</label><input inputmode="numeric" type="text" id="year_built" name="year_built" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="floor">طبقه</label><input inputmode="numeric" type="text" id="floor" name="floor" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="rooms">تعداد اتاق</label><input inputmode="numeric" type="text" id="rooms" name="rooms" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="elevator">آسانسور</label><select id="elevator" name="elevator" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="parking">پارکینگ</label><select id="parking" name="parking" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+        <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="warehouse">انباری</label><select id="warehouse" name="warehouse" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
       </div>
     </section>
 
@@ -437,6 +464,24 @@
     }
   }
   mainSelect.addEventListener('change', e=>fillSub(e.target.value));
+
+  /* =====================[ نمایش فیلدهای اختصاصی ]==================== */
+  const catWrap      = document.getElementById('categorySpecific');
+  const rentFields   = document.getElementById('rentFields');
+  const aptFields    = document.getElementById('apartmentFields');
+  function updateCategorySpecific(){
+    const mainVal = (mainSelect.value||'');
+    const subVal  = (subSelect.value||'');
+    const isRent  = /اجاره/.test(mainVal);
+    const isApt   = /آپارتمان/.test(subVal);
+    if (!catWrap) return;
+    if (!mainVal){ catWrap.classList.add('hidden'); return; }
+    catWrap.classList.remove('hidden');
+    rentFields?.classList.toggle('hidden', !isRent);
+    aptFields?.classList.toggle('hidden', !isApt);
+  }
+  mainSelect.addEventListener('change', updateCategorySpecific);
+  subSelect.addEventListener('change', updateCategorySpecific);
 
   /* =======================[ منطق تصاویر/آپلود ]======================= */
   let imageItems = []; // {id,url,file,isCover,serverId,uploading}

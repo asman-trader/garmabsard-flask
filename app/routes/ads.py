@@ -39,7 +39,30 @@ def _safe_remove_file(path: str) -> None:
 # با endpoint یکتا مشکل رفع می‌شود.
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
 def submit_ad_redirect():
-    return redirect(url_for('main.add_land'))
+    return redirect(url_for('main.add_land_step1'))
+@main_bp.route('/lands/add/step1', methods=['GET','POST'], endpoint='add_land_step1')
+def add_land_step1():
+    if 'user_phone' not in session:
+        flash("برای ثبت آگهی وارد شوید.")
+        session['next'] = url_for('main.add_land_step1')
+        return redirect(url_for('main.login'))
+
+    if request.method == 'POST':
+        trade_type = (request.form.get('trade_type') or '').strip()  # sale|rent
+        property_type = (request.form.get('property_type') or '').strip()  # apartment|villa|land|shop|office|garden
+        if trade_type not in {'sale','rent'}:
+            flash('نوع معامله نامعتبر است.')
+            return redirect(url_for('main.add_land_step1'))
+        if property_type not in {'apartment','villa','land','shop','office','garden'}:
+            flash('نوع ملک نامعتبر است.')
+            return redirect(url_for('main.add_land_step1'))
+        session['ad_category'] = {
+            'trade_type': trade_type,
+            'property_type': property_type,
+        }
+        return redirect(url_for('main.add_land'))
+
+    return render_template('add_land_step1.html')
 
 
 @main_bp.route('/lands/add', methods=['GET','POST'], endpoint='add_land')
@@ -58,6 +81,28 @@ def add_land():
         category = (request.form.get('category','') or '').strip()
         if category and category not in CATEGORY_KEYS:
             category = ""
+
+        # Extras from step-specific fields
+        extras = {
+            'deposit': request.form.get('deposit') or None,
+            'rent': request.form.get('rent') or None,
+            'convertible': bool(request.form.get('convertible')),
+            'year_built': request.form.get('year_built') or None,
+            'floor': request.form.get('floor') or None,
+            'rooms': request.form.get('rooms') or None,
+            'elevator': request.form.get('elevator') if request.form.get('elevator') in {'0','1'} else None,
+            'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
+            'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
+            'district': request.form.get('district') or None,
+            'address': request.form.get('address') or None,
+            'frontage': request.form.get('frontage') or None,
+            'length': request.form.get('length') or None,
+            'street_width': request.form.get('street_width') or None,
+            'is_negotiable': bool(request.form.get('is_negotiable')),
+            'accept_exchange': bool(request.form.get('accept_exchange')),
+            'installment': bool(request.form.get('installment')),
+            'urgent': bool(request.form.get('urgent')),
+        }
 
         if not title or not location or not size:
             flash("همه فیلدها الزامی هستند.")
@@ -78,7 +123,8 @@ def add_land():
             'land_temp': {
                 'title': title, 'location': location, 'size': size,
                 'price_total': _to_int(price_total) if price_total else None,
-                'description': description, 'category': category
+                'description': description, 'category': category,
+                'extras': extras
             },
             'land_images': image_names
         })
@@ -128,7 +174,8 @@ def finalize_land():
         'owner': session.get('user_phone'),
         'status': status,
         'ad_type': session['land_ad_type'],
-        'category': lt.get('category','')
+        'category': lt.get('category',''),
+        'extras': lt.get('extras', {})
     }
     lands.append(new_land)
     save_ads(lands)

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set hide_header = True %}
+{% block title %}ثبت آگهی | انتخاب دسته{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-sm sm:shadow rounded-none sm:rounded-2xl mt-0 sm:mt-6 overflow-hidden">
+  <header class="px-4 sm:px-6 py-4 border-b dark:border-gray-700">
+    <div class="flex items-center gap-3">
+      <span class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 grid place-items-center text-green-700 dark:text-green-300"><i class="fas fa-seedling"></i></span>
+      <div>
+        <div class="font-bold">ثبت آگهی جدید</div>
+        <div class="text-xs text-gray-500">گام ۱ از ۳ — انتخاب دسته</div>
+      </div>
+    </div>
+  </header>
+
+  <form method="POST" class="p-4 sm:p-6 space-y-4" action="{{ url_for('main.add_land_step1') }}">
+    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+    <section class="space-y-2">
+      <label class="block text-sm font-bold text-gray-800 dark:text-gray-200">نوع معامله</label>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+          <input type="radio" name="trade_type" value="sale" required>
+          فروش
+        </label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+          <input type="radio" name="trade_type" value="rent" required>
+          اجاره
+        </label>
+      </div>
+    </section>
+
+    <section class="space-y-2">
+      <label class="block text-sm font-bold text-gray-800 dark:text-gray-200">نوع ملک</label>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="apartment" required> آپارتمان</label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="villa" required> ویلا</label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="land" required> زمین</label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="garden" required> باغ</label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="shop" required> مغازه</label>
+        <label class="inline-flex items-center gap-2 p-3 rounded-xl border dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"><input type="radio" name="property_type" value="office" required> اداری</label>
+      </div>
+    </section>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a href="{{ url_for('main.index') }}" class="px-4 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700">انصراف</a>
+      <button type="submit" class="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-700 text-white">ادامه</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+
