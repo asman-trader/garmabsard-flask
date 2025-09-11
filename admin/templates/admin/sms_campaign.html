@@ -178,6 +178,112 @@
       e.target.appendChild(hidden);
     });
   });
+
+  // ---------- نمایش وضعیت ارسال (Order In Progress) ----------
+  (function(){
+    const form = document.getElementById('smsForm');
+    if (!form) return;
+
+    // ساخت لایه وضعیت
+    const overlay = document.createElement('div');
+    overlay.id = 'sendingOverlay';
+    overlay.className = 'hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4';
+    overlay.innerHTML = `
+      <div class="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-2xl">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-8 h-8 rounded-full border-4 border-vinor-600 border-t-transparent animate-spin"></div>
+          <div class="font-bold">در حال ارسال پیامک‌ها...</div>
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-3">لطفاً صفحه را نبندید. این مرحله بسته به تعداد شماره‌ها زمان‌بر است.</div>
+        <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden mb-2">
+          <div id="sendingBar" class="h-full bg-vinor-600" style="width:0%"></div>
+        </div>
+        <div class="text-xs grid grid-cols-2 gap-2">
+          <div>کل تخمینی: <span id="sendingTotal">—</span></div>
+          <div>ارسال‌شده (تخمینی): <span id="sendingDone">0</span></div>
+          <div>زمان سپری‌شده: <span id="sendingElapsed">0s</span></div>
+          <div>زمان باقی‌مانده (تخمینی): <span id="sendingRemain">—</span></div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    let fileCount = null; // تعداد خطوط فایل
+    let textCount = 0;
+    let timer = null;
+
+    function countTextLines(){
+      const t = (form.elements['numbers_text']?.value || '').trim();
+      if (!t) return 0;
+      return t.split(/\r?\n/).filter(Boolean).length;
+    }
+
+    function formatTime(ms){
+      if (ms <= 0 || !isFinite(ms)) return '0s';
+      const s = Math.round(ms/1000);
+      if (s < 60) return s + 's';
+      const m = Math.floor(s/60), r = s%60;
+      return m + 'm ' + (r? (r+'s'):'');
+    }
+
+    // شمارش خطوط فایل هنگام انتخاب
+    form.elements['numbers_file']?.addEventListener('change', (ev) => {
+      fileCount = null;
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const txt = String(reader.result||'');
+          fileCount = txt.split(/\r?\n/).filter(Boolean).length;
+        } catch(_) { fileCount = null; }
+      };
+      reader.readAsText(file);
+    });
+
+    form.addEventListener('submit', () => {
+      // محاسبه تخمینی
+      textCount = countTextLines();
+      const total = (fileCount ?? 0) + textCount;
+      const mode = (form.elements['delay_mode']?.value || 'fixed');
+      const fixed = Number(form.elements['delay_ms']?.value || '1000') || 0;
+      const minMs = Number(form.elements['delay_min_ms']?.value || '800') || 0;
+      const maxMs = Number(form.elements['delay_max_ms']?.value || '1800') || 0;
+      const avg = mode === 'fixed' ? fixed : Math.max(0, Math.round((Math.min(minMs,maxMs)+Math.max(minMs,maxMs))/2));
+
+      const totalMs = total > 0 ? total * avg : NaN;
+
+      // نمایش لایه وضعیت
+      overlay.classList.remove('hidden');
+      const bar = document.getElementById('sendingBar');
+      const elTotal = document.getElementById('sendingTotal');
+      const elDone  = document.getElementById('sendingDone');
+      const elElapsed = document.getElementById('sendingElapsed');
+      const elRemain  = document.getElementById('sendingRemain');
+
+      elTotal.textContent = total ? String(total) : '—';
+
+      const t0 = Date.now();
+      timer = setInterval(() => {
+        const elapsed = Date.now() - t0;
+        elElapsed.textContent = formatTime(elapsed);
+        if (isFinite(totalMs) && totalMs > 0) {
+          const p = Math.min(100, Math.round((elapsed/totalMs)*100));
+          bar.style.width = p + '%';
+          const done = Math.round((p/100) * total);
+          elDone.textContent = String(done);
+          const remain = Math.max(0, totalMs - elapsed);
+          elRemain.textContent = formatTime(remain);
+        } else {
+          bar.style.width = '20%';
+          elDone.textContent = '—';
+          elRemain.textContent = '—';
+        }
+      }, 500);
+    }, { once: true });
+
+    // پاکسازی تایمر بعد از برگشت پاسخ (بارگذاری مجدد صفحه)
+    window.addEventListener('beforeunload', () => { if (timer) clearInterval(timer); });
+  })();
 </script>
 {% endblock %}
 
