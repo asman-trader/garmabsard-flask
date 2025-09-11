@@ -78,62 +78,39 @@ def add_land():
             return redirect(url_for('main.add_land_step1'))
 
     if request.method == 'POST':
-        title = request.form.get('title')
-        location = request.form.get('location')
-        size = request.form.get('size')
-        price_total = request.form.get('price_total') or None
-        description = request.form.get('description')
-        category = (request.form.get('category','') or '').strip()
-        if category and category not in CATEGORY_KEYS:
-            category = ""
+        # Step 2 (Basics): only images + title + description
+        title = (request.form.get('title') or '').strip()
+        description = request.form.get('description') or None
 
-        # Extras from step-specific fields
-        extras = {
-            'deposit': request.form.get('deposit') or None,
-            'rent': request.form.get('rent') or None,
-            'convertible': bool(request.form.get('convertible')),
-            'year_built': request.form.get('year_built') or None,
-            'floor': request.form.get('floor') or None,
-            'rooms': request.form.get('rooms') or None,
-            'elevator': request.form.get('elevator') if request.form.get('elevator') in {'0','1'} else None,
-            'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
-            'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
-            'district': request.form.get('district') or None,
-            'address': request.form.get('address') or None,
-            'frontage': request.form.get('frontage') or None,
-            'length': request.form.get('length') or None,
-            'street_width': request.form.get('street_width') or None,
-            'is_negotiable': bool(request.form.get('is_negotiable')),
-            'accept_exchange': bool(request.form.get('accept_exchange')),
-            'installment': bool(request.form.get('installment')),
-            'urgent': bool(request.form.get('urgent')),
-        }
-
-        if not title or not location or not size:
-            flash("همه فیلدها الزامی هستند.")
+        if not title:
+            flash("عنوان آگهی الزامی است.")
             return redirect(url_for('main.add_land'))
 
-        code = datetime.now().strftime('%Y%m%d%H%M%S')
-        upload_dir = os.path.join(data_dir(), 'uploads')
-        os.makedirs(upload_dir, exist_ok=True)
-        image_names = []
-        for img in request.files.getlist('images'):
-            if img and img.filename:
-                fname = f"{code}__{secure_filename(img.filename)}"
-                img.save(os.path.join(upload_dir, fname))
-                image_names.append(fname)
+        # Prefer uploaded_ids collected by client-side uploader
+        uploaded_ids_raw = (request.form.get('uploaded_ids') or '').strip(',')
+        image_names = [x for x in uploaded_ids_raw.split(',') if x]
+
+        if not image_names:
+            # Backward compatibility: accept uploaded files if any
+            tmp_code = datetime.now().strftime('%Y%m%d%H%M%S')
+            upload_dir = os.path.join(data_dir(), 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            for img in request.files.getlist('images'):
+                if img and img.filename:
+                    fname = f"{tmp_code}__{secure_filename(img.filename)}"
+                    img.save(os.path.join(upload_dir, fname))
+                    image_names.append(fname)
+
+        code = session.get('land_code') or datetime.now().strftime('%Y%m%d%H%M%S')
+        lt = session.get('land_temp') or {}
+        lt.update({'title': title, 'description': description})
 
         session.update({
             'land_code': code,
-            'land_temp': {
-                'title': title, 'location': location, 'size': size,
-                'price_total': _to_int(price_total) if price_total else None,
-                'description': description, 'category': category,
-                'extras': extras
-            },
-            'land_images': image_names
+            'land_temp': lt,
+            'land_images': image_names,
         })
-        return redirect(url_for('main.add_land_step3'))
+        return redirect(url_for('main.add_land_details'))
 
     return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP, ad_category=session.get('ad_category'))
 
@@ -153,6 +130,61 @@ def add_land_step3():
         session['land_ad_type'] = ad_type
         return redirect(url_for('main.finalize_land'))
     return render_template('add_land_step3.html')
+
+
+# New: Step 3 (Details)
+@main_bp.route('/lands/add/details', methods=['GET','POST'], endpoint='add_land_details')
+def add_land_details():
+    if 'user_phone' not in session:
+        flash("برای ثبت آگهی وارد شوید.")
+        session['next'] = url_for('main.add_land_details')
+        return redirect(url_for('main.login'))
+
+    if not session.get('land_temp'):
+        return redirect(url_for('main.add_land'))
+
+    if request.method == 'POST':
+        price_total = request.form.get('price_total') or None
+        size = request.form.get('size') or None
+        location = request.form.get('location') or request.form.get('city') or None
+
+        category = (request.form.get('category','') or '').strip()
+        if category and category not in CATEGORY_KEYS:
+            category = ""
+
+        extras = {
+            'deposit': request.form.get('deposit') or None,
+            'rent': request.form.get('rent') or None,
+            'convertible': bool(request.form.get('convertible')),
+            'year_built': request.form.get('year_built') or None,
+            'floor': request.form.get('floor') or None,
+            'rooms': request.form.get('rooms') or None,
+            'elevator': request.form.get('elevator') if request.form.get('elevator') in {'0','1'} else None,
+            'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
+            'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
+            'frontage': request.form.get('frontage') or None,
+            'length': request.form.get('length') or None,
+            'street_width': request.form.get('street_width') or None,
+            'is_negotiable': bool(request.form.get('is_negotiable')),
+            'accept_exchange': bool(request.form.get('accept_exchange')),
+            'installment': bool(request.form.get('installment')),
+            'urgent': bool(request.form.get('urgent')),
+            'features': request.form.getlist('features') or [],
+            'document_type': request.form.get('document_type') or None,
+        }
+
+        lt = session.get('land_temp') or {}
+        lt.update({
+            'location': location,
+            'size': size,
+            'price_total': _to_int(price_total) if price_total else None,
+            'category': category or lt.get('category',''),
+            'extras': extras,
+        })
+        session['land_temp'] = lt
+        return redirect(url_for('main.add_land_step3'))
+
+    return render_template('add_land_details.html', ad_category=session.get('ad_category'))
 
 
 @main_bp.route('/lands/finalize', methods=['GET'], endpoint='finalize_land')
