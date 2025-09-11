@@ -1,163 +1,430 @@
 {% extends "base.html" %}
-{% set hide_header = True %}
-{% block title %}گام ۲ از ۴: تصاویر و عنوان{% endblock %}
+
+{% block title %}ثبت آگهی - مرحله ۲{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-sm sm:shadow rounded-none sm:rounded-2xl mt-0 sm:mt-6 overflow-hidden">
-  <header class="px-4 sm:px-6 py-4 border-b dark:border-gray-700">
-    <div class="flex items-center gap-3">
-      <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-seedling"></i></span>
-      <div>
-        <div class="font-bold">ثبت آگهی جدید</div>
-        <div class="text-xs text-gray-500">گام ۲ از ۴ — تصاویر و عنوان</div>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 sm:pb-0">
+  <!-- Header -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 sticky top-0 z-10">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <a href="{{ url_for('ads.add_land_step1') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+        <i class="fas fa-arrow-right text-lg"></i>
+      </a>
+      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۲ از ۴</h1>
+      <div class="w-6"></div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="px-4 pb-3">
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+        <span>تصاویر و توضیحات</span>
+        <span>۵۰٪</span>
       </div>
-      <a href="{{ url_for('main.add_land_step1') }}" class="ms-auto text-xs text-emerald-700 hover:underline">ویرایش دسته</a>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 50%"></div>
+      </div>
     </div>
-  </header>
-
-  <div class="px-4 sm:px-6 py-3 border-b dark:border-gray-700 bg-white/70 dark:bg-gray-900/70">
-    <div class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">1</span><span class="hidden sm:inline">انتخاب دسته</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-emerald-600 text-white">2</span><span class="hidden sm:inline">تصاویر و عنوان</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">3</span><span class="hidden sm:inline">جزئیات</span></div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex items-center gap-2"><span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">4</span><span class="hidden sm:inline">بررسی و انتشار</span></div>
-    </div>
-    <div class="mt-3 h-1 bg-gray-200 dark:bg-gray-700 rounded"><div class="h-1 bg-emerald-600 rounded" style="width:50%"></div></div>
   </div>
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-6 p-4 sm:p-6" id="adForm" novalidate action="{{ url_for('main.add_land') }}">
-    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-
-    <section aria-label="تصاویر" class="space-y-3">
-      <div class="flex items-center justify-between">
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200">تصاویر</label>
-        <div class="text-[11px] text-gray-500">حداکثر ۱۰ تصویر • هرکدام تا ۱۲MB</div>
-      </div>
-
-      <div id="dropzone" role="button"
-           class="rounded-2xl border-2 border-dashed border-emerald-400/70 bg-emerald-50/30 dark:bg-gray-900/30 p-4 sm:p-5 text-center hover:bg-emerald-50/50 transition select-none">
-        <label for="imagesInput" class="w-full h-full block cursor-pointer">
-          <div class="flex items-center justify-center gap-3 text-emerald-700 dark:text-emerald-300">
-            <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 grid place-items-center"><i class="fas fa-upload"></i></span>
-            <div class="text-sm">
-              <div class="font-bold">تصویر اضافه کنید</div>
-              <div class="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">کلیک کنید یا بکشید و رها کنید</div>
+  <!-- Main Content -->
+  <div class="px-4 py-6 space-y-6">
+    <!-- Step 2: Images and Description -->
+    <form id="step2Form" method="POST" enctype="multipart/form-data" class="space-y-6">
+      {{ form.hidden_tag() }}
+      
+      <!-- Images Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-images text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">تصاویر ملک</h2>
+        </div>
+        
+        <!-- Upload Area -->
+        <div class="mb-4">
+          <label for="imagesInput" class="block">
+            <div id="dropzone" class="w-full h-32 border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+              <i class="fas fa-cloud-upload-alt text-3xl text-emerald-500 mb-2"></i>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">تصاویر را انتخاب کنید</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">حداکثر ۱۰ تصویر</p>
             </div>
-          </div>
-        </label>
-        <input type="file" name="images" id="imagesInput" accept="image/*" capture="environment" multiple
-               style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
+          </label>
+          <input type="file" id="imagesInput" name="images" accept="image/*" multiple capture="environment" class="hidden">
+        </div>
+        
+        <!-- Image Preview Grid -->
+        <div id="imagePreview" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
       </div>
 
-      <div id="preview" class="grid grid-cols-3 gap-2"></div>
-      <input type="hidden" name="uploaded_ids" id="uploaded_ids" />
-      <div id="uploadMsg" class="text-xs text-gray-600 dark:text-gray-300"></div>
-    </section>
+      <!-- Title Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-heading text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">عنوان آگهی</h2>
+        </div>
+        
+        <div class="space-y-3">
+          {{ form.title.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
+          {{ form.title(class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors", placeholder="مثال: آپارتمان ۲ خوابه در مرکز شهر") }}
+          {% if form.title.errors %}
+            <div class="text-red-500 text-sm">{{ form.title.errors[0] }}</div>
+          {% endif %}
+        </div>
+      </div>
 
-    <section aria-label="عنوان" class="space-y-2">
-      <label class="block text-sm font-bold text-gray-700 dark:text-gray-200" for="title">عنوان*</label>
-      <input type="text" name="title" id="title" required maxlength="120" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" placeholder="مثلاً: آپارتمان ۸۵ متری خوش نقشه" />
-    </section>
+      <!-- Description Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-align-right text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">توضیحات</h2>
+        </div>
+        
+        <div class="space-y-3">
+          {{ form.description.label(class="block text-sm font-medium text-gray-700 dark:text-gray-300") }}
+          {{ form.description(class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors resize-none", rows="4", placeholder="توضیحات کامل ملک را بنویسید...") }}
+          {% if form.description.errors %}
+            <div class="text-red-500 text-sm">{{ form.description.errors[0] }}</div>
+          {% endif %}
+        </div>
+      </div>
 
-    <section aria-label="توضیحات" class="space-y-2">
-      <label class="block text-sm font-bold text-gray-700 dark:text-gray-200" for="description">توضیحات (اختیاری)</label>
-      <textarea name="description" id="description" rows="4" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" placeholder="ویژگی‌های کلیدی، دسترسی‌ها، وضعیت ملک..."></textarea>
-    </section>
+      <!-- Hidden field for uploaded image IDs -->
+      <input type="hidden" id="uploadedImageIds" name="uploaded_image_ids" value="">
+    </form>
+  </div>
 
-    <div class="h-16 sm:h-0"></div>
-    <div class="fixedbar fixed bottom-0 inset-x-0 sm:static bg-white/95 dark:bg-gray-900/95 border-t dark:border-gray-700 px-4 py-3 flex items-center gap-3 justify-between"
-         style="padding-bottom:calc(env(safe-area-inset-bottom,0px)+12px)">
-      <a href="{{ url_for('main.add_land_step1') }}" class="px-4 py-2 rounded-xl border hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm">بازگشت</a>
-      <div class="text-xs text-gray-500" id="continueHint">افزودن حداقل یک تصویر توصیه می‌شود</div>
-      <button type="submit" id="btnSubmit" class="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-700 text-white">ادامه</button>
+  <!-- Bottom Action Bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-4 py-3 sm:static sm:border-t-0 sm:bg-transparent sm:dark:bg-transparent">
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('ads.add_land_step1') }}" class="flex-1 px-4 py-3 text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        قبلی
+      </a>
+      <button type="submit" form="step2Form" id="continueBtn" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+        ادامه
+      </button>
     </div>
-  </form>
+  </div>
 </div>
 
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
 <style>
-  .thumb{position:relative;border:1px solid rgba(0,0,0,.08);border-radius:12px;overflow:hidden}
-  .thumb img{width:100%;height:120px;object-fit:cover;display:block}
-  .thumb .rm{position:absolute;top:6px;right:6px;background:#ef4444;color:#fff;border-radius:999px;font-size:11px;padding:.2rem .45rem}
-  .thumb .bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(0,0,0,.1)}
-  .thumb .bar>span{display:block;height:100%;background:#10b981;width:0}
-  #dropzone.dragover{background:rgba(16,185,129,.08)}
-  @media (max-width: 420px){ .thumb img{ height: 100px; } }
-  body.kb-open .fixedbar{ position: static; }
+  .image-preview {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .image-preview .remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .upload-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .upload-progress .progress-bar {
+    height: 100%;
+    background: #10b981;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  
+  .toast {
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .toast.success {
+    background: #10b981;
+  }
+  
+  .toast.error {
+    background: #ef4444;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .image-preview {
+      aspect-ratio: 1.2;
+    }
+  }
+  
+  /* Keyboard handling */
+  @media (max-width: 640px) {
+    .fixed.bottom-0 {
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+  }
 </style>
 
 <script>
-(function(){
-  const input   = document.getElementById('imagesInput');
-  const preview = document.getElementById('preview');
-  const msg     = document.getElementById('uploadMsg');
-  const hidden  = document.getElementById('uploaded_ids');
-  const btn     = document.getElementById('btnSubmit');
-  const hint    = document.getElementById('continueHint');
-  const dz      = document.getElementById('dropzone');
-
-  const MAX = 10; const MAX_MB = 12;
-  function toast(t){ try{ msg.textContent = t; }catch(_){}}
-  function fileToDataURL(f){ return new Promise(r=>{ const rd=new FileReader(); rd.onload=()=>r(rd.result); rd.readAsDataURL(f);}); }
-  function enableContinue(){ const hasTitle = Boolean((document.getElementById('title')?.value||'').trim()); if(btn) btn.disabled = !hasTitle; }
-  document.getElementById('title')?.addEventListener('input', enableContinue);
-
-  async function onFiles(files){
-    const arr = Array.from(files||[]);
-    if(!arr.length) return;
-    let ids = (hidden.value||'').split(',').filter(Boolean);
-    for (const f of arr.slice(0,MAX - ids.length)){
-      if (!f.type.startsWith('image/')){ toast('فقط تصویر مجاز است'); continue; }
-      if (f.size > MAX_MB*1024*1024){ toast('حداکثر '+MAX_MB+'MB'); continue; }
-      // کارت پیش‌نمایش با نوار پیشرفت
-      const card = document.createElement('div'); card.className='thumb';
-      const bar  = document.createElement('div'); bar.className='bar'; const barIn=document.createElement('span'); bar.appendChild(barIn);
-      const rm   = document.createElement('button'); rm.type='button'; rm.className='rm'; rm.textContent='حذف';
-      const img  = document.createElement('img');
-      try{ img.src = await fileToDataURL(f);}catch(_){ }
-      card.appendChild(img); card.appendChild(rm); card.appendChild(bar); preview.appendChild(card);
-      rm.addEventListener('click', ()=>{ preview.removeChild(card); ids = ids.filter(x=>x!==card.dataset.id); hidden.value = ids.join(','); enableContinue(); });
-      // آپلود
-      try{
-        const id = await upload(f, (p)=>{ barIn.style.width = p+'%'; });
-        if (id) { ids.push(id); hidden.value = ids.join(','); card.dataset.id = id; barIn.style.width='100%'; }
-      }catch(e){ toast('آپلود ناموفق: '+(e&&e.message||'')); try{ preview.removeChild(card);}catch(_){ } }
-    }
-    enableContinue();
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('step2Form');
+  const imagesInput = document.getElementById('imagesInput');
+  const dropzone = document.getElementById('dropzone');
+  const imagePreview = document.getElementById('imagePreview');
+  const uploadedImageIds = document.getElementById('uploadedImageIds');
+  const continueBtn = document.getElementById('continueBtn');
+  const toastContainer = document.getElementById('toastContainer');
+  
+  let uploadedImages = [];
+  let uploadingCount = 0;
+  
+  // Show toast message
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 4000);
   }
-
-  function upload(f, onprog){
-    return new Promise((resolve,reject)=>{
-      const fd = new FormData(); fd.append('file', f, 'image.jpg');
+  
+  // Update continue button state
+  function updateContinueButton() {
+    const hasImages = uploadedImages.length > 0;
+    const hasTitle = document.querySelector('input[name="title"]').value.trim() !== '';
+    const hasDescription = document.querySelector('textarea[name="description"]').value.trim() !== '';
+    
+    continueBtn.disabled = !hasImages || !hasTitle || !hasDescription || uploadingCount > 0;
+    
+    if (uploadingCount > 0) {
+      continueBtn.textContent = `در حال آپلود... (${uploadingCount})`;
+    } else {
+      continueBtn.textContent = 'ادامه';
+    }
+  }
+  
+  // Create image preview element
+  function createImagePreview(file, id = null) {
+    const preview = document.createElement('div');
+    preview.className = 'image-preview';
+    preview.dataset.fileId = id || Date.now();
+    
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.onclick = () => removeImage(preview.dataset.fileId);
+    
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'upload-progress';
+    const progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    progressContainer.appendChild(progressBar);
+    
+    preview.appendChild(img);
+    preview.appendChild(removeBtn);
+    preview.appendChild(progressContainer);
+    
+    return { preview, progressBar };
+  }
+  
+  // Remove image
+  function removeImage(fileId) {
+    const preview = document.querySelector(`[data-file-id="${fileId}"]`);
+    if (preview) {
+      preview.remove();
+    }
+    
+    uploadedImages = uploadedImages.filter(img => img.id !== fileId);
+    updateUploadedIds();
+    updateContinueButton();
+  }
+  
+  // Update uploaded IDs hidden field
+  function updateUploadedIds() {
+    const ids = uploadedImages.filter(img => img.serverId).map(img => img.serverId);
+    uploadedImageIds.value = ids.join(',');
+  }
+  
+  // Upload single image
+  function uploadImage(file, progressBar) {
+    return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/uploads/images', true);
-      xhr.responseType='json'; xhr.withCredentials=true; xhr.setRequestHeader('Accept','application/json');
-      try{ xhr.upload.onprogress = (ev)=>{ if (!ev.lengthComputable) return; const p = Math.round((ev.loaded/ev.total)*100); if(onprog) onprog(p); }; }catch(_){ }
-      xhr.onload = ()=>{ try{ if(xhr.status>=200&&xhr.status<300){ const d=xhr.response||{}; return resolve(d.id||null);} reject(new Error('HTTP '+xhr.status)); }catch(e){ reject(e);} };
-      xhr.onerror=()=>reject(new Error('NETWORK_ERROR'));
-      xhr.send(fd);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          progressBar.style.width = percentComplete + '%';
+        }
+      });
+      
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success && response.image_id) {
+              resolve(response.image_id);
+            } else {
+              reject(new Error(response.message || 'آپلود ناموفق'));
+            }
+          } catch (e) {
+            reject(new Error('خطا در پردازش پاسخ سرور'));
+          }
+        } else {
+          reject(new Error(`خطا: ${xhr.status}`));
+        }
+      });
+      
+      xhr.addEventListener('error', () => {
+        reject(new Error('خطا در اتصال به سرور'));
+      });
+      
+      xhr.open('POST', '{{ url_for("api.upload_image") }}');
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.withCredentials = true;
+      xhr.send(formData);
     });
   }
-
-  input.addEventListener('change', (e)=> onFiles(e.target.files));
-  dz.addEventListener('click', ()=> input.click());
-  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints>0);
-  if (!isTouch){
-    ;['dragenter','dragover'].forEach(evt=> dz.addEventListener(evt, (e)=>{ e.preventDefault(); dz.classList.add('dragover'); }, { passive:false }));
-    ;['dragleave','drop'].forEach(evt=> dz.addEventListener(evt, (e)=>{ e.preventDefault(); dz.classList.remove('dragover'); }, { passive:false }));
-    dz.addEventListener('drop', (e)=>{ const dt=e.dataTransfer; if(dt?.files) onFiles(dt.files); }, { passive:false });
+  
+  // Handle file selection
+  function handleFiles(files) {
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter(file => file.type.startsWith('image/'));
+    
+    if (validFiles.length === 0) {
+      showToast('لطفاً فایل‌های تصویری معتبر انتخاب کنید', 'error');
+      return;
+    }
+    
+    if (uploadedImages.length + validFiles.length > 10) {
+      showToast('حداکثر ۱۰ تصویر می‌توانید آپلود کنید', 'error');
+      return;
+    }
+    
+    validFiles.forEach(file => {
+      const fileId = Date.now() + Math.random();
+      const { preview, progressBar } = createImagePreview(file, fileId);
+      
+      uploadedImages.push({ id: fileId, file, serverId: null });
+      imagePreview.appendChild(preview);
+      
+      uploadingCount++;
+      updateContinueButton();
+      
+      uploadImage(file, progressBar)
+        .then(serverId => {
+          const imageIndex = uploadedImages.findIndex(img => img.id === fileId);
+          if (imageIndex !== -1) {
+            uploadedImages[imageIndex].serverId = serverId;
+            updateUploadedIds();
+          }
+          showToast('تصویر با موفقیت آپلود شد');
+        })
+        .catch(error => {
+          showToast(error.message, 'error');
+          removeImage(fileId);
+        })
+        .finally(() => {
+          uploadingCount--;
+          updateContinueButton();
+        });
+    });
   }
-  // کیبورد موبایل: نوار پایین را ثابت نگذار
-  ;['focusin','focusout'].forEach(ev=> document.addEventListener(ev, (e)=>{
-    const t = e.target; const isInput = t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA');
-    if (isInput && ev==='focusin') document.body.classList.add('kb-open');
-    if (isInput && ev==='focusout') document.body.classList.remove('kb-open');
-  }));
-  enableContinue();
-})();
+  
+  // Event listeners
+  imagesInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
+  });
+  
+  dropzone.addEventListener('click', () => {
+    imagesInput.click();
+  });
+  
+  // Drag and drop (desktop only)
+  if (!('ontouchstart' in window)) {
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('border-emerald-500', 'bg-emerald-100');
+    });
+    
+    dropzone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-emerald-500', 'bg-emerald-100');
+    });
+    
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-emerald-500', 'bg-emerald-100');
+      if (e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+  }
+  
+  // Form validation
+  form.addEventListener('submit', (e) => {
+    if (uploadedImages.length === 0) {
+      e.preventDefault();
+      showToast('لطفاً حداقل یک تصویر انتخاب کنید', 'error');
+      return;
+    }
+    
+    if (uploadingCount > 0) {
+      e.preventDefault();
+      showToast('لطفاً صبر کنید تا آپلود تصاویر تمام شود', 'error');
+      return;
+    }
+  });
+  
+  // Real-time validation
+  document.querySelector('input[name="title"]').addEventListener('input', updateContinueButton);
+  document.querySelector('textarea[name="description"]').addEventListener('input', updateContinueButton);
+  
+  // Initial state
+  updateContinueButton();
+});
 </script>
 {% endblock %}
-
-
