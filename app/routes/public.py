@@ -10,7 +10,7 @@ from flask import (
 )
 
 from . import main_bp
-from ..utils.storage import data_dir, legacy_dir, load_ads
+from ..utils.storage import data_dir, legacy_dir, load_ads_cached
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_MAP
 
@@ -49,7 +49,7 @@ def _compute_price_per_meter(land: Dict[str, Any]) -> Optional[int]:
     return None
 
 def _get_approved_ads() -> List[Dict[str, Any]]:
-    return [ad for ad in load_ads() if ad.get("status") == "approved"]
+    return [ad for ad in load_ads_cached() if ad.get("status") == "approved"]
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return sorted(
@@ -59,7 +59,7 @@ def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]
     )
 
 def _find_by_code(code: str) -> Optional[Dict[str, Any]]:
-    for ad in load_ads():
+    for ad in load_ads_cached():
         if ad.get("code") == code:
             return ad
     return None
@@ -168,7 +168,12 @@ def uploaded_file(filename):
     for folder in upload_roots:
         fp = os.path.join(folder, filename)
         if os.path.isfile(fp):
-            return send_from_directory(folder, filename)
+            resp = send_from_directory(folder, filename)
+            try:
+                resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+            except Exception:
+                pass
+            return resp
     abort(404, description="File not found")
 
 @main_bp.route("/search", endpoint="search_page")
@@ -229,7 +234,6 @@ def search_results():
 def api_lands_approved():
     try:
         items = _sort_by_created_at_desc(_get_approved_ads())
-        # حداقل فیلدهای مورد نیاز صفحه علاقه‌مندی
         data = [
             {
                 "code": x.get("code"),
@@ -241,7 +245,26 @@ def api_lands_approved():
             }
             for x in items
         ]
-        return {"ok": True, "items": data}
+
+        # ETag: تعداد + آخرین created_at (با فرض sort desc)
+        last_dt = (items[0].get("created_at") if items else "") or ""
+        etag_val = f"v-{len(items)}-{last_dt}"
+
+        inm = request.headers.get("If-None-Match")
+        if inm and inm == etag_val:
+            resp = current_app.response_class(status=304)
+            resp.set_etag(etag_val)
+            resp.headers["Cache-Control"] = "public, max-age=60"
+            return resp
+
+        resp = current_app.response_class(
+            response=current_app.json.dumps({"ok": True, "items": data}, ensure_ascii=False),
+            status=200,
+            mimetype="application/json; charset=utf-8",
+        )
+        resp.set_etag(etag_val)
+        resp.headers["Cache-Control"] = "public, max-age=60"
+        return resp
     except Exception as e:
         return {"ok": False, "error": str(e)}, 500
 

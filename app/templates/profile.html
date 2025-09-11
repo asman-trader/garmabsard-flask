@@ -1,285 +1,139 @@
 {% extends "base.html" %}
-{% block title %}ناحیه کاربری | وینور (Vinor){% endblock %}
+{% block title %}پروفایل | وینور{% endblock %}
 
 {% block content %}
-{# ======================= Macros ======================= #}
-{% macro StatCard(href, icon, label, value) -%}
-  <a href="{{ href }}" class="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm hover:shadow-md transition">
-    <div class="flex items-center justify-between">
-      <div class="text-xs text-gray-500 dark:text-gray-400">{{ label }}</div>
-      <i class="fas {{ icon }} text-gray-400 group-hover:text-green-600"></i>
-    </div>
-    <div class="mt-2 text-2xl font-bold text-gray-800 dark:text-gray-100">{{ value }}</div>
-  </a>
-{%- endmacro %}
+{% set _fname = (user.name if user and user.name else '') %}
+{% set _lname = (user.lastname if user and user.lastname else '') %}
+{% set _full = (_fname ~ ' ' ~ _lname).strip() %}
+{% set _display = _full if _full else (session.get('user_phone') or 'کاربر وینور') %}
+{% set _initial = (_full or (session.get('user_phone') or 'و')) | trim | first %}
 
-{% macro TabBtn(name, icon, text, active=False) -%}
-  <button
-    class="whitespace-nowrap rounded-lg px-3 py-2 text-sm border border-transparent
-           {{ 'bg-green-600 text-white hover:bg-green-700' if active else 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800' }}"
-    data-tab="{{ name }}">
-    <i class="fas {{ icon }} ml-2"></i>{{ text }}
-  </button>
-{%- endmacro %}
+<main class="max-w-2xl mx-auto px-3 sm:px-4 py-6">
 
-{% macro CardItem(land) -%}
-  {% set img = (land.images[0] if land.images else None) if land.images is defined else None %}
-  <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-sm hover:shadow-md transition">
-    <div class="w-full h-40 bg-gray-100 dark:bg-gray-800 overflow-hidden">
-      {% if img %}
-        <img src="{{ url_for('main.uploaded_file', filename=img) }}" alt="{{ land.title }}" class="w-full h-full object-cover" loading="lazy">
-      {% else %}
-        <div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fas fa-image"></i></div>
-      {% endif %}
-    </div>
-    <div class="p-3">
-      <div class="font-semibold text-gray-800 dark:text-gray-100 line-clamp-1">{{ land.title|default('بدون عنوان', true) }}</div>
-      <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-        <span>{{ land.size|default('-', true) }} متر</span><span class="opacity-50">•</span><span>{{ land.location|default('—', true) }}</span>
+  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-5">
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center text-2xl font-extrabold shadow">
+        <span aria-hidden="true">{{ _initial }}</span>
       </div>
-    </div>
-  </a>
-{%- endmacro %}
-
-{% macro Empty(icon, text, cta_href=None, cta_text=None) -%}
-  <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-6 text-center text-gray-600 dark:text-gray-300">
-    <div class="text-2xl mb-2"><i class="fas {{ icon }}"></i></div>
-    <div>{{ text }}</div>
-    {% if cta_href and cta_text %}
-      <a href="{{ cta_href }}" class="inline-flex mt-3 px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition">
-        <i class="fas fa-plus ml-1"></i>{{ cta_text }}
+      <div class="flex-1">
+        <div class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">{{ _display }}</div>
+        <div class="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+          <span id="userPhone">{% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}—{% endif %}</span>
+          {% if session.get('user_phone') %}
+          <button id="copyPhone" class="px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">کپی</button>
+          {% endif %}
+        </div>
+      </div>
+      <a href="{{ url_for('main.settings') }}" class="w-10 h-10 grid place-items-center rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" title="ویرایش پروفایل" aria-label="ویرایش">
+        <i class="fas fa-pen"></i>
       </a>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-3 gap-3 sm:gap-4 my-4">
+    <a href="{{ url_for('main.my_lands') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+      <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-layer-group"></i></div>
+      <div class="mt-2 text-sm font-semibold">آگهی‌های من</div>
+    </a>
+    <a href="{{ url_for('main.favorites') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+      <div class="w-10 h-10 mx-auto rounded-full bg-rose-100 dark:bg-rose-900/30 grid place-items-center text-rose-700 dark:text-rose-300"><i class="fas fa-bookmark"></i></div>
+      <div class="mt-2 text-sm font-semibold">ذخیره‌شده‌ها</div>
+    </a>
+    <a href="{{ url_for('main.notifications') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+      <div class="w-10 h-10 mx-auto rounded-full bg-blue-100 dark:bg-blue-900/30 grid place-items-center text-blue-700 dark:text-blue-300"><i class="fas fa-bell"></i></div>
+      <div class="mt-2 text-sm font-semibold">اعلان‌ها</div>
+    </a>
+  </section>
+
+  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm divide-y divide-gray-100 dark:divide-gray-800">
+    <div class="px-4 py-3 text-xs font-bold text-gray-500 dark:text-gray-400">حساب</div>
+    <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-user-edit"></i></div>
+      <div class="flex-1">
+        <div class="text-sm font-semibold">ویرایش پروفایل</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">نام، نام‌خانوادگی، شهر</div>
+      </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </a>
+    <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div class="w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 grid place-items-center text-yellow-700 dark:text-yellow-300"><i class="fas fa-shield-alt"></i></div>
+      <div class="flex-1">
+        <div class="text-sm font-semibold">حریم‌خصوصی و امنیت</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">ورود با پیامک، خروج از همه دستگاه‌ها</div>
+      </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </a>
+    <a href="{{ url_for('main.logout') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/30 grid place-items-center text-orange-700 dark:text-orange-300"><i class="fas fa-laptop"></i></div>
+      <div class="flex-1">
+        <div class="text-sm font-semibold">نشست‌ها و دستگاه‌ها</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">خروج از همه</div>
+      </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </a>
+  </section>
+
+  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm divide-y divide-gray-100 dark:divide-gray-800 mt-4">
+    <div class="px-4 py-3 text-xs font-bold text-gray-500 dark:text-gray-400">تنظیمات</div>
+    <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-700 dark:text-slate-300"><i class="fas fa-circle-half-stroke"></i></div>
+      <div class="flex-1">
+        <div class="text-sm font-semibold">حالت تیره</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">روشن/تیره</div>
+      </div>
+      <label class="inline-flex items-center cursor-pointer">
+        <input id="darkToggleProfile" type="checkbox" class="sr-only">
+        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
+          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
+        </span>
+      </label>
+    </div>
+    <a href="{{ url_for('main.faq') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div class="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/30 grid place-items-center text-indigo-700 dark:text-indigo-300"><i class="fas fa-circle-question"></i></div>
+      <div class="flex-1">
+        <div class="text-sm font-semibold">راهنما و سوالات پرتکرار</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">پاسخ سوال‌های رایج</div>
+      </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </a>
+  </section>
+
+  <div class="mt-6 flex items-center justify-between">
+    {% if session.get('user_phone') %}
+      <a href="{{ url_for('main.logout') }}" class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 transition"><i class="fas fa-sign-out-alt ml-1"></i> خروج از حساب</a>
+    {% else %}
+      <a href="{{ VINOR_LOGIN_URL }}" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"><i class="fas fa-sign-in-alt ml-1"></i> ورود</a>
     {% endif %}
   </div>
-{%- endmacro %}
 
-{# ======================= Header ======================= #}
-<main class="max-w-6xl mx-auto px-3 sm:px-4 py-6">
-
-  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-4">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <i class="fas fa-user text-green-700 dark:text-green-300 text-xl"></i>
-        </div>
-        <div>
-          <div class="text-base font-bold text-gray-800 dark:text-gray-100">
-            {% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}مهمان{% endif %}
-          </div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">داشبورد شخصی شما</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <a href="{{ url_for('main.settings') }}" class="hidden xs:inline-flex px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-          <i class="fas fa-cog ml-1"></i> تنظیمات
-        </a>
-        {% if session.get('user_phone') %}
-          <a href="{{ url_for('main.logout') }}" class="hidden xs:inline-flex px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition">
-            <i class="fas fa-sign-out-alt ml-1"></i> خروج
-          </a>
-        {% else %}
-          <a href="{{ VINOR_LOGIN_URL }}" class="hidden xs:inline-flex px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition">
-            <i class="fas fa-sign-in-alt ml-1"></i> ورود
-          </a>
-        {% endif %}
-      </div>
-    </div>
-  </section>
-
-  {# ======================= Stats ======================= #}
-  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 my-4">
-    {{ StatCard(url_for('main.my_lands'), 'fa-layer-group', 'آگهی‌های من', (my_lands|default([], true)|length)) }}
-    {{ StatCard(url_for('main.favorites'), 'fa-heart', 'علاقه‌مندی‌ها', (favorites|default([], true)|length)) }}
-    {{ StatCard(url_for('main.app_home') + '#notifications', 'fa-bell', 'اعلان‌های خوانده‌نشده', (notif_count|default(0, true))) }}
-    {{ StatCard(url_for('main.submit_ad'), 'fa-plus-circle', 'ثبت آگهی جدید', '+') }}
-  </section>
-
-  {# ======================= Tabs ======================= #}
-  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-    <nav class="flex overflow-x-auto gap-2 p-3 border-b border-gray-200 dark:border-gray-800">
-      {{ TabBtn('overview', 'fa-gauge', 'نمای کلی', True) }}
-      {{ TabBtn('myads', 'fa-list', 'آگهی‌های من') }}
-      {{ TabBtn('favs', 'fa-heart', 'علاقه‌مندی‌ها') }}
-      {{ TabBtn('notifs', 'fa-bell', 'اعلان‌ها') }}
-      {{ TabBtn('profile', 'fa-user-edit', 'اطلاعات') }}
-      {{ TabBtn('security', 'fa-shield-alt', 'امنیت') }}
-      {{ TabBtn('support', 'fa-headset', 'پشتیبانی') }}
-    </nav>
-
-    <div class="p-4 sm:p-6 space-y-6">
-
-      {# -------- Overview -------- #}
-      <div class="tab-panel" id="tab-overview">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div class="font-bold text-gray-800 dark:text-gray-100 mb-2">وضعیت حساب</div>
-            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-              <li>شماره: <span class="font-semibold">{% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}—{% endif %}</span></li>
-              <li>ورود: <span class="font-semibold">{% if session.get('user_phone') %}فعال{% else %}خارج از حساب{% endif %}</span></li>
-              <li>اعلان‌های خوانده‌نشده: <span class="font-semibold">{{ (notif_count|default(0, true)) }}</span></li>
-            </ul>
-            <div class="mt-3 flex gap-2">
-              <a href="{{ url_for('main.submit_ad') }}" class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition"><i class="fas fa-plus ml-1"></i> ثبت آگهی</a>
-              <a href="{{ url_for('main.app_home') + '#notifications' }}" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-bell ml-1"></i> اعلان‌ها</a>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div class="font-bold text-gray-800 dark:text-gray-100 mb-2">میانبرها</div>
-            <div class="grid grid-cols-2 gap-2">
-              <a href="{{ url_for('main.my_lands') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-layer-group"></i> آگهی‌ها</a>
-              <a href="{{ url_for('main.favorites') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-heart"></i> علاقه‌مندی‌ها</a>
-              <a href="{{ url_for('main.settings') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-cog"></i> تنظیمات</a>
-              <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-home"></i> خانه</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {# -------- My Ads -------- #}
-      <div class="tab-panel hidden" id="tab-myads">
-        {% set ads = my_lands|default([], true) %}
-        {% if ads|length == 0 %}
-          {{ Empty('fa-layer-group', 'هنوز آگهی ثبت نکرده‌اید.', url_for('main.submit_ad'), 'ثبت آگهی') }}
-        {% else %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for land in ads %}{{ CardItem(land) }}{% endfor %}
-          </div>
-        {% endif %}
-      </div>
-
-      {# -------- Favorites -------- #}
-      <div class="tab-panel hidden" id="tab-favs">
-        {% set favs = favorites|default([], true) %}
-        {% if favs|length == 0 %}
-          {{ Empty('fa-heart-broken', 'موردی در علاقه‌مندی‌ها ندارید.') }}
-        {% else %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for land in favs %}{{ CardItem(land) }}{% endfor %}
-          </div>
-        {% endif %}
-      </div>
-
-      {# -------- Notifications -------- #}
-      <div class="tab-panel hidden" id="tab-notifs">
-        <div class="flex items-center justify-between mb-3">
-          <div class="font-bold text-gray-800 dark:text-gray-100">آخرین اعلان‌ها</div>
-          <a href="{{ url_for('main.app_home') + '#notifications' }}" class="text-sm text-green-700 dark:text-green-300 hover:underline">مشاهده همه</a>
-        </div>
-        {% set notifs = items|default([], true) %}
-        {% if notifs|length == 0 %}
-          {{ Empty('fa-bell-slash', 'هنوز اعلانی ندارید.') }}
-        {% else %}
-          <div class="space-y-2">
-            {% for n in notifs[:8] %}
-              <div class="flex items-start gap-3 rounded-xl border p-3
-                          {{ 'border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-900/20' if not n.read else 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900' }}">
-                <div class="w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                  <i class="fas fa-bell text-green-700 dark:text-green-300 text-sm"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="font-semibold text-gray-800 dark:text-gray-100">{{ n.title or 'اعلان' }}</div>
-                  {% if n.message %}<div class="text-sm text-gray-600 dark:text-gray-300 mt-0.5">{{ n.message }}</div>{% endif %}
-                  {% if n.created_at %}<div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">{{ n.created_at }}</div>{% endif %}
-                </div>
-                {% if not n.read %}
-                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-500 text-white">جدید</span>
-                {% endif %}
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
-
-      {# -------- Profile (Basic Info) -------- #}
-      <div class="tab-panel hidden" id="tab-profile">
-        <form method="post" action="{{ url_for('main.settings') }}" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">نام</label>
-            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="نام" value="{{ user.name|default('', true) if user is defined }}">
-          </div>
-          <div>
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">نام خانوادگی</label>
-            <input type="text" name="lastname" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="نام خانوادگی" value="{{ user.lastname|default('', true) if user is defined }}">
-          </div>
-          <div>
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">استان</label>
-            <input type="text" name="province" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="استان" value="{{ user.province|default('', true) if user is defined }}">
-          </div>
-          <div>
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">شهر</label>
-            <input type="text" name="city" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="شهر" value="{{ user.city|default('', true) if user is defined }}">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">شماره موبایل</label>
-            <input type="text" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 cursor-not-allowed" value="{% if session.get('user_phone') %}{{ session['user_phone'] }}{% endif %}" readonly>
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">تغییر رمز (اختیاری)</label>
-            <input type="password" name="password" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="رمز جدید (اختیاری)">
-          </div>
-          <div class="sm:col-span-2">
-            <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition"><i class="fas fa-save ml-1"></i> ذخیره</button>
-          </div>
-        </form>
-      </div>
-
-      {# -------- Security -------- #}
-      <div class="tab-panel hidden" id="tab-security">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div class="font-bold mb-2">ورود با کد پیامکی</div>
-            <p class="text-sm text-gray-600 dark:text-gray-300">برای امنیت بیشتر از کد یکبارمصرف استفاده کنید.</p>
-            <a href="{{ VINOR_LOGIN_URL }}" class="mt-3 inline-flex px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="fas fa-mobile-alt ml-1"></i> ورود مجدد</a>
-          </div>
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div class="font-bold mb-2">نشست‌ها</div>
-            <p class="text-sm text-gray-600 dark:text-gray-300">در صورت شک به دسترسی غیرمجاز از همه دستگاه‌ها خارج شوید.</p>
-            <a href="{{ url_for('main.logout') }}" class="inline-flex mt-3 px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition"><i class="fas fa-sign-out-alt ml-1"></i> خروج از همه</a>
-          </div>
-        </div>
-      </div>
-
-      {# -------- Support -------- #}
-      <div class="tab-panel hidden" id="tab-support">
-        <form method="post" action="{{ url_for('main.settings') }}" class="space-y-3 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-          <div class="font-bold text-gray-800 dark:text-gray-100">درخواست پشتیبانی</div>
-          <input type="text" name="subject" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="موضوع">
-          <textarea name="message" rows="4" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="توضیحات..."></textarea>
-          <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition"><i class="fas fa-paper-plane ml-1"></i> ارسال</button>
-        </form>
-      </div>
-
-    </div>
-  </section>
 </main>
 
-{# ======================= Tabs Script ======================= #}
 <script>
   (function(){
-    const btns=[...document.querySelectorAll('nav .rounded-lg[data-tab]')];
-    const panels=[...document.querySelectorAll('.tab-panel')];
-    const storeKey='profile_active_tab';
+    const copyBtn = document.getElementById('copyPhone');
+    copyBtn?.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText((document.getElementById('userPhone')?.textContent||'').trim()); copyBtn.textContent='کپی شد'; setTimeout(()=>copyBtn.textContent='کپی',1200);}catch(e){}
+    });
 
-    function show(name){
-      btns.forEach(b=>{
-        const active = b.dataset.tab===name;
-        b.classList.toggle('bg-green-600', active);
-        b.classList.toggle('text-white', active);
-        b.classList.toggle('hover:bg-green-700', active);
-        b.classList.toggle('text-gray-700', !active);
-        b.classList.toggle('dark:text-gray-200', !active);
-        b.classList.toggle('hover:bg-gray-100', !active);
-        b.classList.toggle('dark:hover:bg-gray-800', !active);
-      });
-      panels.forEach(p=>p.classList.toggle('hidden', p.id!=='tab-'+name));
-      try{ sessionStorage.setItem(storeKey, name); }catch(e){}
+    const root = document.documentElement;
+    const toggle = document.getElementById('darkToggleProfile');
+    try {
+      const saved = localStorage.getItem('theme');
+      const isDark = saved ? saved==='dark' : root.classList.contains('dark');
+      if (toggle){ toggle.checked = !!isDark; moveDot(); }
+    } catch {}
+
+    function moveDot(){
+      const dot = document.querySelector('#darkToggleProfile + span .dot');
+      if (!dot || !toggle) return;
+      if (toggle.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
     }
 
-    btns.forEach(b=>b.addEventListener('click', ()=>show(b.dataset.tab)));
-    let initial='overview';
-    try{ const s=sessionStorage.getItem(storeKey); if(s) initial=s; }catch(e){}
-    show(initial);
+    toggle?.addEventListener('change', ()=>{
+      root.classList.toggle('dark');
+      try{ localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }catch{}
+      moveDot();
+    });
   })();
 </script>
 {% endblock %}

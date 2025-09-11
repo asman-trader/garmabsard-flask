@@ -86,8 +86,44 @@ def _save(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 # فایل‌های دامنه
+_ADS_CACHE = {"path": None, "mtime": None, "size": None, "data": None}
+
 def load_ads(app=None):        return _load(ensure_file('LANDS_FILE','lands.json',[],app))
-def save_ads(items, app=None): return _save(ensure_file('LANDS_FILE','lands.json',[],app), items)
+
+def load_ads_cached(app=None):
+    """لود آگهی‌ها با کش ساده مبتنی بر mtime/size فایل."""
+    app = app or current_app
+    path = ensure_file('LANDS_FILE','lands.json',[],app)
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+
+    c = _ADS_CACHE
+    if c["path"] == path and c["mtime"] == mtime and c["size"] == size and c["data"] is not None:
+        return c["data"]
+
+    data = _load(path)
+    _ADS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": data})
+    return data
+
+def _update_ads_cache_after_save(path, items):
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+    _ADS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": items})
+
+def save_ads(items, app=None):
+    path = ensure_file('LANDS_FILE','lands.json',[],app)
+    _save(path, items)
+    _update_ads_cache_after_save(path, items)
 
 def load_users(app=None):        return _load(ensure_file('USERS_FILE','users.json',[],app))
 def save_users(items, app=None): return _save(ensure_file('USERS_FILE','users.json',[],app), items)
