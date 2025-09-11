@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% set hide_header = True %}
 
-{% block title %}تنظیمات حساب | وینور{% endblock %}
+{% block title %}تنظیمات | وینور{% endblock %}
 
 {% block content %}
 <!-- ظرف اصلی (Mobile-First) -->
@@ -20,45 +20,38 @@
     </div>
   </header>
 
-  <!-- عنوان و توضیح -->
+  <!-- عنوان -->
   <div class="mb-4 sm:mb-6">
-    <h1 class="text-[18px] sm:text-2xl font-bold text-gray-900 dark:text-white">⚙️ تنظیمات حساب کاربری</h1>
-    <p class="mt-1 text-[12px] sm:text-sm text-gray-500 dark:text-gray-400">
-      اطلاعات پروفایل و موقعیت پیش‌فرض جستجو را به‌روزرسانی کنید. تغییرات شما بلافاصله در تجربه جستجو در وینور اعمال می‌شود.
-    </p>
+    <h1 class="text-[18px] sm:text-2xl font-extrabold text-gray-900 dark:text-white">تنظیمات</h1>
   </div>
 
   {% if user %}
   <form id="settings-form" method="post" action="{{ url_for('main.settings') }}" class="space-y-8">
 
-    <!-- کارت: اطلاعات کاربری -->
-    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
-      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">👤 اطلاعات کاربری</h2>
+    <!-- پروفایل (الهام از تلگرام: ردیف‌های ساده) -->
+    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+      <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">پروفایل</div>
 
-      <!-- موبایل (غیرقابل تغییر) -->
-      <div class="mb-4">
-        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شماره موبایل</label>
-        <input type="text" value="{{ user.phone }}" disabled
-               class="w-full rounded-xl border bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-700 px-3 py-2">
-        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">این فیلد غیرقابل ویرایش است.</p>
-      </div>
-
-      <!-- نام -->
-      <div class="mb-4">
-        <label for="first_name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام</label>
-        <input id="first_name" name="first_name" type="text" value="{{ user.first_name or '' }}" required
-               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-      </div>
-
-      <!-- نام خانوادگی -->
-      <div>
-        <label for="last_name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام خانوادگی</label>
-        <input id="last_name" name="last_name" type="text" value="{{ user.last_name or '' }}"
-               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      <div class="px-4 pb-4">
+        <div class="mb-4">
+          <label for="name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام</label>
+          <input id="name" name="name" type="text" value="{{ user.name or '' }}" required
+                 class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        </div>
+        <div class="mb-4">
+          <label for="lastname" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام خانوادگی</label>
+          <input id="lastname" name="lastname" type="text" value="{{ user.lastname or '' }}"
+                 class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شماره موبایل</label>
+          <input type="text" value="{{ user.phone }}" disabled
+                 class="w-full rounded-xl border bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-700 px-3 py-2">
+        </div>
       </div>
     </section>
 
-    <!-- کارت: موقعیت پیش‌فرض جستجو -->
+    <!-- موقعیت پیش‌فرض جستجو -->
     <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
       <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">📍 موقعیت پیش‌فرض جستجو</h2>
 
@@ -101,13 +94,29 @@
       </div>
     </section>
 
-    <!-- کارت: امنیت -->
-    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
-      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">🔒 امنیت حساب</h2>
-      <label for="new_password" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">تغییر رمز عبور (اختیاری)</label>
-      <input id="new_password" name="new_password" type="password" placeholder="رمز جدید"
-             class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-      <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">اگر قصد تغییر ندارید، این قسمت را خالی بگذارید.</p>
+    <!-- امنیت و ظاهر -->
+    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+      <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">امنیت</div>
+      <div class="px-4 pb-4">
+        <label for="password" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">تغییر رمز عبور (اختیاری)</label>
+        <input id="password" name="password" type="password" placeholder="رمز جدید"
+               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">اگر قصد تغییر ندارید، خالی بگذارید.</p>
+      </div>
+
+      <div class="px-4 pt-2 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">ظاهر</div>
+      <div class="px-4 pb-4 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold">حالت تیره</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">روشن/تیره</div>
+        </div>
+        <label class="inline-flex items-center cursor-pointer">
+          <input id="darkToggleSettings" type="checkbox" class="sr-only">
+          <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
+            <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
+          </span>
+        </label>
+      </div>
     </section>
 
     <!-- نوار ذخیره چسبان در موبایل -->
@@ -126,7 +135,7 @@
     </div>
   {% endif %}
 
-  <!-- لینک بازگشت به خانه (فقط دسکتاپ نشان بده) -->
+  <!-- لینک بازگشت به خانه (فقط دسکتاپ) -->
   <div class="hidden sm:block mt-6">
     <a href="{{ url_for('main.index') }}" class="text-sm text-green-700 dark:text-green-400 hover:underline">
       ← بازگشت به صفحه اصلی
@@ -134,7 +143,7 @@
   </div>
 </div>
 
-<!-- JS: همگام‌سازی با city_select و ساخت لینک -->
+<!-- JS: همگام‌سازی با city_select و ساخت لینک + سوییچ تیره -->
 <script>
   (function () {
     const $province  = document.getElementById('province-select');
@@ -174,6 +183,28 @@
       // به کاربر یادآوری کنیم شهر را دوباره انتخاب کند
       $cityDisp.value   = '';
       $cityHidden.value = '';
+    });
+  })();
+
+  (function(){
+    const root = document.documentElement;
+    const toggle = document.getElementById('darkToggleSettings');
+    try {
+      const saved = localStorage.getItem('theme');
+      const isDark = saved ? saved==='dark' : root.classList.contains('dark');
+      if (toggle){ toggle.checked = !!isDark; moveDot(); }
+    } catch {}
+
+    function moveDot(){
+      const dot = document.querySelector('#darkToggleSettings + span .dot');
+      if (!dot || !toggle) return;
+      if (toggle.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
+    }
+
+    toggle?.addEventListener('change', ()=>{
+      root.classList.toggle('dark');
+      try{ localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }catch{}
+      moveDot();
     });
   })();
 </script>
