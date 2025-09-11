@@ -4,6 +4,7 @@ from flask import render_template, request, redirect, url_for, flash, current_ap
 
 from .blueprint import admin_bp
 from .routes import counts_by_status, load_json, _lands_path, get_settings, save_settings  # reuse helpers
+from .routes import login_required
 from app.services.sms import send_sms_template
 import time
 import threading
@@ -33,6 +34,7 @@ def _normalize_for_sms_ir(mobile: str) -> str:
 
 
 @admin_bp.route('/sms-campaign', methods=['GET', 'POST'])
+@login_required
 def sms_campaign():
     if request.method == 'GET':
         p, a, r = counts_by_status(load_json(_lands_path()) or [])
@@ -50,6 +52,7 @@ def sms_campaign():
     delay_ms_raw = (request.form.get('delay_ms') or '1000').strip()
 
     params: dict[str, str] = {}
+    # Support p[key] and p.name styles (legacy)
     for k, v in request.form.items():
         if k.startswith('p[') and k.endswith(']'):
             key = k[2:-1].strip()
@@ -59,6 +62,16 @@ def sms_campaign():
             key = k[2:].strip()
             if key:
                 params[key] = v
+    # Support new arrays param_key[]/param_value[]
+    keys_arr = request.form.getlist('param_key[]')
+    vals_arr = request.form.getlist('param_value[]')
+    if keys_arr:
+        for i, k in enumerate(keys_arr):
+            key = (k or '').strip()
+            if not key:
+                continue
+            val = (vals_arr[i] if i < len(vals_arr) else '')
+            params[key] = (val or '').strip()
 
     # فایل اختیاری است؛ در صورت نبود فایل، از متن استفاده می‌شود
 
@@ -114,7 +127,7 @@ def sms_campaign():
                 filtered.append(s)
         numbers = filtered
     if not numbers:
-        flash('هیچ شماره‌ای در فایل یافت نشد.', 'warning')
+        flash('هیچ شماره‌ای برای ارسال پیدا نشد.', 'warning')
         return redirect(url_for('admin.sms_campaign'))
 
     # حالت تاخیر تصادفی
@@ -362,3 +375,61 @@ def sms_job_status(job_id: str):
     if not job:
         return jsonify({'ok': False, 'error': 'NOT_FOUND'}), 404
     return jsonify({'ok': True, 'job': job})
+
+
+@admin_bp.post('/sms-campaign/test-send')
+@login_required
+def sms_test_send():
+    """Send a single test SMS with current parameters to verify API/key/template."""
+    _ = request.form.get('csrf_token')
+    phone = (request.form.get('test_mobile') or '').strip()
+    template_id_raw = (request.form.get('template_id') or '').strip()
+
+    if not phone:
+        flash('شماره تست وارد نشده است.', 'warning')
+        return redirect(url_for('admin.sms_campaign'))
+    try:
+        template_id = int(template_id_raw)
+    except Exception:
+        flash('شناسهٔ قالب (template_id) نامعتبر است.', 'danger')
+        return redirect(url_for('admin.sms_campaign'))
+
+    # collect params
+    params: dict[str, str] = {}
+    # legacy styles
+    for k, v in request.form.items():
+        if k.startswith('p[') and k.endswith(']'):
+            key = k[2:-1].strip()
+            if key:
+                params[key] = v
+        elif k.startswith('p.'):
+            key = k[2:].strip()
+            if key:
+                params[key] = v
+    # array style
+    keys_arr = request.form.getlist('param_key[]')
+    vals_arr = request.form.getlist('param_value[]')
+    if keys_arr:
+        for i, k in enumerate(keys_arr):
+            key = (k or '').strip()
+            if not key:
+                continue
+            val = (vals_arr[i] if i < len(vals_arr) else '')
+            params[key] = (val or '').strip()
+
+    to_send = _normalize_for_sms_ir(phone)
+    try:
+        resp = send_sms_template(mobile=to_send, template_id=template_id, parameters=params)
+        ok = bool(resp.get('ok'))
+        code = resp.get('status')
+        body = resp.get('body')
+        if ok:
+            flash(f'پیامک تست با موفقیت ارسال شد. status={code}', 'success')
+        else:
+            current_app.logger.error('[SMS_TEST] failure to %s (norm=%s): status=%s body=%s', phone, to_send, code, str(body)[:800])
+            flash(f'ارسال تست ناموفق بود. status={code}', 'danger')
+    except Exception as e:
+        current_app.logger.error('[SMS_TEST] fatal: %s', e)
+        flash('خطای غیرمنتظره در ارسال تست.', 'danger')
+
+    return redirect(url_for('admin.sms_campaign'))

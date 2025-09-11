@@ -111,8 +111,8 @@
       </div>
       <div id="paramsList" class="grid sm:grid-cols-2 gap-3">
         <div class="param-row grid grid-cols-2 gap-2 items-center">
-          <input name="p[]" placeholder="نام پارامتر" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-          <input name="p_value[]" placeholder="مقدار" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input name="param_key[]" placeholder="نام پارامتر (مثلاً code)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input name="param_value[]" placeholder="مقدار (مثلاً 12345)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
         </div>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید به‌صورت <code>p[key]</code> هر تعداد کلید دلخواه اضافه کنید.</p>
@@ -122,6 +122,16 @@
       <button type="button" id="resetForm" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-800 dark:text-gray-200 px-4 py-2 rounded">پاک‌سازی</button>
       <button type="submit" class="bg-vinor-600 hover:bg-vinor-700 text-white px-5 py-2 rounded">شروع ارسال</button>
     </div>
+  </form>
+
+  <!-- ارسال تستی -->
+  <form method="post" action="{{ url_for('admin.sms_test_send') }}" id="smsTestForm" class="mt-4 flex items-center gap-2 bg-gray-50 dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="template_id" value="">
+    <div class="text-sm">ارسال تستی:</div>
+    <input name="test_mobile" placeholder="مثلاً 0912xxxxxxx" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    <!-- پارامترهای فعلی قالب نیز با فرم اصلی ارسال می‌شوند اگر بخواهید، اما این فرم جداست. -->
+    <button class="text-xs px-3 py-2 rounded bg-vinor-600 text-white">ارسال تست</button>
   </form>
 
   <!-- دفترچه تلفن -->
@@ -372,14 +382,13 @@
     const row = document.createElement('div');
     row.className = 'param-row grid grid-cols-2 gap-2 items-center';
     row.innerHTML = `
-      <input name="p[]" placeholder="نام پارامتر" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-      <input name="p_value[]" placeholder="مقدار" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+      <input name="param_key[]" placeholder="نام پارامتر (مثلاً code)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+      <input name="param_value[]" placeholder="مقدار (مثلاً 12345)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
     `;
     paramsList.appendChild(row);
   });
-  // هنگام ارسال، ورودی‌های p[]/p_value[] را به p[key] نگاشت کنیم
+  // هنگام ارسال، گروه‌های انتخاب‌شده را به textarea اضافه کن
   document.getElementById('smsForm')?.addEventListener('submit', (e) => {
-    // اطمینان از اضافه شدن گروه‌های انتخاب‌شده به textarea قبل از ارسال فرم
     try {
       const ta = document.getElementsByName('numbers_text')[0];
       if (ta) {
@@ -397,19 +406,6 @@
         }
       }
     } catch(_) {}
-
-    const keys = Array.from(document.querySelectorAll('input[name="p[]"]'));
-    const vals = Array.from(document.querySelectorAll('input[name="p_value[]"]'));
-    keys.forEach((k, i) => {
-      const key = (k.value || '').trim();
-      if (!key) return;
-      const val = (vals[i]?.value || '').trim();
-      const hidden = document.createElement('input');
-      hidden.type = 'hidden';
-      hidden.name = `p[${key}]`;
-      hidden.value = val;
-      e.target.appendChild(hidden);
-    });
   });
 
   // ---------- نمایش وضعیت ارسال (Order In Progress) ----------
@@ -519,6 +515,31 @@
   })();
 
   // ---------- Phonebook actions ----------
+  // همگام‌سازی فرم تست با فرم اصلی (template_id و پارامترها)
+  (function syncTestForm(){
+    const mainForm = document.getElementById('smsForm');
+    const testForm = document.getElementById('smsTestForm');
+    if (!mainForm || !testForm) return;
+    testForm.addEventListener('submit', () => {
+      // set template id
+      const tpl = mainForm.elements['template_id']?.value || '';
+      testForm.elements['template_id'].value = tpl;
+      // remove previous param inputs
+      Array.from(testForm.querySelectorAll('input[name="param_key[]"], input[name="param_value[]"]')).forEach(el => el.remove());
+      // copy current params
+      const keys = Array.from(mainForm.querySelectorAll('input[name="param_key[]"]'));
+      const vals = Array.from(mainForm.querySelectorAll('input[name="param_value[]"]'));
+      keys.forEach((k, i) => {
+        const key = (k.value || '').trim();
+        const val = (vals[i]?.value || '').trim();
+        if (!key) return;
+        const hk = document.createElement('input');
+        hk.type = 'hidden'; hk.name = 'param_key[]'; hk.value = key; testForm.appendChild(hk);
+        const hv = document.createElement('input');
+        hv.type = 'hidden'; hv.name = 'param_value[]'; hv.value = val; testForm.appendChild(hv);
+      });
+    });
+  })();
   function appendGroup(idx){
     const ta = document.getElementsByName('numbers_text')[0];
     const hidden = document.getElementById('group_'+idx);
