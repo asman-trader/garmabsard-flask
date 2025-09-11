@@ -5,12 +5,23 @@
 const CACHE_NAME = 'vinor-cache-v4';
 const API_CACHE_NAME = 'vinor-api-cache-v1';
 const ASSETS = [
-  '/',                         // لندینگ
-  '/app',                      // اپ اصلی (Mobile-first)
-  '/manifest.webmanifest',     // مانیفست
+  '/',                         // لندینگ (guest shell)
+  '/start',                    // CTA اولیه
+  '/login',                    // ورود
+  '/search',                   // صفحه جستجو عمومی
+  '/manifest.webmanifest',     // مانیفست داینامیک
+  '/static/site.webmanifest',  // مانیفست استاتیک (سازگاری)
   '/static/sw.js',             // خود SW (مسیر صحیح)
   '/static/favicon-32x32.png',
-  '/static/icons/icon-192.png'
+  '/static/icons/icon-48.png',
+  '/static/icons/icon-72.png',
+  '/static/icons/icon-96.png',
+  '/static/icons/icon-144.png',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-256.png',
+  '/static/icons/icon-384.png',
+  '/static/icons/icon-512.png',
+  '/static/sounds/notify.mp3'
   // در صورت نیاز، فایل‌های استاتیک حیاتی دیگر را اضافه کنید.
 ];
 
@@ -102,6 +113,8 @@ self.addEventListener('fetch', (event) => {
       if (isNavigation) {
         const appFallback = await cache.match('/app');
         if (appFallback) return appFallback;
+        const guestFallback = await cache.match('/');
+        if (guestFallback) return guestFallback;
       }
 
       const any = await caches.match(req);
@@ -305,3 +318,32 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   // console.log('notification closed', event.notification?.tag);
 });
+
+// ================== Warmup (Shell Pre-Fetch) ==================
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data && data.type === 'VINOR_WARMUP') {
+    const urls = Array.isArray(data.urls) ? data.urls : [];
+    event.waitUntil(warmupShell(urls));
+  }
+});
+
+async function warmupShell(urls) {
+  if (!urls || !urls.length) return;
+  const mainCache = await caches.open(CACHE_NAME);
+  const apiCache = await caches.open(API_CACHE_NAME);
+  await Promise.all(urls.map(async (u) => {
+    try {
+      const req = new Request(u, { cache: 'reload' });
+      const res = await fetch(req);
+      if (res && res.ok) {
+        const url = new URL(u, self.registration.scope);
+        if (url.pathname === '/api/lands/approved') {
+          await apiCache.put(req, res.clone());
+        } else if (res.type === 'basic') {
+          await mainCache.put(req, res.clone());
+        }
+      }
+    } catch (e) {}
+  }));
+}

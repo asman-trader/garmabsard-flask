@@ -45,6 +45,13 @@
     }
     #sideMenu.open{transform:translateX(0)}
     .dark #sideMenu{background:#111827;border-color:#374151}
+
+    /* PWA Welcome (first-run on mobile) */
+    .pwa-welcome{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,.86)}
+    .pwa-welcome.hidden{opacity:0;pointer-events:none;transition:opacity .35s ease}
+    .pwa-card{display:flex;flex-direction:column;align-items:center;gap:10px;background:#0b1220;border:1px solid #1f2937;border-radius:20px;padding:22px 24px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .sprout{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:#16a34a;color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.35);animation:sproutPop .9s cubic-bezier(.2,.8,.2,1)}
+    @keyframes sproutPop{0%{transform:scale(.6);filter:blur(2px);opacity:.5}60%{transform:scale(1.06);filter:blur(0);opacity:1}100%{transform:scale(1)}}
   </style>
 
   {% block head %}{% endblock %}
@@ -79,6 +86,18 @@
   <main class="flex-1 py-6 px-4 transition-all duration-300">
     {% block content %}{% endblock %}
   </main>
+
+  <!-- PWA First-run Welcome (mobile only; standalone only; once) -->
+  <div id="pwaWelcome" class="pwa-welcome hidden" role="dialog" aria-modal="true" aria-label="خوش‌آمدید">
+    <div class="pwa-card">
+      <div class="sprout text-3xl"><i class="fas fa-seedling"></i></div>
+      <div class="text-center">
+        <div class="font-extrabold text-lg">به وینور خوش آمدید</div>
+        <div class="text-sm text-gray-300 mt-1">اپ آماده است؛ تجربه‌ای سریع و روان داشته باشید.</div>
+      </div>
+      <button id="pwaWelcomeClose" class="mt-1 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm">شروع</button>
+    </div>
+  </div>
 
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
@@ -132,10 +151,48 @@
         if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
       });
 
-      // ثبت Service Worker (PWA) از روت سراسری
+      // ثبت Service Worker (PWA) از روت سراسری + Warmup شل
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' }).catch(()=>{});
+        navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' })
+          .then(async (reg) => {
+            try {
+              await navigator.serviceWorker.ready;
+              const sw = navigator.serviceWorker.controller || (await (async()=>{
+                // اگر کنترلری نیست، تلاش برای ادعا کردن کنترل پس از فعال‌سازی
+                try { await reg.update(); } catch {}
+                return navigator.serviceWorker.controller;
+              })());
+              const urls = [];
+              // شل مهمان
+              urls.push('/','/start','/login','/search');
+              // شل اپ در صورت ورود
+              if (IS_LOGGED_IN) {
+                urls.push('/app');
+                urls.push('/api/lands/approved'); // warm API cache
+              }
+              if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
+            } catch {}
+          })
+          .catch(()=>{});
       }
+
+      // PWA First-run Welcome (mobile, standalone, once)
+      (function(){
+        const WELCOME_KEY = 'vinor_pwa_welcome_shown_v1';
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        try {
+          if (!isStandalone || !isMobile) return;
+          if (localStorage.getItem(WELCOME_KEY) === '1') return;
+          const el = document.getElementById('pwaWelcome');
+          const btn = document.getElementById('pwaWelcomeClose');
+          if (!el || !btn) return;
+          el.classList.remove('hidden');
+          const close = () => { el.classList.add('hidden'); localStorage.setItem(WELCOME_KEY, '1'); };
+          btn.addEventListener('click', close, { passive: true });
+          setTimeout(close, 3500); // auto-hide after a short delay
+        } catch(e){}
+      })();
     })();
   </script>
 
