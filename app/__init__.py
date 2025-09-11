@@ -223,6 +223,13 @@ def create_app() -> Flask:
         except Exception:
             pass
 
+        # اطمینان مضاعف: معافیت تابع ویو آپلود (در صورت نیاز برخی تنظیمات)
+        try:
+            from .api.uploads import upload_image as _upload_image_view
+            csrf.exempt(_upload_image_view)
+        except Exception:
+            pass
+
         @app.after_request
         def set_csrf_cookie(resp):
             try:
