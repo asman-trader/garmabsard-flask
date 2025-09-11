@@ -1,0 +1,166 @@
+{# --- City (Location) --- #}
+<section aria-label="شهر آگهی" class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">شهر آگهی*</label>
+  <div class="flex items-center gap-2">
+    <div class="flex-1">
+      <div id="cityDisplay" class="px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus-within:ring-2 focus-within:ring-green-500" aria-live="polite">در حال بارگذاری شهر...</div>
+      <input type="hidden" name="city" id="cityInput">
+      <p class="text-[11px] text-gray-500 mt-1">فقط انتخاب موقعیت (شهر) کافی است؛ نیازی به وارد کردن آدرس دقیق نیست.</p>
+    </div>
+    <a href="{{ url_for('main.city_select') }}" class="px-3 py-2 rounded-xl border border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900 transition whitespace-nowrap" aria-label="انتخاب شهر">
+      <i class="fas fa-map-marker-alt ml-1"></i> انتخاب شهر
+    </a>
+  </div>
+</section>
+
+{# --- Size & Price --- #}
+<section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="ابعاد و قیمت">
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="size">متراژ (متر مربع)*</label>
+    <input inputmode="numeric" type="text" id="size" name="size" required autocomplete="off" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500">
+  </div>
+  <div class="space-y-2">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="price_total">قیمت کل (تومان)</label>
+    <input inputmode="numeric" type="text" id="price_total" name="price_total" autocomplete="off" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500">
+    <div id="price_words" class="text-[11px] text-gray-500"></div>
+  </div>
+  <div class="sm:col-span-2 space-y-2">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="price_per_meter">قیمت متری (محاسبه‌شده)</label>
+    <input type="text" id="price_per_meter" name="price_per_meter" readonly class="w-full border rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
+  </div>
+</section>
+
+{# --- Hidden backend mapping --- #}
+<input type="hidden" name="area" id="area_hidden">
+<input type="hidden" name="price" id="price_hidden">
+<input type="hidden" name="location" id="location_hidden">
+
+{# --- Property Specs --- #}
+<section aria-label="مشخصات ملک" class="space-y-2">
+  <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2"><i class="fas fa-ruler-combined"></i> مشخصات ملک</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="frontage">عرض بر (متر)</label><input inputmode="numeric" type="text" id="frontage" name="frontage" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="length">طول (متر)</label><input inputmode="numeric" type="text" id="length" name="length" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="street_width">عرض گذر (متر)</label><input inputmode="numeric" type="text" id="street_width" name="street_width" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm mt-2">
+    <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_fence" value="1"> دیوارکشی کامل</label>
+    <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_corner" value="1"> نبش</label>
+    <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_well" value="1"> چاه</label>
+    <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_guardroom" value="1"> سرایداری/اتاقک</label>
+  </div>
+</section>
+
+{# --- Category specific --- #}
+<section id="categorySpecific" class="space-y-2 hidden" aria-label="فیلدهای اختصاصی دسته">
+  <div id="rentFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="deposit">رهن (تومان)</label><input inputmode="numeric" type="text" id="deposit" name="deposit" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="rent">اجاره ماهانه (تومان)</label><input inputmode="numeric" type="text" id="rent" name="rent" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white" autocomplete="off"></div>
+    <div class="space-y-2 sm:col-span-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200">ودیعه و اجاره قابل تبدیل</label><label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="convertible" value="1"> قابل تبدیل</label></div>
+  </div>
+  <div id="apartmentFields" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden">
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="year_built">سال ساخت</label><input inputmode="numeric" type="text" id="year_built" name="year_built" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="floor">طبقه</label><input inputmode="numeric" type="text" id="floor" name="floor" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="rooms">تعداد اتاق</label><input inputmode="numeric" type="text" id="rooms" name="rooms" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="elevator">آسانسور</label><select id="elevator" name="elevator" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="parking">پارکینگ</label><select id="parking" name="parking" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+    <div class="space-y-2"><label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="warehouse">انباری</label><select id="warehouse" name="warehouse" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white"><option value="">-</option><option value="1">دارد</option><option value="0">ندارد</option></select></div>
+  </div>
+</section>
+
+{# --- Document Type --- #}
+<section aria-label="نوع سند" class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="document_type">نوع سند</label>
+  <select name="document_type" id="document_type" class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+    <option value="" disabled selected>انتخاب نوع سند</option>
+    <option value="سند مادر">سند مادر</option>
+    <option value="قولنامه">قولنامه</option>
+    <option value="بنچاق">بنچاق</option>
+    <option value="کد رهگیری‌دار">کد رهگیری‌دار</option>
+  </select>
+</section>
+
+{# --- Amenities --- #}
+<section aria-label="امکانات" class="space-y-2">
+  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">امکانات</label>
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="آب"> آب</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="برق"> برق</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="گاز"> گاز</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="فاضلاب"> فاضلاب</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="تلفن"> تلفن</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="اینترنت"> اینترنت</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="درخت"> درخت</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="features" value="دیوارکشی"> دیوارکشی</label>
+  </div>
+</section>
+
+{# --- Deal Conditions --- #}
+<section aria-label="شرایط معامله" class="space-y-2">
+  <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2"><i class="fas fa-handshake"></i> شرایط معامله</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="is_negotiable" value="1"> قیمت توافقی</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="accept_exchange" value="1"> معاوضه</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="installment" value="1"> اقساط</label>
+    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><input type="checkbox" name="urgent" value="1"> فوری</label>
+  </div>
+</section>
+
+<script>
+(function(){
+  const CITY_KEY = 'vinor_city';
+  const cityDisplay = document.getElementById('cityDisplay');
+  const cityInput   = document.getElementById('cityInput');
+  const sizeInput   = document.getElementById('size');
+  const totalInput  = document.getElementById('price_total');
+  const ppmInput    = document.getElementById('price_per_meter');
+  const priceWords  = document.getElementById('price_words');
+  const areaHidden  = document.getElementById('area_hidden');
+  const priceHidden = document.getElementById('price_hidden');
+  const locHidden   = document.getElementById('location_hidden');
+
+  const numfmt = new Intl.NumberFormat('fa-IR');
+  const formatNumber = (n) => n ? numfmt.format(n) : '';
+  function parseNumber(str){ if(!str) return 0; const p='۰۱۲۳۴۵۶۷۸۹'; const en=String(str).replace(/[۰-۹]/g,d=>String(p.indexOf(d))).replace(/[^\d]/g,''); return Number(en||0); }
+  function numberToWordsFa(n){ if(!n) return ''; const u=[,'هزار','میلیون','میلیارد','هزار میلیارد']; let i=0; while(n>=1000 && i<u.length-1){ n=Math.round(n/1000); i++; } return formatNumber(n)+' '+u[i]+' تومان'; }
+  function getCity(){ try { return localStorage.getItem(CITY_KEY)||''; } catch { return ''; } }
+  function setCityUI(){ const c=getCity(); cityInput.value=c||''; if(c){ cityDisplay.textContent=c; cityDisplay.classList.remove('border-red-300'); } else { cityDisplay.textContent='شهر انتخاب نشده است'; cityDisplay.classList.add('border-red-300'); } }
+
+  function recalc(){
+    const s=parseNumber(sizeInput?.value);
+    const t=parseNumber(totalInput?.value);
+    if(sizeInput) sizeInput.value = s ? formatNumber(s) : '';
+    if(totalInput) totalInput.value = t ? formatNumber(t) : '';
+    if(ppmInput) ppmInput.value = (s>0 && t>0) ? formatNumber(Math.floor(t/s)) : '';
+    if(priceWords) priceWords.textContent = t ? ('≈ '+numberToWordsFa(t)) : '';
+  }
+
+  sizeInput?.addEventListener('input', recalc);
+  totalInput?.addEventListener('input', recalc);
+  window.addEventListener('storage', (e)=>{ if(e.key===CITY_KEY) setCityUI(); });
+  document.addEventListener('vinor:city-changed', setCityUI);
+  setCityUI(); recalc();
+
+  // Before submit, map raw values
+  const frm = document.currentScript?.closest('form') || document.querySelector('form');
+  frm?.addEventListener('submit', ()=>{
+    const s = parseNumber(sizeInput?.value);
+    const t = parseNumber(totalInput?.value);
+    if(areaHidden) areaHidden.value = s || '';
+    if(priceHidden) priceHidden.value = t || '';
+    if(locHidden) locHidden.value = cityInput?.value || '';
+  });
+
+  // Category-specific toggle (if ad_category provided via server)
+  try{
+    const tradeType = '{{ ad_category.trade_type if ad_category else '' }}';
+    const property  = '{{ ad_category.property_type if ad_category else '' }}';
+    const catWrap = document.getElementById('categorySpecific');
+    const rent = document.getElementById('rentFields');
+    const apt  = document.getElementById('apartmentFields');
+    if(tradeType==='rent' && catWrap && rent){ catWrap.classList.remove('hidden'); rent.classList.remove('hidden'); }
+    if(property==='apartment' && catWrap && apt){ catWrap.classList.remove('hidden'); apt.classList.remove('hidden'); }
+  }catch(_){ }
+})();
+</script>
+
