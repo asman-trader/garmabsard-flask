@@ -1,18 +1,25 @@
 from __future__ import annotations
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, current_app, jsonify
 
 from .blueprint import admin_bp
-from .routes import counts_by_status, load_json, _lands_path  # reuse helpers
+from .routes import counts_by_status, load_json, _lands_path, get_settings, save_settings  # reuse helpers
 from app.services.sms import send_sms_template
 import time
+import threading
+import uuid
+import random
 
 
 @admin_bp.route('/sms-campaign', methods=['GET', 'POST'])
 def sms_campaign():
     if request.method == 'GET':
         p, a, r = counts_by_status(load_json(_lands_path()) or [])
-        return render_template('admin/sms_campaign.html', pending_count=p, approved_count=a, rejected_count=r)
+        phonebook = _load_phonebook()
+        defaults = (get_settings() or {}).get('sms_defaults') or {}
+        jobs = _list_jobs()
+        return render_template('admin/sms_campaign.html', pending_count=p, approved_count=a, rejected_count=r,
+                               phonebook=phonebook, defaults=defaults, jobs=jobs)
 
     _ = request.form.get('csrf_token')
 
@@ -32,9 +39,7 @@ def sms_campaign():
             if key:
                 params[key] = v
 
-    if not file or not file.filename.lower().endswith('.txt'):
-        flash('لطفاً یک فایل txt از شماره‌ها ارسال کنید.', 'warning')
-        return redirect(url_for('admin.sms_campaign'))
+    # فایل اختیاری است؛ در صورت نبود فایل، از متن استفاده می‌شود
 
     try:
         template_id = int(template_id_raw)
@@ -91,8 +96,6 @@ def sms_campaign():
         flash('هیچ شماره‌ای در فایل یافت نشد.', 'warning')
         return redirect(url_for('admin.sms_campaign'))
 
-    sent = failed = 0
-    results = []
     # حالت تاخیر تصادفی
     mode = request.form.get('delay_mode') or 'fixed'
     min_ms = max(0, int((request.form.get('delay_min_ms') or '800') or 800)) if mode == 'random' else None
@@ -102,24 +105,200 @@ def sms_campaign():
 
     dry_run = request.form.get('dry_run') == 'on'
 
-    import random
-
-    for mobile in numbers:
-        if dry_run:
-            resp = {"ok": True, "status": 200}
-        else:
-            resp = send_sms_template(mobile=mobile, template_id=template_id, parameters=params)
-        if resp.get('ok'):
-            sent += 1
-        else:
-            failed += 1
-        results.append({
-            'mobile': mobile,
-            'ok': bool(resp.get('ok')),
-            'status': resp.get('status'),
+    # ذخیره تنظیمات پیش‌فرض (اختیاری) پس از محاسبه مقادیر
+    if request.form.get('save_defaults') == 'on':
+        save_settings({
+            'sms_defaults': {
+                'template_id': template_id,
+                'delay_mode': mode,
+                'delay_ms': delay_ms,
+                'delay_min_ms': min_ms,
+                'delay_max_ms': max_ms,
+                'dedupe': request.form.get('dedupe') == 'on',
+                'validate_ir': request.form.get('validate_ir') == 'on',
+                'dry_run': request.form.get('dry_run') == 'on',
+            }
         })
+    # ایجاد Job پس‌زمینه و شروع Thread
+    job_id = str(uuid.uuid4())
+    _create_job(job_id, total=len(numbers), template_id=template_id, mode=mode,
+                delay_ms=delay_ms, min_ms=min_ms, max_ms=max_ms)
+
+    t = threading.Thread(
+        target=_run_sms_job,
+        args=(job_id, numbers, template_id, params, mode, delay_ms, min_ms, max_ms, dry_run),
+        daemon=True
+    )
+    t.start()
+
+    flash(f'ارسال در پس‌زمینه آغاز شد. شناسه: {job_id}', 'success')
+    return redirect(url_for('admin.sms_campaign'))
+
+
+# ---------------------- Phonebook helpers & routes ----------------------
+def _phonebook_path() -> str:
+    return current_app.config.get(
+        'PHONEBOOK_FILE',
+        current_app.instance_path + '/data/phonebook.json'
+    )
+
+def _load_phonebook() -> dict:
+    import os, json
+    path = _phonebook_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.exists(path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f) or {}
+                if isinstance(data, dict):
+                    data.setdefault('groups', [])
+                    return data
+        except Exception:
+            pass
+    return {'groups': []}
+
+def _save_phonebook(data: dict) -> None:
+    import os, json
+    path = _phonebook_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@admin_bp.post('/sms-campaign/phonebook')
+def save_phonebook_group():
+    name = (request.form.get('group_name') or '').strip() or 'گروه بدون نام'
+    file = request.files.get('phonebook_file')
+    text = (request.form.get('phonebook_text') or '').strip()
+
+    items: list[str] = []
+    # from file
+    if file and file.filename:
+        try:
+            content = file.read().decode('utf-8', errors='ignore')
+        except Exception:
+            content = file.read().decode('cp1256', errors='ignore')
+        items.extend([line.strip() for line in content.splitlines() if line.strip()])
+    # from textarea
+    if text:
+        items.extend([line.strip() for line in text.splitlines() if line.strip()])
+
+    # normalize basic Iran format if requested
+    if request.form.get('validate_ir') == 'on':
+        norm = []
+        for n in items:
+            s = n.replace(' ','')
+            if s.startswith('+98') and len(s) == 13:
+                norm.append(s)
+            elif s.startswith('0098') and len(s) == 14:
+                norm.append('+98' + s[4:])
+            elif s.startswith('0') and len(s) == 11:
+                norm.append('+98' + s[1:])
+            elif s.startswith('9') and len(s) == 10:
+                norm.append('+98' + s)
+            else:
+                norm.append(s)
+        items = norm
+
+    if request.form.get('dedupe') == 'on':
+        seen = set(); deduped = []
+        for n in items:
+            if n not in seen:
+                seen.add(n); deduped.append(n)
+        items = deduped
+
+    if not items:
+        flash('شماره‌ای برای ذخیره در دفترچه تلفن ارسال نشد.', 'warning')
+        return redirect(url_for('admin.sms_campaign'))
+
+    pb = _load_phonebook()
+    pb['groups'].append({
+        'name': name,
+        'count': len(items),
+        'numbers': items,
+    })
+    _save_phonebook(pb)
+    flash(f'گروه «{name}» با {len(items)} شماره ذخیره شد.', 'success')
+    return redirect(url_for('admin.sms_campaign'))
+
+
+# ---------------------- Background Jobs ----------------------
+def _sms_jobs_path() -> str:
+    return current_app.config.get('SMS_JOBS_FILE', current_app.instance_path + '/data/sms_jobs.json')
+
+def _load_jobs() -> dict:
+    import os, json
+    path = _sms_jobs_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.exists(path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f) or {}
+                if isinstance(data, dict):
+                    data.setdefault('jobs', {})
+                    return data
+        except Exception:
+            pass
+    return {'jobs': {}}
+
+def _save_jobs(data: dict) -> None:
+    import os, json
+    path = _sms_jobs_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def _create_job(job_id: str, total: int, template_id: int, mode: str, delay_ms: int, min_ms, max_ms) -> None:
+    data = _load_jobs()
+    data['jobs'][job_id] = {
+        'id': job_id,
+        'status': 'running',
+        'total': total,
+        'sent': 0,
+        'failed': 0,
+        'template_id': template_id,
+        'mode': mode,
+        'delay_ms': delay_ms,
+        'min_ms': min_ms,
+        'max_ms': max_ms,
+        'created_at': int(time.time()),
+        'updated_at': int(time.time()),
+    }
+    _save_jobs(data)
+
+def _update_job(job_id: str, **fields) -> None:
+    data = _load_jobs()
+    if job_id in data['jobs']:
+        data['jobs'][job_id].update(fields)
+        data['jobs'][job_id]['updated_at'] = int(time.time())
+        _save_jobs(data)
+
+def _list_jobs(limit: int = 10) -> list:
+    data = _load_jobs()
+    jobs = list(data['jobs'].values())
+    jobs.sort(key=lambda j: j.get('created_at', 0), reverse=True)
+    return jobs[:limit]
+
+def _run_sms_job(job_id: str, numbers: list[str], template_id: int, params: dict, mode: str,
+                 delay_ms: int, min_ms, max_ms, dry_run: bool) -> None:
+    sent = failed = 0
+    for mobile in numbers:
+        try:
+            if dry_run:
+                resp = {"ok": True, "status": 200}
+            else:
+                resp = send_sms_template(mobile=mobile, template_id=template_id, parameters=params)
+            if resp.get('ok'):
+                sent += 1
+            else:
+                failed += 1
+        except Exception:
+            failed += 1
+
+        _update_job(job_id, sent=sent, failed=failed)
+
         if mode == 'fixed':
-            if delay_ms > 0:
+            if delay_ms and delay_ms > 0:
                 time.sleep(delay_ms / 1000.0)
         else:
             lo = min_ms or 0
@@ -128,11 +307,13 @@ def sms_campaign():
             if wait_ms > 0:
                 time.sleep(wait_ms / 1000.0)
 
-    flash(f'ارسال کامل شد: موفق {sent} | ناموفق {failed}', 'success' if failed == 0 else 'warning')
-    p, a, r = counts_by_status(load_json(_lands_path()) or [])
-    return render_template(
-        'admin/sms_campaign.html',
-        summary={'sent': sent, 'failed': failed, 'total': len(numbers)},
-        results=results[:200],
-        pending_count=p, approved_count=a, rejected_count=r,
-    )
+    _update_job(job_id, status='completed')
+
+
+@admin_bp.get('/sms-campaign/job/<string:job_id>')
+def sms_job_status(job_id: str):
+    data = _load_jobs()
+    job = data['jobs'].get(job_id)
+    if not job:
+        return jsonify({'ok': False, 'error': 'NOT_FOUND'}), 404
+    return jsonify({'ok': True, 'job': job})

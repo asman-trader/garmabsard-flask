@@ -14,6 +14,22 @@
     فایل <code>.txt</code> شامل شماره‌ها (هر خط یک شماره) را بارگذاری کنید یا در کادر زیر بچسبانید. سپس قالب و تاخیر را تنظیم کنید.
   </p>
 
+  <!-- مراحل -->
+  <ol class="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+    <li class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-vinor-600 text-white">1</span>
+      انتخاب مخاطبان
+    </li>
+    <li class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-vinor-600 text-white">2</span>
+      تنظیم قالب و پارامترها
+    </li>
+    <li class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-vinor-600 text-white">3</span>
+      بازه تاخیر و ارسال
+    </li>
+  </ol>
+
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
       <div class="space-y-2 mb-4">
@@ -48,7 +64,7 @@
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-semibold mb-1">شناسه قالب (template_id)</label>
-        <input type="number" name="template_id" placeholder="مثال: 335146" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        <input type="number" name="template_id" placeholder="مثال: 335146" value="{{ defaults.template_id if defaults and defaults.template_id is not none else '' }}" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
         <p class="text-xs text-gray-500 mt-1">شناسه قالب در پنل SMS.ir</p>
       </div>
 
@@ -56,18 +72,18 @@
         <label class="block text-sm font-semibold mb-1">تاخیر بین ارسال‌ها</label>
         <div class="space-y-2">
           <label class="inline-flex items-center gap-2 text-sm">
-            <input type="radio" name="delay_mode" value="fixed" checked>
+            <input type="radio" name="delay_mode" value="fixed" {% if not defaults or defaults.delay_mode != 'random' %}checked{% endif %}>
             ثابت (میلی‌ثانیه)
           </label>
-          <input type="number" name="delay_ms" value="1000" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input type="number" name="delay_ms" value="{{ defaults.delay_ms if defaults and defaults.delay_ms is not none else 1000 }}" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
 
           <label class="inline-flex items-center gap-2 text-sm mt-2">
-            <input type="radio" name="delay_mode" value="random">
+            <input type="radio" name="delay_mode" value="random" {% if defaults and defaults.delay_mode == 'random' %}checked{% endif %}>
             بازهٔ تصادفی (میلی‌ثانیه)
           </label>
           <div class="grid grid-cols-2 gap-2" id="delayRange" style="display:none;">
-            <input type="number" name="delay_min_ms" placeholder="حداقل (مثلاً 800)" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-            <input type="number" name="delay_max_ms" placeholder="حداکثر (مثلاً 1800)" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+            <input type="number" name="delay_min_ms" placeholder="حداقل (مثلاً 800)" value="{{ defaults.delay_min_ms if defaults and defaults.delay_min_ms is not none else 800 }}" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+            <input type="number" name="delay_max_ms" placeholder="حداکثر (مثلاً 1800)" value="{{ defaults.delay_max_ms if defaults and defaults.delay_max_ms is not none else 1800 }}" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
           </div>
         </div>
       </div>
@@ -76,9 +92,10 @@
     <div class="grid sm:grid-cols-2 gap-4">
       <div class="space-y-2">
         <label class="block text-sm font-semibold">گزینه‌ها</label>
-        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dedupe"> حذف شماره‌های تکراری</label>
-        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="validate_ir" checked> اعتبارسنجی الگوی موبایل ایران</label>
-        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dry_run"> شبیه‌سازی (بدون ارسال واقعی)</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dedupe" {% if defaults and defaults.dedupe %}checked{% endif %}> حذف شماره‌های تکراری</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="validate_ir" {% if (not defaults) or defaults.validate_ir %}checked{% endif %}> اعتبارسنجی الگوی موبایل ایران</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dry_run" {% if defaults and defaults.dry_run %}checked{% endif %}> شبیه‌سازی (بدون ارسال واقعی)</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="save_defaults" checked> ذخیره به‌عنوان پیش‌فرض</label>
       </div>
 
       <div class="space-y-2">
@@ -101,10 +118,98 @@
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید به‌صورت <code>p[key]</code> هر تعداد کلید دلخواه اضافه کنید.</p>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex items-center justify-end gap-2">
+      <button type="button" id="resetForm" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-800 dark:text-gray-200 px-4 py-2 rounded">پاک‌سازی</button>
       <button type="submit" class="bg-vinor-600 hover:bg-vinor-700 text-white px-5 py-2 rounded">شروع ارسال</button>
     </div>
   </form>
+
+  <!-- دفترچه تلفن -->
+  <div class="mt-8 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-bold">دفترچه تلفن</h3>
+      <form method="post" action="{{ url_for('admin.save_phonebook_group') }}" enctype="multipart/form-data" class="flex items-center gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="group_name" placeholder="نام گروه" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        <input type="file" name="phonebook_file" accept=".txt" class="text-sm" />
+        <textarea name="phonebook_text" rows="2" placeholder="افزودن دستی (هر خط یک شماره)" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700"></textarea>
+        <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" name="dedupe"> حذف تکراری</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" name="validate_ir" checked> اعتبارسنجی ایران</label>
+        <button class="text-xs px-3 py-2 rounded bg-vinor-600 text-white">ذخیره گروه</button>
+      </form>
+    </div>
+
+    {% set groups = (phonebook.groups if phonebook and phonebook.groups else []) %}
+    {% if groups %}
+      <div class="flex items-center justify-between mb-2">
+        <label class="inline-flex items-center gap-2 text-xs">
+          <input type="checkbox" id="checkAllGroups">
+          انتخاب همه گروه‌ها
+        </label>
+        <input type="search" id="groupSearch" placeholder="جستجوی گروه..." class="text-xs border rounded px-2 py-1 dark:bg-gray-900 dark:border-gray-700" />
+      </div>
+      <div class="grid md:grid-cols-2 gap-3 text-sm" id="groupsContainer">
+        {% for g in groups %}
+          <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3" data-count="{{ g.count }}">
+            <div class="flex items-center justify-between">
+              <label class="inline-flex items-center gap-2">
+                <input type="checkbox" class="group-check">
+                <span class="font-semibold">{{ g.name }}</span>
+              </label>
+              <div class="text-xs text-gray-500">{{ g.count }} شماره</div>
+            </div>
+            <div class="mt-2 flex items-center gap-2">
+              <button type="button" class="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-700" onclick="appendGroup('{{ loop.index0 }}')">افزودن به لیست ارسال</button>
+              <button type="button" class="px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-700" onclick="copyGroup('{{ loop.index0 }}')">کپی</button>
+            </div>
+            <textarea id="group_{{ loop.index0 }}" class="hidden">{{ (g.numbers|join('\n')) }}</textarea>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="mt-3 flex items-center gap-2">
+        <button type="button" class="px-3 py-2 rounded bg-vinor-600 text-white text-xs" id="appendSelected">افزودن گروه‌های انتخاب‌شده</button>
+        <span class="text-xs text-gray-500" id="selectedInfo"></span>
+      </div>
+    {% else %}
+      <div class="text-xs text-gray-500">هنوز گروهی ذخیره نشده است.</div>
+    {% endif %}
+  </div>
+
+  <!-- خلاصه ارسال -->
+  <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow p-4">
+    <h3 class="font-bold mb-2">خلاصه ارسال</h3>
+    <div class="text-sm space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">کل شماره‌ها (تخمینی)</span>
+        <span id="sumTotal" class="font-bold">0</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">از فایل</span>
+        <span id="sumFile">0</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">از متن</span>
+        <span id="sumText">0</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">از دفترچه</span>
+        <span id="sumGroups">0</span>
+      </div>
+      <hr class="my-2 border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">حالت تاخیر</span>
+        <span id="sumDelayMode">fixed</span>
+      </div>
+      <div class="flex items-center justify-between" id="sumFixedRow">
+        <span class="text-gray-600 dark:text-gray-300">تاخیر ثابت</span>
+        <span id="sumFixed">1000 ms</span>
+      </div>
+      <div class="flex items-center justify-between hidden" id="sumRandomRow">
+        <span class="text-gray-600 dark:text-gray-300">بازه تصادفی</span>
+        <span id="sumRandom">800 - 1800 ms</span>
+      </div>
+    </div>
+  </div>
 
   {% if summary %}
     <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -152,6 +257,65 @@
   }
   radios.forEach(r => r.addEventListener('change', updateDelayUI));
   updateDelayUI();
+
+  // خلاصه/برآورد
+  function updateSummary(){
+    const form = document.getElementById('smsForm');
+    if (!form) return;
+    // file
+    const fEl = form.elements['numbers_file'];
+    let fileCnt = Number(fEl?.dataset.lines || '0') || 0;
+    // text
+    const tEl = form.elements['numbers_text'];
+    let textCnt = (tEl?.value || '').split(/\r?\n/).filter(Boolean).length;
+    // selected groups
+    let grpCnt = 0;
+    document.querySelectorAll('.group-check:checked').forEach(ch => {
+      const card = ch.closest('[data-count]');
+      const n = Number(card?.dataset.count || '0') || 0;
+      grpCnt += n;
+    });
+    // write
+    document.getElementById('sumFile').textContent = String(fileCnt);
+    document.getElementById('sumText').textContent = String(textCnt);
+    document.getElementById('sumGroups').textContent = String(grpCnt);
+    document.getElementById('sumTotal').textContent = String(fileCnt + textCnt + grpCnt);
+
+    const mode = document.querySelector('input[name="delay_mode"]:checked')?.value || 'fixed';
+    document.getElementById('sumDelayMode').textContent = mode;
+    const fixedRow = document.getElementById('sumFixedRow');
+    const randomRow = document.getElementById('sumRandomRow');
+    if (mode === 'fixed'){
+      fixedRow.classList.remove('hidden');
+      randomRow.classList.add('hidden');
+      document.getElementById('sumFixed').textContent = (form.elements['delay_ms']?.value || '0') + ' ms';
+    } else {
+      fixedRow.classList.add('hidden');
+      randomRow.classList.remove('hidden');
+      const a = form.elements['delay_min_ms']?.value || '0';
+      const b = form.elements['delay_max_ms']?.value || '0';
+      document.getElementById('sumRandom').textContent = a + ' - ' + b + ' ms';
+    }
+  }
+  document.getElementById('smsForm')?.addEventListener('input', updateSummary);
+  document.getElementById('smsForm')?.addEventListener('change', (e) => {
+    if (e.target && e.target.name === 'numbers_file'){
+      // try count lines of file
+      const file = e.target.files?.[0];
+      if (file){
+        const reader = new FileReader();
+        reader.onload = () => {
+          const txt = String(reader.result||'');
+          const lines = txt.split(/\r?\n/).filter(Boolean).length;
+          e.target.dataset.lines = String(lines);
+          updateSummary();
+        };
+        reader.readAsText(file);
+      }
+    }
+    if (e.target && e.target.classList.contains('group-check')) updateSummary();
+  });
+  updateSummary();
 
   const paramsList = document.getElementById('paramsList');
   document.getElementById('addParam')?.addEventListener('click', () => {
@@ -284,6 +448,70 @@
     // پاکسازی تایمر بعد از برگشت پاسخ (بارگذاری مجدد صفحه)
     window.addEventListener('beforeunload', () => { if (timer) clearInterval(timer); });
   })();
+
+  // ---------- Phonebook actions ----------
+  function appendGroup(idx){
+    const ta = document.getElementsByName('numbers_text')[0];
+    const hidden = document.getElementById('group_'+idx);
+    if (!ta || !hidden) return;
+    const prefix = ta.value && !ta.value.endsWith('\n') ? '\n' : '';
+    ta.value = (ta.value || '') + prefix + hidden.value;
+    updateSummary();
+  }
+  function copyGroup(idx){
+    const hidden = document.getElementById('group_'+idx);
+    if (!hidden) return;
+    hidden.type = 'text';
+    hidden.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    hidden.type = 'hidden';
+  }
+  // انتخاب همه / جستجو
+  document.getElementById('checkAllGroups')?.addEventListener('change', (e) => {
+    const on = e.target.checked;
+    document.querySelectorAll('.group-check').forEach(ch => ch.checked = on);
+    updateSummary();
+  });
+  document.getElementById('groupSearch')?.addEventListener('input', (e) => {
+    const q = (e.target.value || '').trim();
+    const items = document.querySelectorAll('#groupsContainer > div');
+    items.forEach(card => {
+      const title = card.querySelector('label span')?.textContent || '';
+      card.style.display = (!q || title.includes(q)) ? '' : 'none';
+    });
+  });
+
+  // افزودن گروه‌های انتخاب‌شده
+  document.getElementById('appendSelected')?.addEventListener('click', () => {
+    const ta = document.getElementsByName('numbers_text')[0];
+    if (!ta) return;
+    const picks = Array.from(document.querySelectorAll('.group-check:checked'));
+    if (!picks.length) return;
+    let addText = '';
+    picks.forEach(ch => {
+      const card = ch.closest('[data-count]');
+      const textarea = card?.querySelector('textarea[id^=group_]');
+      const txt = textarea?.value || '';
+      addText += (addText ? '\n' : '') + txt;
+    });
+    const prefix = ta.value && !ta.value.endsWith('\n') ? '\n' : '';
+    ta.value = (ta.value || '') + prefix + addText;
+    const selInfo = document.getElementById('selectedInfo');
+    if (selInfo) selInfo.textContent = picks.length + ' گروه اضافه شد.';
+    updateSummary();
+  });
+
+  // پاک‌سازی سریع فرم
+  document.getElementById('resetForm')?.addEventListener('click', () => {
+    const form = document.getElementById('smsForm');
+    if (!form) return;
+    form.reset();
+    document.querySelectorAll('#paramsList .param-row').forEach((row, idx) => { if (idx>0) row.remove(); });
+    document.querySelectorAll('.group-check').forEach(ch => ch.checked = false);
+    const file = form.elements['numbers_file']; if (file) { file.value=''; file.removeAttribute('data-lines'); }
+    updateDelayUI();
+    updateSummary();
+  });
 </script>
 {% endblock %}
 

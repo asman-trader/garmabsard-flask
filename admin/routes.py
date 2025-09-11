@@ -117,7 +117,11 @@ def notify_admin_create(ad: Dict[str, Any]):
 # -----------------------------------------------------------------------------
 # Blueprint (defined centrally)
 # -----------------------------------------------------------------------------
-from .blueprint import admin_bp
+try:
+    from .blueprint import admin_bp
+except Exception:
+    from flask import Blueprint
+    admin_bp = Blueprint('admin', __name__, url_prefix='/admin', template_folder='templates')
 
 # -----------------------------------------------------------------------------
 # پیکربندی ساده ادمین (برای شروع)

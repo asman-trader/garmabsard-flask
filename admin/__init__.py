@@ -5,7 +5,11 @@ Root-level Admin package
 - Loads route modules in a decentralized way for easier maintenance
 """
 
-from .blueprint import admin_bp  # blueprint definition and template_folder setup
+try:
+    from .blueprint import admin_bp  # blueprint definition and template_folder setup
+except Exception:
+    # Fallback if blueprint module not importable
+    from .routes import admin_bp  # type: ignore
 
 # Attach route modules (side-effect imports register routes on admin_bp)
 from . import routes  # core/admin basics, lands, settings, consults, auth (existing)
