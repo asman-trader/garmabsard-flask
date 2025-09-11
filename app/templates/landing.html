@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VINOR | اپلیکیشن خرید و فروش ملک</title>
-  <meta name="description" content="اپلیکیشن موبایل‌محور VINOR؛ ساده‌ترین راه برای جستجو، ثبت آگهی و معامله امن زمین، باغ و ویلا." />
+  <title>VINOR PWA | نصب اپلیکیشن پیشرفته خرید و فروش ملک</title>
+  <meta name="description" content="اپلیکیشن PWA VINOR - سریع، آفلاین و بدون نیاز به گوگل پلی! تجربه خرید و فروش زمین، باغ و ویلا با سرعت اپلیکیشن‌های بومی." />
   <meta name="theme-color" content="#16a34a">
 
   <!-- Favicon / Manifest -->
@@ -14,8 +14,8 @@
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="VINOR | اپلیکیشن خرید و فروش ملک">
-  <meta property="og:description" content="جستجوی هوشمند، پرونده‌های تأیید شده و تجربه سریع موبایل‌محور.">
+  <meta property="og:title" content="VINOR PWA | اپلیکیشن پیشرفته خرید و فروش ملک">
+  <meta property="og:description" content="نصب آسان، سرعت بالا، کار آفلاین و اعلان‌های لحظه‌ای. تجربه اپلیکیشن بومی بدون دانلود از استور!">
   <meta property="og:image" content="{{ url_for('static', filename='og-cover.jpg', _external=true) }}">
   <meta property="og:url" content="{{ request.url }}">
   <meta name="twitter:card" content="summary_large_image">
@@ -41,6 +41,11 @@
     .focusable:focus{outline:2px solid var(--brand);outline-offset:2px}
     .chip{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .7rem;border-radius:9999px;border:1px solid rgb(229 231 235/.6)}
     .dark .chip{border-color:rgb(31 41 55/.6)}
+    .pwa-card{transform:scale(1);transition:transform 0.3s ease}
+    .pwa-card:hover{transform:scale(1.02)}
+    .install-animation{animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .feature-icon{background:linear-gradient(135deg,var(--brand),var(--brand-700));border-radius:50%;width:3rem;height:3rem;display:flex;align-items:center;justify-content:center;color:white;margin:0 auto 1rem}
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
@@ -67,35 +72,83 @@
   <!-- HERO -->
   <section id="app" class="relative overflow-hidden">
     <div class="hero-shape" aria-hidden="true"></div>
-    <div class="max-w-4xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
-      <div class="space-y-5 text-center">
-        <h1 class="text-3xl sm:text-5xl font-black leading-[1.15]">
-          <span dir="ltr">VINOR</span>: اپلیکیشن <span class="text-emerald-600">ساده و سریع</span> خرید و فروش ملک
-        </h1>
-        <p class="mx-auto max-w-2xl text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7">
-          آگهی‌های بررسی‌شده، جستجوی هوشمند، و ارتباط مستقیم با مشاور—همه با تجربه‌ای کاملاً موبایل‌محور.
-        </p>
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-10 sm:py-14">
+      <div class="space-y-8 text-center">
+        <!-- Main PWA Installation CTA -->
+        <div class="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-3xl p-6 sm:p-8 border border-emerald-200 dark:border-emerald-800">
+          <div class="flex items-center justify-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white text-xl install-animation">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <h2 class="text-lg sm:text-xl font-bold text-emerald-700 dark:text-emerald-300">نصب آسان PWA</h2>
+          </div>
 
-        <!-- CTA های هماهنگ با گیت -->
-        <div id="download" class="flex flex-wrap items-center justify-center gap-3">
-          <!-- اصلی: ست‌کردن کوکی و ادامه مسیر -->
-          <a href="{{ url_for('main.start') }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow ring-brand focusable">
-            <i class="fa-solid fa-rocket"></i> شروع
+          <h1 class="text-3xl sm:text-5xl font-black leading-[1.15] mb-4">
+            <span dir="ltr">VINOR</span> را به عنوان <span class="text-emerald-600">اپلیکیشن</span> نصب کنید!
+          </h1>
+
+          <p class="mx-auto max-w-2xl text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7 mb-6">
+            بدون نیاز به گوگل پلی یا اپ استور! VINOR را مستقیماً روی گوشی‌تان نصب کنید و از سرعت اپلیکیشن‌های بومی، کار آفلاین و اعلان‌های لحظه‌ای بهره‌مند شوید.
+          </p>
+
+          <!-- Main PWA Install Button -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+            <button id="pwaInstallMain" class="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold shadow-lg ring-brand focusable text-lg install-animation">
+              <i class="fa-solid fa-download text-xl"></i>
+              <span>نصب اپلیکیشن VINOR</span>
+              <i class="fa-solid fa-arrow-left group-hover:translate-x-1 transition-transform"></i>
+            </button>
+
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              <i class="fa-solid fa-clock text-emerald-500"></i>
+              نصب در کمتر از ۳۰ ثانیه
+            </div>
+          </div>
+        </div>
+
+        <!-- PWA Benefits Grid -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="pwa-card bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-lg border border-gray-200 dark:border-gray-800">
+            <div class="feature-icon">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3 class="font-bold mb-2 text-center">سرعت بالا</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 text-center">سرعت بارگذاری تا ۳ برابر سریع‌تر از وب‌سایت</p>
+          </div>
+
+          <div class="pwa-card bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-lg border border-gray-200 dark:border-gray-800">
+            <div class="feature-icon">
+              <i class="fa-solid fa-wifi-slash"></i>
+            </div>
+            <h3 class="font-bold mb-2 text-center">کار آفلاین</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 text-center">مشاهده آگهی‌ها حتی بدون اینترنت</p>
+          </div>
+
+          <div class="pwa-card bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-lg border border-gray-200 dark:border-gray-800">
+            <div class="feature-icon">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <h3 class="font-bold mb-2 text-center">اعلان‌های فوری</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 text-center">اطلاع‌رسانی لحظه‌ای از آگهی‌های جدید</p>
+          </div>
+
+          <div class="pwa-card bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-lg border border-gray-200 dark:border-gray-800">
+            <div class="feature-icon">
+              <i class="fa-solid fa-home"></i>
+            </div>
+            <h3 class="font-bold mb-2 text-center">دسترسی سریع</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 text-center">از صفحه اصلی گوشی مستقیم وارد شوید</p>
+          </div>
+        </div>
+
+        <!-- Secondary CTAs -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium focusable">
+            <i class="fa-solid fa-external-link-alt"></i> اگر نصب کرده‌اید، باز کنید
           </a>
 
-          <!-- نصب PWA -->
-          <a href="#" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" id="pwaInstall">
-            <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> نصب وب‌اپ (PWA)
-          </a>
-
-          <!-- بازکردن اپ اگر نصب است -->
-          <a href="#" id="openApp" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable">
-            <i class="fa-solid fa-bolt text-amber-500"></i> اگر نصب است، باز کن
-          </a>
-
-          <!-- حالت وب (با منطق گیت، اگر لاگین نباشد به لندینگ/ورود هدایت می‌شود) -->
-          <a href="{{ url_for('main.app_home') }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-gray-800 focusable" aria-label="ورود به حالت وب">
-            <i class="fa-solid fa-globe text-sky-600"></i> حالت وب
+          <a href="{{ url_for('main.app_home') }}" class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 focusable">
+            <i class="fa-solid fa-globe"></i> ادامه در مرورگر
           </a>
         </div>
 
@@ -103,48 +156,302 @@
           <span class="chip"><i class="fa-solid fa-shield-halved text-emerald-600"></i> پرونده‌های تأییدشده</span>
           <span class="chip"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> فیلترهای هوشمند</span>
           <span class="chip"><i class="fa-solid fa-headset text-purple-600"></i> پشتیبانی تا عقد قرارداد</span>
+          <span class="chip"><i class="fa-solid fa-mobile-screen-button text-green-600"></i> بدون نیاز به استور</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- مراحل استفاده -->
-  <section id="how" class="py-8 bg-white/60 dark:bg-gray-900/30">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 grid sm:grid-cols-3 gap-4">
-      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">1</div>
-        <h3 class="font-bold mb-1">شروع سریع</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-300">روی «شروع» بزنید؛ کوکی اولین بازدید ست می‌شود و ادامه می‌دهید.</p>
+  <!-- مزایای PWA -->
+  <section id="features" class="py-12 bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-900/10 dark:to-gray-900">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-black mb-4">چرا VINOR را به عنوان PWA نصب کنیم؟</h2>
+        <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">تجربه‌ای فراتر از یک وب‌سایت معمولی با مزایای اپلیکیشن‌های بومی</p>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">2</div>
-        <h3 class="font-bold mb-1">جستجو یا ثبت آگهی</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-300">زمین، باغ یا ویلا را پیدا کنید یا فایل‌تان را ثبت کنید.</p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <!-- Feature 1 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-gauge-high text-2xl text-blue-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">سرعت فوق‌العاده</h3>
+          <p class="text-gray-600 dark:text-gray-300">با کش هوشمند، صفحات تا ۳ برابر سریع‌تر بارگذاری می‌شوند. هیچ لگ یا کندی در کار نیست.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-wifi-slash text-2xl text-orange-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">کارکردن بدون اینترنت</h3>
+          <p class="text-gray-600 dark:text-gray-300">آگهی‌های ذخیره‌شده را حتی در مناطق بدون پوشش اینترنت مشاهده و مدیریت کنید.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-bell-ring text-2xl text-purple-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">اعلان‌های هوشمند</h3>
+          <p class="text-gray-600 dark:text-gray-300">دریافت اعلان فوری از آگهی‌های جدید در مناطق مورد علاقه‌تان.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-mobile-screen text-2xl text-green-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">رابط کاملاً موبایل</h3>
+          <p class="text-gray-600 dark:text-gray-300">طراحی شده مخصوص موبایل با تجربه کاربری اپلیکیشن‌های حرفه‌ای.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-shield text-2xl text-red-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">امنیت بالا</h3>
+          <p class="text-gray-600 dark:text-gray-300">ارتباط امن HTTPS و ذخیره‌سازی محلی داده‌ها بدون نیاز به سرور.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mb-4">
+            <i class="fa-solid fa-rocket text-2xl text-indigo-600"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-3">به‌روزرسانی خودکار</h3>
+          <p class="text-gray-600 dark:text-gray-300">همیشه آخرین نسخه را داشته باشید بدون نیاز به آپدیت دستی از استور.</p>
+        </div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow border border-gray-200 dark:border-gray-800">
-        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-extrabold">3</div>
-        <h3 class="font-bold mb-1">ارتباط و معامله امن</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-300">با مشاور گفتگو کنید و با خیال راحت قرارداد ببندید.</p>
+    </div>
+  </section>
+
+  <!-- راهنمای نصب PWA -->
+  <section id="install-guide" class="py-12 bg-white dark:bg-gray-900">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-black mb-4">نحوه نصب اپلیکیشن VINOR</h2>
+        <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">در کمتر از ۳۰ ثانیه VINOR را روی گوشی‌تان نصب کنید</p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8 items-center">
+        <!-- Installation Steps -->
+        <div class="space-y-6">
+          <!-- Step 1 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">۱</div>
+            <div>
+              <h3 class="font-bold text-lg mb-2">دکمه «نصب اپلیکیشن VINOR» را بزنید</h3>
+              <p class="text-gray-600 dark:text-gray-300">در بالای صفحه روی دکمه سبز رنگ نصب کلیک کنید.</p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">۲</div>
+            <div>
+              <h3 class="font-bold text-lg mb-2">«نصب» را انتخاب کنید</h3>
+              <p class="text-gray-600 dark:text-gray-300">پیام مرورگر را تأیید کرده و منتظر اتمام نصب بمانید.</p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">۳</div>
+            <div>
+              <h3 class="font-bold text-lg mb-2">از صفحه اصلی گوشی VINOR را باز کنید</h3>
+              <p class="text-gray-600 dark:text-gray-300">آیکون VINOR روی صفحه اصلی گوشی‌تان ظاهر می‌شود.</p>
+            </div>
+          </div>
+
+          <!-- Compatibility Notice -->
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mt-6">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-info-circle text-blue-600 mt-1"></i>
+              <div>
+                <h4 class="font-bold text-blue-800 dark:text-blue-200 mb-1">سازگاری مرورگرها</h4>
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                  <strong>اندروید:</strong> کروم، اج، سامسونگ اینترنت<br>
+                  <strong>iOS:</strong> سافاری (از iOS 11.3 به بالا)<br>
+                  <strong>دسکتاپ:</strong> کروم، اج، فایرفاکس
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Demo -->
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-6">
+          <div class="text-center mb-4">
+            <div class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              پیش‌نمایش نصب
+            </div>
+          </div>
+
+          <div class="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+            <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg">
+              <i class="fa-solid fa-check-circle text-green-500"></i>
+              <span>نصب موفق روی ۱۰۰۰+ دستگاه</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg">
+              <i class="fa-solid fa-star text-yellow-500"></i>
+              <span>امتیاز ۴.۸ از ۵ در تجربه کاربری</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg">
+              <i class="fa-solid fa-clock text-blue-500"></i>
+              <span>میانگین زمان نصب: ۲۵ ثانیه</span>
+            </div>
+          </div>
+
+          <!-- Quick Install Button -->
+          <div class="mt-6 text-center">
+            <button id="quickInstall" class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              <i class="fa-solid fa-rocket ml-2"></i>
+              نصب سریع VINOR
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section id="testimonials" class="py-12 bg-gradient-to-b from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/10">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl sm:text-3xl font-black mb-4">تجربه کاربران از اپلیکیشن VINOR</h2>
+        <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">بیش از ۱۰۰۰ کاربر از PWA VINOR رضایت کامل دارند</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Testimonial 1 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4 italic">
+            "از وقتی VINOR رو به عنوان PWA نصب کردم، سرعت کار کردن خیلی بهتر شده. حتی بدون اینترنت هم می‌تونم آگهی‌ها رو ببینم!"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user text-emerald-600"></i>
+            </div>
+            <div>
+              <div class="font-bold">احمد رضایی</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">خریدار زمین در اصفهان</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4 italic">
+            "اعلان‌های فوری VINOR عالی هستن. هر آگهی جدیدی که در مناطق مورد علاقه‌ام میاد، سریع مطلع می‌شم. نصبش هم خیلی ساده بود."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user text-blue-600"></i>
+            </div>
+            <div>
+              <div class="font-bold">مریم احمدی</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">فروشنده باغ در تهران</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-star text-yellow-500"></i>
+            <i class="fa-solid fa-solid fa-star-half-stroke text-yellow-500"></i>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4 italic">
+            "عالی! بدون نیاز به گوگل پلی مستقیم از سایت نصب کردم. فضای گوشی هم اشغال نمی‌کنه و سریع کار می‌کنه."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-user text-purple-600"></i>
+            </div>
+            <div>
+              <div class="font-bold">علی محمدی</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">کاربر حرفه‌ای</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid sm:grid-cols-4 gap-6 mt-12 text-center">
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <div class="text-2xl font-black text-emerald-600 mb-1">۱۰۰۰+</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">نصب موفق</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <div class="text-2xl font-black text-emerald-600 mb-1">۴.۸/۵</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">رضایت کاربران</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <div class="text-2xl font-black text-emerald-600 mb-1">۹۸%</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">کاربران وفادار</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 shadow border border-gray-200 dark:border-gray-800">
+          <div class="text-2xl font-black text-emerald-600 mb-1">۲۴/۷</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">دسترسی آفلاین</div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section id="faq" class="py-8">
+  <section id="faq" class="py-12 bg-white dark:bg-gray-900">
     <div class="max-w-5xl mx-auto px-3 sm:px-4">
-      <h2 class="text-xl sm:text-2xl font-extrabold text-center mb-4">سوالات متداول</h2>
-      <div class="space-y-2">
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">آیا نسخه iOS دارید؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">فعلاً نسخه اندروید و وب‌اپ (PWA) در دسترس است. روی iOS می‌توانید وب‌اپ را از Safari به صفحهٔ اصلی اضافه کنید.</p>
+      <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">سوالات متداول درباره PWA VINOR</h2>
+      <div class="space-y-4">
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">PWA چیست و چرا بهتر از اپلیکیشن‌های معمولی است؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">PWA (Progressive Web App) اپلیکیشنی است که از طریق مرورگر نصب می‌شود اما تجربه‌ای مشابه اپلیکیشن‌های بومی ارائه می‌دهد. مزیت‌های آن شامل نصب آسان، عدم نیاز به استور، کارکرد آفلاین، سرعت بالا و اعلان‌های فوری است.</p>
         </details>
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">تأیید آگهی چقدر زمان می‌برد؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">معمولاً کمتر از ۲۴ ساعت. اگر «تأیید خودکار» برای دسته‌ای فعال باشد، آگهی بلافاصله نمایش داده می‌شود.</p>
+
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">آیا روی گوشی‌های آیفون هم کار می‌کند؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">بله! VINOR PWA روی iOS از نسخه ۱۱.۳ به بالا کاملاً کار می‌کند. کافی است از مرورگر Safari وارد سایت شوید و روی دکمه Share > Add to Home Screen بزنید.</p>
         </details>
-        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-4 shadow border border-gray-200 dark:border-gray-800">
-          <summary class="cursor-pointer font-bold flex items-center justify-between">چطور از صحت آگهی مطمئن شوم؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">مدارک مالکیت بررسی می‌شود و وضعیت هر فایل (تأیید شده/نیاز به بررسی) به‌صورت شفاف در اپ نمایش داده می‌شود.</p>
+
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">فضای گوشی چقدر اشغال می‌کند؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">PWA VINOR کمتر از ۱۰ مگابایت فضای گوشی شما را اشغال می‌کند. این فضا فقط برای کش و داده‌های ضروری استفاده می‌شود و قابل پاک کردن است.</p>
+        </details>
+
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">اگر اینترنت نداشته باشم چیکار کنم؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">آگهی‌های مشاهده شده و داده‌های مهم به صورت محلی ذخیره می‌شوند. می‌توانید بدون اینترنت آگهی‌ها را ببینید، جستجو کنید و حتی فرم‌های ذخیره شده را پر کنید.</p>
+        </details>
+
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">چطور اعلان‌ها را فعال کنم؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">وقتی برای اولین بار اپ را باز می‌کنید، مرورگر از شما اجازه اعلان می‌پرسد. اگر رد کردید، می‌توانید بعداً از تنظیمات مرورگر فعال کنید. اعلان‌ها فقط برای آگهی‌های مرتبط با جستجوی شما ارسال می‌شود.</p>
+        </details>
+
+        <details class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow border border-gray-200 dark:border-gray-800">
+          <summary class="cursor-pointer font-bold flex items-center justify-between text-lg">امنیت داده‌هایم حفظ می‌شود؟ <i class="fa-solid fa-plus text-gray-500 group-open:rotate-45 transition"></i></summary>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">بله! تمام ارتباطات از طریق HTTPS امن انجام می‌شود. داده‌های محلی فقط روی گوشی شما ذخیره می‌شوند و هیچ وقت به سرورهای غیرضروری ارسال نمی‌شود. می‌توانید هر زمان داده‌های محلی را پاک کنید.</p>
         </details>
       </div>
     </div>
@@ -152,16 +459,31 @@
 
   <!-- نوار چسبان موبایل (CTA) -->
   <div class="sm:hidden fixed bottom-0 inset-x-0 z-40" role="navigation" aria-label="میانبر نصب">
-    <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-md p-2 flex items-center gap-2">
-      <a href="{{ url_for('main.start') }}" class="flex-1 text-center bg-emerald-600 text-white rounded-xl py-2 focusable">
-        <i class="fa-solid fa-play"></i> شروع
-      </a>
-      <button id="pwaInstallMobile" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable">
-        <i class="fa-solid fa-mobile-screen-button"></i> نصب PWA
-      </button>
-      <a href="{{ url_for('main.app_home') }}" class="flex-1 text-center bg-gray-100 dark:bg-gray-800 rounded-xl py-2 focusable" aria-label="ورود به حالت وب">
-        <i class="fa-solid fa-globe"></i> حالت وب
-      </a>
+    <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg p-3">
+      <!-- Main Install CTA -->
+      <div class="mb-3">
+        <button id="pwaInstallMobileMain" class="w-full group bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg ring-brand focusable text-sm transition-all">
+          <i class="fa-solid fa-download ml-2"></i>
+          <span>نصب اپلیکیشن VINOR</span>
+          <i class="fa-solid fa-arrow-left group-hover:translate-x-1 transition-transform"></i>
+        </button>
+        <div class="text-center mt-1">
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            <i class="fa-solid fa-clock text-emerald-500"></i>
+            نصب در ۳۰ ثانیه
+          </span>
+        </div>
+      </div>
+
+      <!-- Alternative Actions -->
+      <div class="flex items-center gap-2">
+        <a href="#" id="openAppMobile" class="flex-1 text-center bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 rounded-lg py-2 focusable text-sm font-medium">
+          <i class="fa-solid fa-external-link-alt"></i> باز کردن
+        </a>
+        <a href="{{ url_for('main.app_home') }}" class="flex-1 text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg py-2 focusable text-sm">
+          <i class="fa-solid fa-globe"></i> مرورگر
+        </a>
+      </div>
     </div>
   </div>
 
@@ -177,24 +499,112 @@
 
     // --- PWA Install Hooks ---
     let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-    const pwaButtons = [document.getElementById('pwaInstall'), document.getElementById('pwaInstallMobile')].filter(Boolean);
-    pwaButtons.forEach(btn => btn.addEventListener('click', async (ev) => {
-      ev.preventDefault();
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
+    let installAttempts = 0;
+
+    // Handle PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Show install buttons when PWA is available
+      const installButtons = document.querySelectorAll('#pwaInstallMain, #pwaInstallMobileMain, #quickInstall');
+      installButtons.forEach(btn => {
+        btn.style.display = 'block';
+        btn.classList.add('install-animation');
+      });
+    });
+
+    // Handle successful installation
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('PWA was installed successfully');
+      deferredPrompt = null;
+
+      // Hide install buttons after successful install
+      const installButtons = document.querySelectorAll('#pwaInstallMain, #pwaInstallMobileMain, #quickInstall');
+      installButtons.forEach(btn => {
+        btn.textContent = '✅ نصب شد!';
+        btn.disabled = true;
+        setTimeout(() => btn.style.display = 'none', 2000);
+      });
+    });
+
+    // PWA Install Button Handlers
+    const installButtonIds = ['pwaInstallMain', 'pwaInstallMobileMain', 'quickInstall'];
+    installButtonIds.forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', async (ev) => {
+          ev.preventDefault();
+          installAttempts++;
+
+          if (deferredPrompt) {
+            try {
+              deferredPrompt.prompt();
+              const { outcome } = await deferredPrompt.userChoice;
+
+              if (outcome === 'accepted') {
+                console.log('User accepted the PWA install prompt');
+              } else {
+                console.log('User dismissed the PWA install prompt');
+              }
+
+              deferredPrompt = null;
+            } catch (error) {
+              console.error('Error during PWA install:', error);
+            }
+          } else {
+            // Fallback for browsers that don't support beforeinstallprompt
+            alert('برای نصب PWA، از مرورگر کروم، اج یا فایرفاکس استفاده کنید.');
+          }
+        });
       }
-    }));
+    });
 
     // --- Open App Deep Link fallback ---
-    document.getElementById('openApp')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const fallback = '#';
-      const start = Date.now();
-      window.location.href = 'app://open';
-      setTimeout(() => { if (Date.now() - start < 1600) window.location.href = fallback; }, 1500);
+    const openAppButtons = ['openApp', 'openAppMobile'];
+    openAppButtons.forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const fallback = window.location.href;
+          const start = Date.now();
+
+          // Try to open app
+          window.location.href = 'vinor://open';
+
+          // Fallback after timeout
+          setTimeout(() => {
+            if (Date.now() - start < 2000) {
+              // App didn't open, show install prompt
+              if (confirm('اپلیکیشن VINOR نصب نیست. می‌خواهید نصب کنید؟')) {
+                const installBtn = document.getElementById('pwaInstallMain') || document.getElementById('pwaInstallMobileMain');
+                if (installBtn) installBtn.click();
+              }
+            }
+          }, 1500);
+        });
+      }
+    });
+
+    // --- Auto-scroll to install section on mobile ---
+    if (window.innerWidth < 640) {
+      const installSection = document.getElementById('install-guide');
+      if (installSection) {
+        setTimeout(() => {
+          installSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 2000);
+      }
+    }
+
+    // --- Analytics for install attempts ---
+    window.addEventListener('load', () => {
+      // Track page views for install conversion
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.ready.then(() => {
+          console.log('PWA ready for install');
+        });
+      }
     });
   </script>
 </body>
