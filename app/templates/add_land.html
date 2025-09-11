@@ -102,6 +102,23 @@
       <p class="text-[11px] text-gray-500">عنوان واضح و مختصر اعتماد ایجاد می‌کند.</p>
     </section>
 
+    <!-- موقعیت و آدرس -->
+    <section aria-label="موقعیت و آدرس" class="space-y-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="district">محله / منطقه</label>
+          <input type="text" id="district" name="district" placeholder="مثلاً: نیاوران، بلوار امام" autocomplete="off"
+                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="address">آدرس دقیق (اختیاری)</label>
+          <input type="text" id="address" name="address" placeholder="نام خیابان، کوچه، پلاک..." autocomplete="off"
+                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+        </div>
+      </div>
+      <p class="text-[11px] text-gray-500">آدرس دقیق منتشر نمی‌شود؛ فقط برای تطبیق و دسترسی استفاده می‌شود.</p>
+    </section>
+
     <!-- ابعاد و قیمت -->
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="ابعاد و قیمت">
       <div class="space-y-2">
@@ -119,6 +136,36 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="price_per_meter">قیمت متری (محاسبه‌شده)</label>
         <input type="text" id="price_per_meter" name="price_per_meter" readonly
                class="w-full border rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-600 dark:text-white">
+      </div>
+    </section>
+
+    <!-- مشخصات فیزیکی ملک -->
+    <section aria-label="مشخصات ملک" class="space-y-2">
+      <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <i class="fas fa-ruler-combined"></i> مشخصات ملک
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="frontage">عرض بر (متر)</label>
+          <input inputmode="numeric" type="text" id="frontage" name="frontage" placeholder="مثلاً ۱۲"
+                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="length">طول (متر)</label>
+          <input inputmode="numeric" type="text" id="length" name="length" placeholder="مثلاً ۴۰"
+                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="street_width">عرض گذر (متر)</label>
+          <input inputmode="numeric" type="text" id="street_width" name="street_width" placeholder="مثلاً ۸"
+                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm mt-2">
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_fence" value="1"> دیوارکشی کامل</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_corner" value="1"> نبش</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_well" value="1"> چاه</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="has_guardroom" value="1"> سرایداری/اتاقک</label>
       </div>
     </section>
 
@@ -166,11 +213,28 @@
     <!-- امکانات -->
     <section aria-label="امکانات" class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">امکانات</label>
-      <div class="grid grid-cols-2 gap-2 text-sm">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
         <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="آب"> آب</label>
         <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="برق"> برق</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="گاز"> گاز</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="فاضلاب"> فاضلاب</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="تلفن"> تلفن</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="اینترنت"> اینترنت</label>
         <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="درخت"> درخت</label>
         <label class="inline-flex items-center gap-2"><input type="checkbox" name="features" value="دیوارکشی"> دیوارکشی</label>
+      </div>
+    </section>
+
+    <!-- شرایط معامله -->
+    <section aria-label="شرایط معامله" class="space-y-2">
+      <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <i class="fas fa-handshake"></i> شرایط معامله
+      </h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="is_negotiable" value="1"> قیمت توافقی</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="accept_exchange" value="1"> معاوضه</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="installment" value="1"> اقساط</label>
+        <label class="inline-flex items-center gap-2"><input type="checkbox" name="urgent" value="1"> فوری</label>
       </div>
     </section>
 
@@ -179,6 +243,21 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="description">توضیحات</label>
       <textarea name="description" id="description" rows="5" placeholder="جزئیات تکمیلی مثل دسترسی‌ها، امکانات، بافت، کاربری و ..."
                 class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500"></textarea>
+    </section>
+
+    <!-- تایید قوانین و پیش‌نمایش -->
+    <section class="space-y-3">
+      <label class="inline-flex items-start gap-2 text-sm">
+        <input type="checkbox" name="agree_terms" required>
+        <span class="text-gray-700 dark:text-gray-200">مسئولیت صحت اطلاعات آگهی با من است و قوانین انتشار وینور را می‌پذیرم.</span>
+      </label>
+
+      <details class="group bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+        <summary class="cursor-pointer text-sm font-bold flex items-center gap-2">
+          <i class="fas fa-eye"></i> پیش‌نمایش سریع
+        </summary>
+        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200" id="quickPreview"></div>
+      </details>
     </section>
 
     <!-- اکشن‌ها (فوتر ثابت موبایل‌محور) -->
@@ -319,6 +398,25 @@
     totalPriceInput.value  = t ? formatNumber(t) : '';
     pricePerMeterInput.value = (s>0 && t>0) ? formatNumber(Math.floor(t/s)) : '';
     priceWords.textContent   = t ? ('≈ ' + numberToWordsFa(t)) : '';
+    // پیش‌نمایش سریع
+    try{
+      const pv = document.getElementById('quickPreview');
+      if(pv){
+        const title = (document.getElementById('title')?.value || '').trim();
+        const city  = getCity();
+        const sizeV = s ? (formatNumber(s)+' متر') : '';
+        const price = t ? numberToWordsFa(t) : 'قیمت توافقی';
+        pv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-lg bg-gray-200 dark:bg-gray-700 grid place-items-center text-green-600"><i class="fas fa-image"></i></div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-900 dark:text-white">${title || 'عنوان آگهی'}</div>
+              <div class="text-xs text-gray-600 dark:text-gray-300">${city || 'شهر'} • ${sizeV}</div>
+            </div>
+            <div class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">${price}</div>
+          </div>`;
+      }
+    }catch(_){}
   }
   sizeInput.addEventListener('input', recalc);
   totalPriceInput.addEventListener('input', recalc);
