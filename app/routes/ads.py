@@ -92,8 +92,13 @@ def add_land():
             return redirect(url_for('main.add_land'))
 
         # Prefer uploaded_image_ids collected by client-side uploader
-        uploaded_ids_raw = (request.form.get('uploaded_image_ids') or '').strip(',')
-        image_names = [x for x in uploaded_ids_raw.split(',') if x]
+        uploaded_ids_raw = (request.form.get('uploaded_image_ids') or '').strip(', ')
+        def _normalize_id(s: str) -> str:
+            s = (s or '').strip()
+            if s.startswith('/uploads/'):
+                s = s[len('/uploads/'):]
+            return s.lstrip('/')
+        image_names = [ _normalize_id(x) for x in uploaded_ids_raw.split(',') if x.strip() ]
 
         if not image_names:
             # Backward compatibility: accept uploaded files if any
