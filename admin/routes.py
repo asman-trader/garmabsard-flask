@@ -9,7 +9,7 @@ from functools import wraps
 from typing import List, Dict, Any, Optional
 
 from flask import (
-    Blueprint, render_template, request, redirect, url_for,
+    render_template, request, redirect, url_for,
     session, current_app, flash, abort, jsonify
 )
 from werkzeug.utils import secure_filename
@@ -115,9 +115,9 @@ def notify_admin_create(ad: Dict[str, Any]):
     )
 
 # -----------------------------------------------------------------------------
-# Blueprint
+# Blueprint (defined centrally)
 # -----------------------------------------------------------------------------
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin', template_folder='templates')
+from .blueprint import admin_bp
 
 # -----------------------------------------------------------------------------
 # پیکربندی ساده ادمین (برای شروع)
@@ -464,94 +464,6 @@ def consults():
     p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/consults.html',
                            consults=consults if isinstance(consults, list) else [],
-                           pending_count=p, approved_count=a, rejected_count=r)
-
-# -----------------------------------------------------------------------------
-# کمپین پیامکی (ارسال انبوه بر اساس فایل txt)
-# -----------------------------------------------------------------------------
-@admin_bp.route('/sms-campaign', methods=['GET', 'POST'])
-@login_required
-def sms_campaign():
-    """صفحه و هندلر ارسال پیامک انبوه با قالب.
-    - ورودی‌ها:
-      * file: فایل txt شامل یک شماره در هر خط
-      * template_id: شناسه قالب (int)
-      * p_*: پارامترهای دلخواه قالب (name/value pairs)
-      * delay_ms: تاخیر بین ارسال‌ها بر حسب میلی‌ثانیه
-    - خروجی: گزارش مختصر موفق/ناموفق
-    """
-    if request.method == 'GET':
-        p, a, r = counts_by_status(load_json(_lands_path()) or [])
-        return render_template('admin/sms_campaign.html', pending_count=p, approved_count=a, rejected_count=r)
-
-    # POST
-    # CSRF
-    _ = request.form.get('csrf_token')
-
-    file = request.files.get('numbers_file')
-    template_id_raw = (request.form.get('template_id') or '').strip()
-    delay_ms_raw = (request.form.get('delay_ms') or '1000').strip()
-
-    # جمع‌آوری پارامترهای قالب p_name / p_value به شکل p[key]=value یا p.key=value
-    params: dict[str, str] = {}
-    for k, v in request.form.items():
-        if k.startswith('p[') and k.endswith(']'):
-            key = k[2:-1].strip()
-            if key:
-                params[key] = v
-        elif k.startswith('p.'):  # جایگزین
-            key = k[2:].strip()
-            if key:
-                params[key] = v
-
-    if not file or not file.filename.lower().endswith('.txt'):
-        flash('لطفاً یک فایل txt از شماره‌ها ارسال کنید.', 'warning')
-        return redirect(url_for('admin.sms_campaign'))
-
-    try:
-        template_id = int(template_id_raw)
-    except Exception:
-        flash('شناسهٔ قالب (template_id) نامعتبر است.', 'danger')
-        return redirect(url_for('admin.sms_campaign'))
-
-    try:
-        delay_ms = max(0, int(delay_ms_raw))
-    except Exception:
-        delay_ms = 1000
-
-    # خواندن شماره‌ها
-    try:
-        content = file.read().decode('utf-8', errors='ignore')
-    except Exception:
-        content = file.read().decode('cp1256', errors='ignore') if file else ''
-    numbers = [line.strip() for line in content.splitlines() if line.strip()]
-    if not numbers:
-        flash('هیچ شماره‌ای در فایل یافت نشد.', 'warning')
-        return redirect(url_for('admin.sms_campaign'))
-
-    # ارسال با تاخیر بین هر مورد
-    sent = failed = 0
-    results = []
-    for mobile in numbers:
-        resp = send_sms_template(mobile=mobile, template_id=template_id, parameters=params)
-        if resp.get('ok'):
-            sent += 1
-        else:
-            failed += 1
-        results.append({
-            'mobile': mobile,
-            'ok': bool(resp.get('ok')),
-            'status': resp.get('status'),
-        })
-        if delay_ms > 0:
-            time.sleep(delay_ms / 1000.0)
-
-    flash(f'ارسال کامل شد: موفق {sent} | ناموفق {failed}', 'success' if failed == 0 else 'warning')
-    # نمایش خلاصه؛ می‌توان گزارش کامل JSON نیز نمایش داد
-    p, a, r = counts_by_status(load_json(_lands_path()) or [])
-    return render_template('admin/sms_campaign.html',
-                           summary={'sent': sent, 'failed': failed, 'total': len(numbers)},
-                           results=results[:200],  # برای سبک بودن صفحه
                            pending_count=p, approved_count=a, rejected_count=r)
 
 # -----------------------------------------------------------------------------
@@ -923,59 +835,4 @@ def reject_land(code):
     return redirect(request.referrer or url_for('admin.rejected_lands'))
 
 # -----------------------------------------------------------------------------
-# ابزار تست اعلان پوش (Admin)
-# -----------------------------------------------------------------------------
-from app.api.push import _load_subs, _save_subs, _send_one  # استفاده مستقیم
-
-@admin_bp.get('/push-test')
-@login_required
-def admin_push_test():
-    # تمپلیت سادهٔ فرم تست (پیشنهاد: admin/push_test.html)
-    return render_template('admin/push_test.html')
-
-@admin_bp.post('/push-test')
-@login_required
-def admin_push_test_send():
-    """
-    فرم POST با فیلدهای:
-      - csrf_token (hidden)
-      - title, body, url (اختیاری)
-    """
-    title = (request.form.get('title') or '').strip() or 'وینور – اعلان آزمایشی'
-    body  = (request.form.get('body') or '').strip()  or 'این یک پیام آزمایشی از پنل ادمین است.'
-    url   = (request.form.get('url')  or '').strip()  or '/notifications'
-
-    payload = {
-        'title': title,
-        'body': body,
-        'url': url,
-        'icon': '/static/icons/icon-192.png',
-        'tag':  'vinor-push-test'
-    }
-
-    subs = _load_subs()
-    if not subs:
-        return jsonify({'ok': False, 'error': 'NO_SUBSCRIBERS'}), 400
-
-    sent = removed = failed = 0
-    alive = []
-    for s in subs:
-        r = _send_one(s, payload)
-        if r.get('ok'):
-            sent += 1
-            alive.append(s)
-        else:
-            if r.get('remove'):
-                removed += 1
-            else:
-                failed += 1
-
-    _save_subs(alive)
-
-    return jsonify({
-        'ok': True,
-        'sent': sent,
-        'removed': removed,
-        'failed': failed,
-        'remaining': len(alive)
-    })
+# Push/SMS routes moved to dedicated modules
