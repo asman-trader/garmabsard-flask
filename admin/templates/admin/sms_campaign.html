@@ -8,10 +8,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow">
+<div class="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow">
 
   <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-    یک فایل <code>.txt</code> شامل یک شماره موبایل در هر خط بارگذاری کنید. سپس قالب پیامک و تاخیر بین ارسال‌ها را انتخاب کنید.
+    فایل <code>.txt</code> شامل شماره‌ها (هر خط یک شماره) را بارگذاری کنید یا در کادر زیر بچسبانید. سپس قالب و تاخیر را تنظیم کنید.
   </p>
 
   {% with messages = get_flashed_messages(with_categories=True) %}
@@ -30,39 +30,76 @@
     {% endif %}
   {% endwith %}
 
-  <form method="post" enctype="multipart/form-data" class="space-y-4">
+  <form method="post" enctype="multipart/form-data" class="space-y-5" id="smsForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div>
-      <label class="block text-sm font-semibold mb-1">فایل شماره‌ها (txt)</label>
-      <input type="file" name="numbers_file" accept=".txt" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-semibold mb-1">فایل شماره‌ها (txt)</label>
+        <input type="file" name="numbers_file" accept=".txt" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        <p class="text-xs text-gray-500 mt-1">هر خط یک شماره. مثال: 0912xxxxxxx یا +98912xxxxxxx</p>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1">چسباندن شماره‌ها (اختیاری)</label>
+        <textarea name="numbers_text" rows="3" placeholder="هر خط یک شماره" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700"></textarea>
+      </div>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-semibold mb-1">شناسه قالب (template_id)</label>
         <input type="number" name="template_id" placeholder="مثال: 335146" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        <p class="text-xs text-gray-500 mt-1">شناسه قالب در پنل SMS.ir</p>
       </div>
+
       <div>
-        <label class="block text-sm font-semibold mb-1">تاخیر بین ارسال‌ها (میلی‌ثانیه)</label>
-        <input type="number" name="delay_ms" value="1000" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        <label class="block text-sm font-semibold mb-1">تاخیر بین ارسال‌ها</label>
+        <div class="space-y-2">
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="radio" name="delay_mode" value="fixed" checked>
+            ثابت (میلی‌ثانیه)
+          </label>
+          <input type="number" name="delay_ms" value="1000" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+
+          <label class="inline-flex items-center gap-2 text-sm mt-2">
+            <input type="radio" name="delay_mode" value="random">
+            بازهٔ تصادفی (میلی‌ثانیه)
+          </label>
+          <div class="grid grid-cols-2 gap-2" id="delayRange" style="display:none;">
+            <input type="number" name="delay_min_ms" placeholder="حداقل (مثلاً 800)" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+            <input type="number" name="delay_max_ms" placeholder="حداکثر (مثلاً 1800)" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          </div>
+        </div>
       </div>
     </div>
 
-    <details class="bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 p-3">
-      <summary class="cursor-pointer text-sm font-semibold">پارامترهای قالب (اختیاری)</summary>
-      <div class="grid sm:grid-cols-2 gap-3 mt-3">
-        <div>
-          <label class="block text-xs mb-1">نام پارامتر (مثال: code)</label>
-          <input name="p[code]" placeholder="مثال: code" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-        </div>
-        <div>
-          <label class="block text-xs mb-1">مقدار پارامتر</label>
-          <input name="p[value]" placeholder="مثال: 12345" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold">گزینه‌ها</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dedupe"> حذف شماره‌های تکراری</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="validate_ir" checked> اعتبارسنجی الگوی موبایل ایران</label>
+        <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="dry_run"> شبیه‌سازی (بدون ارسال واقعی)</label>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold">راهنمای پارامترهای قالب</label>
+        <p class="text-xs text-gray-500">برای هر پارامتر یک ردیف اضافه کنید. مثال: <code>code → 12345</code></p>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 p-3">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">پارامترهای قالب</div>
+        <button type="button" id="addParam" class="text-xs px-2 py-1 rounded bg-vinor-600 text-white">افزودن پارامتر</button>
+      </div>
+      <div id="paramsList" class="grid sm:grid-cols-2 gap-3">
+        <div class="param-row grid grid-cols-2 gap-2 items-center">
+          <input name="p[code]" placeholder="نام (مثلاً code)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+          <input name="p[value]" placeholder="مقدار (مثلاً 12345)" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
         </div>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید فیلدها را با کلیدهای دیگری مانند <code>p[name]</code> اضافه کنید.</p>
-    </details>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید به‌صورت <code>p[key]</code> هر تعداد کلید دلخواه اضافه کنید.</p>
+    </div>
 
     <div class="flex justify-end">
       <button type="submit" class="bg-vinor-600 hover:bg-vinor-700 text-white px-5 py-2 rounded">شروع ارسال</button>
@@ -103,6 +140,45 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const radios = document.querySelectorAll('input[name="delay_mode"]');
+  const delayRange = document.getElementById('delayRange');
+  function updateDelayUI(){
+    const mode = document.querySelector('input[name="delay_mode"]:checked')?.value;
+    delayRange.style.display = (mode === 'random') ? '' : 'none';
+  }
+  radios.forEach(r => r.addEventListener('change', updateDelayUI));
+  updateDelayUI();
+
+  const paramsList = document.getElementById('paramsList');
+  document.getElementById('addParam')?.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'param-row grid grid-cols-2 gap-2 items-center';
+    row.innerHTML = `
+      <input name="p[]" placeholder="نام پارامتر" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+      <input name="p_value[]" placeholder="مقدار" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    `;
+    paramsList.appendChild(row);
+  });
+  // هنگام ارسال، ورودی‌های p[]/p_value[] را به p[key] نگاشت کنیم
+  document.getElementById('smsForm')?.addEventListener('submit', (e) => {
+    const keys = Array.from(document.querySelectorAll('input[name="p[]"]'));
+    const vals = Array.from(document.querySelectorAll('input[name="p_value[]"]'));
+    keys.forEach((k, i) => {
+      const key = (k.value || '').trim();
+      if (!key) return;
+      const val = (vals[i]?.value || '').trim();
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = `p[${key}]`;
+      hidden.value = val;
+      e.target.appendChild(hidden);
+    });
+  });
+</script>
 {% endblock %}
 
 
