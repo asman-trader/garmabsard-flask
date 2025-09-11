@@ -155,18 +155,7 @@
             <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-amber-600"></i>
           </a>
 
-          <!-- درخواست‌های مشاوره -->
-          <a href="{{ url_for('admin.consults') }}"
-             class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl shadow p-5 flex items-center gap-4 hover:shadow-vinor transition focus-visible:focus-ring">
-            <div class="shrink-0 rounded-2xl p-3 sm:p-4 bg-blue-500/10 text-blue-600">
-              <i class="fas fa-user-headset text-2xl"></i>
-            </div>
-            <div>
-              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-300">درخواست‌های مشاوره</p>
-              <p class="text-2xl font-extrabold" aria-live="polite">{{ consults_count or 0 }}</p>
-            </div>
-            <i class="fas fa-chevron-left ms-auto text-gray-300 group-hover:text-blue-600"></i>
-          </a>
+          
 
         </div>
       </section>
@@ -194,11 +183,7 @@
             <div class="mt-1 text-sm">رد شده‌ها</div>
           </a>
 
-          <a href="{{ url_for('admin.consults') }}"
-             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 text-center hover:shadow-md transition focus-visible:focus-ring">
-            <i class="fas fa-phone-volume text-blue-600 text-xl"></i>
-            <div class="mt-1 text-sm">مشاوره‌ها</div>
-          </a>
+          
 
           <a href="{{ url_for('admin.settings') }}"
              class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 text-center hover:shadow-md transition focus-visible:focus-ring">

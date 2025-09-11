@@ -171,18 +171,7 @@
       <span>ثبت ملک جدید</span>
     </a>
 
-    <!-- درخواست‌های مشاوره -->
-    <a href="{{ url_for('admin.consults') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.consults' %}
-                bg-vinor-600 text-white shadow
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-              {% endif %}"
-       {% if _endpoint == 'admin.consults' %} aria-current="page" {% endif %}>
-      <i class="fas fa-user-headset"></i>
-      <span>درخواست مشاوره</span>
-    </a>
+    
 
     <!-- تنظیمات سایت -->
     <a href="{{ url_for('admin.settings') }}"

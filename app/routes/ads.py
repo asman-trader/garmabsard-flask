@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from . import main_bp
-from ..utils.storage import data_dir, load_ads, save_ads, load_consults, save_consults, load_settings
+from ..utils.storage import data_dir, load_ads, save_ads, load_settings
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
 
@@ -422,19 +422,7 @@ def delete_land(code):
     return redirect(url_for('main.my_lands'))
 
 
-@main_bp.route('/consult/<code>', methods=['POST'], endpoint='consult')
-def consult(code):
-    consults = load_consults()
-    consults.append({
-        'name': request.form.get('name'),
-        'phone': request.form.get('phone'),
-        'message': request.form.get('message'),
-        'code': code,
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    })
-    save_consults(consults)
-    flash("✅ درخواست مشاوره ثبت شد.")
-    return redirect(url_for('main.land_detail', code=code))
+## consult endpoint removed
 
 
 # حذف آگهی با مسیر دوم (سازگار با فرم‌های جدید)

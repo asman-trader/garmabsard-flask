@@ -409,12 +409,12 @@ def logout():
 def dashboard():
     cleanup_expired_ads()
     lands = load_json(_lands_path())
-    consults = load_json(_consults_path())
+    consults = []
     pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template(
         'admin/dashboard.html',
         lands_count=len(lands) if isinstance(lands, list) else 0,
-        consults_count=len(consults) if isinstance(consults, list) else 0,
+        consults_count=0,
         pending_count=pending_count,
         approved_count=approved_count,
         rejected_count=rejected_count
@@ -452,19 +452,7 @@ def settings():
                            settings=settings_data,
                            pending_count=p, approved_count=a, rejected_count=r)
 
-@admin_bp.route('/consults')
-@login_required
-def consults():
-    cleanup_expired_ads()
-    consults = load_json(_consults_path())
-    lands = load_json(_lands_path())
-    land_map = {str(l.get('code')): l for l in lands} if isinstance(lands, list) else {}
-    for c in consults if isinstance(consults, list) else []:
-        c['land'] = land_map.get(str(c.get('code')))
-    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
-    return render_template('admin/consults.html',
-                           consults=consults if isinstance(consults, list) else [],
-                           pending_count=p, approved_count=a, rejected_count=r)
+## admin consults removed
 
 # -----------------------------------------------------------------------------
 # فهرست آگهی‌ها (با صفحه‌بندی)
