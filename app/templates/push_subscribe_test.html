@@ -37,7 +37,7 @@
   btn.addEventListener('click', async () => {
     try {
       log('در حال ثبت Service Worker...');
-      const reg = await navigator.serviceWorker.register('/static/sw.js');
+      const reg = await navigator.serviceWorker.register('/sw.js');
       log('SW ثبت شد.');
 
       log('درخواست اجازه نوتیفیکیشن...');
