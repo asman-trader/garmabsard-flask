@@ -1,0 +1,89 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}کاربران | پنل مدیریت{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-users"></i>
+کاربران
+{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-6">
+
+  <!-- آمار خلاصه -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-300">کل کاربران</div>
+      <div class="text-2xl font-extrabold">{{ total_users or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-300">فعال (۳۰ روز اخیر)</div>
+      <div class="text-2xl font-extrabold">{{ active_users or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-300">جدید (۷ روز)</div>
+      <div class="text-2xl font-extrabold">{{ new_users_7d or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-300">تایید شده</div>
+      <div class="text-2xl font-extrabold">{{ verified_users or 0 }}</div>
+    </div>
+  </div>
+
+  <!-- فیلترها -->
+  <form method="get" class="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <input name="q" value="{{ q or '' }}" placeholder="جستجو (نام، موبایل، ایمیل)" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    <select name="sort" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700">
+      <option value="created_desc" {% if sort=='created_desc' %}selected{% endif %}>جدیدترین</option>
+      <option value="created_asc" {% if sort=='created_asc' %}selected{% endif %}>قدیمی‌تر</option>
+      <option value="last_login_desc" {% if sort=='last_login_desc' %}selected{% endif %}>آخرین ورود (جدیدتر)</option>
+      <option value="last_login_asc" {% if sort=='last_login_asc' %}selected{% endif %}>آخرین ورود (قدیمی‌تر)</option>
+    </select>
+    <button class="bg-vinor-600 hover:bg-vinor-700 text-white text-sm rounded px-3 py-2">اعمال</button>
+  </form>
+
+  <!-- جدول کاربران -->
+  <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+    <table class="w-full text-sm bg-white dark:bg-gray-800">
+      <thead class="bg-gray-50 dark:bg-gray-700/60">
+        <tr class="text-gray-700 dark:text-gray-200">
+          <th class="p-2 text-right">نام</th>
+          <th class="p-2 text-right">موبایل</th>
+          <th class="p-2 text-right">ایمیل</th>
+          <th class="p-2 text-center">تایید</th>
+          <th class="p-2 text-center">آخرین ورود</th>
+          <th class="p-2 text-center">تاریخ ایجاد</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="border-t dark:border-gray-700">
+          <td class="p-2">{{ u.name or u.fullname or '—' }}</td>
+          <td class="p-2">{{ u.phone or u.mobile or '—' }}</td>
+          <td class="p-2">{{ u.email or '—' }}</td>
+          <td class="p-2 text-center">{{ '✅' if (u.is_verified or u.verified or u.phone_verified) else '—' }}</td>
+          <td class="p-2 text-center">{{ u.last_login_ts or u.last_login or '—' }}</td>
+          <td class="p-2 text-center">{{ u.created_at_ts or u.created_at or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- صفحه‌بندی -->
+  {% if pages and pages>1 %}
+  <div class="mt-3 flex items-center justify-center gap-1 text-sm">
+    {% for p in range(1, pages+1) %}
+      <a href="{{ url_for('admin.users_page', q=q, sort=sort, page=p) }}"
+         class="px-3 py-1 rounded border
+                {% if p == page %} bg-vinor-600 text-white border-vinor-600 {% else %} bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 {% endif %}">
+        {{ p }}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+

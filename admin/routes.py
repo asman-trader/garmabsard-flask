@@ -29,6 +29,7 @@ except Exception:
 # -----------------------------------------------------------------------------
 from app.services.notifications import add_notification
 from app.services.sms import send_sms_template
+from app.utils.storage import load_users
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
     """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
@@ -414,14 +415,134 @@ def dashboard():
     cleanup_expired_ads()
     lands = load_json(_lands_path())
     consults = []
+    # محاسبه کاربران فعال
+    try:
+        users = load_users()
+    except Exception:
+        users = []
+    total_users = len(users) if isinstance(users, list) else 0
+    # جزئیات کاربران: فعال، جدید ۷ روز اخیر، تایید شده
+    active_users = 0
+    new_users_7d = 0
+    verified_users = 0
+    try:
+        now_ts = int(datetime.utcnow().timestamp())
+        for u in users if isinstance(users, list) else []:
+            if u.get('is_active'):
+                active_users += 1
+            else:
+                last = u.get('last_login_ts') or u.get('last_login')
+                try:
+                    ts = int(last)
+                    if now_ts - ts <= 30*24*3600:
+                        active_users += 1
+                except Exception:
+                    pass
+            # جدید ۷ روز اخیر
+            created = u.get('created_at_ts') or u.get('created_at')
+            try:
+                cts = int(created)
+                if now_ts - cts <= 7*24*3600:
+                    new_users_7d += 1
+            except Exception:
+                pass
+            # تایید شده
+            if any(bool(u.get(k)) for k in ('is_verified','verified','phone_verified')):
+                verified_users += 1
+    except Exception:
+        active_users = active_users or 0
+        new_users_7d = new_users_7d or 0
+        verified_users = verified_users or 0
+        active_users = 0
     pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template(
         'admin/dashboard.html',
         lands_count=len(lands) if isinstance(lands, list) else 0,
         consults_count=0,
+        total_users=total_users,
+        active_users=active_users,
+        new_users_7d=new_users_7d,
+        verified_users=verified_users,
         pending_count=pending_count,
         approved_count=approved_count,
         rejected_count=rejected_count
+    )
+
+@admin_bp.route('/users')
+@login_required
+def users_page():
+    try:
+        users = load_users()
+    except Exception:
+        users = []
+
+    # جستجو و مرتب‌سازی ساده
+    q = (request.args.get('q') or '').strip().lower()
+    sort = (request.args.get('sort') or 'created_desc').strip()
+
+    safe_users = users if isinstance(users, list) else []
+    if q:
+        def _hit(u):
+            phone = str(u.get('phone') or u.get('mobile') or '')
+            email = str(u.get('email') or '')
+            name  = str(u.get('name') or u.get('fullname') or '')
+            return (q in phone.lower()) or (q in email.lower()) or (q in name.lower())
+        safe_users = [u for u in safe_users if _hit(u)]
+
+    def _int(v, default=0):
+        try:
+            return int(v)
+        except Exception:
+            return default
+
+    if sort == 'last_login_desc':
+        safe_users.sort(key=lambda u: _int(u.get('last_login_ts') or u.get('last_login'), 0), reverse=True)
+    elif sort == 'last_login_asc':
+        safe_users.sort(key=lambda u: _int(u.get('last_login_ts') or u.get('last_login'), 0))
+    elif sort == 'created_asc':
+        safe_users.sort(key=lambda u: _int(u.get('created_at_ts') or u.get('created_at'), 0))
+    else:  # created_desc
+        safe_users.sort(key=lambda u: _int(u.get('created_at_ts') or u.get('created_at'), 0), reverse=True)
+
+    # آمار
+    total_users = len(users) if isinstance(users, list) else 0
+    active_users = 0
+    new_users_7d = 0
+    verified_users = 0
+    now_ts = int(datetime.utcnow().timestamp())
+    for u in users if isinstance(users, list) else []:
+        if u.get('is_active'):
+            active_users += 1
+        else:
+            ts = _int(u.get('last_login_ts') or u.get('last_login'), 0)
+            if ts and (now_ts - ts) <= 30*24*3600:
+                active_users += 1
+        cts = _int(u.get('created_at_ts') or u.get('created_at'), 0)
+        if cts and (now_ts - cts) <= 7*24*3600:
+            new_users_7d += 1
+        if any(bool(u.get(k)) for k in ('is_verified','verified','phone_verified')):
+            verified_users += 1
+
+    # صفحه‌بندی ساده
+    page = int(request.args.get('page', 1) or 1)
+    per_page = min(int(request.args.get('per_page', 20) or 20), 100)
+    total = len(safe_users)
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, pages))
+    start = (page - 1) * per_page
+    items = safe_users[start:start+per_page]
+
+    return render_template(
+        'admin/users.html',
+        users=items,
+        total_users=total_users,
+        active_users=active_users,
+        new_users_7d=new_users_7d,
+        verified_users=verified_users,
+        q=q,
+        sort=sort,
+        page=page,
+        pages=pages,
     )
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
