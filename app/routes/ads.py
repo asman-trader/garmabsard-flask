@@ -72,6 +72,11 @@ def add_land():
         session['next'] = url_for('main.add_land')
         return redirect(url_for('main.login'))
 
+    # Guard: اگر دسته انتخاب نشده باشد کاربر را به گام ۱ بفرست
+    if request.method == 'GET':
+        if not session.get('ad_category'):
+            return redirect(url_for('main.add_land_step1'))
+
     if request.method == 'POST':
         title = request.form.get('title')
         location = request.form.get('location')
@@ -130,7 +135,7 @@ def add_land():
         })
         return redirect(url_for('main.add_land_step3'))
 
-    return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP)
+    return render_template('add_land.html', CATEGORY_MAP=CATEGORY_MAP, ad_category=session.get('ad_category'))
 
 
 @main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')

@@ -199,26 +199,34 @@
 
     <!-- دسته‌بندی (از گام ۱) -->
     <section aria-label="دسته‌بندی" class="space-y-2">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_main">نوع معامله (گروه)*</label>
-          <select id="category_main" name="category_main" required class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-            <option value="" disabled selected>انتخاب کنید...</option>
-            <option value="فروش مسکونی">فروش مسکونی</option>
-            <option value="اجاره مسکونی">اجاره مسکونی</option>
-            <option value="اجاره اداری و تجاری">اجاره اداری و تجاری</option>
-            <option value="فروش اداری و تجاری">فروش اداری و تجاری</option>
-            <option value="اجاره کوتاه‌مدت">اجاره کوتاه‌مدت</option>
-            <option value="پروژه‌های ساخت‌وساز">پروژه‌های ساخت‌وساز</option>
-          </select>
+      {% if ad_category %}
+        <div class="flex items-center gap-2 text-sm">
+          <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ 'فروش' if ad_category.trade_type=='sale' else 'اجاره' }}</span>
+          <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">{{ ad_category.property_type|default('ملک') }}</span>
+          <a href="{{ url_for('main.add_land_step1') }}" class="ms-auto text-xs text-emerald-700 hover:underline">ویرایش دسته</a>
         </div>
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_sub">دسته‌بندی (زیرشاخه)*</label>
-          <select id="category_sub" name="category_sub" required disabled class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-            <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
-          </select>
+      {% else %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_main">نوع معامله (گروه)*</label>
+            <select id="category_main" name="category_main" required class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+              <option value="" disabled selected>انتخاب کنید...</option>
+              <option value="فروش مسکونی">فروش مسکونی</option>
+              <option value="اجاره مسکونی">اجاره مسکونی</option>
+              <option value="اجاره اداری و تجاری">اجاره اداری و تجاری</option>
+              <option value="فروش اداری و تجاری">فروش اداری و تجاری</option>
+              <option value="اجاره کوتاه‌مدت">اجاره کوتاه‌مدت</option>
+              <option value="پروژه‌های ساخت‌وساز">پروژه‌های ساخت‌وساز</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_sub">دسته‌بندی (زیرشاخه)*</label>
+            <select id="category_sub" name="category_sub" required disabled class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
+              <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
+            </select>
+          </div>
         </div>
-      </div>
+      {% endif %}
     </section>
 
     <!-- فیلدهای خاص بر اساس دسته (مانند دیوار) -->
@@ -500,8 +508,8 @@
   const rentFields   = document.getElementById('rentFields');
   const aptFields    = document.getElementById('apartmentFields');
   function updateCategorySpecific(){
-    const mainVal = (mainSelect.value||'');
-    const subVal  = (subSelect.value||'');
+    const mainVal = (mainSelect?.value||'');
+    const subVal  = (subSelect?.value||'');
     const isRent  = /اجاره/.test(mainVal);
     const isApt   = /آپارتمان/.test(subVal);
     if (!catWrap) return;
@@ -510,8 +518,20 @@
     rentFields?.classList.toggle('hidden', !isRent);
     aptFields?.classList.toggle('hidden', !isApt);
   }
-  mainSelect.addEventListener('change', updateCategorySpecific);
-  subSelect.addEventListener('change', updateCategorySpecific);
+  mainSelect?.addEventListener('change', updateCategorySpecific);
+  subSelect?.addEventListener('change', updateCategorySpecific);
+
+  // اگر از گام ۱ آمده‌ایم و دسته معلوم است، فیلدهای اختصاصی را فعال کن
+  try{
+    const hasAdCat = {{ 'true' if ad_category else 'false' }};
+    if (hasAdCat){
+      // شبیه‌سازی مقداردهی: اجاره/فروش از سشن → نمایش بلاک مرتبط
+      const tradeType = '{{ ad_category.trade_type if ad_category else '' }}';
+      const property  = '{{ ad_category.property_type if ad_category else '' }}';
+      if (tradeType === 'rent') { catWrap?.classList.remove('hidden'); rentFields?.classList.remove('hidden'); }
+      if (property === 'apartment') { catWrap?.classList.remove('hidden'); aptFields?.classList.remove('hidden'); }
+    }
+  }catch(_){}
 
   /* =======================[ منطق تصاویر/آپلود ]======================= */
   let imageItems = []; // {id,url,file,isCover,serverId,uploading}
