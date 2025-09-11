@@ -169,7 +169,8 @@ def create_app() -> Flask:
 
     # ---------- رجیستر بلوپرینت‌ها ----------
     from .routes import main_bp
-    from .routes.admin import admin_bp
+    # Prefer root-level admin package (migrated)
+    from admin import admin_bp  # type: ignore
     from .routes.webhook import webhook_bp
 
     lands_bp = None

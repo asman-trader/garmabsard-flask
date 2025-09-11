@@ -15,7 +15,7 @@ from . import public       # صفحه /app و صفحات عمومی
 from . import ads          # آگهی‌ها
 from . import auth         # ورود/تأیید/خروج  -> endpoints: main.login, main.verify, main.logout
 from . import profile      # پروفایل/تنظیمات/علاقه‌مندی‌ها -> endpoints: main.profile, main.settings, main.favorites
-from . import admin        # پنل ادمین
+# پنل ادمین به پکیج ریشه‌ای admin منتقل شده است و جداگانه رجیستر می‌شود
 from . import notifications  # اعلان‌ها (لیست + API)
 from . import diagnostics  # ابزارهای تست/سلامت
 from . import webhook      # وب‌هوک‌ها

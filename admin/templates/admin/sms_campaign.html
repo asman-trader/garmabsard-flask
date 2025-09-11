@@ -1,0 +1,108 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}تبلیغات پیامکی | پنل مدیریت وینور{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-sms"></i>
+تبلیغات پیامکی
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow">
+
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+    یک فایل <code>.txt</code> شامل یک شماره موبایل در هر خط بارگذاری کنید. سپس قالب پیامک و تاخیر بین ارسال‌ها را انتخاب کنید.
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="space-y-2 mb-4">
+        {% for category, msg in messages %}
+          <div class="text-sm rounded-lg px-3 py-2
+            {% if category in ['success'] %}bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200
+            {% elif category in ['warning'] %}bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200
+            {% elif category in ['info'] %}bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200
+            {% else %}bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200{% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+      <label class="block text-sm font-semibold mb-1">فایل شماره‌ها (txt)</label>
+      <input type="file" name="numbers_file" accept=".txt" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-semibold mb-1">شناسه قالب (template_id)</label>
+        <input type="number" name="template_id" placeholder="مثال: 335146" required class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1">تاخیر بین ارسال‌ها (میلی‌ثانیه)</label>
+        <input type="number" name="delay_ms" value="1000" min="0" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+      </div>
+    </div>
+
+    <details class="bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 p-3">
+      <summary class="cursor-pointer text-sm font-semibold">پارامترهای قالب (اختیاری)</summary>
+      <div class="grid sm:grid-cols-2 gap-3 mt-3">
+        <div>
+          <label class="block text-xs mb-1">نام پارامتر (مثال: code)</label>
+          <input name="p[code]" placeholder="مثال: code" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        </div>
+        <div>
+          <label class="block text-xs mb-1">مقدار پارامتر</label>
+          <input name="p[value]" placeholder="مثال: 12345" class="w-full text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">می‌توانید فیلدها را با کلیدهای دیگری مانند <code>p[name]</code> اضافه کنید.</p>
+    </details>
+
+    <div class="flex justify-end">
+      <button type="submit" class="bg-vinor-600 hover:bg-vinor-700 text-white px-5 py-2 rounded">شروع ارسال</button>
+    </div>
+  </form>
+
+  {% if summary %}
+    <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+      <h3 class="font-bold mb-2">نتیجه:</h3>
+      <div class="text-sm">کل: {{ summary.total }} | موفق: {{ summary.sent }} | ناموفق: {{ summary.failed }}</div>
+    </div>
+  {% endif %}
+
+  {% if results %}
+    <div class="mt-4">
+      <h4 class="font-semibold mb-2 text-sm">آخرین نتایج (حداکثر ۲۰۰ مورد):</h4>
+      <div class="max-h-72 overflow-auto text-xs border border-gray-200 dark:border-gray-700 rounded">
+        <table class="w-full">
+          <thead class="bg-gray-100 dark:bg-gray-900">
+            <tr>
+              <th class="p-2 text-right">شماره</th>
+              <th class="p-2 text-center">وضعیت</th>
+              <th class="p-2 text-center">کد</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in results %}
+            <tr class="border-t border-gray-100 dark:border-gray-800">
+              <td class="p-2">{{ r.mobile }}</td>
+              <td class="p-2 text-center">{{ '✅' if r.ok else '❌' }}</td>
+              <td class="p-2 text-center">{{ r.status }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+

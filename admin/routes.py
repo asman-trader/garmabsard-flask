@@ -16,6 +16,7 @@ from werkzeug.utils import secure_filename
 
 # اختیاری: ارسال OTP برای توسعه‌های بعدی
 import requests
+import time
 
 # اگر CSRFProtect در app factory فعال است، فقط روی روت لاگین موقتاً معاف می‌کنیم
 try:
@@ -27,6 +28,7 @@ except Exception:
 # اعلان‌ها (Vinor Notifications)
 # -----------------------------------------------------------------------------
 from app.services.notifications import add_notification
+from app.services.sms import send_sms_template
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
     """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
@@ -115,7 +117,7 @@ def notify_admin_create(ad: Dict[str, Any]):
 # -----------------------------------------------------------------------------
 # Blueprint
 # -----------------------------------------------------------------------------
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin', template_folder='templates')
 
 # -----------------------------------------------------------------------------
 # پیکربندی ساده ادمین (برای شروع)
@@ -166,7 +168,7 @@ def _lands_path() -> str:
     if os.path.exists(primary):
         return primary
     # fallback: مسیر قدیمی داخل app/data/lands.json
-    fallback = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "lands.json")
+    fallback = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app", "data", "lands.json")
     return fallback
 
 def _consults_path() -> str:
@@ -317,6 +319,7 @@ def _delete_ad_images(ad: Dict[str, Any]):
         else:
             candidates.append(os.path.join(_uploads_root(), img))
             candidates.append(os.path.join(_uploads_root(), os.path.basename(img)))
+        
             if img.startswith('static/'):
                 candidates.append(os.path.join(current_app.root_path, img))
         for c in candidates:
@@ -461,6 +464,94 @@ def consults():
     p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/consults.html',
                            consults=consults if isinstance(consults, list) else [],
+                           pending_count=p, approved_count=a, rejected_count=r)
+
+# -----------------------------------------------------------------------------
+# کمپین پیامکی (ارسال انبوه بر اساس فایل txt)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/sms-campaign', methods=['GET', 'POST'])
+@login_required
+def sms_campaign():
+    """صفحه و هندلر ارسال پیامک انبوه با قالب.
+    - ورودی‌ها:
+      * file: فایل txt شامل یک شماره در هر خط
+      * template_id: شناسه قالب (int)
+      * p_*: پارامترهای دلخواه قالب (name/value pairs)
+      * delay_ms: تاخیر بین ارسال‌ها بر حسب میلی‌ثانیه
+    - خروجی: گزارش مختصر موفق/ناموفق
+    """
+    if request.method == 'GET':
+        p, a, r = counts_by_status(load_json(_lands_path()) or [])
+        return render_template('admin/sms_campaign.html', pending_count=p, approved_count=a, rejected_count=r)
+
+    # POST
+    # CSRF
+    _ = request.form.get('csrf_token')
+
+    file = request.files.get('numbers_file')
+    template_id_raw = (request.form.get('template_id') or '').strip()
+    delay_ms_raw = (request.form.get('delay_ms') or '1000').strip()
+
+    # جمع‌آوری پارامترهای قالب p_name / p_value به شکل p[key]=value یا p.key=value
+    params: dict[str, str] = {}
+    for k, v in request.form.items():
+        if k.startswith('p[') and k.endswith(']'):
+            key = k[2:-1].strip()
+            if key:
+                params[key] = v
+        elif k.startswith('p.'):  # جایگزین
+            key = k[2:].strip()
+            if key:
+                params[key] = v
+
+    if not file or not file.filename.lower().endswith('.txt'):
+        flash('لطفاً یک فایل txt از شماره‌ها ارسال کنید.', 'warning')
+        return redirect(url_for('admin.sms_campaign'))
+
+    try:
+        template_id = int(template_id_raw)
+    except Exception:
+        flash('شناسهٔ قالب (template_id) نامعتبر است.', 'danger')
+        return redirect(url_for('admin.sms_campaign'))
+
+    try:
+        delay_ms = max(0, int(delay_ms_raw))
+    except Exception:
+        delay_ms = 1000
+
+    # خواندن شماره‌ها
+    try:
+        content = file.read().decode('utf-8', errors='ignore')
+    except Exception:
+        content = file.read().decode('cp1256', errors='ignore') if file else ''
+    numbers = [line.strip() for line in content.splitlines() if line.strip()]
+    if not numbers:
+        flash('هیچ شماره‌ای در فایل یافت نشد.', 'warning')
+        return redirect(url_for('admin.sms_campaign'))
+
+    # ارسال با تاخیر بین هر مورد
+    sent = failed = 0
+    results = []
+    for mobile in numbers:
+        resp = send_sms_template(mobile=mobile, template_id=template_id, parameters=params)
+        if resp.get('ok'):
+            sent += 1
+        else:
+            failed += 1
+        results.append({
+            'mobile': mobile,
+            'ok': bool(resp.get('ok')),
+            'status': resp.get('status'),
+        })
+        if delay_ms > 0:
+            time.sleep(delay_ms / 1000.0)
+
+    flash(f'ارسال کامل شد: موفق {sent} | ناموفق {failed}', 'success' if failed == 0 else 'warning')
+    # نمایش خلاصه؛ می‌توان گزارش کامل JSON نیز نمایش داد
+    p, a, r = counts_by_status(load_json(_lands_path()) or [])
+    return render_template('admin/sms_campaign.html',
+                           summary={'sent': sent, 'failed': failed, 'total': len(numbers)},
+                           results=results[:200],  # برای سبک بودن صفحه
                            pending_count=p, approved_count=a, rejected_count=r)
 
 # -----------------------------------------------------------------------------
