@@ -174,6 +174,8 @@ def report_ad(code):
         if not isinstance(items, list):
             items = []
         new_id = (max([x.get("id", 0) for x in items], default=0) or 0) + 1
+        client_ip = request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or request.remote_addr or ''
+        ua = request.headers.get('User-Agent', '')
         rec = {
             "id": new_id,
             "code": str(code),
@@ -181,10 +183,12 @@ def report_ad(code):
             "details": details,
             "created_at": datetime.utcnow().isoformat() + "Z",
             "status": "open",
+            "ip": client_ip,
+            "ua": ua,
         }
         items.append(rec)
         save_reports(items)
-        return redirect(url_for("main.land_detail", code=code))
+        return redirect(url_for("main.land_detail", code=code, reported=1))
 
     return render_template(
         "report_ad.html",

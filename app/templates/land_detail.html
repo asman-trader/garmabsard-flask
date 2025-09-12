@@ -58,9 +58,11 @@
 
       <div class="flex items-center gap-1">
         <button
+          id="shareBtn"
           type="button"
           class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-          onclick="shareLand('{{ url_for('main.land_detail', code=land.get("code"), _external=True) }}', '{{ (land.get("title") or "آگهی ملک")|e }}')"
+          data-share-url="{{ url_for('main.land_detail', code=land.get('code'), _external=True) }}"
+          data-share-title="{{ (land.get('title') or 'آگهی ملک')|e }}"
           title="اشتراک‌گذاری"
           aria-label="اشتراک‌گذاری">
           <i class="fas fa-share-nodes"></i>
@@ -100,7 +102,7 @@
                   alt="تصویر {{ loop.index }} از {{ land.get('title') or '' }}"
                   class="w-full h-64 sm:h-[420px] object-cover select-none"
                   loading="lazy"
-                  onclick="openFullscreen('{{ src }}')"
+                  data-fs-src="{{ src }}"
                   onerror="this.src='/static/img/placeholder.jpg'; this.onclick=null;" />
               </div>
             {% endfor %}
@@ -134,6 +136,11 @@
 
   {# ==================== Main Content ==================== #}
   <main class="max-w-4xl mx-auto px-3 pb-28" role="main">
+    {% if request.args.get('reported') %}
+      <div class="mt-3 bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm">
+        گزارش شما ثبت شد. با تشکر از همکاری شما.
+      </div>
+    {% endif %}
     {# --------- Summary Card (Price / Size) --------- #}
     {% set _sz = (land.get('size')|int if land.get('size') is not none else (land.get('area')|int if land.get('area') is not none else 0)) %}
     {% set _price_total = (land.get('price_total') if land.get('price_total') is not none else land.get('price')) %}
@@ -491,5 +498,24 @@
     window.openFullscreen = openFullscreen;
     window.closeFullscreen = closeFullscreen;
     window.toast = toast;
+
+    // Delegate clicks for fullscreen from images
+    document.addEventListener('click', function(e){
+      const target = e.target;
+      if (target && target.matches('img[data-fs-src]')){
+        openFullscreen(target.getAttribute('data-fs-src'));
+      }
+    });
+
+    // Bind share button via dataset (avoids complex inline Jinja in JS)
+    (function(){
+      const btn = document.getElementById('shareBtn');
+      if(!btn) return;
+      btn.addEventListener('click', function(){
+        const url = btn.getAttribute('data-share-url') || window.location.href;
+        const title = btn.getAttribute('data-share-title') || document.title;
+        shareLand(url, title);
+      });
+    })();
   </script>
 {% endblock %}

@@ -456,6 +456,10 @@ def dashboard():
         active_users = 0
     pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
     open_reports = [r for r in (load_reports() or []) if isinstance(r, dict) and r.get('status') in (None, '', 'open')]
+    # شمارش کلی گزارش‌های باز برای نمایش در لبه‌های مختلف پنل
+    all_reports = load_reports() or []
+    open_reports = [r for r in all_reports if isinstance(r, dict) and r.get('status') in (None, '', 'open')]
+
     return render_template(
         'admin/dashboard.html',
         lands_count=len(lands) if isinstance(lands, list) else 0,
