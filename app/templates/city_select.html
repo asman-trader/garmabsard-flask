@@ -216,8 +216,8 @@
   // ذخیره‌سازی
   function setCityStorage(province, city) {
     let label = 'کل ایران';
-    if (province && city) label = `${city}، ${province}`;
-    else if (province && !city) label = `استان ${province}`;
+    if (province && city) label = `${city}`; // فقط شهر نمایش داده شود
+    else if (province && !city) label = `${province}`; // فقط نام استان
 
     try {
       localStorage.setItem(CITY_KEY, label);
