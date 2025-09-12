@@ -9,7 +9,8 @@
 {% macro LandCard(land) -%}
   {% set images = land.get('images') or [] %}
   {% set img = images[0] if images else None %}
-  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}">
+  {% set _city = land.get('city') or (land.get('location') or '').split('-')[0].strip() %}
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}" data-city="{{ _city }}">
     <div class="relative">
       <a href="{{ url_for('main.land_detail', code=land.code) }}">
         {% if img %}
@@ -47,8 +48,15 @@
 <!-- نوار جستجوی سرتاسری زیر هدر (چسبان) -->
 <section class="sticky top-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
   <div class="max-w-6xl mx-auto px-3 py-3">
-    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex gap-2">
-      <div class="relative flex-1">
+    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex flex-wrap gap-2">
+      <input type="hidden" name="city" id="cityHidden" value="{{ request.args.get('city','') }}">
+      <button type="button" id="cityChip"
+              class="h-11 px-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+        <i class="fas fa-map-marker-alt text-green-600"></i>
+        <span id="cityChipLabel">انتخاب شهر</span>
+      </button>
+
+      <div class="relative flex-1 min-w-[220px]">
         <input type="text" name="q" id="searchInput"
                class="w-full h-11 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
                placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..."
@@ -233,6 +241,69 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// همگام‌سازی انتخاب شهر با سِرچ و اعمال روی فرم
+document.addEventListener('DOMContentLoaded', () => {
+  const cityBtn = document.getElementById('cityChip');
+  const cityLabel = document.getElementById('cityChipLabel');
+  const cityHidden = document.getElementById('cityHidden');
+  const form = document.getElementById('search-form');
+
+  function gotoCityPicker() {
+    try {
+      const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
+      url.searchParams.set('next', window.location.href);
+      window.location.href = url.toString();
+    } catch (_) {
+      window.location.href = "{{ url_for('main.city_select') }}";
+    }
+  }
+
+  function setCityUIFromStorage() {
+    let label = '';
+    try {
+      const obj = JSON.parse(localStorage.getItem('vinor_city_obj') || 'null');
+      if (obj && (obj.city || obj.province)) label = obj.city || obj.province || '';
+    } catch(_) {}
+    if (!label) {
+      // fallback به پارامتر آدرس یا کلید قدیمی
+      label = "{{ (request.args.get('city') or '')|trim }}";
+      if (!label) {
+        const saved = (localStorage.getItem('vinor:selectedCity') || '').split(/[‌,،]/).map(s=>s.trim()).filter(Boolean)[0] || '';
+        label = saved;
+      }
+    }
+
+    if (label) {
+      if (cityLabel) cityLabel.textContent = label;
+      if (cityHidden && cityHidden.value !== label) cityHidden.value = label;
+      cityBtn?.classList.add('border-green-500');
+    } else {
+      if (cityLabel) cityLabel.textContent = 'انتخاب شهر';
+      if (cityHidden) cityHidden.value = '';
+      cityBtn?.classList.remove('border-green-500');
+    }
+  }
+
+  if (cityBtn) {
+    cityBtn.addEventListener('click', (e) => { e.preventDefault(); gotoCityPicker(); });
+  }
+
+  setCityUIFromStorage();
+
+  // اگر city در کوئری نبود ولی در storage موجود بود، فرم را برای اعمال فیلتر ارسال کن
+  try {
+    const qsHasCity = !!("{{ (request.args.get('city') or '')|trim }}");
+    if (!qsHasCity && cityHidden && cityHidden.value) {
+      form?.submit();
+    }
+  } catch(_) {}
+
+  document.addEventListener('vinor:city-changed', () => {
+    setCityUIFromStorage();
+    form?.submit();
+  });
+});
+
 /* =============== تاریخچه جستجو (LocalStorage) =============== */
 function storeSearchQuery(q) {
   q = (q || "").trim();
@@ -287,7 +358,7 @@ renderSearchHistory();
 /* =============== پاک کردن فیلترها =============== */
 function clearAllFilters() {
   const form = document.getElementById('search-form');
-  const keep = ['sort']; // اگر خواستی سورت حفظ بشه
+  const keep = ['sort','city']; // شهر انتخاب‌شده حفظ شود
   [...form.querySelectorAll('input[type="text"], input[type="number"]')].forEach(inp => inp.value = '');
   form.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
 

@@ -23,34 +23,47 @@
     </button>
   </div>
 
-  <!-- Province & City selectors -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <!-- Selected summary chips -->
+  <section class="mb-3">
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-      <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">استان</label>
-      <select id="provinceSelect"
-              class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                     dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
-        <option value="">— انتخاب استان —</option>
-      </select>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-      <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">شهر</label>
-      <select id="citySelect" disabled
-              class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                     dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
-        <option value="">— ابتدا استان را انتخاب کنید —</option>
-      </select>
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-sm text-gray-600 dark:text-gray-300">مناطق انتخاب‌شده</label>
+        <button id="clearSelections" class="text-xs text-red-600 hover:underline">حذف همه</button>
+      </div>
+      <div id="selectedChips" class="flex flex-wrap gap-2"></div>
     </div>
   </section>
 
-  <!-- Search in cities of selected province -->
-  <div class="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-    <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">جستجوی شهر در استان انتخاب‌شده</label>
-    <input id="citySearch" type="text" placeholder="مثلاً دماوند، رودهن، لواسان..."
-           class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                  dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
-  </div>
+  <!-- Province & City selectors (Divar-style) -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <!-- Provinces column -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-0 shadow overflow-hidden">
+      <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">استان‌ها</div>
+      <ul id="provinceList" class="max-h-96 overflow-auto divide-y divide-gray-100 dark:divide-gray-700">
+        <!-- با اسکریپت پر می‌شود -->
+      </ul>
+    </div>
+
+    <!-- Cities column -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-0 shadow overflow-hidden">
+      <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
+        <span class="text-sm text-gray-600 dark:text-gray-300">شهرها</span>
+        <input id="citySearch" type="text" placeholder="جستجوی شهر در استان فعال"
+               class="w-44 sm:w-56 rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1.5 text-sm dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
+      </div>
+      <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+        <label class="inline-flex items-center gap-2 text-xs">
+          <input id="toggleAllInProvince" type="checkbox" class="rounded border-gray-300 dark:border-gray-700">
+          انتخاب همه شهرهای این استان
+        </label>
+      </div>
+      <ul id="cityList" class="max-h-96 overflow-auto divide-y divide-gray-100 dark:divide-gray-700">
+        <!-- با اسکریپت پر می‌شود -->
+      </ul>
+    </div>
+  </section>
+
+  
 
   <!-- Suggested chips -->
   <section class="mt-4">
@@ -63,13 +76,7 @@
     </div>
   </section>
 
-  <!-- Results -->
-  <section class="mt-4">
-    <ul id="cityResults"
-        class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-      <!-- با اسکریپت پر می‌شود -->
-    </ul>
-  </section>
+  
 
   <!-- Actions -->
   <div class="mt-4 flex items-center justify-between">
@@ -96,21 +103,25 @@
 <script>
 (function() {
   // 🔁 هماهنگ با کل پروژه:
-  const CITY_KEY = 'vinor_city';               // لیبل قابل نمایش (مثلاً «دماوند، تهران» یا «کل ایران»)
-  const CITY_OBJ_KEY = 'vinor_city_obj';       // آبجکت {province, city}
-  const CITY_SYNC_KEY = 'vinor_city_sync';     // برای تریگر تغییرات بین تب‌ها
-  const EVT_NAME = 'vinor:city-changed';       // رویداد سفارشی پروژه
+  const CITY_KEY = 'vinor_city';               // لیبل قابل نمایش (single)
+  const CITY_OBJ_KEY = 'vinor_city_obj';       // آبجکت {province, city} (single)
+  const CITY_SYNC_KEY = 'vinor_city_sync';     // برای تریگر تغییرات بین تب‌ها (single)
+  const EVT_NAME = 'vinor:city-changed';       // رویداد سفارشی پروژه (single)
+  const CITY_MULTI_KEY = 'vinor_cities';       // آرایه‌ای از {province, city}
+  const EVT_MULTI = 'vinor:city-multi-changed';
 
-  const provinceSelect = document.getElementById('provinceSelect');
-  const citySelect = document.getElementById('citySelect');
+  const provinceList = document.getElementById('provinceList');
+  const cityList = document.getElementById('cityList');
   const citySearch = document.getElementById('citySearch');
-  const cityResults = document.getElementById('cityResults');
   const saveBtn = document.getElementById('saveBtn');
   const clearBtn = document.getElementById('clearCity');
   const rememberCheck = document.getElementById('rememberCheck');
   const btnAllIran = document.getElementById('btnAllIran');
   const btnBack = document.getElementById('btnBack');
   const cancelBtn = document.getElementById('cancelBtn');
+  const selectedChips = document.getElementById('selectedChips');
+  const clearSelections = document.getElementById('clearSelections');
+  const toggleAllInProvince = document.getElementById('toggleAllInProvince');
 
   // برگشت امن به صفحه‌ی قبلی (اگر referrer معتبر باشد)
   function goBackSafely(fallbackUrl) {
@@ -139,7 +150,9 @@
   ];
 
   let DATA = [];
+  let activeProvince = '';
   let currentCities = [];
+  let selected = new Map(); // key: province -> Set of cities ('' means whole province)
 
   async function loadData() {
     try {
@@ -156,181 +169,253 @@
   }
 
   function populateProvinces() {
-    provinceSelect.innerHTML = '<option value="">— انتخاب استان —</option>';
+    provinceList.innerHTML = '';
     const provinces = DATA.map(d => d.province).sort((a,b)=>a.localeCompare(b,'fa'));
     for (const p of provinces) {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      provinceSelect.appendChild(opt);
-    }
-  }
-
-  function populateCities(province) {
-    citySelect.disabled = true;
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    currentCities = [];
-    if (!province) { renderResults(citySearch.value); return; }
-
-    const row = DATA.find(d => d.province === province);
-    if (!row) { renderResults(citySearch.value); return; }
-    currentCities = (row.cities || []).slice().sort((a,b)=>a.localeCompare(b,'fa'));
-
-    citySelect.disabled = false;
-    citySelect.innerHTML = '<option value="">— انتخاب شهر —</option>';
-    for (const c of currentCities) {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      citySelect.appendChild(opt);
-    }
-    renderResults(citySearch.value);
-  }
-
-  function renderResults(query) {
-    const q = (query || '').trim().toLowerCase();
-    let items = currentCities.slice();
-    if (q) items = items.filter(x => x.toLowerCase().includes(q));
-    if (!provinceSelect.value) items = [];
-
-    cityResults.innerHTML = '';
-    items.slice(0, 200).forEach(name => {
       const li = document.createElement('li');
-      li.className = 'flex items-center justify-between px-3 py-2 hover:bg-green-50 dark:hover:bg-green-800 cursor-pointer';
+      li.className = 'flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-800';
       li.innerHTML = `
-        <div class="flex items-center gap-2">
-          <i class="fas fa-map-marker-alt text-green-600"></i>
-          <span class="text-sm">${name}</span>
-        </div>
-        <i class="fas fa-check text-green-600 opacity-0 select-check"></i>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" class="province-check rounded border-gray-300 dark:border-gray-700" data-province="${p}">
+          <span>${p}</span>
+        </label>
+        <i class="fas fa-chevron-left text-gray-400"></i>
       `;
-      li.addEventListener('click', () => {
-        citySelect.value = name;
-        document.querySelectorAll('.select-check').forEach(i => i.classList.add('opacity-0'));
-        li.querySelector('.select-check').classList.remove('opacity-0');
+      li.addEventListener('click', (e) => {
+        if (!(e.target instanceof HTMLInputElement)) {
+          setActiveProvince(p);
+        }
       });
-      cityResults.appendChild(li);
-    });
+      provinceList.appendChild(li);
+    }
+  }
+
+  function setActiveProvince(province) {
+    activeProvince = province;
+    const row = DATA.find(d => d.province === province);
+    currentCities = row ? (row.cities || []).slice().sort((a,b)=>a.localeCompare(b,'fa')) : [];
+    renderCityList();
+  }
+
+  function renderCityList() {
+    const q = (citySearch.value || '').trim().toLowerCase();
+    const items = q ? currentCities.filter(x => x.toLowerCase().includes(q)) : currentCities.slice();
+    const selSet = selected.get(activeProvince) || new Set();
+    cityList.innerHTML = '';
+    for (const name of items) {
+      const li = document.createElement('li');
+      li.className = 'px-3 py-2 hover:bg-green-50 dark:hover:bg-green-800';
+      li.innerHTML = `
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" class="city-check rounded border-gray-300 dark:border-gray-700" data-city="${name}" ${selSet.has(name)?'checked':''}>
+          <span>${name}</span>
+        </label>
+      `;
+      const cb = li.querySelector('input');
+      cb.addEventListener('change', (e) => {
+        toggleCity(activeProvince, name, cb.checked);
+      });
+      cityList.appendChild(li);
+    }
+    updateToggleAllState();
+  }
+
+  function updateToggleAllState() {
+    if (!toggleAllInProvince) return;
+    const selSet = selected.get(activeProvince) || new Set();
+    const allCount = currentCities.length;
+    const checkedCount = [...selSet].filter(c => currentCities.includes(c)).length;
+    toggleAllInProvince.checked = allCount > 0 && checkedCount === allCount;
+    toggleAllInProvince.indeterminate = checkedCount > 0 && checkedCount < allCount;
   }
 
   // ذخیره‌سازی
-  function setCityStorage(province, city) {
-    let label = 'کل ایران';
-    if (province && city) label = `${city}`; // فقط شهر نمایش داده شود
-    else if (province && !city) label = `${province}`; // فقط نام استان
-
-    try {
-      localStorage.setItem(CITY_KEY, label);
-      localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province: province || '', city: city || '' }));
-      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province, cityName: city || '' } }));
-      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString()); // sync ping
-    } catch (_) {}
+  function setSingleStorageFromMulti() {
+    // سازگاری: اگر فقط یکی انتخاب شده باشد، کلیدهای single را نیز بروز کن
+    const list = getSelectedList();
+    if (list.length === 1) {
+      const only = list[0];
+      const label = only.city || only.province || 'کل ایران';
+      try {
+        localStorage.setItem(CITY_KEY, label);
+        localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province: only.province || '', city: only.city || '' }));
+        document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province: only.province || '', cityName: only.city || '' } }));
+        localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
+      } catch(_) {}
+    } else if (list.length === 0) {
+      try {
+        localStorage.removeItem(CITY_KEY);
+        localStorage.removeItem(CITY_OBJ_KEY);
+        document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: '', province: '', cityName: '' } }));
+        localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
+      } catch(_) {}
+    }
   }
 
-  function clearCityStorage() {
+  function saveMultiToStorage() {
+    const list = getSelectedList();
     try {
-      localStorage.removeItem(CITY_KEY);
-      localStorage.removeItem(CITY_OBJ_KEY);
-      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: '', province: '', cityName: '' } }));
-      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
-    } catch (_) {}
+      localStorage.setItem(CITY_MULTI_KEY, JSON.stringify(list));
+      document.dispatchEvent(new CustomEvent(EVT_MULTI, { detail: { items: list } }));
+    } catch(_) {}
+    setSingleStorageFromMulti();
+  }
+
+  function clearAllSelections() {
+    selected.clear();
+    saveMultiToStorage();
+    renderCityList();
+    renderSelectedChips();
+    updateToggleAllState();
   }
 
   function initFromStorage() {
+    // اولویت: چندگانه
     try {
-      const raw = localStorage.getItem(CITY_OBJ_KEY);
-      if (!raw) return;
-      const obj = JSON.parse(raw);
-      if (obj && obj.province) {
-        provinceSelect.value = obj.province;
-        populateCities(obj.province);
-        if (obj.city) citySelect.value = obj.city;
+      const arr = JSON.parse(localStorage.getItem(CITY_MULTI_KEY) || '[]');
+      if (Array.isArray(arr)) {
+        selected.clear();
+        for (const it of arr) {
+          if (!it || !it.province) continue;
+          const set = selected.get(it.province) || new Set();
+          if (it.city) set.add(it.city); else set.add('');
+          selected.set(it.province, set);
+        }
       }
-    } catch (_) {}
+    } catch(_) {}
+
+    // اگر خالی بود، از single پر کن
+    if (selected.size === 0) {
+      try {
+        const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || 'null');
+        if (obj && (obj.province || obj.city)) {
+          const set = new Set();
+          if (obj.city) set.add(obj.city); else set.add('');
+          selected.set(obj.province || '', set);
+        }
+      } catch(_) {}
+    }
+    // پیش‌فرض: استان اول لیست را فعال کن
+    const firstProvince = (DATA[0] && DATA[0].province) || '';
+    setActiveProvince(firstProvince);
+    renderSelectedChips();
   }
 
   // رویدادها
-  provinceSelect.addEventListener('change', () => {
-    citySearch.value = '';
-    populateCities(provinceSelect.value);
+  citySearch.addEventListener('input', () => renderCityList());
+  toggleAllInProvince.addEventListener('change', (e) => {
+    if (!activeProvince) return;
+    const all = new Set(currentCities);
+    selected.set(activeProvince, e.target.checked ? all : new Set());
+    renderCityList();
+    renderSelectedChips();
+    saveMultiToStorage();
   });
-  citySearch.addEventListener('input', () => renderResults(citySearch.value));
 
   // چیپ‌ها (از جمله «کل ایران»)
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const name = chip.getAttribute('data-chip') || chip.textContent.trim();
       if (name === 'کل ایران') {
-        provinceSelect.value = '';
-        citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-        citySelect.disabled = true;
-        citySearch.value = '';
-        cityResults.innerHTML = '';
-        if (rememberCheck.checked) setCityStorage('', '');
-        else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+        clearAllSelections();
+        saveMultiToStorage();
         goBackSafely("{{ url_for('main.index') }}");
         return;
       }
       // جستجو در کل دیتا برای پیدا کردن استان/شهر
-      if (provinceSelect.value && currentCities.includes(name)) {
-        citySelect.value = name; renderResults(name); return;
-      }
       for (const row of DATA) {
         if (row.cities && row.cities.includes(name)) {
-          provinceSelect.value = row.province;
-          populateCities(row.province);
-          citySelect.value = name;
-          renderResults(name);
+          setActiveProvince(row.province);
+          toggleCity(row.province, name, true);
+          renderSelectedChips();
+          saveMultiToStorage();
           return;
         }
       }
       const asProvince = DATA.find(d => d.province === name);
       if (asProvince) {
-        provinceSelect.value = asProvince.province;
-        populateCities(asProvince.province);
+        setActiveProvince(asProvince.province);
+        toggleProvince(asProvince.province, true);
+        renderSelectedChips();
+        saveMultiToStorage();
       }
     });
   });
 
   btnAllIran.addEventListener('click', (e) => {
     e.preventDefault();
-    provinceSelect.value = '';
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    citySelect.disabled = true;
-    citySearch.value = '';
-    cityResults.innerHTML = '';
-    if (rememberCheck.checked) setCityStorage('', '');
-    else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+    clearAllSelections();
+    saveMultiToStorage();
     goBackSafely("{{ url_for('main.index') }}");
   });
 
   saveBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    const p = provinceSelect.value || '';
-    const c = citySelect.value || '';
-    if (!p && !c) {
-      if (rememberCheck.checked) setCityStorage('', '');
-      else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
-      goBackSafely("{{ url_for('main.index') }}");
-      return;
-    }
-    if (rememberCheck.checked) setCityStorage(p, c);
-    else {
-      const label = c ? `${c}، ${p}` : `استان ${p}`;
-      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province: p, cityName: c } }));
-    }
+    saveMultiToStorage();
     goBackSafely("{{ url_for('main.index') }}");
   });
 
   clearBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    clearCityStorage();
-    provinceSelect.value = '';
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    citySelect.disabled = true;
-    citySearch.value = '';
-    cityResults.innerHTML = '';
+    clearAllSelections();
+    saveMultiToStorage();
   });
+
+  // helpers: selection
+  function toggleProvince(province, checked) {
+    if (!province) return;
+    if (checked) {
+      selected.set(province, new Set()); // علامت‌گذاری استان (بدون شهر = کل استان)
+    } else {
+      selected.delete(province);
+    }
+    renderCityList();
+  }
+
+  function toggleCity(province, city, checked) {
+    if (!province || !city) return;
+    const set = selected.get(province) || new Set();
+    if (checked) set.add(city); else set.delete(city);
+    selected.set(province, set);
+    renderSelectedChips();
+    updateToggleAllState();
+  }
+
+  function getSelectedList() {
+    const out = [];
+    for (const [p, set] of selected.entries()) {
+      if (set.size === 0 || set.has('')) {
+        out.push({ province: p, city: '' });
+        continue;
+      }
+      for (const c of set) out.push({ province: p, city: c });
+    }
+    return out;
+  }
+
+  function renderSelectedChips() {
+    selectedChips.innerHTML = '';
+    const list = getSelectedList();
+    if (list.length === 0) {
+      selectedChips.innerHTML = '<span class="text-xs text-gray-400">هیچ موردی انتخاب نشده.</span>';
+      return;
+    }
+    for (const it of list) {
+      const label = it.city || `استان ${it.province}`;
+      const chip = document.createElement('span');
+      chip.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border border-gray-300 dark:border-gray-700';
+      chip.innerHTML = `${label} <button class="text-red-500" title="حذف">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        if (it.city) toggleCity(it.province, it.city, false); else selected.delete(it.province);
+        renderSelectedChips();
+        renderCityList();
+        saveMultiToStorage();
+      });
+      selectedChips.appendChild(chip);
+    }
+  }
+
+  clearSelections.addEventListener('click', (e) => { e.preventDefault(); clearAllSelections(); });
 
   // شروع
   loadData();
