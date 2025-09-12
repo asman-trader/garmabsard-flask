@@ -21,8 +21,9 @@
         <label class="sr-only" for="q">جستجو</label>
         <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
           <!-- City selector (persisted) -->
-          <input id="city" name="city" list="cities" placeholder="شهر"
-                 class="w-28 sm:w-40 px-3 py-2 text-sm sm:text-base bg-white/20 text-white placeholder-white/80 focus:outline-none">
+          <input id="city" name="city" list="cities" placeholder="انتخاب شهر"
+                 readonly
+                 class="w-28 sm:w-40 px-3 py-2 text-sm sm:text-base bg-white/20 text-white placeholder-white/80 focus:outline-none cursor-pointer select-none">
           <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
                  class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
           <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
@@ -63,8 +64,9 @@
   {% for land in lands %}
     {% set images = land.get('images') or [] %}
     {% set img = images[0] if images else None %}
+    {% set _city = land.get('city') or (land.get('location') or '').split('-')[0].strip() %}
 
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}" data-city="{{ _city }}">
 
       <!-- تصویر اصلی -->
       <div class="relative">
@@ -108,16 +110,67 @@
 <!-- اسکریپت علاقه‌مندی -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Persist selected city in localStorage and prefill on load
+    // Persist selected city/cities and filter cards live
     try {
       const cityInput = document.getElementById('city');
+      const gotoCityPicker = () => {
+        try {
+          const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
+          url.searchParams.set('next', window.location.href);
+          window.location.href = url.toString();
+        } catch (_) {
+          window.location.href = "{{ url_for('main.city_select') }}";
+        }
+      };
+      const applyCityFilter = () => {
+        const raw = (cityInput?.value || '').trim();
+        const tokens = raw ? raw.split(/[‌,،]/).map(s => s.trim()).filter(Boolean) : [];
+        const selected = new Set(tokens.map(t => t.toLowerCase()));
+        document.querySelectorAll('.land-card').forEach(card => {
+          const c = (card.getAttribute('data-city') || '').toLowerCase();
+          const show = selected.size === 0 || selected.has(c);
+          card.style.display = show ? '' : 'none';
+        });
+      };
+
       if (cityInput){
-        const saved = localStorage.getItem('vinor:selectedCity') || '';
-        if (saved && !cityInput.value) cityInput.value = saved;
+        // Prefill from global city picker (if available), else our local key
+        let initLabel = '';
+        try {
+          const obj = JSON.parse(localStorage.getItem('vinor_city_obj') || 'null');
+          if (obj && (obj.city || obj.province)) initLabel = obj.city || obj.province || '';
+        } catch(_) {}
+        if (!initLabel) initLabel = localStorage.getItem('vinor:selectedCity') || '';
+        if (initLabel && !cityInput.value) cityInput.value = initLabel;
+
+        // Navigate to city selection on click/focus
+        cityInput.addEventListener('click', (e) => { e.preventDefault(); gotoCityPicker(); });
+        cityInput.addEventListener('focus', (e) => { e.preventDefault(); gotoCityPicker(); });
+
+        cityInput.addEventListener('input', () => {
+          localStorage.setItem('vinor:selectedCity', cityInput.value || '');
+          applyCityFilter();
+        });
         cityInput.addEventListener('change', () => {
           localStorage.setItem('vinor:selectedCity', cityInput.value || '');
+          applyCityFilter();
         });
+        // Apply on load
+        applyCityFilter();
       }
+
+      // React to global city changes from city_select
+      document.addEventListener('vinor:city-changed', (e) => {
+        try {
+          const detail = e.detail || {};
+          const label = (detail.cityName || detail.city || '').trim();
+          if (cityInput && label) {
+            cityInput.value = label;
+            localStorage.setItem('vinor:selectedCity', label);
+            applyCityFilter();
+          }
+        } catch(_) {}
+      });
     } catch (e) {}
 
     // ذخیره فهرست فعلی آگهی‌ها برای استفاده صفحه علاقه‌مندی‌ها (خواندن از اسکریپت JSON)
