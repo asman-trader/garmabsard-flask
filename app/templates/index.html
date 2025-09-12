@@ -20,12 +20,28 @@
       <form action="{{ url_for('main.search_page') }}" method="get" class="sm:col-span-3">
         <label class="sr-only" for="q">جستجو</label>
         <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
+          <!-- City selector (persisted) -->
+          <input id="city" name="city" list="cities" placeholder="شهر"
+                 class="w-28 sm:w-40 px-3 py-2 text-sm sm:text-base bg-white/20 text-white placeholder-white/80 focus:outline-none">
           <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
                  class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
           <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
             <i class="fas fa-search"></i>
           </button>
         </div>
+        {# Datalist of cities derived from current lands #}
+        {% set _cities = [] %}
+        {% for l in lands %}
+          {% set _c = l.get('city') or (l.get('location') or '').split('-')[0].strip() %}
+          {% if _c and (_c not in _cities) %}
+            {% set _ = _cities.append(_c) %}
+          {% endif %}
+        {% endfor %}
+        <datalist id="cities">
+          {% for c in _cities %}
+            <option value="{{ c }}"></option>
+          {% endfor %}
+        </datalist>
       </form>
       <div class="sm:col-span-2 grid grid-cols-3 gap-2">
         <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
@@ -86,11 +102,33 @@
   {% endfor %}
 </main>
 
+<!-- Lands JSON (for client features like favorites) -->
+<script id="lands-json" type="application/json">{{ lands | tojson }}</script>
+
 <!-- اسکریپت علاقه‌مندی -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // ذخیره فهرست فعلی آگهی‌ها برای استفاده صفحه علاقه‌مندی‌ها
-    try { localStorage.setItem("allLandsData", JSON.stringify({{ lands | tojson }})); } catch (e) {}
+    // Persist selected city in localStorage and prefill on load
+    try {
+      const cityInput = document.getElementById('city');
+      if (cityInput){
+        const saved = localStorage.getItem('vinor:selectedCity') || '';
+        if (saved && !cityInput.value) cityInput.value = saved;
+        cityInput.addEventListener('change', () => {
+          localStorage.setItem('vinor:selectedCity', cityInput.value || '');
+        });
+      }
+    } catch (e) {}
+
+    // ذخیره فهرست فعلی آگهی‌ها برای استفاده صفحه علاقه‌مندی‌ها (خواندن از اسکریپت JSON)
+    try {
+      const landsJsonEl = document.getElementById('lands-json');
+      if (landsJsonEl) {
+        const txt = landsJsonEl.textContent || '[]';
+        // نگهداری به صورت رشته JSON برای کاهش تبدیل‌ها
+        localStorage.setItem('allLandsData', txt);
+      }
+    } catch (e) {}
 
     const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
 

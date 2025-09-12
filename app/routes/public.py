@@ -245,6 +245,7 @@ def search_page():
     """
     # ورودی‌ها
     q = (request.args.get("q") or "").strip().lower()
+    city_param = (request.args.get("city") or "").strip().lower()
     category = (request.args.get("category") or "").strip()
     if category not in CATEGORY_MAP:
         category = ""
@@ -268,6 +269,15 @@ def search_page():
     results = all_pool
     if category:
         results = [ad for ad in results if (ad.get("category", "") == category)]
+    if city_param:
+        def _city_of(ad):
+            c1 = (ad.get("city") or "").strip().lower()
+            if c1:
+                return c1
+            loc = (ad.get("location") or "").strip().lower()
+            # allow formats like "تهران - ..."
+            return loc.split("-")[0].strip() if loc else ""
+        results = [ad for ad in results if _city_of(ad) == city_param]
     if min_price is not None:
         results = [ad for ad in results if _to_int(ad.get("price_total"), 0) >= min_price]
     if max_price is not None:
