@@ -171,7 +171,19 @@
       <span>ثبت ملک جدید</span>
     </a>
 
-    
+    <!-- گزارش‌های کاربران -->
+    <a href="{{ url_for('admin.reports_list') }}"
+       class="flex items-center justify-between px-2 py-2 rounded-md transition
+              {% if _endpoint == 'admin.reports_list' %}
+                bg-vinor-600 text-white shadow
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
+              {% endif %}">
+      <span class="flex items-center gap-2">
+        <i class="fa-solid fa-flag"></i>
+        گزارش‌های کاربران
+      </span>
+    </a>
 
     <!-- تنظیمات سایت -->
     <a href="{{ url_for('admin.settings') }}"

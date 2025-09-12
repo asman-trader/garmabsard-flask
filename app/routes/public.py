@@ -10,7 +10,7 @@ from flask import (
 )
 
 from . import main_bp
-from ..utils.storage import data_dir, legacy_dir, load_ads_cached
+from ..utils.storage import data_dir, legacy_dir, load_ads_cached, load_reports, save_reports
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_MAP
 
@@ -152,6 +152,44 @@ def land_detail(code):
         "land_detail.html",
         land=land,
         CATEGORY_MAP=CATEGORY_MAP,
+        brand="وینور",
+        domain="vinor.ir",
+    )
+
+@main_bp.route("/report/<code>", methods=["GET", "POST"], endpoint="report_ad")
+def report_ad(code):
+    """
+    گزارش آگهی توسط کاربر: ذخیره در reports.json واقع در instance/data
+    ساختار هر گزارش: { id, code, reason, details, created_at, status }
+    """
+    ad = _find_by_code(code)
+    if not ad:
+        abort(404, description="آگهی یافت نشد")
+
+    if request.method == "POST":
+        reason = (request.form.get("reason") or "").strip()
+        details = (request.form.get("details") or "").strip()
+
+        items = load_reports()
+        if not isinstance(items, list):
+            items = []
+        new_id = (max([x.get("id", 0) for x in items], default=0) or 0) + 1
+        rec = {
+            "id": new_id,
+            "code": str(code),
+            "reason": reason or "unspecified",
+            "details": details,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "status": "open",
+        }
+        items.append(rec)
+        save_reports(items)
+        return redirect(url_for("main.land_detail", code=code))
+
+    return render_template(
+        "report_ad.html",
+        land=ad,
+        code=code,
         brand="وینور",
         domain="vinor.ir",
     )
@@ -346,6 +384,20 @@ def faq():
     """
     return render_template(
         "main/faq.html",
+        brand="وینور",
+        domain="vinor.ir",
+        current_year=datetime.now().year,
+    )
+
+# --- Buying Guides ---
+@main_bp.route("/guide/safe-buy", endpoint="buy_safe")
+@main_bp.route("/راهنمای-خرید-امن")
+def buy_safe():
+    """
+    صفحهٔ راهنمای خرید امن در وینور
+    """
+    return render_template(
+        "main/buy_safe.html",
         brand="وینور",
         domain="vinor.ir",
         current_year=datetime.now().year,

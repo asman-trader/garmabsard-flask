@@ -29,7 +29,7 @@ except Exception:
 # -----------------------------------------------------------------------------
 from app.services.notifications import add_notification
 from app.services.sms import send_sms_template
-from app.utils.storage import load_users
+from app.utils.storage import load_users, load_reports, save_reports
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
     """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
@@ -455,6 +455,7 @@ def dashboard():
         verified_users = verified_users or 0
         active_users = 0
     pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
+    open_reports = [r for r in (load_reports() or []) if isinstance(r, dict) and r.get('status') in (None, '', 'open')]
     return render_template(
         'admin/dashboard.html',
         lands_count=len(lands) if isinstance(lands, list) else 0,
@@ -465,7 +466,8 @@ def dashboard():
         verified_users=verified_users,
         pending_count=pending_count,
         approved_count=approved_count,
-        rejected_count=rejected_count
+        rejected_count=rejected_count,
+        reports_open_count=len(open_reports or [])
     )
 
 @admin_bp.route('/users')
@@ -665,6 +667,49 @@ def rejected_lands():
         pagination={"page": pagination["page"], "pages": pagination["pages"]},
         pending_count=p, approved_count=a, rejected_count=r
     )
+
+# -----------------------------------------------------------------------------
+# گزارش‌های کاربران (Reported Ads)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/reports')
+@login_required
+def reports_list():
+    items = load_reports() or []
+    if not isinstance(items, list):
+        items = []
+    # تازه‌ترین بالا
+    try:
+        items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    except Exception:
+        pass
+    page = int(request.args.get('page', 1) or 1)
+    per_page = int(request.args.get('per_page', 20) or 20)
+    pagination = paginate(items, page, per_page)
+    return render_template(
+        'admin/reports.html',
+        reports=pagination['items'],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]}
+    )
+
+@admin_bp.post('/reports/<int:rid>/resolve')
+@login_required
+def report_resolve(rid: int):
+    items = load_reports() or []
+    if not isinstance(items, list):
+        items = []
+    changed = False
+    for r in items:
+        try:
+            if int(r.get('id', 0)) == int(rid):
+                r['status'] = 'resolved'
+                r['resolved_at'] = iso_z(utcnow())
+                changed = True
+                break
+        except Exception:
+            continue
+    if changed:
+        save_reports(items)
+    return redirect(url_for('admin.reports_list'))
 
 # -----------------------------------------------------------------------------
 # مشاهده آگهی

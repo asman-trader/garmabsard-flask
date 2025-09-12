@@ -57,7 +57,7 @@ def migrate_legacy(app=None):
     inst = data_dir(app)
     legacy = legacy_dir(app)
     try:
-        for name in ('lands.json','users.json','consults.json','settings.json','notifications.json'):
+        for name in ('lands.json','users.json','consults.json','settings.json','notifications.json','reports.json'):
             old, new = os.path.join(legacy, name), os.path.join(inst, name)
             if os.path.exists(old) and not os.path.exists(new):
                 try: shutil.copy2(old, new)
@@ -135,3 +135,7 @@ def load_settings(app=None):  return _load(ensure_file('SETTINGS_FILE','settings
 
 def load_notifications(app=None):        return _load(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app))
 def save_notifications(items, app=None): return _save(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app), items)
+
+# Reports (user-reported ads)
+def load_reports(app=None):        return _load(ensure_file('REPORTS_FILE','reports.json',[],app))
+def save_reports(items, app=None): return _save(ensure_file('REPORTS_FILE','reports.json',[],app), items)

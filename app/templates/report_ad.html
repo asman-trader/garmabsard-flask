@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set _title = "گزارش این آگهی | وینور" %}
+{% block title %}{{ _title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-slate-900">
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b dark:border-slate-700">
+    <div class="max-w-4xl mx-auto px-3 py-3 flex items-center justify-between">
+      <a href="{{ url_for('main.land_detail', code=code) }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="بازگشت">
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+      <h1 class="text-base font-bold">گزارش این آگهی</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-3 py-4">
+    <form method="post" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 space-y-4">
+      <div class="text-sm text-gray-600 dark:text-gray-300">
+        <div class="font-bold mb-1">آگهی: {{ land.get('title') or code }}</div>
+        <div class="text-xs text-gray-500">کد آگهی: {{ code }}</div>
+      </div>
+
+      <div>
+        <label for="reason" class="block text-sm font-medium mb-1">دلیل گزارش</label>
+        <select id="reason" name="reason" class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 text-sm">
+          <option value="fake">اطلاعات نادرست / جعلی</option>
+          <option value="spam">اسپم / تبلیغاتی</option>
+          <option value="illegal">محتوای غیرقانونی</option>
+          <option value="duplicate">تکراری</option>
+          <option value="other">سایر</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="details" class="block text-sm font-medium mb-1">توضیحات تکمیلی (اختیاری)</label>
+        <textarea id="details" name="details" rows="4" class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 text-sm"></textarea>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="submit" class="px-4 py-2 rounded-lg text-sm bg-rose-600 hover:bg-rose-700 text-white">ارسال گزارش</button>
+        <a href="{{ url_for('main.land_detail', code=code) }}" class="px-4 py-2 rounded-lg text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600">انصراف</a>
+      </div>
+    </form>
+  </main>
+</div>
+{% endblock %}
+
+{% block floating_action %}{% endblock %}
+

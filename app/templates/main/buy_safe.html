@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set _title = "راهنمای خرید امن | وینور" %}
+{% block title %}{{ _title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-slate-900">
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b dark:border-slate-700">
+    <div class="max-w-4xl mx-auto px-3 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('main.app_home') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="خانه">
+          <i class="fa-solid fa-house"></i>
+        </a>
+        <h1 class="text-base font-bold">راهنمای خرید امن</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-3 py-4">
+    <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+      <h2 class="font-bold text-lg mb-3">پیش از معامله</h2>
+      <ul class="list-disc pr-5 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        <li>بررسی اصالت سند، پایان‌کار، استعلام از اداره ثبت و شهرداری.</li>
+        <li>بازدید حضوری ملک و مطابقت مشخصات با سند و نقشه.</li>
+        <li>بررسی بدهی‌ها و توقیف‌های احتمالی (وام، رهن، بدهی عوارض).</li>
+      </ul>
+
+      <h2 class="font-bold text-lg mt-5 mb-3">حین معامله</h2>
+      <ul class="list-disc pr-5 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        <li>تنظیم مبایعه‌نامه شفاف با ذکر تمام متعلقات، حدود اربعه و تعهدات.</li>
+        <li>واریز وجه مرحله‌ای و به حساب‌های نام‌برده در قرارداد با رسید رسمی.</li>
+        <li>حضور در دفترخانه و انتقال رسمی سند مطابق مفاد قرارداد.</li>
+      </ul>
+
+      <h2 class="font-bold text-lg mt-5 mb-3">پس از معامله</h2>
+      <ul class="list-disc pr-5 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        <li>دریافت مفاصاحساب‌ها، استعلامات نهایی و مدارک تکمیلی از فروشنده.</li>
+        <li>به‌روزرسانی اطلاعات ثبتی و شهرداری در صورت لزوم.</li>
+      </ul>
+
+      <div class="mt-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm">
+        <strong>تذکر:</strong> وینور صرفاً بستر آگهی است. مسئولیت بررسی و انجام معامله بر عهده طرفین است. در صورت نیاز از مشاور حقوقی استفاده کنید.
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <a href="{{ url_for('main.faq') }}" class="px-3 py-2 rounded-lg text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600">سوالات پرتکرار</a>
+        <a href="{{ url_for('main.app_home') }}" class="px-3 py-2 rounded-lg text-sm bg-emerald-600 hover:bg-emerald-700 text-white">بازگشت به اپ</a>
+      </div>
+    </article>
+  </main>
+</div>
+{% endblock %}
+
+{% block floating_action %}{% endblock %}
+
