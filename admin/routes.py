@@ -28,8 +28,10 @@ except Exception:
 # اعلان‌ها (Vinor Notifications)
 # -----------------------------------------------------------------------------
 from app.services.notifications import add_notification
+from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
 from app.utils.storage import load_users, load_reports, save_reports
+from app.services.notifications import add_notification
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
     """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
@@ -550,6 +552,63 @@ def users_page():
         page=page,
         pages=pages,
     )
+
+# -----------------------------------------------------------------------------
+# ارسال اعلان همگانی به همهٔ کاربران
+# -----------------------------------------------------------------------------
+@admin_bp.route('/notifications/broadcast', methods=['GET', 'POST'])
+@login_required
+def notifications_broadcast():
+    message = None
+    error = None
+    if request.method == 'POST':
+        title = (request.form.get('title') or '').strip()
+        body  = (request.form.get('body') or '').strip()
+        ntype = (request.form.get('type') or 'info').strip() or 'info'
+        # واکشی کاربران
+        try:
+            users = load_users()
+        except Exception:
+            users = []
+        user_ids = []
+        for u in users if isinstance(users, list) else []:
+            uid = str(u.get('id') or u.get('user_id') or u.get('phone') or u.get('mobile') or '').strip()
+            if uid:
+                user_ids.append(uid)
+        if not title or not body:
+            error = 'عنوان و متن اعلان الزامی است.'
+        elif not user_ids:
+            error = 'هیچ کاربری یافت نشد.'
+        else:
+            sent = 0
+            # ثبت اعلان در in-app notifications
+            for uid in user_ids:
+                try:
+                    add_notification(uid, title=title, body=body, ntype=ntype)
+                    sent += 1
+                except Exception:
+                    pass
+
+            # تلاش برای ارسال Web Push با صدا (در کلاینت)
+            try:
+                subs = _load_subs()
+            except Exception:
+                subs = []
+            push_sent = 0
+            payload = {
+                "title": title,
+                "body": body,
+                "icon": "/static/icons/icon-192.png",
+                "badge": "/static/icons/monochrome-192.png",
+                "url": url_for('main.app_home', _external=True),
+                "sound": "/static/sounds/notify.mp3"
+            }
+            for s in subs:
+                res = _send_one(s, payload)
+                if res.get('ok'): push_sent += 1
+            message = f'اعلان برای {sent} کاربر ثبت و {push_sent} پوش ارسال شد.'
+
+    return render_template('admin/broadcast.html', message=message, error=error)
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required

@@ -1,6 +1,6 @@
 {# templates/search.html #}
 {% extends "base.html" %}
-{% set hide_header = False %}
+{% set hide_header = True %}
 {% block title %}جستجوی زمین - سریع و هوشمند{% endblock %}
 
 {% block content %}
@@ -10,7 +10,14 @@
   {% set images = land.get('images') or [] %}
   {% set img = images[0] if images else None %}
   {% set _city = land.get('city') or (land.get('location') or '').split('-')[0].strip() %}
-  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}" data-city="{{ _city }}">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md"
+       data-code="{{ land.code }}"
+       data-city="{{ _city|lower }}"
+       data-title="{{ (land.title or '')|lower }}"
+       data-location="{{ (land.location or '')|lower }}"
+       data-desc="{{ (land.description or '')|lower }}"
+       data-size="{{ land.size or land.area or 0 }}"
+       data-price="{{ land.price_total or land.price or 0 }}">
     <div class="relative">
       <a href="{{ url_for('main.land_detail', code=land.code) }}">
         {% if img %}
@@ -45,137 +52,68 @@
   </div>
 {%- endmacro %}
 
-<!-- نوار جستجوی سرتاسری زیر هدر (چسبان) -->
-<section class="sticky top-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-6xl mx-auto px-3 py-3">
-    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex flex-wrap gap-2">
+<!-- نوار جستجو به سبک تلگرام (موبایل‌محور، چسبان) -->
+<header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+  <div class="max-w-6xl mx-auto px-3 py-2">
+    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex items-center gap-2">
       <input type="hidden" name="city" id="cityHidden" value="{{ request.args.get('city','') }}">
-      <button type="button" id="cityChip"
-              class="h-11 px-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+      <button type="button" onclick="history.back()" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <button type="button" id="cityChip" class="h-10 px-3 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-xs sm:text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
         <i class="fas fa-map-marker-alt text-green-600"></i>
         <span id="cityChipLabel">انتخاب شهر</span>
       </button>
-
-      <div class="relative flex-1 min-w-[220px]">
-        <input type="text" name="q" id="searchInput"
-               class="w-full h-11 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-               placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..."
-               value="{{ request.args.get('q','') }}"
-               oninput="storeSearchQuery(this.value)">
+      <div class="relative flex-1">
+        <input type="text" name="q" id="searchInput" class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..." value="{{ request.args.get('q','') }}" oninput="storeSearchQuery(this.value)">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
-
       <details class="group relative">
-        <summary class="h-11 cursor-pointer select-none flex items-center px-3 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
-          <i class="fas fa-sliders-h mr-2"></i> فیلتر
+        <summary class="w-10 h-10 grid place-items-center rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-gray-700" title="فیلتر">
+          <i class="fas fa-sliders-h"></i>
         </summary>
-        <div class="absolute left-0 mt-2 w-[92vw] sm:w-[520px] p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+        <div class="absolute right-0 mt-2 w-[92vw] sm:w-[520px] p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl">
           <div class="grid grid-cols-2 gap-3 text-sm">
-            <input type="number" inputmode="numeric" name="min_price" placeholder="حداقل قیمت"
-                   value="{{ request.args.get('min_price','') }}"
-                   class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="max_price" placeholder="حداکثر قیمت"
-                   value="{{ request.args.get('max_price','') }}"
-                   class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="min_size" placeholder="حداقل متراژ"
-                   value="{{ request.args.get('min_size','') }}"
-                   class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="max_size" placeholder="حداکثر متراژ"
-                   value="{{ request.args.get('max_size','') }}"
-                   class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+            <input type="number" inputmode="numeric" name="min_price" placeholder="حداقل قیمت" value="{{ request.args.get('min_price','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+            <input type="number" inputmode="numeric" name="max_price" placeholder="حداکثر قیمت" value="{{ request.args.get('max_price','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+            <input type="number" inputmode="numeric" name="min_size" placeholder="حداقل متراژ" value="{{ request.args.get('min_size','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+            <input type="number" inputmode="numeric" name="max_size" placeholder="حداکثر متراژ" value="{{ request.args.get('max_size','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
           </div>
-
           <div class="mt-3 grid grid-cols-2 gap-2">
             <select name="sort" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm">
-              {# sort: newest (default), price_asc, size_desc #}
               {% set s = request.args.get('sort','newest') %}
               <option value="newest" {{ 'selected' if s=='newest' else '' }}>جدیدترین</option>
               <option value="price_asc" {{ 'selected' if s=='price_asc' else '' }}>ارزان‌ترین</option>
               <option value="size_desc" {{ 'selected' if s=='size_desc' else '' }}>بزرگ‌ترین متراژ</option>
             </select>
-
-            <button type="button" onclick="clearAllFilters()"
-                    class="w-full px-3 py-2 rounded-lg border border-red-300/70 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">
-              پاکسازی فیلترها
-            </button>
+            <button type="button" onclick="clearAllFilters()" class="w-full px-3 py-2 rounded-lg border border-red-300/70 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">پاکسازی فیلترها</button>
           </div>
-
           <div class="mt-3 flex gap-2">
-            <button type="submit"
-                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm">
-              اعمال فیلتر
-            </button>
+            <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm">اعمال فیلتر</button>
           </div>
         </div>
       </details>
-
-      <button type="submit"
-              class="h-11 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold">
-        جستجو
-      </button>
+      
     </form>
 
-    <!-- تاریخچه جستجو -->
+    <!-- تاریخچه جستجو (الهام از تلگرام) -->
     <div class="mt-2">
       <div class="flex items-center justify-between">
         <span class="text-xs text-gray-500 dark:text-gray-400">🕓 جستجوهای اخیر</span>
         <button onclick="clearAllHistory()" class="text-[11px] text-red-500 hover:text-red-700">حذف همه</button>
       </div>
-      <div id="search-history" class="mt-1 flex flex-wrap gap-2"></div>
+      <div id="search-history" class="mt-1 flex gap-2 overflow-x-auto no-scrollbar"></div>
     </div>
   </div>
-</section>
+</header>
 
 {# ========================= بدنه صفحه ========================= #}
-<main class="max-w-6xl mx-auto px-3 py-4">
+<main class="max-w-6xl mx-auto px-3 pb-24 pt-3">
 
   {# -------- بخش نتایج جستجو (در صورت داشتن پرس‌وجو) -------- #}
-  {% set has_query = request.args.get('q') or request.args.get('min_price') or request.args.get('max_price') or request.args.get('min_size') or request.args.get('max_size') or request.args.get('sort') %}
-  {% set results = lands if lands is defined else [] %}
-  {% set results_total = results|length %}
-
-  {% if has_query %}
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">
-        نتیجه جستجو {% if results_total>0 %}({{ results_total }}){% endif %}
-      </h2>
-      {% if request.args.get('sort') %}
-        <span class="text-[11px] text-gray-500 dark:text-gray-400">مرتب‌سازی:
-          {{ 'جدیدترین' if request.args.get('sort')=='newest'
-             else 'ارزان‌ترین' if request.args.get('sort')=='price_asc'
-             else 'بزرگ‌ترین متراژ' if request.args.get('sort')=='size_desc'
-             else 'جدیدترین' }}
-        </span>
-      {% endif %}
-    </div>
-
-    {% if results_total == 0 %}
-      <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-sm text-yellow-800 dark:text-yellow-200">
-        نتیجه‌ای پیدا نشد. فیلترها را سبک‌تر کن یا کلمه دیگری امتحان کن.
-      </div>
-    {% else %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="searchResultsGrid">
-        {% for land in results %}
-          {{ LandCard(land) }}
-        {% endfor %}
-      </div>
-
-      {# صفحه‌بندی نتایج جستجو (اختیاری) #}
-      {% if pagination %}
-        <div class="mt-4 mb-10 flex items-center justify-center gap-2">
-          {% if pagination.prev_url %}
-            <a href="{{ pagination.prev_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">قبلی</a>
-          {% endif %}
-          <span class="text-xs text-gray-500 dark:text-gray-400">صفحه {{ pagination.page }} از {{ pagination.pages }}</span>
-          {% if pagination.next_url %}
-            <a href="{{ pagination.next_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">بعدی</a>
-          {% endif %}
-        </div>
-      {% endif %}
-    {% endif %}
-
-    <hr class="my-6 border-gray-200 dark:border-gray-800">
-  {% endif %}
+  {# نتایج زنده: به صورت کلاینتی نمایش و فیلتر می‌شود #}
+  <div id="liveSummary" class="mb-3 text-xs text-gray-500 dark:text-gray-400"></div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="searchResultsGrid"></div>
 
   {# --------- بخش نمایش تمامی آگهی‌ها (همیشه نمایش بده) --------- #}
   {% set all_list = all_lands if all_lands is defined else (lands if not has_query else []) %}
@@ -213,12 +151,31 @@
     {% endif %}
   {% endif %}
 
+<!-- نوار اکشن پایین (موبایل‌محور) -->
+<div class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t border-gray-200 dark:border-gray-800 px-3 py-2 sm:hidden">
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+    <button class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-sm" onclick="clearAllFilters()">پاکسازی فیلترها</button>
+    <a href="{{ url_for('main.city_select') }}" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-sm flex items-center gap-2">
+      <i class="fas fa-map-marker-alt text-green-600"></i>
+      تغییر شهر
+    </a>
+    <button class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-bold" onclick="document.getElementById('search-form')?.submit()">اعمال</button>
+  </div>
+</div>
+
+<!-- JSON for lands (safe embed) -->
+<script id="lands-json" type="application/json">{{ (lands or []) | tojson }}</script>
+
 </main>
 
 <script>
 // اسکریپت علاقه‌مندی مشابه صفحه اصلی
 document.addEventListener("DOMContentLoaded", () => {
-  try { localStorage.setItem("allLandsData", JSON.stringify({{ (lands or []) | tojson }})); } catch (e) {}
+  try {
+    const el = document.getElementById('lands-json');
+    const txt = (el && el.textContent) ? el.textContent : '[]';
+    localStorage.setItem('allLandsData', txt);
+  } catch (e) {}
   const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
   document.querySelectorAll(".land-card").forEach(card => {
     const code = card.dataset.code;
@@ -259,23 +216,44 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setCityUIFromStorage() {
-    let label = '';
+    let display = '';
+    let hiddenVal = '';
     try {
       const obj = JSON.parse(localStorage.getItem('vinor_city_obj') || 'null');
-      if (obj && (obj.city || obj.province)) label = obj.city || obj.province || '';
+      if (obj && typeof obj === 'object') {
+        if (Array.isArray(obj.cities) && obj.cities.length > 1) {
+          display = `${obj.cities.length} شهر`;
+          hiddenVal = obj.cities.join(',');
+        } else if (Array.isArray(obj.cities) && obj.cities.length === 1) {
+          display = obj.cities[0];
+          hiddenVal = obj.cities[0];
+        } else if (obj.province && obj.city) {
+          display = obj.city;
+          hiddenVal = obj.city;
+        } else if (obj.province && obj.allProvince) {
+          display = obj.province;
+          // در حالت انتخاب همه استان، cities در storage شامل همه شهرهای آن استان است
+          hiddenVal = (obj.cities || []).join(',');
+        } else if (obj.province && !obj.city) {
+          display = obj.province;
+          hiddenVal = obj.province; // فالبک
+        }
+      }
     } catch(_) {}
-    if (!label) {
+
+    if (!display) {
       // fallback به پارامتر آدرس یا کلید قدیمی
-      label = "{{ (request.args.get('city') or '')|trim }}";
-      if (!label) {
+      const qsCity = "{{ (request.args.get('city') or '')|trim }}";
+      if (qsCity) { display = qsCity; hiddenVal = qsCity; }
+      else {
         const saved = (localStorage.getItem('vinor:selectedCity') || '').split(/[‌,،]/).map(s=>s.trim()).filter(Boolean)[0] || '';
-        label = saved;
+        if (saved) { display = saved; hiddenVal = saved; }
       }
     }
 
-    if (label) {
-      if (cityLabel) cityLabel.textContent = label;
-      if (cityHidden && cityHidden.value !== label) cityHidden.value = label;
+    if (display) {
+      if (cityLabel) cityLabel.textContent = display;
+      if (cityHidden) cityHidden.value = hiddenVal;
       cityBtn?.classList.add('border-green-500');
     } else {
       if (cityLabel) cityLabel.textContent = 'انتخاب شهر';
@@ -331,8 +309,11 @@ function clearAllHistory() {
 
 function selectHistoryItem(q) {
   const input = document.getElementById('searchInput');
+  if (!input) return;
   input.value = q;
-  document.getElementById('search-form').submit();
+  try { storeSearchQuery(q); } catch(_) {}
+  if (typeof runLiveSearch === 'function') runLiveSearch();
+  input.focus();
 }
 
 function renderSearchHistory() {
@@ -355,6 +336,12 @@ function renderSearchHistory() {
 }
 renderSearchHistory();
 
+// همگام‌سازی اولیه تاریخچه با مقدار ورودی (اگر از لینک آمده باشد)
+try {
+  const initQ = (document.getElementById('searchInput')?.value || '').trim();
+  if (initQ) storeSearchQuery(initQ);
+} catch(_) {}
+
 /* =============== پاک کردن فیلترها =============== */
 function clearAllFilters() {
   const form = document.getElementById('search-form');
@@ -369,6 +356,80 @@ function clearAllFilters() {
   });
   window.location.href = url.toString();
 }
+
+/* =============== نتایج زنده =============== */
+let liveTimer;
+function runLiveSearch(){
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(()=>{
+    try{
+      const container = document.getElementById('searchResultsGrid');
+      const summary = document.getElementById('liveSummary');
+      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const cityHidden = document.getElementById('cityHidden');
+      const cityList = (cityHidden?.value || '').toLowerCase();
+      const citySet = new Set(cityList.split(',').map(s=>s.trim()).filter(Boolean));
+      const form = document.getElementById('search-form');
+      const params = new URLSearchParams(new FormData(form));
+      const minPrice = parseInt(params.get('min_price')||'')||0;
+      const maxPrice = parseInt(params.get('max_price')||'')||0;
+      const minSize  = parseInt(params.get('min_size')||'')||0;
+      const maxSize  = parseInt(params.get('max_size')||'')||0;
+
+      let cards = Array.from(document.querySelectorAll('.land-card'));
+      if (cards.length === 0){
+        const raw = document.getElementById('lands-json')?.textContent || localStorage.getItem('allLandsData') || '[]';
+        const lands = JSON.parse(raw);
+        const mount = document.getElementById('searchResultsGrid');
+        mount.innerHTML = lands.map(l=>`
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card" data-code="${l.code}" data-city="${(l.city || (l.location||'').split('-')[0]).toLowerCase()}" data-title="${(l.title||'').toLowerCase()}" data-location="${(l.location||'').toLowerCase()}" data-desc="${(l.description||'').toLowerCase()}" data-size="${l.size||l.area||0}" data-price="${l.price_total||l.price||0}">
+            <a href="/land/${l.code}">
+              ${(l.images && l.images.length) ? `<img src="/uploads/${l.images[0]}" class="w-full h-60 object-cover" />` : `<div class=\"w-full h-60 bg-gray-200 dark:bg-gray-800 grid place-items-center\"><i class=\"fas fa-seedling text-2xl text-green-600/70\"></i></div>`}
+            </a>
+            <div class="p-4">
+              <a href="/land/${l.code}"><h3 class="text-base font-bold truncate">${l.title||''}</h3></a>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 ${l.location||'?'} | 📏 ${(l.size||l.area||'?')} متر</p>
+              <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">💰 ${(l.price_total||l.price||'نامشخص')}</p>
+            </div>
+          </div>
+        `).join('');
+        cards = Array.from(document.querySelectorAll('.land-card'));
+      }
+
+      const filtered = cards.filter(card=>{
+        const title = card.dataset.title || '';
+        const loc   = card.dataset.location || '';
+        const desc  = card.dataset.desc || '';
+        const city  = (card.dataset.city || '').trim();
+        const size  = parseInt(card.dataset.size||'0')||0;
+        const price = parseInt(card.dataset.price||'0')||0;
+
+        if (q && !(title.includes(q) || loc.includes(q) || desc.includes(q))) return false;
+        if (citySet.size>0 && !citySet.has(city)) return false;
+        if (minPrice && (!price || price < minPrice)) return false;
+        if (maxPrice && (!price || price > maxPrice)) return false;
+        if (minSize && size < minSize) return false;
+        if (maxSize && size > maxSize) return false;
+        return true;
+      });
+
+      const total = cards.length;
+      const shown = filtered.length;
+      cards.forEach(c=>c.style.display='none');
+      filtered.forEach(c=>c.style.display='');
+      if (summary) summary.textContent = shown ? `${shown} نتیجه از ${total}` : 'نتیجه‌ای پیدا نشد';
+    }catch(e){}
+  }, 200);
+}
+
+document.getElementById('searchInput')?.addEventListener('input', runLiveSearch);
+document.querySelectorAll('#search-form input, #search-form select').forEach(el=>{
+  el.addEventListener('change', runLiveSearch);
+});
+
+runLiveSearch();
 </script>
 
 {% endblock %}
+
+{% block floating_action %}{% endblock %}

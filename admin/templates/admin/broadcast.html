@@ -1,0 +1,39 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-3 py-4">
+  <h1 class="text-xl font-bold mb-4">ارسال اعلان همگانی</h1>
+
+  {% if message %}
+    <div class="mb-3 p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="mb-3 p-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
+    <div>
+      <label class="block text-sm mb-1">عنوان اعلان</label>
+      <input type="text" name="title" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="مثلاً به‌روزرسانی جدید" required>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">متن اعلان</label>
+      <textarea name="body" rows="4" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="متن پیام برای همه کاربران" required></textarea>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">نوع اعلان</label>
+      <select name="type" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2 text-sm">
+        <option value="info">اطلاعات</option>
+        <option value="success">موفقیت</option>
+        <option value="warning">هشدار</option>
+        <option value="error">خطا</option>
+        <option value="status">وضعیت</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">ارسال به همه</button>
+      <a href="{{ url_for('admin.dashboard') }}" class="px-4 py-2 rounded-lg border">انصراف</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

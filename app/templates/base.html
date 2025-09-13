@@ -292,6 +292,24 @@
     })();
   </script>
 
+  <script>
+    (function(){
+      try {
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.addEventListener('message', (e) => {
+            const data = e.data || {};
+            if (data && data.type === 'PUSH_RECEIVED') {
+              try {
+                const audio = new Audio('/static/sounds/notify.mp3');
+                audio.play().catch(()=>{});
+              } catch (_) {}
+            }
+          });
+        }
+      } catch (_) {}
+    })();
+  </script>
+
   {% block scripts %}{% endblock %}
 </body>
 </html>
