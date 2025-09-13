@@ -20,29 +20,19 @@
       <form action="{{ url_for('main.search_page') }}" method="get" class="sm:col-span-3">
         <label class="sr-only" for="q">جستجو</label>
         <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
-          <!-- City selector (persisted) -->
-          <input id="city" name="city" list="cities" placeholder="انتخاب شهر"
-                 readonly
-                 class="w-28 sm:w-40 px-3 py-2 text-sm sm:text-base bg-white/20 text-white placeholder-white/80 focus:outline-none cursor-pointer select-none">
+          <!-- City selector trigger and label -->
+          <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
+             class="flex items-center gap-2 px-3 bg-white/20 text-white hover:bg-white/25 text-sm sm:text-base">
+            <i class="fas fa-map-marker-alt"></i>
+            <span id="cityLabel">کل ایران</span>
+          </a>
           <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
                  class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
           <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
             <i class="fas fa-search"></i>
           </button>
         </div>
-        {# Datalist of cities derived from current lands #}
-        {% set _cities = [] %}
-        {% for l in lands %}
-          {% set _c = l.get('city') or (l.get('location') or '').split('-')[0].strip() %}
-          {% if _c and (_c not in _cities) %}
-            {% set _ = _cities.append(_c) %}
-          {% endif %}
-        {% endfor %}
-        <datalist id="cities">
-          {% for c in _cities %}
-            <option value="{{ c }}"></option>
-          {% endfor %}
-        </datalist>
+        <input type="hidden" id="cityHidden" name="city" value="">
       </form>
       <div class="sm:col-span-2 grid grid-cols-3 gap-2">
         <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
@@ -64,9 +54,8 @@
   {% for land in lands %}
     {% set images = land.get('images') or [] %}
     {% set img = images[0] if images else None %}
-    {% set _city = land.get('city') or (land.get('location') or '').split('-')[0].strip() %}
 
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}" data-city="{{ _city }}">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md" data-code="{{ land.code }}">
 
       <!-- تصویر اصلی -->
       <div class="relative">
@@ -110,68 +99,56 @@
 <!-- اسکریپت علاقه‌مندی -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Persist selected city/cities and filter cards live
-    try {
-      const cityInput = document.getElementById('city');
-      const gotoCityPicker = () => {
-        try {
-          const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
-          url.searchParams.set('next', window.location.href);
-          window.location.href = url.toString();
-        } catch (_) {
-          window.location.href = "{{ url_for('main.city_select') }}";
-        }
-      };
-      const applyCityFilter = () => {
-        const raw = (cityInput?.value || '').trim();
-        const tokens = raw ? raw.split(/[‌,،]/).map(s => s.trim()).filter(Boolean) : [];
-        const selected = new Set(tokens.map(t => t.toLowerCase()));
-        document.querySelectorAll('.land-card').forEach(card => {
-          const c = (card.getAttribute('data-city') || '').toLowerCase();
-          const show = selected.size === 0 || selected.has(c);
-          card.style.display = show ? '' : 'none';
-        });
-      };
+    // City label logic: supports province-only or multiple cities
+    (function(){
+      const CITY_KEY = 'vinor_city';            // label (what to display)
+      const CITY_OBJ_KEY = 'vinor_city_obj';    // {province, city}
+      const EVT_NAME = 'vinor:city-changed';
 
-      if (cityInput){
-        // Prefill from global city picker (if available), else our local key
-        let initLabel = '';
-        try {
-          const obj = JSON.parse(localStorage.getItem('vinor_city_obj') || 'null');
-          if (obj && (obj.city || obj.province)) initLabel = obj.city || obj.province || '';
-        } catch(_) {}
-        if (!initLabel) initLabel = localStorage.getItem('vinor:selectedCity') || '';
-        if (initLabel && !cityInput.value) cityInput.value = initLabel;
+      function applyCityLabelFromStorage(){
+        const labelEl = document.getElementById('cityLabel');
+        const hiddenEl = document.getElementById('cityHidden');
+        if (!labelEl || !hiddenEl) return;
 
-        // Navigate to city selection on click/focus
-        cityInput.addEventListener('click', (e) => { e.preventDefault(); gotoCityPicker(); });
-        cityInput.addEventListener('focus', (e) => { e.preventDefault(); gotoCityPicker(); });
+        let display = 'کل ایران';
+        let hiddenVal = '';
+        try{
+          const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || '{}');
+          const rawLabel = localStorage.getItem(CITY_KEY) || '';
+          // We support three states:
+          // 1) Province + City: display only city
+          // 2) Province only: display province
+          // 3) Multiple cities (future-ready): if stored as {cities:[..], province:'..'}
+          if (obj && typeof obj === 'object'){
+            if (Array.isArray(obj.cities) && obj.cities.length > 1){
+              display = `${obj.cities.length} شهر`;
+              hiddenVal = obj.cities.join(',');
+            } else if (Array.isArray(obj.cities) && obj.cities.length === 1){
+              display = obj.cities[0];
+              hiddenVal = obj.cities[0];
+            } else if (obj.province && obj.city){
+              display = obj.city;
+              hiddenVal = obj.city;
+            } else if (obj.province && !obj.city){
+              display = obj.province;
+              hiddenVal = obj.province;
+            } else if (rawLabel){
+              display = rawLabel;
+              hiddenVal = rawLabel;
+            }
+          }
+        }catch(_){}
 
-        cityInput.addEventListener('input', () => {
-          localStorage.setItem('vinor:selectedCity', cityInput.value || '');
-          applyCityFilter();
-        });
-        cityInput.addEventListener('change', () => {
-          localStorage.setItem('vinor:selectedCity', cityInput.value || '');
-          applyCityFilter();
-        });
-        // Apply on load
-        applyCityFilter();
+        labelEl.textContent = display || 'کل ایران';
+        hiddenEl.value = hiddenVal;
       }
 
-      // React to global city changes from city_select
-      document.addEventListener('vinor:city-changed', (e) => {
-        try {
-          const detail = e.detail || {};
-          const label = (detail.cityName || detail.city || '').trim();
-          if (cityInput && label) {
-            cityInput.value = label;
-            localStorage.setItem('vinor:selectedCity', label);
-            applyCityFilter();
-          }
-        } catch(_) {}
+      applyCityLabelFromStorage();
+      document.addEventListener(EVT_NAME, applyCityLabelFromStorage);
+      window.addEventListener('storage', (e)=>{
+        if (e.key === 'vinor_city' || e.key === 'vinor_city_obj') applyCityLabelFromStorage();
       });
-    } catch (e) {}
+    })();
 
     // ذخیره فهرست فعلی آگهی‌ها برای استفاده صفحه علاقه‌مندی‌ها (خواندن از اسکریپت JSON)
     try {

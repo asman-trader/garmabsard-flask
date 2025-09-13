@@ -246,6 +246,13 @@ def search_page():
     # ورودی‌ها
     q = (request.args.get("q") or "").strip().lower()
     city_param = (request.args.get("city") or "").strip().lower()
+    city_multi = []
+    try:
+        # اگر city به صورت "تهران,ری,ورامین" ارسال شد
+        if "," in city_param:
+            city_multi = [c.strip() for c in city_param.split(",") if c.strip()]
+    except Exception:
+        city_multi = []
     category = (request.args.get("category") or "").strip()
     if category not in CATEGORY_MAP:
         category = ""
@@ -269,7 +276,15 @@ def search_page():
     results = all_pool
     if category:
         results = [ad for ad in results if (ad.get("category", "") == category)]
-    if city_param:
+    if city_multi:
+        def _city_of(ad):
+            c1 = (ad.get("city") or "").strip().lower()
+            if c1:
+                return c1
+            loc = (ad.get("location") or "").strip().lower()
+            return loc.split("-")[0].strip() if loc else ""
+        results = [ad for ad in results if _city_of(ad) in city_multi]
+    elif city_param:
         def _city_of(ad):
             c1 = (ad.get("city") or "").strip().lower()
             if c1:
