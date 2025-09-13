@@ -300,13 +300,56 @@
             const data = e.data || {};
             if (data && data.type === 'PUSH_RECEIVED') {
               try {
-                const audio = new Audio('/static/sounds/notify.mp3');
-                audio.play().catch(()=>{});
+                const el = document.getElementById('notifySound');
+                if (el) {
+                  el.play().catch(()=>{});
+                }
               } catch (_) {}
             }
           });
         }
       } catch (_) {}
+    })();
+  </script>
+
+  <!-- Hidden audio for notification sound (preloaded/unlocked on first gesture) -->
+  <audio id="notifySound" src="{{ url_for('static', filename='sounds/notify.mp3') }}" preload="auto" style="display:none"></audio>
+
+  <script>
+    (function(){
+      let unlocked = false;
+      function markUnlocked(){
+        try { localStorage.setItem('vinor_audio_unlocked','1'); } catch(_){}
+        unlocked = true;
+      }
+      function unlockAudio(){
+        if (unlocked) return;
+        const el = document.getElementById('notifySound');
+        if (!el) return;
+        try {
+          el.muted = true;
+          const p = el.play();
+          if (p && typeof p.then === 'function'){
+            p.then(()=>{ try { el.pause(); el.currentTime = 0; el.muted = false; markUnlocked(); detach(); } catch(_){ markUnlocked(); detach(); } })
+             .catch(()=>{});
+          } else {
+            // Older browsers
+            markUnlocked();
+            detach();
+          }
+        } catch(_){}
+      }
+      function detach(){
+        window.removeEventListener('click', unlockAudio, true);
+        window.removeEventListener('touchstart', unlockAudio, true);
+        window.removeEventListener('keydown', unlockAudio, true);
+      }
+      // Try auto unlock if previously allowed
+      try { if (localStorage.getItem('vinor_audio_unlocked') === '1') unlockAudio(); } catch(_){}
+      // Ensure unlock on first user gesture
+      window.addEventListener('click', unlockAudio, true);
+      window.addEventListener('touchstart', unlockAudio, true);
+      window.addEventListener('keydown', unlockAudio, true);
     })();
   </script>
 

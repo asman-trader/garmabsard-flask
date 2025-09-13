@@ -11,6 +11,7 @@
   {% endif %}
 
   <form method="post" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
       <label class="block text-sm mb-1">عنوان اعلان</label>
       <input type="text" name="title" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="مثلاً به‌روزرسانی جدید" required>
