@@ -52,9 +52,11 @@ def _send_one(subscription: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str
         return {'ok': False, 'error': 'MISSING_VAPID_PRIVATE_KEY', 'remove': False}
 
     try:
+        # WebPush standard payload (data is string). Some browsers expect 'notification' wrapper.
+        data_str = json.dumps(payload, ensure_ascii=False)
         webpush(
             subscription_info=subscription,
-            data=json.dumps(payload, ensure_ascii=False),
+            data=data_str,
             vapid_private_key=vapid_private,
             vapid_claims=vapid_claims,
             timeout=10

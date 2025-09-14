@@ -289,6 +289,58 @@
           window.dispatchEvent(new CustomEvent("vinor:push-tested", { detail: { ok: false, error: String(err) }}));
         }
       });
+
+      // تلاش خودکار برای ثبت پوش اگر قبلاً اجازه داده شده و سابسکرایب نداریم
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          if (!('serviceWorker' in navigator)) return;
+          const perm = (Notification && Notification.permission) || 'default';
+          if (perm === 'granted' && VAPID_PUBLIC_KEY) {
+            const reg = await navigator.serviceWorker.getRegistration('/');
+            if (reg) {
+              const existing = await reg.pushManager.getSubscription();
+              if (!existing) {
+                try { const sub = await subscribePush(); await saveSubscription(sub); } catch(_){}
+              }
+            }
+          }
+        } catch(_){}
+      });
+    })();
+  </script>
+
+  <!-- نوار فعال‌سازی اعلان (فقط وقتی اجازه داده نشده/ثبت نشده) -->
+  <div id="pushEnableBar" class="fixed bottom-4 right-4 z-40 hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow">
+    <i class="fas fa-bell text-amber-500"></i>
+    <span class="text-sm">اعلان‌ها را فعال کنید</span>
+    <button id="pushEnableBtn" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">فعال‌سازی</button>
+  </div>
+
+  <script>
+    (function(){
+      async function shouldShowBar(){
+        try{
+          if (!('serviceWorker' in navigator) || !('Notification' in window)) return false;
+          if (Notification.permission === 'denied') return false;
+          const reg = await navigator.serviceWorker.getRegistration('/');
+          if (!reg) return true;
+          const sub = await reg.pushManager.getSubscription();
+          return !sub;
+        }catch(_) { return false; }
+      }
+      document.addEventListener('DOMContentLoaded', async ()=>{
+        const bar = document.getElementById('pushEnableBar');
+        const btn = document.getElementById('pushEnableBtn');
+        if (!bar || !btn) return;
+        if (await shouldShowBar()) bar.classList.remove('hidden');
+        btn.addEventListener('click', async ()=>{
+          try{
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') { bar.classList.add('hidden'); return; }
+            if (window.VinorPush) await window.VinorPush.subscribe();
+          }catch(_){} finally { bar.classList.add('hidden'); }
+        });
+      });
     })();
   </script>
 
