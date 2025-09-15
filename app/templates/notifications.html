@@ -1,13 +1,10 @@
 {% extends "base.html" %}
+{% set hide_header = True %}
 
 {% block title %}اعلان‌ها | وینور{% endblock %}
 
 {% block content %}
   <main class="max-w-md mx-auto p-4 sm:p-6">
-    <!-- هدر صفحه -->
-    <header class="flex items-center justify-between mb-4">
-      <h1 class="text-lg font-bold">اعلان‌های من</h1>
-    </header>
 
     <!-- لیست اعلان‌ها -->
     <ul class="space-y-3">
@@ -64,12 +61,21 @@
     <source src="{{ url_for('static', filename='sounds/notify.mp3') }}" type="audio/mpeg">
   </audio>
 
+  <script id="notif-config" type="application/json">{{ {
+    'mark_all_read_url': mark_all_read_url|default(''),
+    'mark_one_read_url': mark_one_read_url|default(''),
+    'unread_count_url':  unread_count_url|default(''),
+    'vapid_public_key':  VAPID_PUBLIC_KEY|default('')
+  }|tojson }}</script>
+
   <script>
-    // ===== Config injected from server =====
-    const MARK_ALL_READ_URL = {{ mark_all_read_url|default('')|tojson }};
-    const MARK_ONE_READ_URL = {{ mark_one_read_url|default('')|tojson }};
-    const UNREAD_COUNT_URL  = {{ unread_count_url|default('')|tojson }};
-    const VAPID_PUBLIC_KEY  = {{ VAPID_PUBLIC_KEY|default('')|tojson }};
+    // ===== Config injected from server (parsed from JSON to avoid lint errors) =====
+    const __cfgEl = document.getElementById('notif-config');
+    const __cfg = __cfgEl ? JSON.parse(__cfgEl.textContent || '{}') : {};
+    const MARK_ALL_READ_URL = __cfg.mark_all_read_url || '';
+    const MARK_ONE_READ_URL = __cfg.mark_one_read_url || '';
+    const UNREAD_COUNT_URL  = __cfg.unread_count_url  || '';
+    const VAPID_PUBLIC_KEY  = window.VAPID_PUBLIC_KEY || __cfg.vapid_public_key || '';
 
     // ===== Utils =====
     function getCookie(name){
@@ -202,3 +208,6 @@
     // خوانده‌شدن خودکار هنگام ورود به صفحه اعمال شده است (بدون دکمه)
   </script>
 {% endblock %}
+
+{# حذف میانبر/دکمه شناور ثبت آگهی #}
+{% block floating_action %}{% endblock %}
