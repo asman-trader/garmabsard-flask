@@ -1,5 +1,5 @@
 # passenger_wsgi.py (یا wsgi.py)
-import sys, os, traceback
+import sys, os, traceback, json
 
 # 1) مسیر پروژه و sys.path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -18,6 +18,25 @@ if os.path.exists(VENV_ACTIVATE):
 # 3) ساخت مسیر instance و لاگ
 INSTANCE_PATH = os.environ.get('INSTANCE_PATH', os.path.join(PROJECT_ROOT, 'instance'))
 os.makedirs(INSTANCE_PATH, exist_ok=True)
+# تلاش برای بارگذاری کلیدهای VAPID از فایل پایدار در instance/data/vapid.json
+try:
+    data_dir = os.path.join(INSTANCE_PATH, 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    vapid_file = os.path.join(data_dir, 'vapid.json')
+    if os.path.exists(vapid_file):
+        with open(vapid_file, 'r', encoding='utf-8') as f:
+            cfg = json.load(f) or {}
+        pub = (cfg.get('VAPID_PUBLIC_KEY') or '').strip()
+        prv = (cfg.get('VAPID_PRIVATE_KEY') or '').strip()
+        sub = (cfg.get('VAPID_SUB') or '').strip()
+        if pub and not os.environ.get('VAPID_PUBLIC_KEY'):
+            os.environ['VAPID_PUBLIC_KEY'] = pub
+        if prv and not os.environ.get('VAPID_PRIVATE_KEY'):
+            os.environ['VAPID_PRIVATE_KEY'] = prv
+        if sub and not os.environ.get('VAPID_SUB'):
+            os.environ['VAPID_SUB'] = sub
+except Exception:
+    pass
 LOG_DIR = os.path.join(INSTANCE_PATH, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, 'wsgi.log')
