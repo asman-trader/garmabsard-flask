@@ -4,16 +4,16 @@
 {% set hide_header = true %}
 {% block content %}
 <main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
-  <!-- Mobile Page Bar -->
+  <!-- Top Bar -->
   <div class="sticky top-0 z-20 -mx-3 sm:mx-0 px-3 py-3 mb-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
     <button id="btnBack" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
       <i class="fas fa-arrow-right"></i>
     </button>
-    <h1 class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب شهر</h1>
+    <h1 id="pageTitle" class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب استان</h1>
     <div class="w-10"></div>
   </div>
 
-  <!-- All Iran quick -->
+  <!-- Quick: All Iran -->
   <div class="mb-3">
     <button id="btnAllIran"
       class="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gray-300 dark:border-gray-700
@@ -23,117 +23,49 @@
     </button>
   </div>
 
-  <!-- Province & City selectors -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-      <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">استان</label>
-      <select id="provinceSelect"
-              class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                     dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
-        <option value="">— انتخاب استان —</option>
-      </select>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-      <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">شهر</label>
-      <select id="citySelect" disabled
-              class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                     dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none">
-        <option value="">— ابتدا استان را انتخاب کنید —</option>
-      </select>
-    </div>
-  </section>
-
-  <!-- Search in cities of selected province -->
-  <div class="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
-    <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">جستجوی شهر در استان انتخاب‌شده</label>
-    <input id="citySearch" type="text" placeholder="مثلاً دماوند، رودهن، لواسان..."
-           class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2
-                  dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
+  <!-- Contextual Action: Select Whole Province (shown in city step) -->
+  <div id="provAction" class="hidden mb-3">
+    <button id="btnAllProvince"
+      class="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-800 text-emerald-700 dark:text-emerald-300 font-bold">
+      <i class="fas fa-layer-group"></i>
+      انتخاب همه شهرهای این استان
+    </button>
   </div>
 
-  <!-- Suggested chips -->
-  <section class="mt-3">
-    <div class="flex gap-2 overflow-x-auto no-scrollbar whitespace-nowrap" id="quickChips">
-      {% set quick = ['کل ایران','دماوند','گرمابسرد','تهران','پردیس','بومهن','رودهن','گیلاوند','لواسان','فیروزکوه'] %}
-      {% for c in quick %}
-      <button class="chip px-3 py-2 rounded-full border text-sm bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-800"
-              data-chip="{{ c }}">{{ c }}</button>
-      {% endfor %}
-    </div>
-  </section>
+  <!-- Unified Search -->
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow">
+    <label id="searchLabel" class="block text-sm text-gray-600 dark:text-gray-300 mb-2">جستجوی استان</label>
+    <input id="searchBox" type="text" placeholder="مثلاً تهران، البرز..."
+           class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
+  </div>
 
-  <!-- Results -->
-  <section class="mt-4">
-    <div class="flex items-center justify-between mb-2">
-      <div id="selCount" class="text-xs text-gray-600 dark:text-gray-300">۰ شهر انتخاب شده</div>
-      <div class="flex items-center gap-2">
-        <button id="selectAllInProvince" class="text-sm text-emerald-700 dark:text-emerald-300 hover:underline">انتخاب همه شهرهای استان</button>
-        <button id="clearSelectedCities" class="text-sm text-gray-600 dark:text-gray-300 hover:underline">لغو انتخاب</button>
-      </div>
-    </div>
-    <ul id="cityResults"
-        class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-      <!-- با اسکریپت پر می‌شود -->
+  <!-- List -->
+  <section class="mt-3">
+    <ul id="listContainer" class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+      <!-- filled by JS -->
     </ul>
   </section>
-
-  <!-- Actions -->
-  <div class="mt-4 flex items-center justify-between">
-    <button id="clearCity" class="text-sm text-red-600 hover:underline">حذف شهر/استان انتخابی</button>
-    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-      <input id="rememberCheck" type="checkbox" class="rounded border-gray-300 dark:border-gray-700" checked>
-      ذخیره به‌عنوان پیش‌فرض
-    </label>
-  </div>
-
-  <!-- Spacer for bottom bar -->
-  <div class="h-20"></div>
-
-  <!-- Bottom Action Bar (mobile) -->
-  <div class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t border-gray-200 dark:border-gray-800 px-3 py-2">
-    <div class="max-w-md sm:max-w-2xl mx-auto grid grid-cols-2 gap-2">
-      <a id="cancelBtn" href="{{ url_for('main.index') }}" class="py-3 text-center rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">انصراف</a>
-      <button id="saveBtn" class="py-3 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 active:scale-[0.99]">ذخیره</button>
-    </div>
-  </div>
 </main>
 
 <script>
 (function() {
-  // 🔁 هماهنگ با کل پروژه:
-  const CITY_KEY = 'vinor_city';               // لیبل قابل نمایش (مثلاً «دماوند، تهران» یا «کل ایران»)
-  const CITY_OBJ_KEY = 'vinor_city_obj';       // آبجکت {province, city}
-  const CITY_SYNC_KEY = 'vinor_city_sync';     // برای تریگر تغییرات بین تب‌ها
-  const EVT_NAME = 'vinor:city-changed';       // رویداد سفارشی پروژه
+  // Keys and events
+  const CITY_KEY = 'vinor_city';
+  const CITY_OBJ_KEY = 'vinor_city_obj';
+  const CITY_SYNC_KEY = 'vinor_city_sync';
+  const EVT_NAME = 'vinor:city-changed';
 
-  const provinceSelect = document.getElementById('provinceSelect');
-  const citySelect = document.getElementById('citySelect');
-  const citySearch = document.getElementById('citySearch');
-  const cityResults = document.getElementById('cityResults');
-  const saveBtn = document.getElementById('saveBtn');
-  const clearBtn = document.getElementById('clearCity');
-  const rememberCheck = document.getElementById('rememberCheck');
-  const btnAllIran = document.getElementById('btnAllIran');
+  // UI refs
   const btnBack = document.getElementById('btnBack');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const btnSelectAll = document.getElementById('selectAllInProvince');
-  const btnClearSelected = document.getElementById('clearSelectedCities');
-  const selCount = document.getElementById('selCount');
+  const btnAllIran = document.getElementById('btnAllIran');
+  const provAction = document.getElementById('provAction');
+  const btnAllProvince = document.getElementById('btnAllProvince');
+  const searchBox = document.getElementById('searchBox');
+  const searchLabel = document.getElementById('searchLabel');
+  const pageTitle = document.getElementById('pageTitle');
+  const listContainer = document.getElementById('listContainer');
 
-  // برگشت امن به صفحه‌ی قبلی (اگر referrer معتبر باشد)
-  function goBackSafely(fallbackUrl) {
-    try {
-      const ref = document.referrer || '';
-      const sameOrigin = ref && new URL(ref).origin === location.origin;
-      if (sameOrigin) { history.back(); return; }
-    } catch(_) {}
-    window.location.href = fallbackUrl;
-  }
-  btnBack.addEventListener('click', () => goBackSafely("{{ url_for('main.index') }}"));
-  cancelBtn.addEventListener('click', (e) => { e.preventDefault(); goBackSafely("{{ url_for('main.index') }}"); });
-
-  // --- بارگذاری دیتاست استان/شهر ---
+  // Data
   const FALLBACK = [
     {"province":"تهران","cities":["تهران","ری","اسلام‌شهر","ورامین","قرچک","شمیرانات","لواسان","میگون","پردیس","بومهن","رودهن","جاجرود","آبعلی","پاکدشت","دماوند","فیروزکوه","گرمابسرد","گیلاوند"]},
     {"province":"البرز","cities":["کرج","فردیس","ساوجبلاغ","نظرآباد","طالقان","اشتهارد","ماهدشت","محمدشهر"]},
@@ -148,241 +80,156 @@
   ];
 
   let DATA = [];
+  let currentProvince = '';
   let currentCities = [];
-  let selectedCities = [];
+  let view = 'province'; // or 'city'
+
+  function goBackSafely(fallbackUrl) {
+    try {
+      const ref = document.referrer || '';
+      const sameOrigin = ref && new URL(ref).origin === location.origin;
+      if (sameOrigin) { history.back(); return; }
+    } catch(_) {}
+    window.location.href = fallbackUrl;
+  }
+
+  btnBack.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (view === 'city') {
+      showProvinces();
+      return;
+    }
+    goBackSafely("{{ url_for('main.index') }}");
+  });
 
   async function loadData() {
     try {
-      const res = await fetch("/static/data/iran_provinces_cities.json", {cache: "force-cache"});
-      if (!res.ok) throw new Error("no json");
+      const res = await fetch('/static/data/iran_provinces_cities.json', { cache: 'force-cache' });
+      if (!res.ok) throw new Error('no json');
       const json = await res.json();
-      if (!Array.isArray(json) || !json.length) throw new Error("bad json");
+      if (!Array.isArray(json) || !json.length) throw new Error('bad json');
       DATA = json;
     } catch (e) {
       DATA = FALLBACK;
     }
-    populateProvinces();
-    initFromStorage();
+    showProvinces();
   }
 
-  function populateProvinces() {
-    provinceSelect.innerHTML = '<option value="">— انتخاب استان —</option>';
-    const provinces = DATA.map(d => d.province).sort((a,b)=>a.localeCompare(b,'fa'));
-    for (const p of provinces) {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      provinceSelect.appendChild(opt);
-    }
-  }
-
-  function populateCities(province) {
-    citySelect.disabled = true;
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    currentCities = [];
-    selectedCities = [];
-    if (!province) { renderResults(citySearch.value); return; }
-
-    const row = DATA.find(d => d.province === province);
-    if (!row) { renderResults(citySearch.value); return; }
-    currentCities = (row.cities || []).slice().sort((a,b)=>a.localeCompare(b,'fa'));
-
-    citySelect.disabled = false;
-    citySelect.innerHTML = '<option value="">— انتخاب شهر —</option>';
-    for (const c of currentCities) {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      citySelect.appendChild(opt);
-    }
-    // بازیابی انتخاب‌های قبلی
-    try {
-      const raw = localStorage.getItem(CITY_OBJ_KEY);
-      if (raw) {
-        const obj = JSON.parse(raw);
-        if (obj && obj.province === province && Array.isArray(obj.cities)) {
-          selectedCities = obj.cities.filter(x => currentCities.includes(x));
-        }
-      }
-    } catch(_) {}
-    renderResults(citySearch.value);
-  }
-
-  function renderResults(query) {
-    const q = (query || '').trim().toLowerCase();
-    let items = currentCities.slice();
-    if (q) items = items.filter(x => x.toLowerCase().includes(q));
-    if (!provinceSelect.value) items = [];
-
-    cityResults.innerHTML = '';
-    items.slice(0, 200).forEach(name => {
-      const li = document.createElement('li');
-      li.className = 'flex items-center justify-between px-3 py-2 hover:bg-green-50 dark:hover:bg-green-800';
-      const checked = selectedCities.includes(name) ? 'checked' : '';
-      li.innerHTML = `
-        <label class="flex items-center gap-2 w-full cursor-pointer">
-          <input type="checkbox" class="city-check rounded border-gray-300 dark:border-gray-600" data-name="${name}" ${checked} />
-          <i class="fas fa-map-marker-alt text-green-600"></i>
-          <span class="text-sm flex-1">${name}</span>
-        </label>
-      `;
-      li.querySelector('.city-check').addEventListener('change', (e) => {
-        const n = e.target.getAttribute('data-name');
-        if (e.target.checked) {
-          if (!selectedCities.includes(n)) selectedCities.push(n);
-        } else {
-          selectedCities = selectedCities.filter(x => x !== n);
-        }
-        updateSelCount();
-      });
-      cityResults.appendChild(li);
-    });
-    updateSelCount();
-  }
-
-  function updateSelCount(){
-    try{
-      const n = selectedCities.length || 0;
-      const faDigits = n.toString().replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d,10)]);
-      selCount.textContent = `${faDigits} شهر انتخاب شده`;
-    }catch(_){}
-  }
-
-  // ذخیره‌سازی
-  function setCityStorage(province, city) {
-    let label = 'کل ایران';
-    if (province && city) label = `${city}`; // فقط شهر نمایش داده شود
-    else if (province && !city) label = `${province}`; // فقط نام استان
-
-    try {
-      localStorage.setItem(CITY_KEY, label);
-      localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province: province || '', city: city || '' }));
-      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: label, province, cityName: city || '' } }));
-      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString()); // sync ping
-    } catch (_) {}
-  }
-
-  function clearCityStorage() {
+  function setCityStorageForAllIran() {
     try {
       localStorage.removeItem(CITY_KEY);
       localStorage.removeItem(CITY_OBJ_KEY);
-      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: '', province: '', cityName: '' } }));
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران', province: '', cityName: '' } }));
       localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
-    } catch (_) {}
+    } catch(_) {}
   }
 
-  function initFromStorage() {
+  function setCityStorageForProvince(province, cities) {
     try {
-      const raw = localStorage.getItem(CITY_OBJ_KEY);
-      if (!raw) return;
-      const obj = JSON.parse(raw);
-      if (obj && obj.province) {
-        provinceSelect.value = obj.province;
-        populateCities(obj.province);
-        if (obj.city) citySelect.value = obj.city;
-      }
-    } catch (_) {}
+      const allProv = true;
+      const citiesForStore = Array.isArray(cities) ? cities.slice() : [];
+      localStorage.setItem(CITY_KEY, province);
+      localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province, city: '', cities: citiesForStore, allProvince: allProv }));
+      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: province, province, cityName: '', cities: citiesForStore, allProvince: allProv } }));
+    } catch(_) {}
   }
 
-  // رویدادها
-  provinceSelect.addEventListener('change', () => {
-    citySearch.value = '';
-    populateCities(provinceSelect.value);
-  });
-  citySearch.addEventListener('input', () => renderResults(citySearch.value));
+  function setCityStorageForCity(province, city) {
+    try {
+      localStorage.setItem(CITY_KEY, city);
+      localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province, city, cities: [city], allProvince: false }));
+      localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
+      document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city, province, cityName: city, cities: [city], allProvince: false } }));
+    } catch(_) {}
+  }
 
-  // چیپ‌ها (از جمله «کل ایران»)
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const name = chip.getAttribute('data-chip') || chip.textContent.trim();
-      if (name === 'کل ایران') {
-        provinceSelect.value = '';
-        citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-        citySelect.disabled = true;
-        citySearch.value = '';
-        cityResults.innerHTML = '';
-        if (rememberCheck.checked) setCityStorage('', '');
-        else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
-        goBackSafely("{{ url_for('main.index') }}");
-        return;
-      }
-      // جستجو در کل دیتا برای پیدا کردن استان/شهر
-      if (provinceSelect.value && currentCities.includes(name)) {
-        citySelect.value = name; renderResults(name); return;
-      }
-      for (const row of DATA) {
-        if (row.cities && row.cities.includes(name)) {
-          provinceSelect.value = row.province;
-          populateCities(row.province);
-          citySelect.value = name;
-          renderResults(name);
-          return;
-        }
-      }
-      const asProvince = DATA.find(d => d.province === name);
-      if (asProvince) {
-        provinceSelect.value = asProvince.province;
-        populateCities(asProvince.province);
-      }
+  function showProvinces() {
+    view = 'province';
+    currentProvince = '';
+    currentCities = [];
+    pageTitle.textContent = 'انتخاب استان';
+    searchLabel.textContent = 'جستجوی استان';
+    searchBox.placeholder = 'مثلاً تهران، البرز...';
+    searchBox.value = '';
+    provAction.classList.add('hidden');
+    renderProvinceList('');
+  }
+
+  function showCities(province) {
+    view = 'city';
+    currentProvince = province;
+    const row = DATA.find(d => d.province === province);
+    currentCities = (row && Array.isArray(row.cities)) ? row.cities.slice().sort((a,b)=>a.localeCompare(b,'fa')) : [];
+    pageTitle.textContent = `شهرهای ${province}`;
+    searchLabel.textContent = 'جستجوی شهر';
+    searchBox.placeholder = 'مثلاً دماوند، رودهن...';
+    searchBox.value = '';
+    provAction.classList.remove('hidden');
+    renderCityList('');
+  }
+
+  function renderProvinceList(q) {
+    const query = (q||'').trim().toLowerCase();
+    const provinces = DATA.map(d => d.province).sort((a,b)=>a.localeCompare(b,'fa'))
+      .filter(p => !query || p.toLowerCase().includes(query));
+    listContainer.innerHTML = '';
+    provinces.forEach(p => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <button class="w-full flex items-center justify-between px-3 py-3 hover:bg-green-50 dark:hover:bg-green-800">
+          <span class="text-sm">${p}</span>
+          <i class="fas fa-chevron-left text-gray-400"></i>
+        </button>
+      `;
+      li.querySelector('button').addEventListener('click', ()=> showCities(p));
+      listContainer.appendChild(li);
     });
+  }
+
+  function renderCityList(q) {
+    const query = (q||'').trim().toLowerCase();
+    const items = currentCities.filter(c => !query || c.toLowerCase().includes(query));
+    listContainer.innerHTML = '';
+    items.forEach(c => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <button class="w-full flex items-center justify-between px-3 py-3 hover:bg-green-50 dark:hover:bg-green-800">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-map-marker-alt text-green-600"></i>
+            <span class="text-sm">${c}</span>
+          </div>
+          <i class="fas fa-check text-transparent"></i>
+        </button>
+      `;
+      li.querySelector('button').addEventListener('click', ()=> {
+        setCityStorageForCity(currentProvince, c);
+        goBackSafely("{{ url_for('main.index') }}");
+      });
+      listContainer.appendChild(li);
+    });
+  }
+
+  // Events
+  searchBox.addEventListener('input', ()=>{
+    if (view === 'province') renderProvinceList(searchBox.value);
+    else renderCityList(searchBox.value);
   });
 
-  btnAllIran.addEventListener('click', (e) => {
+  btnAllIran.addEventListener('click', (e)=>{
     e.preventDefault();
-    provinceSelect.value = '';
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    citySelect.disabled = true;
-    citySearch.value = '';
-    cityResults.innerHTML = '';
-    selectedCities = [];
-    if (rememberCheck.checked) setCityStorage('', '', [], false);
-    else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
+    setCityStorageForAllIran();
     goBackSafely("{{ url_for('main.index') }}");
   });
 
-  btnSelectAll.addEventListener('click', (e)=>{
+  btnAllProvince.addEventListener('click', (e)=>{
     e.preventDefault();
-    if (!provinceSelect.value){ return; }
-    selectedCities = currentCities.slice();
-    renderResults(citySearch.value);
-  });
-
-  btnClearSelected.addEventListener('click', (e)=>{
-    e.preventDefault();
-    selectedCities = [];
-    renderResults(citySearch.value);
-  });
-
-  saveBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const p = provinceSelect.value || '';
-    const c = citySelect.value || '';
-    if (!p && selectedCities.length === 0 && !c) {
-      if (rememberCheck.checked) setCityStorage('', '', [], false);
-      else document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: 'کل ایران' } }));
-      goBackSafely("{{ url_for('main.index') }}");
-      return;
-    }
-    const effective = selectedCities.length ? selectedCities.slice() : (c ? [c] : []);
-    const allProv = (p && ((effective.length === 0) || (currentCities.length>0 && effective.length === currentCities.length)));
-    const citiesForStore = allProv ? currentCities.slice() : effective;
-    try { localStorage.setItem(CITY_KEY, allProv ? p : (citiesForStore.length>1 ? `${citiesForStore.length} شهر` : (citiesForStore[0]||'کل ایران'))); } catch(_){ }
-    try { localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province:p, city:c, cities:citiesForStore, allProvince: allProv })); localStorage.setItem(CITY_SYNC_KEY, Date.now().toString()); } catch(_){ }
-    document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city: allProv ? p : (citiesForStore.length>1 ? `${citiesForStore.length} شهر` : (citiesForStore[0]||'کل ایران')), province: p, cityName: c, cities: citiesForStore, allProvince: allProv } }));
+    if (!currentProvince) return;
+    setCityStorageForProvince(currentProvince, currentCities);
     goBackSafely("{{ url_for('main.index') }}");
   });
 
-  clearBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    clearCityStorage();
-    provinceSelect.value = '';
-    citySelect.innerHTML = '<option value="">— ابتدا استان را انتخاب کنید —</option>';
-    citySelect.disabled = true;
-    citySearch.value = '';
-    cityResults.innerHTML = '';
-  });
-
-  // شروع
+  // Init
   loadData();
 })();
 </script>
