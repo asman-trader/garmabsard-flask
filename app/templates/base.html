@@ -138,6 +138,46 @@
         if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
       });
 
+      // ژست کشیدنی موبایل برای باز/بستن منو (RTL – منو از راست باز می‌شود)
+      (function(){
+        let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false;
+        const EDGE = 24;       // ناحیه فعال کنار صفحه (px)
+        const OPEN_THRESH = 40; // حداقل جابجایی برای باز/بستن (px)
+        const isMobile = () => window.innerWidth <= 768;
+
+        function onStart(ev){
+          if (!isMobile()) return;
+          const t = ev.touches ? ev.touches[0] : ev;
+          startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
+        }
+        function onMove(ev){
+          if (!tracking) return;
+          const t = ev.touches ? ev.touches[0] : ev;
+          dx = t.clientX - startX; dy = t.clientY - startY;
+        }
+        function onEnd(){
+          if (!tracking) return; tracking = false;
+          const absX = Math.abs(dx), absY = Math.abs(dy);
+          // فقط حرکت افقی معنادار
+          if (absX < absY) return;
+          const fromRightEdge = (window.innerWidth - startX) <= EDGE;
+          const menuIsOpen = sideMenu?.classList.contains('open');
+
+          // بازکردن: شروع از لبه راست و کشیدن به چپ (dx منفی)
+          if (!menuIsOpen && fromRightEdge && dx <= -OPEN_THRESH) {
+            sideMenu?.classList.add('open');
+            return;
+          }
+          // بستن: وقتی باز است و به راست کشیده می‌شود
+          if (menuIsOpen && dx >= OPEN_THRESH) {
+            sideMenu?.classList.remove('open');
+          }
+        }
+        document.addEventListener('touchstart', onStart, { passive: true });
+        document.addEventListener('touchmove', onMove, { passive: true });
+        document.addEventListener('touchend', onEnd, { passive: true });
+      })();
+
       // فیلترها
       const toggleBtn = document.getElementById("toggleFilters");
       const filters   = document.getElementById("advancedFilters");
