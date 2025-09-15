@@ -2,7 +2,7 @@
 // تجربه سریع، امن و شفاف
 
 // ================== Cache ==================
-const CACHE_NAME = 'vinor-cache-v5';
+const CACHE_NAME = 'vinor-cache-v6';
 const API_CACHE_NAME = 'vinor-api-cache-v1';
 const ASSETS = [
   '/',                         // لندینگ (guest shell)
@@ -22,7 +22,10 @@ const ASSETS = [
   '/static/icons/icon-384.png',
   '/static/icons/icon-512.png',
   '/static/sounds/notify.mp3',
-  '/static/offline.html'
+  '/static/offline.html',
+  // Side menu skeleton parts (ensure offline availability and faster first open)
+  '/static/site.webmanifest',
+  '/static/icons/icon-192.png'
   // در صورت نیاز، فایل‌های استاتیک حیاتی دیگر را اضافه کنید.
 ];
 
