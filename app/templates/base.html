@@ -184,9 +184,11 @@
         function onStart(ev){
           const t = ev.touches ? ev.touches[0] : ev;
           const target = ev.target || null;
-          if (isInteractive(target)) return;
           const menuIsOpen = sideMenu?.classList.contains('open');
-          // باز کردن/بستن از هر جای صفحه (به جز کنترل‌های تعاملی)
+          // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
+          // وقتی منو بسته است، روی کنترل‌های تعاملی ژست را شروع نکن
+          if (!menuIsOpen && isInteractive(target)) return;
+          // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
           mode = menuIsOpen ? 'close' : 'open';
         }
