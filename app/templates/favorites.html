@@ -1,16 +1,30 @@
 {% extends "base.html" %}
+{% set hide_header = True %}
 
 {% block title %}علاقه‌مندی‌ها | وینور{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-3 sm:px-4 py-6">
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">ذخیره‌شده‌ها</h1>
-    <div class="flex items-center gap-2">
-      <button id="refreshFavs" class="px-3 py-2 text-sm rounded-lg border dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800">↻ بروزرسانی</button>
-      <button id="clearFavs" class="px-3 py-2 text-sm rounded-lg bg-rose-600 hover:bg-rose-700 text-white">حذف همه</button>
+<!-- Header: back + title + bell (optional) -->
+<header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+  <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+    <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">ذخیره‌شده‌ها</h1>
+    <button id="favBell" type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="علاقه‌مندی‌ها">
+      <i class="fas fa-bookmark"></i>
+    </button>
+  </div>
+  <div class="px-3 sm:px-4 pb-3">
+    <div class="flex items-center justify-end gap-2">
+      <button id="refreshFavs" class="px-3 py-1.5 text-xs rounded-lg border dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800">↻ بروزرسانی</button>
+      <button id="clearFavs" class="px-3 py-1.5 text-xs rounded-lg bg-rose-600 hover:bg-rose-700 text-white">حذف همه</button>
     </div>
   </div>
+</header>
+<div class="h-20"></div>
+
+<div class="max-w-7xl mx-auto px-3 sm:px-4 py-6">
 
   <div id="favoritesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
@@ -21,6 +35,30 @@
 
 <script>
   (function(){
+    // optional: bell behavior similar to notifications page
+    try{
+      const bell = document.getElementById('favBell');
+      bell?.addEventListener('click', async ()=>{
+        if (!('Notification' in window)) return;
+        const perm = (Notification.permission === 'default') ? await Notification.requestPermission() : Notification.permission;
+        if (perm !== 'granted') return;
+        if ('serviceWorker' in navigator){
+          const reg = await navigator.serviceWorker.getRegistration('/') || await navigator.serviceWorker.register('/sw.js');
+          if (reg && reg.pushManager){
+            try{
+              const r = await fetch('/api/push/config');
+              const d = await r.json();
+              const pk = d.publicKey || '';
+              if (pk){
+                const key = (b64)=>{const p='='.repeat((4-b64.length%4)%4);const s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);const out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;};
+                const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:key(pk)});
+                await fetch('/api/push/subscribe', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(sub)});
+              }
+            }catch(_){ }
+          }
+        }
+      });
+    }catch(_){ }
     const KEY = 'favoriteLands';
     const container = document.getElementById('favoritesContainer');
     const emptyEl = document.getElementById('noFavorites');
