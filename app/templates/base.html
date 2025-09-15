@@ -169,6 +169,24 @@
               if (IS_LOGGED_IN) {
                 urls.push('/app');
                 urls.push('/api/lands/approved'); // warm API cache
+                // شل کامل ثبت آگهی (۴ مرحله)
+                urls.push('/lands/add/step1');
+                urls.push('/lands/add');
+                urls.push('/lands/add/details');
+                urls.push('/lands/add/step3');
+                // صفحات اصلی کاربر
+                urls.push('/notifications');
+                urls.push('/favorites');
+                urls.push('/profile');
+                urls.push('/my-lands');
+                urls.push('/settings');
+                urls.push('/search');
+              } else {
+                // صفحات مهم مهمان
+                urls.push('/');
+                urls.push('/start');
+                urls.push('/login');
+                urls.push('/search');
               }
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
             } catch {}
