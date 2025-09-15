@@ -52,7 +52,7 @@ def add_land_step1():
     if request.method == 'POST':
         trade_type = (request.form.get('trade_type') or '').strip()  # sale|rent
         property_type = (request.form.get('property_type') or '').strip()  # apartment|villa|land|shop|office|garden
-        if trade_type not in {'sale','rent'}:
+        if trade_type not in {'sale','rent','exchange'}:
             flash('نوع معامله نامعتبر است.')
             return redirect(url_for('main.add_land_step1'))
         if property_type not in {'apartment','villa','land','shop','office','garden'}:

@@ -33,7 +33,7 @@
 
   <!-- Main Content -->
   <div class="px-4 py-6 space-y-6">
-    <!-- Step 1: Category Selection -->
+    <!-- Step 1: Simplified Selection -->
     <form id="step1Form" method="POST" class="space-y-6" action="{{ url_for('main.add_land_step1') }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       <input type="hidden" name="city" id="cityInput" value="">
@@ -57,104 +57,73 @@
         <div id="cityWarn" class="mt-3 hidden text-xs text-red-600">یک شهر معتبر انتخاب کنید (استان/چندین شهر مجاز نیست).</div>
       </div>
 
-      <!-- Trade Type Section -->
+      <!-- Trade Type Section (simplified + exchange) -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-3">
           <i class="fas fa-handshake text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">نوع معامله</h2>
+          <h2 class="text-base font-bold text-gray-900 dark:text-white">نوع معامله</h2>
         </div>
-        
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-2 text-sm">
           <label class="relative cursor-pointer">
             <input type="radio" name="trade_type" value="sale" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-tag text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">فروش</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">خرید و فروش ملک</div>
-              </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
+              <i class="fas fa-tag text-emerald-500 mb-1"></i>
+              <div class="font-bold">فروش</div>
             </div>
           </label>
-          
           <label class="relative cursor-pointer">
             <input type="radio" name="trade_type" value="rent" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-key text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">اجاره</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">اجاره ملک</div>
-              </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
+              <i class="fas fa-key text-emerald-500 mb-1"></i>
+              <div class="font-bold">اجاره</div>
+            </div>
+          </label>
+          <label class="relative cursor-pointer">
+            <input type="radio" name="trade_type" value="exchange" required class="sr-only peer">
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
+              <i class="fas fa-arrows-rotate text-emerald-500 mb-1"></i>
+              <div class="font-bold">معاوضه</div>
             </div>
           </label>
         </div>
       </div>
 
-      <!-- Property Type Section -->
+      <!-- Property Type Section (simplified) -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-3">
           <i class="fas fa-home text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">نوع ملک</h2>
+          <h2 class="text-base font-bold text-gray-900 dark:text-white">نوع ملک</h2>
         </div>
         
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-2 text-sm">
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="apartment" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-building text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">آپارتمان</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-building text-emerald-500 mb-1"></i><div class="font-bold">آپارتمان</div></div>
           </label>
           
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="villa" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-home text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">ویلا</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-home text-emerald-500 mb-1"></i><div class="font-bold">ویلا</div></div>
           </label>
           
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="land" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-mountain text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">زمین</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-mountain text-emerald-500 mb-1"></i><div class="font-bold">زمین</div></div>
           </label>
           
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="garden" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-seedling text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">باغ</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-seedling text-emerald-500 mb-1"></i><div class="font-bold">باغ</div></div>
           </label>
           
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="shop" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-store text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">مغازه</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-store text-emerald-500 mb-1"></i><div class="font-bold">مغازه</div></div>
           </label>
           
           <label class="relative cursor-pointer">
             <input type="radio" name="property_type" value="office" required class="sr-only peer">
-            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-              <div class="text-center">
-                <i class="fas fa-briefcase text-2xl text-emerald-500 mb-2"></i>
-                <div class="font-bold text-gray-900 dark:text-white">اداری</div>
-              </div>
-            </div>
+            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-briefcase text-emerald-500 mb-1"></i><div class="font-bold">اداری</div></div>
           </label>
         </div>
       </div>
