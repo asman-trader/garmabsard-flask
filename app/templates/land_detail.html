@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set hide_header = True %}
 {% set _title = (land.get('title') or "جزئیات آگهی") ~ " | وینور (Vinor)" %}
 {% block title %}{{ _title }}{% endblock %}
 
@@ -41,8 +42,8 @@
     {%- endif -%}
   {%- endmacro %}
 
-  {# ==================== App Bar (Sticky) ==================== #}
-  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-b dark:border-slate-700" role="banner" aria-label="نوار ابزار">
+  {# ==================== App Bar (Fixed Full-Width) ==================== #}
+  <header class="fixed top-0 inset-x-0 z-40 bg-white dark:bg-slate-800 border-b dark:border-slate-700" role="banner" aria-label="نوار ابزار">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-2 px-3 py-2">
       <div class="flex items-center gap-2">
         <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" title="بازگشت" aria-label="بازگشت">
@@ -79,6 +80,9 @@
       </div>
     </div>
   </header>
+
+  <!-- Spacer for fixed header -->
+  <div class="h-14"></div>
 
   {# ==================== Media Gallery ==================== #}
   <section class="bg-white dark:bg-slate-800 border-b dark:border-slate-700" aria-label="گالری تصاویر">

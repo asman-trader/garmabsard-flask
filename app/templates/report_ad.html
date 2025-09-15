@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% set hide_header = True %}
 {% set _title = "گزارش این آگهی | وینور" %}
 {% block title %}{{ _title }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 dark:bg-slate-900">
-  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b dark:border-slate-700">
+  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-slate-800 border-b dark:border-slate-700">
     <div class="max-w-4xl mx-auto px-3 py-3 flex items-center justify-between">
       <a href="{{ url_for('main.land_detail', code=code) }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="بازگشت">
         <i class="fa-solid fa-arrow-right"></i>
@@ -16,6 +17,9 @@
       <div class="w-9"></div>
     </div>
   </header>
+
+  <!-- Spacer for fixed header -->
+  <div class="h-16"></div>
 
   <main class="max-w-4xl mx-auto px-3 py-4">
     <div class="bg-gradient-to-br from-rose-50 to-amber-50 dark:from-rose-900/10 dark:to-amber-900/10 border border-rose-200/60 dark:border-rose-800/60 rounded-xl p-4 mb-3">

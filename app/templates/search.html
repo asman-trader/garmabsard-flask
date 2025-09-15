@@ -65,7 +65,7 @@
         <span id="cityChipLabel">انتخاب شهر</span>
       </button>
       <div class="relative flex-1">
-        <input type="text" name="q" id="searchInput" class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..." value="{{ request.args.get('q','') }}" oninput="storeSearchQuery(this.value)">
+        <input type="text" name="q" id="searchInput" class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..." value="{{ request.args.get('q','') }}">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
       <details class="group relative">
@@ -112,7 +112,7 @@
 
   {# -------- بخش نتایج جستجو (در صورت داشتن پرس‌وجو) -------- #}
   {# نتایج زنده: به صورت کلاینتی نمایش و فیلتر می‌شود #}
-  <div id="liveSummary" class="mb-3 text-xs text-gray-500 dark:text-gray-400"></div>
+  <div id="liveSummary" class="mb-3 text-xs text-gray-500 dark:text-gray-400" role="status" aria-live="polite"></div>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="searchResultsGrid"></div>
 
   {# --------- بخش نمایش تمامی آگهی‌ها (همیشه نمایش بده) --------- #}
@@ -384,7 +384,7 @@ function runLiveSearch(){
         mount.innerHTML = lands.map(l=>`
           <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card" data-code="${l.code}" data-city="${(l.city || (l.location||'').split('-')[0]).toLowerCase()}" data-title="${(l.title||'').toLowerCase()}" data-location="${(l.location||'').toLowerCase()}" data-desc="${(l.description||'').toLowerCase()}" data-size="${l.size||l.area||0}" data-price="${l.price_total||l.price||0}">
             <a href="/land/${l.code}">
-              ${(l.images && l.images.length) ? `<img src="/uploads/${l.images[0]}" class="w-full h-60 object-cover" />` : `<div class=\"w-full h-60 bg-gray-200 dark:bg-gray-800 grid place-items-center\"><i class=\"fas fa-seedling text-2xl text-green-600/70\"></i></div>`}
+              ${(l.images && l.images.length) ? `<img src="/uploads/${(String(l.images[0]).startsWith('/uploads/')? String(l.images[0]).slice(9): l.images[0])}" class="w-full h-60 object-cover" alt="تصویر آگهی" />` : `<div class=\"w-full h-60 bg-gray-200 dark:bg-gray-800 grid place-items-center\" aria-label=\"بدون تصویر\"><i class=\"fas fa-seedling text-2xl text-green-600/70\"></i></div>`}
             </a>
             <div class="p-4">
               <a href="/land/${l.code}"><h3 class="text-base font-bold truncate">${l.title||''}</h3></a>
