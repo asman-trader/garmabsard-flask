@@ -153,8 +153,7 @@
           const target = ev.target || null;
           if (isInteractive(target)) return;
           const menuIsOpen = sideMenu?.classList.contains('open');
-          // باز کردن از هر جای صفحه (نه داخل منو/کنترل‌ها)؛ بستن از هر جا به جز خود منو
-          if (menuIsOpen && target && target.closest('#sideMenu')) return; // داخل منو ژست نگیریم
+          // باز کردن/بستن از هر جای صفحه (به جز کنترل‌های تعاملی)
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
           mode = menuIsOpen ? 'close' : 'open';
         }
