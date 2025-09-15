@@ -64,6 +64,20 @@ def notify_status_change(ad: Dict[str, Any], status: str, reason: Optional[str] 
             ad_id=code,
             action_url=action_url
         )
+        # تلاش برای ارسال Web Push به تمام مشترکین
+        try:
+            payload = {
+                'title': 'آگهی شما تأیید شد',
+                'body': 'آگهی شما در وینور منتشر شد.',
+                'url': action_url,
+                'icon': '/static/icons/icon-192.png',
+                'badge': '/static/icons/monochrome-192.png',
+                'tag': 'vinor-ad-approved'
+            }
+            for s in (_load_subs() or []):
+                _send_one(s, payload)
+        except Exception:
+            pass
     elif status == 'rejected':
         body = "آگهی شما نیاز به اصلاح دارد."
         if reason:
@@ -76,6 +90,19 @@ def notify_status_change(ad: Dict[str, Any], status: str, reason: Optional[str] 
             ad_id=code,
             action_url=action_url
         )
+        try:
+            payload = {
+                'title': 'آگهی شما رد شد / نیاز به اصلاح',
+                'body': body,
+                'url': action_url,
+                'icon': '/static/icons/icon-192.png',
+                'badge': '/static/icons/monochrome-192.png',
+                'tag': 'vinor-ad-rejected'
+            }
+            for s in (_load_subs() or []):
+                _send_one(s, payload)
+        except Exception:
+            pass
     elif status == 'expired':
         add_notification(
             user_id=uid,
@@ -85,6 +112,19 @@ def notify_status_change(ad: Dict[str, Any], status: str, reason: Optional[str] 
             ad_id=code,
             action_url=url_for('main.my_lands')
         )
+        try:
+            payload = {
+                'title': 'آگهی شما منقضی شد',
+                'body': 'برای تمدید از بخش آگهی‌های من اقدام کنید.',
+                'url': url_for('main.my_lands'),
+                'icon': '/static/icons/icon-192.png',
+                'badge': '/static/icons/monochrome-192.png',
+                'tag': 'vinor-ad-expired'
+            }
+            for s in (_load_subs() or []):
+                _send_one(s, payload)
+        except Exception:
+            pass
 
 def notify_admin_edit(ad: Dict[str, Any]):
     """اعلان بعد از ویرایش توسط ادمین."""
@@ -100,6 +140,19 @@ def notify_admin_edit(ad: Dict[str, Any]):
         ad_id=code,
         action_url=_safe_action_url(code)
     )
+    try:
+        payload = {
+            'title': 'ویرایش آگهی انجام شد',
+            'body': 'تغییرات آگهی شما توسط پشتیبانی وینور اعمال شد.',
+            'url': _safe_action_url(code),
+            'icon': '/static/icons/icon-192.png',
+            'badge': '/static/icons/monochrome-192.png',
+            'tag': 'vinor-ad-edited'
+        }
+        for s in (_load_subs() or []):
+            _send_one(s, payload)
+    except Exception:
+        pass
 
 def notify_admin_create(ad: Dict[str, Any]):
     """اعلان بعد از ثبت آگهی توسط ادمین (در صورت وجود صاحب)."""
@@ -116,6 +169,19 @@ def notify_admin_create(ad: Dict[str, Any]):
         user_id=uid, title=title, body=body, ntype=ntype,
         ad_id=code, action_url=_safe_action_url(code)
     )
+    try:
+        payload = {
+            'title': title,
+            'body': body,
+            'url': _safe_action_url(code),
+            'icon': '/static/icons/icon-192.png',
+            'badge': '/static/icons/monochrome-192.png',
+            'tag': 'vinor-ad-created'
+        }
+        for s in (_load_subs() or []):
+            _send_one(s, payload)
+    except Exception:
+        pass
 
 # -----------------------------------------------------------------------------
 # Blueprint (defined centrally)
