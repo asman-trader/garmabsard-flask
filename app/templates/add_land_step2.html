@@ -66,7 +66,7 @@
         
         <div class="space-y-3">
           <label class="sr-only" for="title">عنوان آگهی</label>
-          <input type="text" name="title" id="title" required maxlength="60" minlength="11"
+          <input type="text" name="title" id="title" required maxlength="60" minlength="11" aria-describedby="titleError titleCount"
                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" 
                  placeholder="مثال: آپارتمان ۲ خوابه در مرکز شهر">
           <div id="titleError" class="mt-1 text-[11px] text-red-600 hidden">عنوان باید بیش از ۱۰ و حداکثر ۶۰ کاراکتر باشد.</div>
@@ -83,7 +83,7 @@
         
         <div class="space-y-3">
           <label class="sr-only" for="description">توضیحات</label>
-          <textarea name="description" id="description" rows="4" maxlength="950" minlength="51"
+          <textarea name="description" id="description" rows="4" maxlength="950" minlength="51" required aria-describedby="descError descCount"
                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors resize-none" 
                     placeholder="توضیحات کامل ملک را بنویسید..."></textarea>
           <div id="descError" class="mt-1 text-[11px] text-red-600 hidden">توضیحات باید بیش از ۵۰ و حداکثر ۹۵۰ کاراکتر باشد.</div>
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const validFiles = fileArray.filter(file => file.type.startsWith('image/'));
     
     if (validFiles.length === 0) {
-      showToast('لطفاً فایل‌های تصویری معتبر انتخاب کنید', 'error');
+      // تصویر اختیاری است؛ اگر هیچ فایل معتبری نبود، صرفاً پیام نشان نده
       return;
     }
     
