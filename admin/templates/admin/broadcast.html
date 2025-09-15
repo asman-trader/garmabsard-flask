@@ -12,6 +12,22 @@
 
   <form method="post" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if push_diag %}
+    <div class="mb-2 text-xs rounded-lg border p-3"
+         style="border-color: rgba(59,130,246,.4); background: rgba(59,130,246,.06);">
+      <div class="font-bold mb-1">وضعیت پوش</div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div>کلید عمومی: <span class="font-mono">{{ '✅' if push_diag.has_public else '❌' }}</span></div>
+        <div>کلید خصوصی: <span class="font-mono">{{ '✅' if push_diag.has_private else '❌' }}</span></div>
+        <div>تعداد مشترک: <span class="font-mono">{{ push_diag.subs_count or 0 }}</span></div>
+      </div>
+      {% if not push_diag.has_private %}
+        <div class="mt-1 text-amber-700 dark:text-amber-300">کلید خصوصی VAPID تنظیم نشده؛ ارسال Web Push انجام نمی‌شود.</div>
+      {% elif (push_diag.subs_count or 0) == 0 %}
+        <div class="mt-1 text-amber-700 dark:text-amber-300">هنوز مشترکی ثبت نشده است؛ از صفحهٔ «تست اعلان پوش» برای عضویت یک مرورگر اقدام کنید.</div>
+      {% endif %}
+    </div>
+    {% endif %}
     <div>
       <label class="block text-sm mb-1">عنوان اعلان</label>
       <input type="text" name="title" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="مثلاً به‌روزرسانی جدید" required>

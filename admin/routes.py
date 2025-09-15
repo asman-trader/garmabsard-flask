@@ -561,6 +561,16 @@ def users_page():
 def notifications_broadcast():
     message = None
     error = None
+    # Diagnostics for push configuration/subscribers
+    try:
+        subs_for_diag = _load_subs()
+    except Exception:
+        subs_for_diag = []
+    push_diag = {
+        'has_public': bool(current_app.config.get('VAPID_PUBLIC_KEY')),
+        'has_private': bool(current_app.config.get('VAPID_PRIVATE_KEY')),
+        'subs_count': len(subs_for_diag or []),
+    }
     if request.method == 'POST':
         title = (request.form.get('title') or '').strip()
         body  = (request.form.get('body') or '').strip()
@@ -607,8 +617,14 @@ def notifications_broadcast():
                 res = _send_one(s, payload)
                 if res.get('ok'): push_sent += 1
             message = f'اعلان برای {sent} کاربر ثبت و {push_sent} پوش ارسال شد.'
+            # update diagnostics after send
+            try:
+                subs_for_diag = _load_subs()
+            except Exception:
+                subs_for_diag = []
+            push_diag.update({'subs_count': len(subs_for_diag or [])})
 
-    return render_template('admin/broadcast.html', message=message, error=error)
+    return render_template('admin/broadcast.html', message=message, error=error, push_diag=push_diag)
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
