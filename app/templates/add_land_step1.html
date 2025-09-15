@@ -33,6 +33,7 @@
     <!-- Step 1: Category Selection -->
     <form id="step1Form" method="POST" class="space-y-6" action="{{ url_for('main.add_land_step1') }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+      <input type="hidden" name="city" id="cityInput" value="">
 
       <!-- Trade Type Section -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
@@ -64,6 +65,25 @@
             </div>
           </label>
         </div>
+      </div>
+
+      <!-- Location (Single City) -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-map-marker-alt text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">موقعیت</h2>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">لطفاً فقط یک شهر را انتخاب کنید.</p>
+
+        <div class="flex items-center gap-2">
+          <button type="button" id="cityChip" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <i class="fas fa-map-marker-alt text-green-600"></i>
+            <span id="cityChipLabel">انتخاب شهر</span>
+          </button>
+          <button type="button" id="cityClear" class="text-xs text-red-500 hover:underline">حذف انتخاب</button>
+        </div>
+
+        <div id="cityWarn" class="mt-3 hidden text-xs text-red-600">یک شهر معتبر انتخاب کنید (استان/چندین شهر مجاز نیست).</div>
       </div>
 
       <!-- Property Type Section -->
@@ -176,8 +196,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateContinueButton() {
     const tradeType = document.querySelector('input[name="trade_type"]:checked');
     const propertyType = document.querySelector('input[name="property_type"]:checked');
-    
-    continueBtn.disabled = !tradeType || !propertyType;
+    const cityVal = (document.getElementById('cityInput')?.value || '').trim();
+    continueBtn.disabled = !tradeType || !propertyType || !cityVal;
   }
   
   // Event listeners
@@ -197,6 +217,50 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initial state
   updateContinueButton();
+  // City single-select integration
+  (function(){
+    const CITY_OBJ_KEY = 'vinor_city_obj';
+    const EVT_NAME = 'vinor:city-changed';
+    const chip = document.getElementById('cityChip');
+    const label = document.getElementById('cityChipLabel');
+    const input = document.getElementById('cityInput');
+    const warn = document.getElementById('cityWarn');
+    const clearBtn = document.getElementById('cityClear');
+
+    function setState(display, value, valid){
+      if (label) label.textContent = display || 'انتخاب شهر';
+      if (input) input.value = value || '';
+      if (warn) warn.classList.toggle('hidden', !!valid);
+      updateContinueButton();
+    }
+
+    function applyFromStorage(){
+      try{
+        const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || 'null');
+        if (obj && obj.city) { setState(obj.city, obj.city, true); return; }
+        if (obj && Array.isArray(obj.cities)){
+          if (obj.cities.length === 1){ setState(obj.cities[0], obj.cities[0], true); return; }
+          if (obj.cities.length > 1){ setState('انتخاب شهر', '', false); return; }
+        }
+        if (obj && obj.province && obj.allProvince){ setState('انتخاب شهر', '', false); return; }
+      }catch(_){ }
+      setState('انتخاب شهر', '', false);
+    }
+
+    function gotoPicker(){
+      try{
+        const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
+        url.searchParams.set('next', window.location.href);
+        window.location.href = url.toString();
+      }catch(_){ window.location.href = "{{ url_for('main.city_select') }}"; }
+    }
+
+    chip?.addEventListener('click', (e)=>{ e.preventDefault(); gotoPicker(); });
+    clearBtn?.addEventListener('click', (e)=>{ e.preventDefault(); setState('انتخاب شهر','',false); });
+    document.addEventListener(EVT_NAME, applyFromStorage);
+    window.addEventListener('storage', (e)=>{ if (e.key === 'vinor_city_obj') applyFromStorage(); });
+    applyFromStorage();
+  })();
 });
 </script>
 {% endblock %}
