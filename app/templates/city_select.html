@@ -112,6 +112,7 @@
     } catch (e) {
       DATA = FALLBACK;
     }
+    ensureDefaultAllIran();
     showProvinces();
   }
 
@@ -141,6 +142,16 @@
       localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province, city, cities: [city], allProvince: false }));
       localStorage.setItem(CITY_SYNC_KEY, Date.now().toString());
       document.dispatchEvent(new CustomEvent(EVT_NAME, { detail: { city, province, cityName: city, cities: [city], allProvince: false } }));
+    } catch(_) {}
+  }
+
+  function ensureDefaultAllIran() {
+    try {
+      const hasObj = !!localStorage.getItem(CITY_OBJ_KEY);
+      const hasLabel = !!localStorage.getItem(CITY_KEY);
+      if (!hasObj && !hasLabel) {
+        setCityStorageForAllIran();
+      }
     } catch(_) {}
   }
 
