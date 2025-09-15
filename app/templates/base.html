@@ -138,16 +138,18 @@
         if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
       });
 
-      // ژست کشیدنی موبایل برای باز/بستن منو (RTL – منو از راست باز می‌شود)
+      // ژست کشیدنی همه‌پلتفرم (موبایل و دسکتاپ) برای باز/بستن منو (RTL)
       (function(){
         let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false;
-        const EDGE = 24;       // ناحیه فعال کنار صفحه (px)
-        const OPEN_THRESH = 40; // حداقل جابجایی برای باز/بستن (px)
-        const isMobile = () => window.innerWidth <= 768;
+        const EDGE = 24;        // ناحیه فعال کنار صفحه (px)
+        const OPEN_THRESH = 40; // حداقل جابجایی افقی (px)
 
         function onStart(ev){
-          if (!isMobile()) return;
           const t = ev.touches ? ev.touches[0] : ev;
+          const menuIsOpen = sideMenu?.classList.contains('open');
+          const fromRightEdge = (window.innerWidth - t.clientX) <= EDGE;
+          // شروع فقط اگر از لبه راست باشد یا منو باز باشد (برای بستن)
+          if (!menuIsOpen && !fromRightEdge) return;
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
         }
         function onMove(ev){
@@ -158,24 +160,27 @@
         function onEnd(){
           if (!tracking) return; tracking = false;
           const absX = Math.abs(dx), absY = Math.abs(dy);
-          // فقط حرکت افقی معنادار
-          if (absX < absY) return;
-          const fromRightEdge = (window.innerWidth - startX) <= EDGE;
+          if (absX < Math.max(absY, 6)) return; // اطمینان از حرکت افقی غالب
           const menuIsOpen = sideMenu?.classList.contains('open');
+          const fromRightEdge = (window.innerWidth - startX) <= EDGE;
 
           // بازکردن: شروع از لبه راست و کشیدن به چپ (dx منفی)
           if (!menuIsOpen && fromRightEdge && dx <= -OPEN_THRESH) {
             sideMenu?.classList.add('open');
             return;
           }
-          // بستن: وقتی باز است و به راست کشیده می‌شود
+          // بستن: وقتی باز است و به راست کشیده می‌شود (dx مثبت)
           if (menuIsOpen && dx >= OPEN_THRESH) {
             sideMenu?.classList.remove('open');
           }
         }
+        // پشتیبانی از Touch و Mouse/Pointer
         document.addEventListener('touchstart', onStart, { passive: true });
         document.addEventListener('touchmove', onMove, { passive: true });
         document.addEventListener('touchend', onEnd, { passive: true });
+        document.addEventListener('pointerdown', onStart, { passive: true });
+        document.addEventListener('pointermove', onMove, { passive: true });
+        document.addEventListener('pointerup', onEnd, { passive: true });
       })();
 
       // فیلترها
