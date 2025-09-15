@@ -158,7 +158,7 @@
         const OPEN_THRESH = 48; // حداقل جابجایی افقی (px)
 
         function isInteractive(el){
-          return el && (el.closest('#sideMenu') || el.closest('#menuToggle') || el.closest('input,textarea,select,button,a'));
+          return el && (el.closest('#menuToggle') || el.closest('input,textarea,select,button,a'));
         }
 
         function onStart(ev){
@@ -183,7 +183,7 @@
             // شروع از لبه راست و کشیدن به چپ (dx منفی)
             if (dx <= -OPEN_THRESH) sideMenu?.classList.add('open');
           } else if (mode === 'close'){
-            // وقتی باز است و به راست کشیده می‌شود (dx مثبت)
+            // وقتی باز است، چه روی منو و چه بیرون از آن به راست کشیده شود (dx مثبت)
             if (dx >= OPEN_THRESH) sideMenu?.classList.remove('open');
           }
           mode = '';
