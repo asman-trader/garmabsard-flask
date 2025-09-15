@@ -32,6 +32,26 @@ def load_source(path: str) -> Image.Image:
     return img
 
 
+def crop_quadrant(img: Image.Image, pos: str) -> Image.Image:
+    """Crop one quadrant from a 2x2 grid image.
+
+    pos ∈ { 'top-left', 'top-right', 'bottom-left', 'bottom-right' }
+    """
+    w, h = img.size
+    hw, hh = w // 2, h // 2
+    if pos == 'top-left':
+        box = (0, 0, hw, hh)
+    elif pos == 'top-right':
+        box = (hw, 0, w, hh)
+    elif pos == 'bottom-left':
+        box = (0, hh, hw, h)
+    elif pos == 'bottom-right':
+        box = (hw, hh, w, h)
+    else:
+        return img
+    return img.crop(box)
+
+
 def resize_contain(img: Image.Image, target: int) -> Image.Image:
     """Resize keeping aspect ratio to fit inside a target square; transparent padding."""
     canvas = Image.new("RGBA", (target, target), (0, 0, 0, 0))
@@ -60,9 +80,11 @@ def make_maskable(img: Image.Image, target: int, safe_ratio: float = 0.8) -> Ima
     return canvas
 
 
-def generate_all(source_path: str, out_dir: str) -> None:
+def generate_all(source_path: str, out_dir: str, crop: str | None = None) -> None:
     ensure_dir(out_dir)
     src = load_source(source_path)
+    if crop:
+        src = crop_quadrant(src, crop)
 
     for size in SIZES:
         # Standard icon
@@ -76,16 +98,17 @@ def generate_all(source_path: str, out_dir: str) -> None:
     print(f"✅ Generated icons in: {out_dir}")
 
 
-def parse_args() -> Tuple[str, str]:
+def parse_args() -> Tuple[str, str, str | None]:
     p = argparse.ArgumentParser(description="Generate PWA icons from a single seed image")
     p.add_argument("--source", required=True, help="Path to high-res source PNG (sprout)")
     p.add_argument("--out", default="app/static/icons", help="Output directory (default: app/static/icons)")
+    p.add_argument("--crop", choices=["top-left", "top-right", "bottom-left", "bottom-right"], help="Crop one quadrant from a 2x2 sheet before resizing")
     a = p.parse_args()
-    return a.source, a.out
+    return a.source, a.out, a.crop
 
 
 if __name__ == "__main__":
-    src, out = parse_args()
-    generate_all(src, out)
+    src, out, crop = parse_args()
+    generate_all(src, out, crop)
 
 
