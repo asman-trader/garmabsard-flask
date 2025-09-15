@@ -119,6 +119,7 @@
     overflow: hidden;
     border: 1px solid #e5e7eb;
   }
+  .image-preview.dragging { opacity: .6; transform: scale(.98); }
   
   .image-preview img {
     width: 100%;
@@ -141,6 +142,29 @@
     justify-content: center;
     font-size: 12px;
     cursor: pointer;
+  }
+  .image-preview .cover-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(16,185,129,.6);
+    background: rgba(255,255,255,.9);
+    color: #065f46;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .image-preview .cover-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #065f46;
+    color: #fff;
+    font-size: 10px;
+    opacity: .95;
   }
   
   .upload-progress {
@@ -267,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const preview = document.createElement('div');
     preview.className = 'image-preview';
     preview.dataset.fileId = id || Date.now();
+    preview.draggable = true;
     
     const img = document.createElement('img');
     img.src = URL.createObjectURL(file);
@@ -275,6 +300,13 @@ document.addEventListener('DOMContentLoaded', function() {
     removeBtn.className = 'remove-btn';
     removeBtn.innerHTML = '×';
     removeBtn.onclick = () => removeImage(preview.dataset.fileId);
+    const coverBtn = document.createElement('button');
+    coverBtn.className = 'cover-btn';
+    coverBtn.textContent = 'انتخاب کاور';
+    coverBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      setAsCover(preview.dataset.fileId);
+    });
     
     const progressContainer = document.createElement('div');
     progressContainer.className = 'upload-progress';
@@ -285,6 +317,24 @@ document.addEventListener('DOMContentLoaded', function() {
     preview.appendChild(img);
     preview.appendChild(removeBtn);
     preview.appendChild(progressContainer);
+    preview.appendChild(coverBtn);
+
+    // Drag & Drop handlers
+    preview.addEventListener('dragstart', (ev)=>{
+      preview.classList.add('dragging');
+      ev.dataTransfer.setData('text/plain', preview.dataset.fileId);
+    });
+    preview.addEventListener('dragend', ()=>{
+      preview.classList.remove('dragging');
+    });
+    preview.addEventListener('dragover', (ev)=>{ ev.preventDefault(); });
+    preview.addEventListener('drop', (ev)=>{
+      ev.preventDefault();
+      const srcId = ev.dataTransfer.getData('text/plain');
+      const dstId = preview.dataset.fileId;
+      if (!srcId || !dstId || srcId === dstId) return;
+      reorderPreviews(srcId, dstId);
+    });
     
     return { preview, progressBar };
   }
@@ -295,6 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
     preview.className = 'image-preview';
     const localId = id || (Date.now() + Math.random());
     preview.dataset.fileId = localId;
+    preview.draggable = true;
 
     const img = document.createElement('img');
     img.src = `/uploads/${serverId}`;
@@ -307,8 +358,26 @@ document.addEventListener('DOMContentLoaded', function() {
     preview.appendChild(img);
     preview.appendChild(removeBtn);
     imagePreview.appendChild(preview);
+    // Drag & Drop handlers
+    preview.addEventListener('dragstart', (ev)=>{
+      preview.classList.add('dragging');
+      ev.dataTransfer.setData('text/plain', preview.dataset.fileId);
+    });
+    preview.addEventListener('dragend', ()=>{
+      preview.classList.remove('dragging');
+    });
+    preview.addEventListener('dragover', (ev)=>{ ev.preventDefault(); });
+    preview.addEventListener('drop', (ev)=>{
+      ev.preventDefault();
+      const srcId = ev.dataTransfer.getData('text/plain');
+      const dstId = preview.dataset.fileId;
+      if (!srcId || !dstId || srcId === dstId) return;
+      reorderPreviews(srcId, dstId);
+    });
 
-    uploadedImages.push({ id: localId, file: null, serverId });
+    const isFirst = uploadedImages.length === 0;
+    uploadedImages.push({ id: localId, file: null, serverId, isCover: isFirst });
+    if (isFirst) renderCoverBadges();
   }
   
   // Remove image
@@ -321,12 +390,62 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadedImages = uploadedImages.filter(img => img.id !== fileId);
     updateUploadedIds();
     updateContinueButton();
+    renderCoverBadges();
+    saveDraft();
+    // Ensure we always have a cover if any image exists
+    if (uploadedImages.length) {
+      if (!uploadedImages.some(x=>x.isCover)) {
+        uploadedImages[0].isCover = true;
+        renderCoverBadges();
+        saveDraft();
+      }
+    }
   }
   
   // Update uploaded IDs hidden field
   function updateUploadedIds() {
     const ids = uploadedImages.filter(img => img.serverId).map(img => img.serverId);
     uploadedImageIds.value = ids.join(',');
+    // Persist immediately to avoid ghost previews on refresh
+    saveDraft();
+  }
+
+  function setAsCover(fileId) {
+    uploadedImages = uploadedImages.map(x => ({ ...x, isCover: x.id == fileId }));
+    renderCoverBadges();
+    saveDraft();
+  }
+
+  function renderCoverBadges() {
+    // remove old badges
+    document.querySelectorAll('.image-preview .cover-badge').forEach(el => el.remove());
+    // add badge for current cover
+    const cover = uploadedImages.find(x => x.isCover);
+    if (!cover) return;
+    const preview = document.querySelector(`.image-preview[data-file-id="${cover.id}"]`);
+    if (!preview) return;
+    const badge = document.createElement('span');
+    badge.className = 'cover-badge';
+    badge.textContent = 'کاور';
+    preview.appendChild(badge);
+  }
+
+  function reorderPreviews(srcId, dstId) {
+    const fromIdx = uploadedImages.findIndex(x => String(x.id) === String(srcId));
+    const toIdx = uploadedImages.findIndex(x => String(x.id) === String(dstId));
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+    const [moved] = uploadedImages.splice(fromIdx, 1);
+    uploadedImages.splice(toIdx, 0, moved);
+    // Reorder DOM
+    const srcEl = document.querySelector(`.image-preview[data-file-id="${srcId}"]`);
+    const dstEl = document.querySelector(`.image-preview[data-file-id="${dstId}"]`);
+    if (srcEl && dstEl && srcEl !== dstEl) imagePreview.insertBefore(srcEl, dstEl);
+    // Make first item cover per UX
+    uploadedImages.forEach(x => x.isCover = false);
+    if (uploadedImages.length) uploadedImages[0].isCover = true;
+    renderCoverBadges();
+    updateUploadedIds();
+    saveDraft();
   }
 
   // Draft persistence
@@ -422,7 +541,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const fileId = Date.now() + Math.random();
       const { preview, progressBar } = createImagePreview(file, fileId);
       
-      uploadedImages.push({ id: fileId, file, serverId: null });
+      // اگر کاور نداریم، اولی را کاور کن
+      const isFirst = uploadedImages.length === 0;
+      uploadedImages.push({ id: fileId, file, serverId: null, isCover: isFirst });
       imagePreview.appendChild(preview);
       
       uploadingCount++;
@@ -437,6 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           showToast('تصویر با موفقیت آپلود شد');
           saveDraft();
+          renderCoverBadges();
         })
         .catch(error => {
           showToast(error.message, 'error');
