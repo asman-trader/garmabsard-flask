@@ -3,15 +3,18 @@
 
 {% set hide_header = true %}
 {% block content %}
-<main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
-  <!-- Top Bar -->
-  <div class="sticky top-0 z-20 -mx-3 sm:mx-0 px-3 py-3 mb-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+<!-- Fixed Header -->
+<div class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
+  <div class="px-3 sm:px-4 py-3 flex items-center justify-between">
     <button id="btnBack" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
       <i class="fas fa-arrow-right"></i>
     </button>
     <h1 id="pageTitle" class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب استان</h1>
     <div class="w-10"></div>
   </div>
+</div>
+<div class="h-14"></div>
+<main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
 
   <!-- Quick: All Iran -->
   <div class="mb-3">
