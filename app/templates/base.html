@@ -120,6 +120,7 @@
   <script>
     (function(){
       const IS_LOGGED_IN = {{ 'true' if __is_logged_in else 'false' }};
+      const IS_HOME = {{ 'true' if request.endpoint in ['main.index','main.app_home'] else 'false' }};
       const LOGIN_URL    = "{{ __login_url }}";
 
       // گارد لاگین برای لینک‌هایی که ورود لازم دارند
@@ -187,7 +188,7 @@
           const menuIsOpen = sideMenu?.classList.contains('open');
           // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
           // وقتی منو بسته است، روی کنترل‌های تعاملی ژست را شروع نکن
-          if (!menuIsOpen && isInteractive(target)) return;
+          if (!menuIsOpen && isInteractive(target) && !IS_HOME) return;
           // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
           mode = menuIsOpen ? 'close' : 'open';
