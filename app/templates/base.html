@@ -110,6 +110,8 @@
 
   {# سایدبار #}
   {% include 'side_menu.html' %}
+  <!-- Backdrop for side menu (mobile only) -->
+  <div id="menuBackdrop" class="fixed inset-0 sm:hidden bg-black/30 opacity-0 pointer-events-none transition-opacity z-40"></div>
 
   {# === آماده‌سازی امن متغیرها برای اسکریپت‌ها (بدون استفاده از globals()) === #}
   {% set __is_logged_in = (VINOR_IS_LOGGED_IN if VINOR_IS_LOGGED_IN is defined else (session.get('user_id') and True)) %}
@@ -132,8 +134,26 @@
 
       // سایدبار
       const sideMenu = document.getElementById("sideMenu");
-      document.getElementById("menuToggle")?.addEventListener("click", ()=> sideMenu?.classList.add("open"));
-      document.getElementById("closeMenu")?.addEventListener("click", ()=> sideMenu?.classList.remove("open"));
+      const menuBackdrop = document.getElementById('menuBackdrop');
+
+      function openMenu(){
+        try{ sideMenu?.classList.add('open'); }catch(_){ }
+        if (menuBackdrop){
+          menuBackdrop.classList.remove('opacity-0','pointer-events-none');
+          menuBackdrop.classList.add('opacity-100','pointer-events-auto');
+        }
+      }
+      function closeMenu(){
+        try{ sideMenu?.classList.remove('open'); }catch(_){ }
+        if (menuBackdrop){
+          menuBackdrop.classList.add('opacity-0','pointer-events-none');
+          menuBackdrop.classList.remove('opacity-100','pointer-events-auto');
+        }
+      }
+
+      document.getElementById("menuToggle")?.addEventListener("click", openMenu);
+      document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
+      menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
       // اول منو را ببند، سپس اجازه بده سایر کلیک‌ها اجرا شوند (capture)
       window.addEventListener("click", (e)=>{
         try {
@@ -141,7 +161,7 @@
           const insideMenu = !!e.target.closest('#sideMenu');
           const onToggle = !!e.target.closest('#menuToggle');
           if (isOpen && !insideMenu && !onToggle) {
-            sideMenu?.classList.remove('open');
+            closeMenu();
             // مانع رسیدن کلیک به عناصر زیرین شو
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             else e.stopPropagation();
@@ -181,10 +201,10 @@
           if (absX < Math.max(absY, 8)) return; // حرکت افقی غالب
           if (mode === 'open'){
             // شروع از لبه راست و کشیدن به چپ (dx منفی)
-            if (dx <= -OPEN_THRESH) sideMenu?.classList.add('open');
+            if (dx <= -OPEN_THRESH) openMenu();
           } else if (mode === 'close'){
             // وقتی باز است، چه روی منو و چه بیرون از آن به راست کشیده شود (dx مثبت)
-            if (dx >= OPEN_THRESH) sideMenu?.classList.remove('open');
+            if (dx >= OPEN_THRESH) closeMenu();
           }
           mode = '';
         }
