@@ -51,6 +51,12 @@ def notifications_page():
         return guard  # ریدایرکت به لاگین
 
     uid = current_user_id()
+    # به محض مشاهدهٔ صفحه، اعلان‌های خوانده‌نشده را خوانده علامت بزن
+    try:
+        mark_all_read(uid)
+    except Exception:
+        pass
+    # سپس فهرست اعلان‌ها را بگیر (همه خوانده خواهند بود)
     items = get_user_notifications(uid, limit=100)
 
     # URLها در ویو ساخته می‌شوند تا در قالب به‌صورت امن استفاده شوند (مثلاً با |tojson)

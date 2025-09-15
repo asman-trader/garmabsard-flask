@@ -7,10 +7,6 @@
     <!-- هدر صفحه -->
     <header class="flex items-center justify-between mb-4">
       <h1 class="text-lg font-bold">اعلان‌های من</h1>
-      <button id="mark-all"
-              class="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700">
-        علامت‌گذاری همه به‌عنوان خوانده‌شده
-      </button>
     </header>
 
     <!-- لیست اعلان‌ها -->
@@ -50,15 +46,7 @@
                   </a>
                 {% endif %}
 
-                {% if not is_read %}
-                  <button class="mark-read text-xs px-2 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                          data-id="{{ n.id }}">
-                    علامت‌گذاری به‌عنوان خوانده‌شده
-                  </button>
-                  <span class="dot-new text-[10px] text-red-500">● جدید</span>
-                {% else %}
-                  <span class="text-[10px] text-gray-400">خوانده‌شده</span>
-                {% endif %}
+                <span class="text-[10px] text-gray-400">خوانده‌شده</span>
               </div>
             </div>
           </li>
@@ -211,51 +199,6 @@
       if (perm === 'granted' && reg) await ensurePushSubscription(reg);
     })();
 
-    // ===== خوانده‌شدن‌ها =====
-    function disableBtn(btn, on=true){
-      if (!btn) return;
-      btn.disabled = on;
-      btn.classList.toggle('opacity-60', on);
-      btn.classList.toggle('cursor-not-allowed', on);
-    }
-    async function markAllAPI(){
-      const btn = document.getElementById("mark-all");
-      if (btn?.disabled) return;
-      disableBtn(btn, true);
-      const url = MARK_ALL_READ_URL || '/api/notifications/mark-all-read';
-      const res = await postJSON(url, {});
-      if(res && (res.ok || res.status === 'ok')){
-        document.querySelectorAll(".mark-read").forEach(el=>{
-          const tag = document.createElement('span');
-          tag.className = 'text-[10px] text-gray-400';
-          tag.textContent = 'خوانده‌شده';
-          const dot = el.parentElement?.querySelector('.dot-new');
-          if (dot) dot.remove();
-          el.replaceWith(tag);
-        });
-      } else {
-        disableBtn(btn, false);
-      }
-    }
-    async function markOneAPI(id, btn){
-      if(!id || btn?.disabled) return;
-      disableBtn(btn, true);
-      const url = MARK_ONE_READ_URL || '/api/notifications/mark-read';
-      const res = await postJSON(url, { id });
-      if(res && (res.ok || res.status === 'ok')){
-        const tag = document.createElement('span');
-        tag.className = 'text-[10px] text-gray-400';
-        tag.textContent = 'خوانده‌شده';
-        const dot = btn.parentElement?.querySelector('.dot-new');
-        if (dot) dot.remove();
-        btn.replaceWith(tag);
-      } else {
-        disableBtn(btn, false);
-      }
-    }
-    document.getElementById("mark-all")?.addEventListener("click", markAllAPI);
-    document.querySelectorAll(".mark-read").forEach(btn=>{
-      btn.addEventListener("click", ()=> markOneAPI(btn.dataset.id, btn));
-    });
+    // خوانده‌شدن خودکار هنگام ورود به صفحه اعمال شده است (بدون دکمه)
   </script>
 {% endblock %}
