@@ -142,6 +142,11 @@
           const onToggle = !!e.target.closest('#menuToggle');
           if (isOpen && !insideMenu && !onToggle) {
             sideMenu?.classList.remove('open');
+            // مانع رسیدن کلیک به عناصر زیرین شو
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            else e.stopPropagation();
+            try { e.preventDefault(); } catch(_) {}
+            return;
           }
         } catch(_) {}
       }, true);
