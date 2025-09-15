@@ -388,10 +388,7 @@ def edit_land(code):
             'size': request.form.get('size'),
             'price_total': _to_int(request.form.get('price_total')) if request.form.get('price_total') else None,
             'description': request.form.get('description'),
-            'category': category,
-            # هر ویرایش توسط کاربر → نیازمند بازبینی مجدد
-            'status': 'pending',
-            'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'category': category
         })
 
         folder = os.path.join(data_dir(), 'uploads')
