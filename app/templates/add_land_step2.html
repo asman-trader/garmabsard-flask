@@ -65,10 +65,12 @@
         </div>
         
         <div class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="title">عنوان آگهی</label>
-          <input type="text" name="title" id="title" required
+          <label class="sr-only" for="title">عنوان آگهی</label>
+          <input type="text" name="title" id="title" required maxlength="60" minlength="11"
                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors" 
                  placeholder="مثال: آپارتمان ۲ خوابه در مرکز شهر">
+          <div id="titleError" class="mt-1 text-[11px] text-red-600 hidden">عنوان باید بیش از ۱۰ و حداکثر ۶۰ کاراکتر باشد.</div>
+          <div class="mt-1 text-[11px] text-gray-500" id="titleCount">کاراکتر: 0/60</div>
         </div>
       </div>
 
@@ -80,10 +82,12 @@
         </div>
         
         <div class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="description">توضیحات</label>
-          <textarea name="description" id="description" rows="4"
+          <label class="sr-only" for="description">توضیحات</label>
+          <textarea name="description" id="description" rows="4" maxlength="950" minlength="51"
                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors resize-none" 
                     placeholder="توضیحات کامل ملک را بنویسید..."></textarea>
+          <div id="descError" class="mt-1 text-[11px] text-red-600 hidden">توضیحات باید بیش از ۵۰ و حداکثر ۹۵۰ کاراکتر باشد.</div>
+          <div class="mt-1 text-[11px] text-gray-500" id="descCount">کاراکتر: 0/950</div>
         </div>
       </div>
 
@@ -155,6 +159,8 @@
     width: 0%;
     transition: width 0.3s ease;
   }
+  /* Auto-grow textarea */
+  #description { overflow: hidden; }
   
   .toast {
     padding: 12px 16px;
@@ -227,14 +233,28 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Update continue button state
   function updateContinueButton() {
-    const hasImages = uploadedImages.length > 0;
     const titleInput = document.querySelector('input[name="title"]');
     const descriptionInput = document.querySelector('textarea[name="description"]');
-    const hasTitle = titleInput ? titleInput.value.trim() !== '' : false;
-    const hasDescription = descriptionInput ? descriptionInput.value.trim() !== '' : false;
-    
-    continueBtn.disabled = !hasImages || !hasTitle || !hasDescription || uploadingCount > 0;
-    
+    const titleLen = titleInput ? titleInput.value.trim().length : 0;
+    const descLen  = descriptionInput ? descriptionInput.value.trim().length : 0;
+    const titleOk = titleLen >= 11 && titleLen <= 60;
+    const descOk  = descLen >= 51 && descLen <= 950;
+
+    const titleErr = document.getElementById('titleError');
+    const descErr  = document.getElementById('descError');
+    if (titleErr) titleErr.classList.toggle('hidden', titleOk || titleLen === 0);
+    if (descErr)  descErr.classList.toggle('hidden',  descOk  || descLen  === 0);
+
+    continueBtn.disabled = !(titleOk && descOk) || uploadingCount > 0;
+
+    // Counters
+    try{
+      const tC = document.getElementById('titleCount');
+      const dC = document.getElementById('descCount');
+      if (tC) tC.textContent = `کاراکتر: ${titleLen}/60`;
+      if (dC) dC.textContent = `کاراکتر: ${descLen}/950`;
+    }catch(_){ }
+
     if (uploadingCount > 0) {
       continueBtn.textContent = `در حال آپلود... (${uploadingCount})`;
     } else {
@@ -417,12 +437,21 @@ document.addEventListener('DOMContentLoaded', function() {
   // Form validation
   if (form) {
     form.addEventListener('submit', (e) => {
-      if (uploadedImages.length === 0) {
+      const titleInput = document.querySelector('input[name="title"]');
+      const descriptionInput = document.querySelector('textarea[name="description"]');
+      const titleLen = titleInput ? titleInput.value.trim().length : 0;
+      const descLen  = descriptionInput ? descriptionInput.value.trim().length : 0;
+      if (titleLen < 11 || titleLen > 60) {
         e.preventDefault();
-        showToast('لطفاً حداقل یک تصویر انتخاب کنید', 'error');
+        showToast('عنوان باید بیش از ۱۰ و حداکثر ۶۰ کاراکتر باشد.', 'error');
         return;
       }
-      
+      if (descLen < 51 || descLen > 950) {
+        e.preventDefault();
+        showToast('توضیحات باید بیش از ۵۰ و حداکثر ۹۵۰ کاراکتر باشد.', 'error');
+        return;
+      }
+
       if (uploadingCount > 0) {
         e.preventDefault();
         showToast('لطفاً صبر کنید تا آپلود تصاویر تمام شود', 'error');
@@ -440,7 +469,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   if (descriptionInput) {
-    descriptionInput.addEventListener('input', updateContinueButton);
+    const autoResizeDescription = () => {
+      try {
+        descriptionInput.style.height = 'auto';
+        const maxH = 800; // px cap to avoid excessive growth
+        const next = Math.min(descriptionInput.scrollHeight, maxH);
+        descriptionInput.style.height = next + 'px';
+      } catch(_) {}
+    };
+    descriptionInput.addEventListener('input', () => { updateContinueButton(); autoResizeDescription(); });
+    // Initialize height
+    autoResizeDescription();
   }
   
   // Initial state

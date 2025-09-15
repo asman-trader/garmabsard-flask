@@ -87,8 +87,19 @@ def add_land():
         title = (request.form.get('title') or '').strip()
         description = request.form.get('description') or None
 
-        if not title:
-            flash("عنوان آگهی الزامی است.")
+        # Server-side validation for lengths
+        if len(title) > 60:
+            flash("حداکثر طول عنوان ۶۰ کاراکتر است.")
+            return redirect(url_for('main.add_land'))
+        if description is not None and len(description) > 950:
+            flash("حداکثر طول توضیحات ۹۵۰ کاراکتر است.")
+            return redirect(url_for('main.add_land'))
+
+        if not title or len(title) < 11:
+            flash("عنوان باید بیش از ۱۰ و حداکثر ۶۰ کاراکتر باشد.")
+            return redirect(url_for('main.add_land'))
+        if description is None or len(description.strip()) < 51:
+            flash("توضیحات باید بیش از ۵۰ و حداکثر ۹۵۰ کاراکتر باشد.")
             return redirect(url_for('main.add_land'))
 
         # Prefer uploaded_image_ids collected by client-side uploader
