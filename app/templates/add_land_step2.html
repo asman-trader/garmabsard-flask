@@ -43,13 +43,12 @@
         
         <!-- Upload Area -->
         <div class="mb-4">
-          <label for="imagesInput" class="block">
-            <div id="dropzone" class="w-full h-32 border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
-              <i class="fas fa-cloud-upload-alt text-3xl text-emerald-500 mb-2"></i>
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">تصاویر را انتخاب کنید</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">حداکثر ۱۰ تصویر</p>
-            </div>
-          </label>
+          <div id="dropzone" role="button" tabindex="0" aria-controls="imagesInput" aria-label="انتخاب تصاویر"
+               class="w-full h-32 border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+            <i class="fas fa-cloud-upload-alt text-3xl text-emerald-500 mb-2"></i>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">تصاویر را انتخاب کنید</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">حداکثر ۱۰ تصویر</p>
+          </div>
           <input type="file" id="imagesInput" name="images" accept="image/*" multiple class="hidden">
         </div>
         
@@ -218,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let uploadedImages = [];
   let uploadingCount = 0;
+  const LS_KEY = 'adStep2Draft';
   
   // Show toast message
   function showToast(message, type = 'success') {
@@ -288,6 +288,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     return { preview, progressBar };
   }
+
+  // Create preview from server URL (for restored state)
+  function createImagePreviewFromUrl(serverId, id = null) {
+    const preview = document.createElement('div');
+    preview.className = 'image-preview';
+    const localId = id || (Date.now() + Math.random());
+    preview.dataset.fileId = localId;
+
+    const img = document.createElement('img');
+    img.src = `/uploads/${serverId}`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.onclick = () => removeImage(preview.dataset.fileId);
+
+    preview.appendChild(img);
+    preview.appendChild(removeBtn);
+    imagePreview.appendChild(preview);
+
+    uploadedImages.push({ id: localId, file: null, serverId });
+  }
   
   // Remove image
   function removeImage(fileId) {
@@ -305,6 +327,36 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateUploadedIds() {
     const ids = uploadedImages.filter(img => img.serverId).map(img => img.serverId);
     uploadedImageIds.value = ids.join(',');
+  }
+
+  // Draft persistence
+  function saveDraft() {
+    const titleEl = document.querySelector('input[name="title"]');
+    const descEl = document.querySelector('textarea[name="description"]');
+    const ids = uploadedImages.filter(x=>x.serverId).map(x=>x.serverId);
+    const payload = {
+      title: titleEl ? titleEl.value : '',
+      description: descEl ? descEl.value : '',
+      uploadedIds: ids
+    };
+    try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch(_) {}
+  }
+
+  function loadDraft() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch(_) { data = null; }
+    if (!data) return;
+    try {
+      const titleEl = document.querySelector('input[name="title"]');
+      const descEl = document.querySelector('textarea[name="description"]');
+      if (titleEl && typeof data.title === 'string') titleEl.value = data.title;
+      if (descEl && typeof data.description === 'string') descEl.value = data.description;
+      (Array.isArray(data.uploadedIds) ? data.uploadedIds : []).forEach(sid=>{
+        if (sid && typeof sid === 'string') createImagePreviewFromUrl(sid);
+      });
+      updateUploadedIds();
+      updateContinueButton();
+    } catch(_) {}
   }
   
   // Upload single image
@@ -384,6 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateUploadedIds();
           }
           showToast('تصویر با موفقیت آپلود شد');
+          saveDraft();
         })
         .catch(error => {
           showToast(error.message, 'error');
@@ -401,15 +454,22 @@ document.addEventListener('DOMContentLoaded', function() {
     imagesInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
         handleFiles(e.target.files);
+        saveDraft();
       }
     });
   }
   
   if (dropzone) {
-    dropzone.addEventListener('click', () => {
-      if (imagesInput) {
-        imagesInput.click();
-      }
+    const openPicker = (e) => {
+      e.preventDefault();
+      if (!imagesInput) return;
+      // Clear value to ensure same-file re-selection triggers change
+      imagesInput.value = '';
+      imagesInput.click();
+    };
+    dropzone.addEventListener('click', openPicker);
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') openPicker(e);
     });
   }
   
@@ -457,6 +517,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('لطفاً صبر کنید تا آپلود تصاویر تمام شود', 'error');
         return;
       }
+      // On successful submit, clear draft (server will carry state)
+      try { localStorage.removeItem(LS_KEY); } catch(_) {}
     });
   }
   
@@ -465,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const descriptionInput = document.querySelector('textarea[name="description"]');
   
   if (titleInput) {
-    titleInput.addEventListener('input', updateContinueButton);
+    titleInput.addEventListener('input', () => { updateContinueButton(); saveDraft(); });
   }
   
   if (descriptionInput) {
@@ -477,12 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
         descriptionInput.style.height = next + 'px';
       } catch(_) {}
     };
-    descriptionInput.addEventListener('input', () => { updateContinueButton(); autoResizeDescription(); });
+    descriptionInput.addEventListener('input', () => { updateContinueButton(); autoResizeDescription(); saveDraft(); });
     // Initialize height
     autoResizeDescription();
   }
   
   // Initial state
+  loadDraft();
   updateContinueButton();
 });
 </script>
