@@ -2,7 +2,7 @@
 // تجربه سریع، امن و شفاف
 
 // ================== Cache ==================
-const CACHE_NAME = 'vinor-cache-v4';
+const CACHE_NAME = 'vinor-cache-v5';
 const API_CACHE_NAME = 'vinor-api-cache-v1';
 const ASSETS = [
   '/',                         // لندینگ (guest shell)
@@ -21,7 +21,8 @@ const ASSETS = [
   '/static/icons/icon-256.png',
   '/static/icons/icon-384.png',
   '/static/icons/icon-512.png',
-  '/static/sounds/notify.mp3'
+  '/static/sounds/notify.mp3',
+  '/static/offline.html'
   // در صورت نیاز، فایل‌های استاتیک حیاتی دیگر را اضافه کنید.
 ];
 
@@ -120,6 +121,8 @@ self.addEventListener('fetch', (event) => {
         if (appFallback) return appFallback;
         const guestFallback = await cache.match('/');
         if (guestFallback) return guestFallback;
+        const offline = await cache.match('/static/offline.html');
+        if (offline) return offline;
       }
 
       const any = await caches.match(req);
