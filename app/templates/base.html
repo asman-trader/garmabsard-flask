@@ -140,17 +140,23 @@
 
       // ژست کشیدنی همه‌پلتفرم (موبایل و دسکتاپ) برای باز/بستن منو (RTL)
       (function(){
-        let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false;
+        let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false, mode = '';
         const EDGE = 24;        // ناحیه فعال کنار صفحه (px)
-        const OPEN_THRESH = 40; // حداقل جابجایی افقی (px)
+        const OPEN_THRESH = 48; // حداقل جابجایی افقی (px)
+
+        function isInteractive(el){
+          return el && (el.closest('#sideMenu') || el.closest('#menuToggle') || el.closest('input,textarea,select,button,a'));
+        }
 
         function onStart(ev){
           const t = ev.touches ? ev.touches[0] : ev;
+          const target = ev.target || null;
+          if (isInteractive(target)) return;
           const menuIsOpen = sideMenu?.classList.contains('open');
-          const fromRightEdge = (window.innerWidth - t.clientX) <= EDGE;
-          // شروع فقط اگر از لبه راست باشد یا منو باز باشد (برای بستن)
-          if (!menuIsOpen && !fromRightEdge) return;
+          // باز کردن از هر جای صفحه (نه داخل منو/کنترل‌ها)؛ بستن از هر جا به جز خود منو
+          if (menuIsOpen && target && target.closest('#sideMenu')) return; // داخل منو ژست نگیریم
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
+          mode = menuIsOpen ? 'close' : 'open';
         }
         function onMove(ev){
           if (!tracking) return;
@@ -160,19 +166,15 @@
         function onEnd(){
           if (!tracking) return; tracking = false;
           const absX = Math.abs(dx), absY = Math.abs(dy);
-          if (absX < Math.max(absY, 6)) return; // اطمینان از حرکت افقی غالب
-          const menuIsOpen = sideMenu?.classList.contains('open');
-          const fromRightEdge = (window.innerWidth - startX) <= EDGE;
-
-          // بازکردن: شروع از لبه راست و کشیدن به چپ (dx منفی)
-          if (!menuIsOpen && fromRightEdge && dx <= -OPEN_THRESH) {
-            sideMenu?.classList.add('open');
-            return;
+          if (absX < Math.max(absY, 8)) return; // حرکت افقی غالب
+          if (mode === 'open'){
+            // شروع از لبه راست و کشیدن به چپ (dx منفی)
+            if (dx <= -OPEN_THRESH) sideMenu?.classList.add('open');
+          } else if (mode === 'close'){
+            // وقتی باز است و به راست کشیده می‌شود (dx مثبت)
+            if (dx >= OPEN_THRESH) sideMenu?.classList.remove('open');
           }
-          // بستن: وقتی باز است و به راست کشیده می‌شود (dx مثبت)
-          if (menuIsOpen && dx >= OPEN_THRESH) {
-            sideMenu?.classList.remove('open');
-          }
+          mode = '';
         }
         // پشتیبانی از Touch و Mouse/Pointer
         document.addEventListener('touchstart', onStart, { passive: true });
