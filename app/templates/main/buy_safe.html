@@ -4,16 +4,19 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 dark:bg-slate-900">
-  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b dark:border-slate-700">
-    <div class="max-w-4xl mx-auto px-3 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <a href="{{ url_for('main.app_home') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="خانه">
-          <i class="fa-solid fa-house"></i>
-        </a>
-        <h1 class="text-base font-bold">راهنمای خرید امن</h1>
-      </div>
+  <!-- Header: back + title + icon (like favorites) -->
+  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+    <div class="max-w-4xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">راهنمای خرید امن</h1>
+      <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
+        <i class="fas fa-shield-halved"></i>
+      </button>
     </div>
   </header>
+  <div class="h-20"></div>
 
   <main class="max-w-4xl mx-auto px-3 py-4">
     <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">

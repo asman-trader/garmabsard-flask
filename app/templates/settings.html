@@ -7,23 +7,21 @@
 <!-- ظرف اصلی (Mobile-First) -->
 <div class="mx-auto max-w-xl px-4 pb-28 pt-3 sm:pt-6">
 
-  <!-- هدر چسبان موبایلی -->
-  <header class="sticky top-0 z-10 -mx-4 mb-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-100 dark:border-gray-800">
-    <div class="max-w-xl mx-auto px-4 h-12 flex items-center justify-between">
-      <button onclick="history.back()" class="text-sm font-medium text-gray-600 dark:text-gray-300">
-        ← بازگشت
+  <!-- Header: back + title + icon (like favorites) -->
+  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+    <div class="max-w-xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
       </button>
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-green-600"></span>
-        <span class="text-sm font-bold text-green-700 dark:text-green-400">وینور</span>
-      </div>
+      <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">تنظیمات</h1>
+      <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="تنظیمات">
+        <i class="fas fa-gear"></i>
+      </button>
     </div>
   </header>
+  <div class="h-20"></div>
 
-  <!-- عنوان -->
-  <div class="mb-4 sm:mb-6">
-    <h1 class="text-[18px] sm:text-2xl font-extrabold text-gray-900 dark:text-white">تنظیمات</h1>
-  </div>
+  
 
   {% if user %}
   <form id="settings-form" method="post" action="{{ url_for('main.settings') }}" class="space-y-8">

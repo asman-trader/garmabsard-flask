@@ -3,6 +3,20 @@
 {% block title %}سوالات پرتکرار | وینور{% endblock %}
 
 {% block content %}
+<!-- Header: back + title + icon (like favorites) -->
+<header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+  <div class="max-w-3xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+    <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">سوالات پرتکرار</h1>
+    <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
+      <i class="fas fa-circle-question"></i>
+    </button>
+  </div>
+  
+</header>
+<div class="h-20"></div>
 <div class="p-5 max-w-3xl mx-auto space-y-6 leading-7">
 
   <section class="bg-white dark:bg-gray-800 rounded-2xl shadow p-5">
