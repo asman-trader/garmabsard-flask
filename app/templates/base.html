@@ -134,9 +134,17 @@
       const sideMenu = document.getElementById("sideMenu");
       document.getElementById("menuToggle")?.addEventListener("click", ()=> sideMenu?.classList.add("open"));
       document.getElementById("closeMenu")?.addEventListener("click", ()=> sideMenu?.classList.remove("open"));
+      // اول منو را ببند، سپس اجازه بده سایر کلیک‌ها اجرا شوند (capture)
       window.addEventListener("click", (e)=>{
-        if(!e.target.closest("#sideMenu") && !e.target.closest("#menuToggle")) sideMenu?.classList.remove("open");
-      });
+        try {
+          const isOpen = sideMenu?.classList.contains('open');
+          const insideMenu = !!e.target.closest('#sideMenu');
+          const onToggle = !!e.target.closest('#menuToggle');
+          if (isOpen && !insideMenu && !onToggle) {
+            sideMenu?.classList.remove('open');
+          }
+        } catch(_) {}
+      }, true);
 
       // ژست کشیدنی همه‌پلتفرم (موبایل و دسکتاپ) برای باز/بستن منو (RTL)
       (function(){
