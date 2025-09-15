@@ -327,7 +327,7 @@ def create_app() -> Flask:
             return
 
         safe_paths = {
-            "/", "/start", "/login", "/verify", "/logout",
+            "/", "/start", "/login", "/verify", "/logout", "/app",
             "/favicon.ico", "/robots.txt", "/sitemap.xml",
             "/site.webmanifest", "/manifest.webmanifest", "/sw.js",
             "/git-webhook", "/git-webhook/",

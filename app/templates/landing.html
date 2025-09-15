@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>VINOR PWA | نصب اپلیکیشن پیشرفته خرید و فروش ملک</title>
   <meta name="description" content="اپلیکیشن PWA VINOR - سریع، آفلاین و بدون نیاز به گوگل پلی! تجربه خرید و فروش زمین، باغ و ویلا با سرعت اپلیکیشن‌های بومی." />
   <meta name="theme-color" content="#16a34a">
@@ -657,6 +657,24 @@
         });
       }
     });
+
+    // --- Register Service Worker + Warmup app shell for guests too ---
+    (function(){
+      if (!('serviceWorker' in navigator)) return;
+      // Use the same SW route as the main app
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(async (reg)=>{
+        try{
+          await navigator.serviceWorker.ready;
+          const sw = navigator.serviceWorker.controller;
+          if (sw){
+            const urls = [
+              '/', '/app', '/search', '/api/lands/approved'
+            ];
+            sw.postMessage({ type: 'VINOR_WARMUP', urls });
+          }
+        }catch(_){ }
+      }).catch(()=>{});
+    })();
   </script>
 </body>
 </html>
