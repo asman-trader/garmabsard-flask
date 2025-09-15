@@ -108,11 +108,9 @@ def index():
 def start():
     """
     CTA لندینگ → ست‌کردن کوکی «اولین بازدید انجام شد»
-    سپس:
-      - اگر لاگین است → /app
-      - اگر لاگین نیست → مسیر ورود (با فالبک امن)
+    سپس همیشه به /app می‌رویم (مهمان یا لاگین).
     """
-    target = url_for("main.app_home") if session.get("user_id") else _login_url_fallback()
+    target = url_for("main.app_home")
     resp = make_response(redirect(target))
     resp.set_cookie(FIRST_VISIT_COOKIE, "1", max_age=60 * 60 * 24 * 365, samesite="Lax")
     session.permanent = True
@@ -121,11 +119,10 @@ def start():
 @main_bp.route("/app", endpoint="app_home")
 def app_home():
     """
-    خانه اپ وینور (پس از ورود)
+    خانه اپ وینور – برای مهمان و کاربر وارد شده.
     فهرست آگهی‌های تأییدشده به ترتیب نزولی تاریخ.
+    عملیات نیازمند ورود (ثبت/علاقه‌مندی و ...) همچنان با گارد کلاینت/سرور حفاظت می‌شود.
     """
-    if not session.get("user_id"):
-        return redirect(_login_url_fallback())
     lands = _sort_by_created_at_desc(_get_approved_ads())
     return render_template(
         "index.html",
