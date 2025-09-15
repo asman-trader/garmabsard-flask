@@ -4,6 +4,20 @@
 {% block title %}اعلان‌ها | وینور{% endblock %}
 
 {% block content %}
+  <!-- Header: back + bell -->
+  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-base font-bold text-gray-900 dark:text-white">اعلان‌ها</h1>
+      <button id="notifBell" type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="فعال‌سازی اعلان‌ها">
+        <i class="fas fa-bell"></i>
+      </button>
+    </div>
+  </header>
+  <div class="h-14"></div>
+
   <main class="max-w-md mx-auto p-4 sm:p-6">
 
     <!-- لیست اعلان‌ها -->
@@ -198,12 +212,24 @@
       });
     }
 
-    // ===== Auto flow (silent) =====
+    // ===== Auto flow (silent) + bell button =====
     (async ()=>{
       const perm = await requestNotificationPermissionIfNeeded();
       const reg  = await ensureSW();
       if (perm === 'granted' && reg) await ensurePushSubscription(reg);
     })();
+
+    // Bell triggers permission + subscription
+    try{
+      const bell = document.getElementById('notifBell');
+      bell?.addEventListener('click', async ()=>{
+        const perm = await requestNotificationPermissionIfNeeded();
+        const reg  = await ensureSW();
+        if (perm === 'granted' && reg) {
+          await ensurePushSubscription(reg);
+        }
+      });
+    }catch(_){ }
 
     // خوانده‌شدن خودکار هنگام ورود به صفحه اعمال شده است (بدون دکمه)
   </script>
