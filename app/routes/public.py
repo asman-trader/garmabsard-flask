@@ -422,6 +422,17 @@ def faq():
         current_year=datetime.now().year,
     )
 
+# --- Unified Help page ---
+@main_bp.route("/help", endpoint="help")
+@main_bp.route("/راهنما")
+def help_page():
+    return render_template(
+        "main/help.html",
+        brand="وینور",
+        domain="vinor.ir",
+        current_year=datetime.now().year,
+    )
+
 # --- Buying Guides ---
 @main_bp.route("/guide/safe-buy", endpoint="buy_safe")
 @main_bp.route("/راهنمای-خرید-امن")

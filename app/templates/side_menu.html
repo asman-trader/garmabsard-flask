@@ -88,37 +88,7 @@
       {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
       {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
-      <!-- Help accordion -->
-      <div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <button id="helpToggle"
-                class="w-full flex items-center gap-3 p-3 text-right hover:bg-green-50 dark:hover:bg-green-800 transition"
-                aria-expanded="false" aria-controls="helpPanel">
-          <i class="fas fa-life-ring text-lg text-green-600 dark:text-green-400"></i>
-          <span class="text-[15px] font-medium text-gray-800 dark:text-gray-100">راهنما</span>
-          <i id="helpCaret" class="fas fa-chevron-down ms-auto text-xs text-gray-500"></i>
-        </button>
-
-        <div id="helpPanel" class="max-h-screen overflow-hidden transition-[max-height] duration-300 ease-out bg-gray-50/60 dark:bg-gray-800/60">
-          <a href="{{ url_for('main.about') }}"
-             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
-            <i class="fas fa-info-circle text-sm text-green-600 dark:text-green-400"></i>
-            درباره وینور
-          </a>
-          <a href="{{ url_for('main.faq') }}"
-             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
-            <i class="fas fa-question-circle text-sm text-green-600 dark:text-green-400"></i>
-            سوالات پرتکرار
-          </a>
-          {# دکمه ساده تماس با ما #}
-          {% set PHONE = (contact_phone|default('+989121234567')) %}
-          <a href="tel:{{ PHONE }}"
-             class="flex items-center gap-2 py-2 pe-3 ps-10 text-[14px] text-gray-700 dark:text-gray-200 hover:bg-green-100/70 dark:hover:bg-green-900/30">
-            <i class="fas fa-phone text-sm text-green-600 dark:text-green-400"></i>
-            تماس با ما
-          </a>
-        </div>
-      </div>
-      <!-- /Help accordion -->
+      {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
     </div>
 
     <!-- Auth -->

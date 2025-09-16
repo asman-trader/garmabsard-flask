@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}راهنما | وینور{% endblock %}
+
+{% block content %}
+<!-- Header: back + title -->
+<header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+  <div class="max-w-4xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+    <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">راهنما</h1>
+    <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
+      <i class="fas fa-life-ring"></i>
+    </button>
+  </div>
+</header>
+<div class="h-20"></div>
+
+<main class="max-w-4xl mx-auto px-3 py-4 space-y-4">
+  <!-- About -->
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 grid place-items-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <div class="flex-1">
+        <h2 class="font-semibold mb-1">درباره وینور</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">با هدف ایجاد تجربه‌ای سریع، امن و شفاف برای معاملات ملکی.</p>
+        <a href="{{ url_for('main.about') }}" class="text-sm text-emerald-700 dark:text-emerald-300 hover:underline">مشاهده بیشتر</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 grid place-items-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+        <i class="fas fa-circle-question"></i>
+      </div>
+      <div class="flex-1">
+        <h2 class="font-semibold mb-1">سوالات پرتکرار</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">پاسخ به رایج‌ترین پرسش‌ها درباره ثبت آگهی و استفاده از وینور.</p>
+        <a href="{{ url_for('main.faq') }}" class="text-sm text-emerald-700 dark:text-emerald-300 hover:underline">مطالعه سوالات</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Safe Buy Guide -->
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 grid place-items-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <div class="flex-1">
+        <h2 class="font-semibold mb-1">راهنمای خرید امن</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">نکات مهم پیش از معامله، حین معامله و پس از آن.</p>
+        <a href="{{ url_for('main.buy_safe') }}" class="text-sm text-emerald-700 dark:text-emerald-300 hover:underline">مشاهده راهنما</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 grid place-items-center rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-200">
+        <i class="fas fa-phone"></i>
+      </div>
+      <div class="flex-1">
+        <h2 class="font-semibold mb-1">تماس با پشتیبانی</h2>
+        <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+          <li>📞 تلفن: <a href="tel:+989121234567" class="text-emerald-700 dark:text-emerald-300 hover:underline">09121234567</a></li>
+          <li>💬 واتساپ: <a href="https://wa.me/989121234567" target="_blank" class="text-emerald-700 dark:text-emerald-300 hover:underline">ارسال پیام</a></li>
+          <li>🌐 وب‌سایت: <a href="https://vinor.ir" class="text-emerald-700 dark:text-emerald-300 hover:underline">vinor.ir</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="text-center text-xs text-gray-500 dark:text-gray-400">© {{ current_year|default(2025) }} وینور | vinor.ir</div>
+</main>
+{% endblock %}
+
+{% block floating_action %}{% endblock %}
+
+

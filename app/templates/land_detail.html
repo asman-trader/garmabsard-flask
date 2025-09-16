@@ -159,7 +159,19 @@
     {% set vil = ex.get('villa') or {} %}
     {% set lnd = ex.get('land') or {} %}
     {% set com = ex.get('commercial') or {} %}
+    {% set doc_label = ('رسمی' if ex.get('document_type')=='official' else ('قراردادی' if ex.get('document_type')=='temporary' else ex.get('document_type'))) %}
+    {% set trade_label = ('اجاره' if (ex.get('deposit') or ex.get('rent')) else 'فروش') %}
+    {% set prop_from_map = CATEGORY_MAP.get(land.get('category') or '', '') %}
+    {% set derived_prop = 'ویلا' if vil else ('آپارتمان' if apt else ('زمین' if lnd else ('اداری/تجاری' if com else ''))) %}
+    {% set prop_label = prop_from_map or derived_prop %}
+    {% set cat_main = land.get('category_main') %}
+    {% set cat_sub  = land.get('category_sub') %}
+    {% set sub_detail = (cat_sub or (com.get('type') if com.get('type') else (lnd.get('use') if lnd.get('use') else ''))) %}
+    {% set group_label = ('مسکونی' if (apt or vil or prop_label in ['آپارتمان','ویلا']) else ('اداری/تجاری' if (com or prop_label in ['اداری/تجاری']) else ('زمین/باغ' if (lnd or prop_label in ['زمین','باغ']) else (prop_label or '')))) %}
+    {% set cat_display_compact = (trade_label ~ ' ' ~ group_label) if group_label else (CATEGORY_MAP.get(land.get('category') or '', 'نامشخص')) %}
+    {% set cat_display_full = (trade_label ~ ' ' ~ prop_label ~ ((' — ' ~ sub_detail) if sub_detail else '')) if prop_label else (CATEGORY_MAP.get(land.get('category') or '', 'نامشخص')) %}
 
+    <div>
     <section class="-mt-3 sm:-mt-6" aria-label="خلاصه آگهی">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div class="flex items-start justify-between gap-3">
@@ -168,78 +180,37 @@
               {{ land.get('title') or "بدون عنوان" }}
             </h2>
 
-            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div class="mt-1 text-[12px] text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-2">
               <span class="inline-flex items-center gap-1">
-                <i class="fas fa-clock"></i>{{ land.get('created_at') | date_ymd }}
+                <i class="fa-solid fa-tag"></i>
+                <span>{{ cat_display_compact or 'نامشخص' }}</span>
               </span>
-
-              {% if land.get('code') %}
-                <span class="inline-flex items-center gap-1">
-                  <i class="fas fa-hashtag"></i>کد: <span id="landCode">{{ land.get('code') }}</span>
-                </span>
-              {% endif %}
-
-              {% if land.get('status') %}
-                {% if land.get('status') == 'approved' %}
-                  <span class="inline-flex items-center gap-1 text-green-600">
-                    <i class="fas fa-check-circle"></i> تأیید شده
-                  </span>
-                {% elif land.get('status') == 'pending' %}
-                  <span class="inline-flex items-center gap-1 text-yellow-600">
-                    <i class="fas fa-hourglass-half"></i> در انتظار
-                  </span>
-                {% elif land.get('status') == 'rejected' %}
-                  <span class="inline-flex items-center gap-1 text-red-600">
-                    <i class="fas fa-times-circle"></i> رد شده
-                  </span>
+              <span class="text-gray-300">•</span>
+              {% set _loc = land.get('location') or ((land.get('city') or '' ) ~ ((" - " ~ land.get('location_detail')) if land.get('location_detail') else '')) %}
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-location-dot"></i>
+                {% if _city_safe %}
+                  <a href="{{ url_for('main.search_page', city=_city_safe) }}" class="hover:underline">{{ _loc or 'نامشخص' }}</a>
+                {% else %}
+                  <span>{{ _loc or 'نامشخص' }}</span>
                 {% endif %}
-              {% endif %}
+              </span>
+              <span class="text-gray-300">•</span>
+              <span class="inline-flex items-center gap-1">
+                <i class="fas fa-clock"></i>
+                <span class="jalali" data-dt="{{ land.get('created_at') }}">{{ land.get('created_at') }}</span>
+              </span>
             </div>
           </div>
 
           
         </div>
 
-        {# Badges row #}
-        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px] text-gray-700 dark:text-gray-300">
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
-            <i class="fa-regular fa-square"></i><span>متراژ:</span>
-            <strong class="mr-auto">{{ "{:,.0f}".format(_sz).replace(",","٫") if _sz else "نامشخص" }} متر</strong>
-          </div>
-
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
-            <i class="fa-solid fa-location-dot"></i><span>موقعیت:</span>
-            <strong class="mr-auto">
-              {% set _loc = land.get('location') or ((land.get('city') or "" ) ~ ((" - " ~ land.get('location_detail')) if land.get('location_detail') else "")) %}
-              {% if _city_safe %}
-                <a href="{{ url_for('main.search_page', city=_city_safe) }}" class="hover:underline">{{ _loc or "نامشخص" }}</a>
-              {% else %}
-                {{ _loc or "نامشخص" }}
-              {% endif %}
-            </strong>
-          </div>
-
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
-            <i class="fa-regular fa-file-lines"></i><span>نوع سند:</span>
-            <strong class="mr-auto">{{ land.get('document_type') or "نامشخص" }}</strong>
-          </div>
-
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
-            <i class="fa-solid fa-tag"></i><span>دسته:</span>
-            <strong class="mr-auto">
-              {% if land.get('category_main') or land.get('category_sub') %}
-                {{ (land.get('category_main') or "نامشخص") ~ ((" / " ~ land.get('category_sub')) if land.get('category_sub') else "") }}
-              {% else %}
-                {{ CATEGORY_MAP.get(land.get('category') or '', 'نامشخص') }}
-              {% endif %}
-            </strong>
-          </div>
-        </div>
+        {# Info chips row (removed for Divar-style meta) #}
 
         {# Bold Price Block #}
-        <div class="mt-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/10">
-          <div class="flex items-baseline justify-between gap-3">
-            <div class="flex items-baseline gap-2">
+        <div class="mt-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/10 text-center">
+          <div class="flex items-baseline justify-center gap-2">
               {% if _price_total is not none %}
                 <span id="priceTotal" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
                 <span class="text-sm font-bold text-emerald-700/80">تومان</span>
@@ -247,9 +218,9 @@
                 <span class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">توافقی</span>
               {% endif %}
             </div>
-            <div id="priceWords" class="text-xs text-emerald-700/80 dark:text-emerald-300/90"></div>
+            
           </div>
-          <div class="mt-2 flex items-center flex-wrap gap-2 text-xs">
+          <div class="mt-2 flex items-center justify-center flex-wrap gap-2 text-xs">
             {% if _ppm is not none %}
             <span class="px-2 py-1 rounded-full bg-white/70 dark:bg-slate-700/50 border border-emerald-200/70 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300">
               قیمت متری: {{ "{:,.0f}".format(_ppm|int).replace(",", "٫") }} تومان
@@ -272,7 +243,7 @@
       'فوری': ex.get('urgent')
     } %}
     {% if has_rent or has_doc or conds %}
-    <section class="mt-3" aria-label="اطلاعات معامله">
+    <section class="mt-4" aria-label="اطلاعات معامله">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">اطلاعات معامله</h3>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
@@ -311,10 +282,14 @@
 
     {# --------- Category-specific Details --------- #}
     {% if apt or vil %}
-    <section class="mt-3" aria-label="مشخصات واحد مسکونی">
+    <section class="mt-4" aria-label="مشخصات واحد مسکونی">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">مشخصات {{ 'آپارتمان' if apt else 'ویلا' }}</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          <div class="rounded-lg border p-3">
+            <div class="text-xs text-gray-500">متراژ</div>
+            <div class="font-bold">{{ "{:,.0f}".format(_sz).replace(",","٫") if _sz else "نامشخص" }} متر</div>
+          </div>
           {% set y = apt.get('year_built') or ex.get('year_built') %}
           {% if y %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">سال ساخت</div><div class="font-bold">{{ y }}</div></div>{% endif %}
           {% set fl = apt.get('floor') or ex.get('floor') %}
@@ -344,7 +319,7 @@
     {% endif %}
 
     {% if lnd %}
-    <section class="mt-3" aria-label="مشخصات زمین/باغ">
+    <section class="mt-4" aria-label="مشخصات زمین/باغ">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">مشخصات {{ 'زمین' if (lnd and not ex.get('garden')) else 'باغ' }}</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
@@ -367,7 +342,7 @@
     {% endif %}
 
     {% if com %}
-    <section class="mt-3" aria-label="مشخصات اداری/تجاری">
+    <section class="mt-4" aria-label="مشخصات اداری/تجاری">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">مشخصات {{ 'اداری' if com else 'تجاری' }}</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
@@ -381,7 +356,7 @@
     {% endif %}
 
     {# --------- Description --------- #}
-    <section class="mt-3" aria-label="توضیحات">
+    <section class="mt-4" aria-label="توضیحات">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <h3 class="font-bold mb-3">توضیحات</h3>
         <div class="whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">
@@ -391,7 +366,7 @@
     </section>
 
     {# --------- Trust & Safety --------- #}
-    <section class="mt-3" aria-label="راهنمای امنیت">
+    <section class="mt-4" aria-label="راهنمای امنیت">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 grid place-items-center text-emerald-700 dark:text-emerald-300">
@@ -411,23 +386,7 @@
         </div>
       </article>
     </section>
-
-    {# --------- Contact / Consult (Desktop) --------- #}
-    <section class="mt-3 hidden sm:block" aria-label="تماس و مشاوره">
-      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-        <div class="flex items-center justify-between gap-3">
-          <p class="text-sm text-gray-600 dark:text-gray-300">
-            برای اطلاعات بیشتر با مشاور وینور تماس بگیرید یا فرم مشاوره را ارسال کنید.
-          </p>
-          <div class="flex items-center gap-2">
-            {% if land.get('owner') %}
-              <a href="tel:{{ land.get('owner') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-5 py-2.5 rounded-full shadow transition">📞 تماس</a>
-            {% endif %}
-            {# دکمه اشتراک عمداً حذف شده است. #}
-          </div>
-        </div>
-      </article>
-    </section>
+    </div>
   </main>
 
   {# ==================== Mobile Footer Actions ==================== #}
@@ -465,7 +424,7 @@
       }
       const priceEl = document.getElementById('priceTotal');
       const wordsEl = document.getElementById('priceWords');
-      if (priceEl && wordsEl){
+      if (false && priceEl && wordsEl){
         const raw = String(priceEl.textContent||'').replace(/[^\d۰-۹]/g,'');
         const persian = '۰۱۲۳۴۵۶۷۸۹';
         const en = raw.replace(/[۰-۹]/g, d => String(persian.indexOf(d)));
@@ -611,6 +570,30 @@
     window.closeFullscreen = closeFullscreen;
     window.toast = toast;
 
+    // -------- Jalali Date Render (client-side) --------
+    (function(){
+      const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+      function toJalali(g){
+        try{
+          const d = new Date((g||'').replace(' ','T'));
+          if (isNaN(d)) return null;
+          try{
+            const fmt = new Intl.DateTimeFormat('fa-IR-u-nu-latn', {year:'numeric', month:'2-digit', day:'2-digit'});
+            const parts = fmt.formatToParts(d);
+            const y = parts.find(p=>p.type==='year')?.value;
+            const m = parts.find(p=>p.type==='month')?.value;
+            const day = parts.find(p=>p.type==='day')?.value;
+            if (y && m && day) return `${day} ${months[parseInt(m,10)-1]} ${y}`;
+          }catch(_){ }
+          return d.toLocaleDateString('fa-IR');
+        }catch(_){ return null; }
+      }
+      document.querySelectorAll('.jalali[data-dt]').forEach(el=>{
+        const j = toJalali(el.getAttribute('data-dt')||'');
+        if (j) el.textContent = j;
+      });
+    })();
+
     // Delegate clicks for fullscreen from images
     document.addEventListener('click', function(e){
       const target = e.target;
@@ -622,12 +605,20 @@
     // Bind share button via dataset (avoids complex inline Jinja in JS)
     (function(){
       const btn = document.getElementById('shareBtn');
+      const btnAside = document.getElementById('shareBtnAside');
       if(!btn) return;
       btn.addEventListener('click', function(){
         const url = btn.getAttribute('data-share-url') || window.location.href;
         const title = btn.getAttribute('data-share-title') || document.title;
         shareLand(url, title);
       });
+      if (btnAside){
+        btnAside.addEventListener('click', function(){
+          const url = window.location.href;
+          const title = document.title;
+          shareLand(url, title);
+        });
+      }
     })();
   </script>
 {% endblock %}
