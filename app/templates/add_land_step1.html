@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function updateContinueState(){
-    const hasSubcat = subcatSelect && subcatSelect.value !== '';
+    const hasSubcat = Boolean(prop && prop.value);
     continueBtn.disabled = !(hasSubcat && hasValidLocation());
   }
 
