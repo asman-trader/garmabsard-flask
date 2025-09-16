@@ -136,27 +136,17 @@
       // سایدبار
       const sideMenu = document.getElementById("sideMenu");
       const menuBackdrop = document.getElementById('menuBackdrop');
-      const menuOverlay  = document.getElementById('menuOverlay');
 
       function openMenu(){
         try{ sideMenu?.classList.add('open'); }catch(_){ }
-        // بهینه‌سازی برای صفحات غیرِ اصلی: از menuOverlay استفاده کن و اسکرول را قفل کن
-        if (!IS_HOME && menuOverlay){
-          menuOverlay.classList.remove('pointer-events-none');
-          menuOverlay.classList.add('opacity-100');
-          try { document.body.style.overflow = 'hidden'; } catch(_){ }
-        } else if (menuBackdrop){
+        if (menuBackdrop){
           menuBackdrop.classList.remove('opacity-0','pointer-events-none');
           menuBackdrop.classList.add('opacity-100','pointer-events-auto');
         }
       }
       function closeMenu(){
         try{ sideMenu?.classList.remove('open'); }catch(_){ }
-        if (!IS_HOME && menuOverlay){
-          menuOverlay.classList.add('pointer-events-none');
-          menuOverlay.classList.remove('opacity-100');
-          try { document.body.style.overflow = ''; } catch(_){ }
-        } else if (menuBackdrop){
+        if (menuBackdrop){
           menuBackdrop.classList.add('opacity-0','pointer-events-none');
           menuBackdrop.classList.remove('opacity-100','pointer-events-auto');
         }
@@ -173,12 +163,10 @@
           const onToggle = !!e.target.closest('#menuToggle');
           if (isOpen && !insideMenu && !onToggle) {
             closeMenu();
-            // برای صفحه اصلی رفتار فعلی حفظ می‌شود؛ در سایر صفحات نیازی به مسدودسازی کامل نیست
-            if (IS_HOME) {
-              if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-              else e.stopPropagation();
-              try { e.preventDefault(); } catch(_) {}
-            }
+            // مانع رسیدن کلیک به عناصر زیرین شو
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            else e.stopPropagation();
+            try { e.preventDefault(); } catch(_) {}
             return;
           }
         } catch(_) {}
@@ -201,13 +189,7 @@
           // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
           // وقتی منو بسته است، روی کنترل‌های تعاملی ژست را شروع نکن
           if (!menuIsOpen && isInteractive(target) && !IS_HOME) return;
-          // در صفحات غیرِ اصلی: باز کردن فقط از لبه راست صفحه (برای جلوگیری از باز شدن تصادفی)
-          if (!menuIsOpen && !IS_HOME){
-            const vw = window.innerWidth || document.documentElement.clientWidth || 0;
-            const nearRightEdge = (vw - t.clientX) <= EDGE; // RTL
-            if (!nearRightEdge) return;
-          }
-          // باز کردن/بستن از هر جای صفحه (یا لبه در صفحات غیرِ اصلی)
+          // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
           mode = menuIsOpen ? 'close' : 'open';
         }
@@ -236,7 +218,6 @@
         document.addEventListener('pointerdown', onStart, { passive: true });
         document.addEventListener('pointermove', onMove, { passive: true });
         document.addEventListener('pointerup', onEnd, { passive: true });
-        document.addEventListener('pointercancel', onEnd, { passive: true });
       })();
 
       // فیلترها
