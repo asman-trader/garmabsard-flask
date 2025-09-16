@@ -383,9 +383,16 @@ def api_lands_approved():
 @main_bp.route("/city", endpoint="city_select")
 def city_select():
     """
-    انتخاب شهر (برای آینده: شخصی‌سازی نتایج)
+    انتخاب شهر تکی (برای ثبت آگهی)
     """
     return render_template("city_select.html", brand="وینور", domain="vinor.ir")
+
+@main_bp.route("/city/multi", endpoint="city_select_multi")
+def city_select_multi():
+    """
+    انتخاب چند استان/شهر (برای فیلتر جستجو)
+    """
+    return render_template("city_select_multi.html", brand="وینور", domain="vinor.ir")
 
 # --- About Vinor ---
 @main_bp.route("/about")

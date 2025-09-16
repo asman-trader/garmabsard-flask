@@ -9,12 +9,22 @@
     <button id="btnBack" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
       <i class="fas fa-arrow-right"></i>
     </button>
-    <h1 id="pageTitle" class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب استان</h1>
+    <h1 id="pageTitle" class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب موقعیت و شهر</h1>
     <div class="w-10"></div>
   </div>
 </div>
 <div class="h-14"></div>
 <main class="max-w-md sm:max-w-2xl mx-auto px-3 sm:px-4 py-5">
+  <!-- Intro for submit-ad flow -->
+  <div class="mb-3 rounded-2xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 p-3">
+    <div class="flex items-start gap-2">
+      <i class="fas fa-location-dot text-emerald-600 mt-0.5"></i>
+      <div>
+        <div class="text-sm font-bold text-emerald-800 dark:text-emerald-300">قبل از ثبت آگهی</div>
+        <div class="text-xs text-emerald-900/80 dark:text-emerald-200/90 mt-0.5">برای ادامه، موقعیت و شهر خود را انتخاب کنید.</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Quick: All Iran -->
   <div class="mb-3">
@@ -162,7 +172,7 @@
     view = 'province';
     currentProvince = '';
     currentCities = [];
-    pageTitle.textContent = 'انتخاب استان';
+    pageTitle.textContent = 'انتخاب موقعیت و شهر';
     searchLabel.textContent = 'جستجوی استان';
     searchBox.placeholder = 'مثلاً تهران، البرز...';
     searchBox.value = '';
@@ -218,7 +228,9 @@
       `;
       li.querySelector('button').addEventListener('click', ()=> {
         setCityStorageForCity(currentProvince, c);
-        goBackSafely("{{ url_for('main.index') }}");
+        const next = new URLSearchParams(location.search).get('next');
+        if (next) { window.location.href = next; return; }
+        goBackSafely("{{ url_for('main.add_land_step1') }}");
       });
       listContainer.appendChild(li);
     });
@@ -233,14 +245,18 @@
   btnAllIran.addEventListener('click', (e)=>{
     e.preventDefault();
     setCityStorageForAllIran();
-    goBackSafely("{{ url_for('main.index') }}");
+    const next = new URLSearchParams(location.search).get('next');
+    if (next) { window.location.href = next; return; }
+    goBackSafely("{{ url_for('main.add_land_step1') }}");
   });
 
   btnAllProvince.addEventListener('click', (e)=>{
     e.preventDefault();
     if (!currentProvince) return;
     setCityStorageForProvince(currentProvince, currentCities);
-    goBackSafely("{{ url_for('main.index') }}");
+    const next = new URLSearchParams(location.search).get('next');
+    if (next) { window.location.href = next; return; }
+    goBackSafely("{{ url_for('main.add_land_step1') }}");
   });
 
   // Init

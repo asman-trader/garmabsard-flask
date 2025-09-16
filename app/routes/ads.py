@@ -39,7 +39,8 @@ def _safe_remove_file(path: str) -> None:
 # با endpoint یکتا مشکل رفع می‌شود.
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
 def submit_ad_redirect():
-    return redirect(url_for('main.add_land_step1'))
+    # ابتدا انتخاب شهر، سپس رفتن به گام ۱
+    return redirect(url_for('main.city_select', next=url_for('main.add_land_step1')))
 
 
 @main_bp.route('/lands/add/step1', methods=['GET','POST'], endpoint='add_land_step1')
@@ -52,6 +53,7 @@ def add_land_step1():
     if request.method == 'POST':
         trade_type = (request.form.get('trade_type') or '').strip()  # sale|rent
         property_type = (request.form.get('property_type') or '').strip()  # apartment|villa|land|shop|office|garden
+        location = (request.form.get('location') or '').strip()
         if trade_type not in {'sale','rent','exchange'}:
             flash('نوع معامله نامعتبر است.')
             return redirect(url_for('main.add_land_step1'))
@@ -62,6 +64,11 @@ def add_land_step1():
             'trade_type': trade_type,
             'property_type': property_type,
         }
+        # اختیاری: اگر کاربر در گام ۱ شهر را انتخاب کرده، در پیش‌نویس ذخیره کن
+        if location:
+            lt = session.get('land_temp') or {}
+            lt.update({'location': location})
+            session['land_temp'] = lt
         return redirect(url_for('main.add_land'))
 
     return render_template('add_land_step1.html')

@@ -40,7 +40,8 @@
 
       <!-- Category grid -->
       <section class="mt-2">
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">ابتدا دسته اصلی را انتخاب کنید</div>
+        <div id="catButtonsWrap" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button type="button" data-cat="rent_residential" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
             <div class="flex items-center gap-2">
               <i class="fas fa-key text-emerald-600"></i>
@@ -99,32 +100,23 @@
             <button id="btnChangeSubcat" type="button" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">تغییر زیر‌دسته</button>
           </div>
 
-          <!-- City from city_select page -->
-          <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-map-marker-alt text-emerald-600"></i>
-              <div>
-                <div class="text-xs text-gray-500">موقعیت</div>
-                <div id="cityLabel" class="text-sm font-medium text-gray-800 dark:text-gray-100">انتخاب نشده</div>
-              </div>
-            </div>
-            <a href="{{ url_for('main.city_select') }}" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs">انتخاب/تغییر شهر</a>
+          <!-- City hint (picked before this step) -->
+          <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div class="text-xs text-gray-600 dark:text-gray-300">شهر در گام قبل انتخاب می‌شود.</div>
+            <a href="{{ url_for('main.city_select', next=url_for('main.add_land_step1')) }}" class="px-3 py-2 rounded-xl border text-xs hover:bg-gray-50 dark:hover:bg-gray-700">تغییر شهر</a>
           </div>
-
-          <!-- Hidden field for backend -->
-          <input type="hidden" id="location_hidden" name="location" value="">
         </div>
       </div>
     </form>
   </div>
 
-  <!-- Bottom sheet for sub-category (very light) -->
+  <!-- Bottom sheet for sub-category (light, accessible) -->
   <div id="sheet" class="fixed inset-0 z-30 hidden">
     <div id="sheetBg" class="absolute inset-0 bg-black/40"></div>
-    <div class="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-800 rounded-t-2xl border-t border-gray-200 dark:border-gray-700 p-3 shadow-2xl">
+    <div role="dialog" aria-modal="true" aria-labelledby="sheetTitle" class="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-800 rounded-t-2xl border-t border-gray-200 dark:border-gray-700 p-3 shadow-2xl">
       <div class="flex items-center justify-between px-1 py-1">
         <div id="sheetTitle" class="text-sm font-bold"></div>
-        <button id="sheetClose" class="p-2 text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        <button id="sheetClose" class="p-2 text-gray-500 hover:text-gray-700" aria-label="بستن"><i class="fas fa-times"></i></button>
       </div>
       <div id="sheetItems" class="mt-1 grid grid-cols-2 gap-2"></div>
     </div>
@@ -160,10 +152,10 @@ document.addEventListener('DOMContentLoaded', function(){
   const selectorsWrap = document.getElementById('selectorsWrap');
   const subcatSelect = document.getElementById('subcatSelect');
   const continueBtn = document.getElementById('continueBtn');
-  const locationSelect = document.getElementById('locationSelect');
-  const locationInput = document.getElementById('locationInput');
-  const locationHidden = document.getElementById('location_hidden');
-  const cityLabel = document.getElementById('cityLabel');
+  const locationSelect = null;
+  const locationInput = null;
+  const locationHidden = null;
+  const cityLabel = null;
   const btnChangeSubcat = document.getElementById('btnChangeSubcat');
   const summaryCat = document.getElementById('summaryCat');
   const summarySubcat = document.getElementById('summarySubcat');
@@ -174,7 +166,12 @@ document.addEventListener('DOMContentLoaded', function(){
       trade: 'rent',
       items: [
         { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
-        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+        { value: 'apartment', label: 'سوئیت', icon: 'fa-bed' },
+        { value: 'apartment', label: 'پنت‌هاوس', icon: 'fa-city' },
+        { value: 'apartment', label: 'نوساز', icon: 'fa-star' },
+        { value: 'apartment', label: 'قدیمی‌ساز', icon: 'fa-house' },
+        { value: 'villa',     label: 'خانه ویلایی', icon: 'fa-home' },
+        { value: 'villa',     label: 'باغ‌ویلا', icon: 'fa-tree' }
       ]
     },
     sale_residential: {
@@ -182,39 +179,50 @@ document.addEventListener('DOMContentLoaded', function(){
       trade: 'sale',
       items: [
         { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
-        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+        { value: 'apartment', label: 'پنت‌هاوس', icon: 'fa-city' },
+        { value: 'villa',     label: 'خانه و ویلا', icon: 'fa-house' },
+        { value: 'land',      label: 'زمین مسکونی', icon: 'fa-mountain' }
       ]
     },
     sale_office: {
       title: 'فروش اداری و تجاری',
       trade: 'sale',
       items: [
-        { value: 'office', label: 'اداری', icon: 'fa-briefcase' },
-        { value: 'shop',   label: 'تجاری/مغازه', icon: 'fa-store' }
+        { value: 'office', label: 'دفتر اداری', icon: 'fa-briefcase' },
+        { value: 'office', label: 'مطب/پزشکی', icon: 'fa-stethoscope' },
+        { value: 'office', label: 'فضای آموزشی', icon: 'fa-chalkboard-user' },
+        { value: 'shop',   label: 'مغازه و غرفه', icon: 'fa-store' },
+        { value: 'shop',   label: 'فروشگاه/کافی‌شاپ', icon: 'fa-mug-hot' }
       ]
     },
     rent_office: {
       title: 'اجارهٔ اداری و تجاری',
       trade: 'rent',
       items: [
-        { value: 'office', label: 'اداری', icon: 'fa-briefcase' },
-        { value: 'shop',   label: 'تجاری/مغازه', icon: 'fa-store' }
+        { value: 'office', label: 'دفتر اداری', icon: 'fa-briefcase' },
+        { value: 'office', label: 'مطب/پزشکی', icon: 'fa-stethoscope' },
+        { value: 'office', label: 'فضای آموزشی', icon: 'fa-chalkboard-user' },
+        { value: 'shop',   label: 'مغازه و غرفه', icon: 'fa-store' },
+        { value: 'shop',   label: 'کارگاه/انبار سبک', icon: 'fa-warehouse' }
       ]
     },
     project: {
       title: 'پروژه‌های ساخت‌وساز',
       trade: 'sale',
       items: [
-        { value: 'land', label: 'زمین/قطعه', icon: 'fa-mountain' },
-        { value: 'garden', label: 'باغ', icon: 'fa-seedling' }
+        { value: 'land',   label: 'زمین/قطعه', icon: 'fa-mountain' },
+        { value: 'garden', label: 'باغ', icon: 'fa-seedling' },
+        { value: 'land',   label: 'پیش‌فروش', icon: 'fa-calendar-days' },
+        { value: 'land',   label: 'مشارکت در ساخت', icon: 'fa-people-carry' }
       ]
     },
     short_rent: {
       title: 'اجارهٔ کوتاه‌مدت',
       trade: 'rent',
       items: [
-        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
-        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+        { value: 'apartment', label: 'آپارتمان و سوئیت', icon: 'fa-building' },
+        { value: 'villa',     label: 'ویلا و باغ',     icon: 'fa-home' },
+        { value: 'office',    label: 'دفتر/فضای آموزشی', icon: 'fa-chalkboard-user' }
       ]
     }
   };
@@ -253,9 +261,18 @@ document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('[data-cat]').forEach(el => {
     el.addEventListener('click', ()=> openSheet(el.getAttribute('data-cat')));
   });
+  // Highlight selected category button
+  const catButtonsWrap = document.getElementById('catButtonsWrap');
+  catButtonsWrap?.querySelectorAll('[data-cat]')?.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      catButtonsWrap.querySelectorAll('[data-cat]').forEach(b=> b.classList.remove('ring-2','ring-emerald-500'));
+      btn.classList.add('ring-2','ring-emerald-500');
+    });
+  });
   function closeSheet(){ sheet.classList.add('hidden'); }
   sheetBg.addEventListener('click', closeSheet);
   sheetClose.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeSheet(); });
 
   // Enable continue when selections are valid
   // City comes from localStorage set in city_select
@@ -268,11 +285,7 @@ document.addEventListener('DOMContentLoaded', function(){
       return { label: label || (obj && (obj.city || obj.province)) || '', obj };
     }catch(_){ return { label:'', obj:null }; }
   }
-  function applyCityLabel(){
-    const { label } = getCityFromStorage();
-    if (cityLabel) cityLabel.textContent = label || 'انتخاب نشده';
-    if (locationHidden) locationHidden.value = label || '';
-  }
+  function applyCityLabel(){ /* city is chosen pre-step; no UI binding needed */ }
   function hasValidLocation(){
     const { label } = getCityFromStorage();
     return Boolean(label && label.trim());
@@ -284,18 +297,17 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   if (subcatSelect) subcatSelect.addEventListener('change', updateContinueState);
-  window.addEventListener('storage', (e)=>{ if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) { applyCityLabel(); updateContinueState(); } });
-  document.addEventListener('vinor:city-changed', ()=>{ applyCityLabel(); updateContinueState(); });
+  window.addEventListener('storage', (e)=>{ if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) { updateContinueState(); } });
+  document.addEventListener('vinor:city-changed', ()=>{ updateContinueState(); });
 
   // Submit handler
   continueBtn.addEventListener('click', function(){
     if (!prop.value || !hasValidLocation()) return;
-    applyCityLabel();
     form.submit();
   });
 
   // Initial city label
-  applyCityLabel();
+  // city already selected on prior page
 });
 </script>
   <!-- Bottom Action Bar -->

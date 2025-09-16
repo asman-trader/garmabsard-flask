@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}انتخاب چند شهر/استان{% endblock %}
+
+{% set hide_header = true %}
+{% block content %}
+<!-- Fixed Header -->
+<div class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
+  <div class="px-3 sm:px-4 py-3 flex items-center justify-between">
+    <button id="btnBack" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h1 id="pageTitle" class="text-base font-bold text-gray-800 dark:text-gray-100">انتخاب چند شهر/استان</h1>
+    <div class="w-10"></div>
+  </div>
+</div>
+<div class="h-14"></div>
+
+<main class="max-w-3xl mx-auto px-3 sm:px-4 py-5">
+  <!-- Intro -->
+  <div class="mb-3 rounded-2xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 p-3">
+    <div class="flex items-start gap-2">
+      <i class="fas fa-location-dot text-emerald-600 mt-0.5"></i>
+      <div>
+        <div class="text-sm font-bold text-emerald-800 dark:text-emerald-300">فیلتر جستجو بر اساس موقعیت</div>
+        <div class="text-xs text-emerald-900/80 dark:text-emerald-200/90 mt-0.5">می‌توانید چند استان یا چند شهر را هم‌زمان انتخاب کنید.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="sm:col-span-1">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+        <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">جستجوی استان</label>
+        <input id="searchProvince" type="text" placeholder="مثلاً تهران، البرز..."
+               class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" />
+        <ul id="provList" class="mt-2 max-h-72 overflow-auto divide-y divide-gray-200 dark:divide-gray-800"></ul>
+      </div>
+    </div>
+    <div class="sm:col-span-2">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm text-gray-600 dark:text-gray-300"><span id="cityPanelTitle">شهرها</span></div>
+          <div class="flex items-center gap-2">
+            <button id="btnAddProvince" class="px-3 py-1.5 rounded-lg border text-xs hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50" disabled>انتخاب همه شهرهای استان</button>
+            <button id="btnClearAll" class="px-3 py-1.5 rounded-lg border text-xs hover:bg-gray-50 dark:hover:bg-gray-700">حذف همه</button>
+          </div>
+        </div>
+        <div id="cityListWrap" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected chips + Apply -->
+  <div class="mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
+    <div class="text-xs text-gray-500 mb-2">انتخاب‌شده‌ها</div>
+    <div id="selectedChips" class="flex flex-wrap gap-2 min-h-[32px]"></div>
+    <div class="mt-3 flex items-center justify-end gap-2">
+      <a id="btnCancel" class="px-3 py-2 rounded-xl border text-sm hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">لغو</a>
+      <button id="btnApply" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm">اعمال</button>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  const CITY_KEY = 'vinor_city';
+  const CITY_OBJ_KEY = 'vinor_city_obj';
+
+  const btnBack = document.getElementById('btnBack');
+  const searchProvince = document.getElementById('searchProvince');
+  const provList = document.getElementById('provList');
+  const cityListWrap = document.getElementById('cityListWrap');
+  const cityPanelTitle = document.getElementById('cityPanelTitle');
+  const btnAddProvince = document.getElementById('btnAddProvince');
+  const btnClearAll = document.getElementById('btnClearAll');
+  const selectedChips = document.getElementById('selectedChips');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnApply = document.getElementById('btnApply');
+
+  let DATA = [];
+  let currentProvince = '';
+  let currentCities = [];
+  const selected = new Set();
+
+  function goNextOrBack(){
+    const next = new URLSearchParams(location.search).get('next');
+    if (next) { location.href = next; return; }
+    try { history.back(); } catch(_) { location.href = '{{ url_for('main.search_page') }}'; }
+  }
+
+  btnBack.addEventListener('click', (e)=>{ e.preventDefault(); goNextOrBack(); });
+  btnCancel.addEventListener('click', (e)=>{ e.preventDefault(); goNextOrBack(); });
+
+  async function loadData(){
+    try {
+      const res = await fetch('/static/data/iran_provinces_cities.json', { cache: 'force-cache' });
+      DATA = await res.json();
+      if (!Array.isArray(DATA) || !DATA.length) throw new Error('bad json');
+    } catch(_) {
+      DATA = [];
+    }
+    renderProvList('');
+  }
+
+  function renderProvList(q){
+    const query = (q||'').trim().toLowerCase();
+    const provinces = DATA.map(d=>d.province).filter(Boolean).sort((a,b)=>a.localeCompare(b,'fa'))
+      .filter(p => !query || p.toLowerCase().includes(query));
+    provList.innerHTML = '';
+    provinces.forEach(p=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<button class="w-full flex items-center justify-between px-3 py-2 hover:bg-green-50 dark:hover:bg-green-900/20"><span class="text-sm">${p}</span><i class="fas fa-chevron-left text-gray-400"></i></button>`;
+      li.querySelector('button').addEventListener('click', ()=> showCities(p));
+      provList.appendChild(li);
+    });
+  }
+
+  function showCities(province){
+    currentProvince = province;
+    const row = DATA.find(d=>d.province===province);
+    currentCities = (row && Array.isArray(row.cities)) ? row.cities.slice().sort((a,b)=>a.localeCompare(b,'fa')) : [];
+    cityPanelTitle.textContent = `شهرهای ${province}`;
+    btnAddProvince.disabled = currentCities.length === 0;
+    renderCityList('');
+  }
+
+  function renderCityList(q){
+    const query = (q||'').trim().toLowerCase();
+    const items = currentCities.filter(c => !query || c.toLowerCase().includes(query));
+    cityListWrap.innerHTML = '';
+    items.forEach(c => {
+      const id = `c_${currentProvince}_${c}`;
+      const div = document.createElement('label');
+      div.className = 'flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer';
+      div.innerHTML = `<input type="checkbox" class="accent-emerald-600" id="${id}"> <span class="text-sm">${c}</span>`;
+      const chk = div.querySelector('input');
+      chk.checked = selected.has(c);
+      chk.addEventListener('change', ()=>{
+        if (chk.checked) selected.add(c); else selected.delete(c);
+        renderChips();
+      });
+      cityListWrap.appendChild(div);
+    });
+  }
+
+  function renderChips(){
+    selectedChips.innerHTML = '';
+    Array.from(selected).sort((a,b)=>a.localeCompare(b,'fa')).forEach(c=>{
+      const chip = document.createElement('span');
+      chip.className = 'px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2';
+      chip.innerHTML = `<i class="fas fa-map-marker-alt"></i><span>${c}</span><button title="حذف" class="text-red-600">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', ()=>{ selected.delete(c); renderChips(); renderCityList(''); });
+      selectedChips.appendChild(chip);
+    });
+  }
+
+  btnAddProvince.addEventListener('click', ()=>{
+    currentCities.forEach(c=> selected.add(c));
+    renderChips(); renderCityList('');
+  });
+  btnClearAll.addEventListener('click', ()=>{ selected.clear(); renderChips(); renderCityList(''); });
+
+  btnApply.addEventListener('click', ()=>{
+    const cities = Array.from(selected);
+    try {
+      // Label for chip elsewhere
+      const label = cities.length > 1 ? `${cities.length} شهر` : (cities[0] || '');
+      localStorage.setItem(CITY_KEY, label);
+      localStorage.setItem(CITY_OBJ_KEY, JSON.stringify({ province: '', city: cities.length===1 ? cities[0] : '', cities, allProvince: false }));
+      document.dispatchEvent(new CustomEvent('vinor:city-changed'));
+    } catch(_) {}
+    goNextOrBack();
+  });
+
+  searchProvince.addEventListener('input', ()=> renderProvList(searchProvince.value));
+
+  loadData();
+})();
+</script>
+{% endblock %}
+
