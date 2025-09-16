@@ -88,11 +88,21 @@ def sms_campaign():
 
     file_numbers: list[str] = []
     if file and file.filename:
+        raw = b''
         try:
-            content = file.read().decode('utf-8', errors='ignore')
+            raw = file.read()
         except Exception:
-            content = file.read().decode('cp1256', errors='ignore') if file else ''
-        file_numbers = [line.strip() for line in content.splitlines() if line.strip()]
+            raw = b''
+        text = ''
+        if raw:
+            try:
+                text = raw.decode('utf-8')
+            except Exception:
+                try:
+                    text = raw.decode('cp1256', errors='ignore')
+                except Exception:
+                    text = raw.decode('latin1', errors='ignore')
+        file_numbers = [line.strip() for line in (text.splitlines() if text else []) if line.strip()]
 
     text_numbers: list[str] = []
     if numbers_text:
@@ -162,7 +172,8 @@ def sms_campaign():
     t = threading.Thread(
         target=_run_sms_job,
         args=(app_obj, job_id, numbers, template_id, params, mode, delay_ms, min_ms, max_ms, dry_run),
-        daemon=True
+        daemon=False,
+        name=f"SMSJob-{job_id[:8]}"
     )
     t.start()
 
@@ -209,11 +220,21 @@ def save_phonebook_group():
     items: list[str] = []
     # from file
     if file and file.filename:
+        raw = b''
         try:
-            content = file.read().decode('utf-8', errors='ignore')
+            raw = file.read()
         except Exception:
-            content = file.read().decode('cp1256', errors='ignore')
-        items.extend([line.strip() for line in content.splitlines() if line.strip()])
+            raw = b''
+        text = ''
+        if raw:
+            try:
+                text = raw.decode('utf-8')
+            except Exception:
+                try:
+                    text = raw.decode('cp1256', errors='ignore')
+                except Exception:
+                    text = raw.decode('latin1', errors='ignore')
+        items.extend([line.strip() for line in (text.splitlines() if text else []) if line.strip()])
     # from textarea
     if text:
         items.extend([line.strip() for line in text.splitlines() if line.strip()])

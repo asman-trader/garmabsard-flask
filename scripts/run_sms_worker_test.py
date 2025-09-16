@@ -27,18 +27,19 @@ def main():
     delay_ms = 10
     dry_run = True  # set to False to try real API send
 
-    # Create job record
-    _create_job(job_id, total=len(numbers), template_id=template_id,
-                mode=mode, delay_ms=delay_ms, min_ms=None, max_ms=None)
+    # Create job record and run worker inside application context
+    with app.app_context():
+        _create_job(job_id, total=len(numbers), template_id=template_id,
+                    mode=mode, delay_ms=delay_ms, min_ms=None, max_ms=None)
 
-    # Run worker synchronously (direct call) with app context
-    _run_sms_job(app, job_id, numbers, template_id, params, mode, delay_ms, None, None, dry_run)
+        # Run worker synchronously (direct call) with app context
+        _run_sms_job(app, job_id, numbers, template_id, params, mode, delay_ms, None, None, dry_run)
 
-    # Read job results
-    data = _load_jobs()
-    job = data.get("jobs", {}).get(job_id)
-    print("JOB:", job_id)
-    print(job)
+        # Read job results
+        data = _load_jobs()
+        job = data.get("jobs", {}).get(job_id)
+        print("JOB:", job_id)
+        print(job)
 
 
 if __name__ == "__main__":
