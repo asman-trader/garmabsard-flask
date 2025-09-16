@@ -331,6 +331,11 @@ def create_app() -> Flask:
             "/favicon.ico", "/robots.txt", "/sitemap.xml",
             "/site.webmanifest", "/manifest.webmanifest", "/sw.js",
             "/git-webhook", "/git-webhook/",
+            # Public help pages (accessible without login)
+            "/help", "/راهنما",
+            "/about", "/درباره-ما",
+            "/faq", "/سوالات-پرتکرار",
+            "/guide/safe-buy", "/راهنمای-خرید-امن",
         }
         if request.path in safe_paths:
             current_app.logger.debug("PASS (path): %s", request.path)
