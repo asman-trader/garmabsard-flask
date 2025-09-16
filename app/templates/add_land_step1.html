@@ -6,20 +6,19 @@
 {% block content %}
 {% block floating_action %}{% endblock %}
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 sm:pb-0">
-  <!-- Header -->
+  <!-- Header (consistent with other steps) -->
   <div class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 fixed top-0 inset-x-0 z-20 px-4 sm:px-6 lg:px-8">
     <div class="py-3 flex items-center justify-between">
-      <a href="{{ url_for('main.index') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">
+      <a href="{{ url_for('main.index') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white" aria-label="بازگشت">
         <i class="fas fa-arrow-right text-lg"></i>
       </a>
       <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۱ از ۴</h1>
       <div class="w-6"></div>
     </div>
-    
     <!-- Progress Bar -->
     <div class="pb-3">
       <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
-        <span>انتخاب دسته</span>
+        <span>انتخاب دسته و موقعیت</span>
         <span>۲۵٪</span>
       </div>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -32,113 +31,102 @@
   <div class="h-24"></div>
 
   <!-- Main Content -->
-  <div class="px-4 py-6 space-y-6">
-    <!-- Step 1: Simplified Selection -->
-    <form id="step1Form" method="POST" class="space-y-6" action="{{ url_for('main.add_land_step1') }}">
+  <div class="px-4 py-6">
+    <form id="step1Form" method="POST" action="{{ url_for('main.add_land_step1') }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-      <input type="hidden" name="city" id="cityInput" value="">
+      <input type="hidden" name="trade_type" id="trade_type" value="">
+      <input type="hidden" name="property_type" id="property_type" value="">
+      <input type="hidden" name="_has_locations" value="{% if locations %}1{% else %}0{% endif %}">
 
-      <!-- Location (Single City) -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-map-marker-alt text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">موقعیت</h2>
-        </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">لطفاً فقط یک شهر را انتخاب کنید.</p>
-
-        <div class="flex items-center gap-2">
-          <button type="button" id="cityChip" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <i class="fas fa-map-marker-alt text-green-600"></i>
-            <span id="cityChipLabel">انتخاب شهر</span>
+      <!-- Category grid -->
+      <section class="mt-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <button type="button" data-cat="rent_residential" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-key text-emerald-600"></i>
+              <span class="text-[14px]">اجارهٔ مسکونی</span>
+            </div>
+            <i class="fas fa-angle-left text-gray-400"></i>
           </button>
-          <button type="button" id="cityClear" class="text-xs text-red-500 hover:underline">حذف انتخاب</button>
-        </div>
-
-        <div id="cityWarn" class="mt-3 hidden text-xs text-red-600">یک شهر معتبر انتخاب کنید (استان/چندین شهر مجاز نیست).</div>
-      </div>
-
-      <!-- Trade Type Section (simplified + exchange) -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-3">
-          <i class="fas fa-handshake text-emerald-500"></i>
-          <h2 class="text-base font-bold text-gray-900 dark:text-white">نوع معامله</h2>
-        </div>
-        <div class="grid grid-cols-3 gap-2 text-sm">
-          <label class="relative cursor-pointer">
-            <input type="radio" name="trade_type" value="sale" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
-              <i class="fas fa-tag text-emerald-500 mb-1"></i>
-              <div class="font-bold">فروش</div>
+          <button type="button" data-cat="sale_residential" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-sign-hanging text-emerald-600"></i>
+              <span class="text-[14px]">فروش مسکونی</span>
             </div>
-          </label>
-          <label class="relative cursor-pointer">
-            <input type="radio" name="trade_type" value="rent" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
-              <i class="fas fa-key text-emerald-500 mb-1"></i>
-              <div class="font-bold">اجاره</div>
+            <i class="fas fa-angle-left text-gray-400"></i>
+          </button>
+          <button type="button" data-cat="sale_office" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-briefcase text-emerald-600"></i>
+              <span class="text-[14px]">فروش اداری/تجاری</span>
             </div>
-          </label>
-          <label class="relative cursor-pointer">
-            <input type="radio" name="trade_type" value="exchange" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all">
-              <i class="fas fa-arrows-rotate text-emerald-500 mb-1"></i>
-              <div class="font-bold">معاوضه</div>
+            <i class="fas fa-angle-left text-gray-400"></i>
+          </button>
+          <button type="button" data-cat="rent_office" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-building text-emerald-600"></i>
+              <span class="text-[14px]">اجاره اداری/تجاری</span>
             </div>
-          </label>
+            <i class="fas fa-angle-left text-gray-400"></i>
+          </button>
+          <button type="button" data-cat="project" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-mountain text-emerald-600"></i>
+              <span class="text-[14px]">پروژه‌های ساخت‌وساز</span>
+            </div>
+            <i class="fas fa-angle-left text-gray-400"></i>
+          </button>
+          <button type="button" data-cat="short_rent" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-clock text-emerald-600"></i>
+              <span class="text-[14px]">اجارهٔ کوتاه‌مدت</span>
+            </div>
+            <i class="fas fa-angle-left text-gray-400"></i>
+          </button>
         </div>
-      </div>
+      </section>
 
-      <!-- Property Type Section (simplified) -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-3">
-          <i class="fas fa-home text-emerald-500"></i>
-          <h2 class="text-base font-bold text-gray-900 dark:text-white">نوع ملک</h2>
-        </div>
-        
-        <div class="grid grid-cols-3 gap-2 text-sm">
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="apartment" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-building text-emerald-500 mb-1"></i><div class="font-bold">آپارتمان</div></div>
-          </label>
-          
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="villa" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-home text-emerald-500 mb-1"></i><div class="font-bold">ویلا</div></div>
-          </label>
-          
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="land" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-mountain text-emerald-500 mb-1"></i><div class="font-bold">زمین</div></div>
-          </label>
-          
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="garden" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-seedling text-emerald-500 mb-1"></i><div class="font-bold">باغ</div></div>
-          </label>
-          
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="shop" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-store text-emerald-500 mb-1"></i><div class="font-bold">مغازه</div></div>
-          </label>
-          
-          <label class="relative cursor-pointer">
-            <input type="radio" name="property_type" value="office" required class="sr-only peer">
-            <div class="p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center transition-all"><i class="fas fa-briefcase text-emerald-500 mb-1"></i><div class="font-bold">اداری</div></div>
-          </label>
+      <!-- Selection summary and city (from city_select) -->
+      <div id="selectorsWrap" class="mt-3 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+          <!-- Category/Subcategory summary -->
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-xs text-gray-500 mb-1">انتخاب شما</div>
+              <div class="text-sm font-bold text-gray-900 dark:text-white" id="summaryCat">—</div>
+              <div class="text-sm text-gray-700 dark:text-gray-300" id="summarySubcat">زیر‌دسته انتخاب نشده</div>
+            </div>
+            <button id="btnChangeSubcat" type="button" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">تغییر زیر‌دسته</button>
+          </div>
+
+          <!-- City from city_select page -->
+          <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-map-marker-alt text-emerald-600"></i>
+              <div>
+                <div class="text-xs text-gray-500">موقعیت</div>
+                <div id="cityLabel" class="text-sm font-medium text-gray-800 dark:text-gray-100">انتخاب نشده</div>
+              </div>
+            </div>
+            <a href="{{ url_for('main.city_select') }}" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs">انتخاب/تغییر شهر</a>
+          </div>
+
+          <!-- Hidden field for backend -->
+          <input type="hidden" id="location_hidden" name="location" value="">
         </div>
       </div>
     </form>
   </div>
 
-  <!-- Bottom Action Bar -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-4 py-3 sm:static sm:border-t-0 sm:bg-transparent sm:dark:bg-transparent">
-    <div class="flex items-center gap-3">
-      <a href="{{ url_for('main.index') }}" class="flex-1 px-4 py-3 text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-        انصراف
-      </a>
-      <button type="submit" form="step1Form" id="continueBtn" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
-        ادامه
-      </button>
+  <!-- Bottom sheet for sub-category (very light) -->
+  <div id="sheet" class="fixed inset-0 z-30 hidden">
+    <div id="sheetBg" class="absolute inset-0 bg-black/40"></div>
+    <div class="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-800 rounded-t-2xl border-t border-gray-200 dark:border-gray-700 p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-1 py-1">
+        <div id="sheetTitle" class="text-sm font-bold"></div>
+        <button id="sheetClose" class="p-2 text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="sheetItems" class="mt-1 grid grid-cols-2 gap-2"></div>
     </div>
   </div>
 </div>
@@ -158,79 +146,168 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('step1Form');
+document.addEventListener('DOMContentLoaded', function(){
+  const trade = document.getElementById('trade_type');
+  const prop  = document.getElementById('property_type');
+  const form  = document.getElementById('step1Form');
+  const sheet = document.getElementById('sheet');
+  const sheetBg = document.getElementById('sheetBg');
+  const sheetClose = document.getElementById('sheetClose');
+  const sheetItems = document.getElementById('sheetItems');
+  const sheetTitle = document.getElementById('sheetTitle');
+
+  // New dropdown elements
+  const selectorsWrap = document.getElementById('selectorsWrap');
+  const subcatSelect = document.getElementById('subcatSelect');
   const continueBtn = document.getElementById('continueBtn');
-  
-  // Update continue button state
-  function updateContinueButton() {
-    const tradeType = document.querySelector('input[name="trade_type"]:checked');
-    const propertyType = document.querySelector('input[name="property_type"]:checked');
-    const cityVal = (document.getElementById('cityInput')?.value || '').trim();
-    continueBtn.disabled = !tradeType || !propertyType || !cityVal;
-  }
-  
-  // Event listeners
-  document.querySelectorAll('input[name="trade_type"], input[name="property_type"]').forEach(input => {
-    input.addEventListener('change', updateContinueButton);
-  });
-  
-  // Keyboard handling for mobile
-  ['focusin', 'focusout'].forEach(ev => {
-    document.addEventListener(ev, (e) => {
-      const t = e.target;
-      const isInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA');
-      if (isInput && ev === 'focusin') document.body.classList.add('kb-open');
-      if (isInput && ev === 'focusout') document.body.classList.remove('kb-open');
+  const locationSelect = document.getElementById('locationSelect');
+  const locationInput = document.getElementById('locationInput');
+  const locationHidden = document.getElementById('location_hidden');
+  const cityLabel = document.getElementById('cityLabel');
+  const btnChangeSubcat = document.getElementById('btnChangeSubcat');
+  const summaryCat = document.getElementById('summaryCat');
+  const summarySubcat = document.getElementById('summarySubcat');
+
+  const CATS = {
+    rent_residential: {
+      title: 'اجارهٔ مسکونی',
+      trade: 'rent',
+      items: [
+        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
+        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+      ]
+    },
+    sale_residential: {
+      title: 'فروش مسکونی',
+      trade: 'sale',
+      items: [
+        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
+        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+      ]
+    },
+    sale_office: {
+      title: 'فروش اداری و تجاری',
+      trade: 'sale',
+      items: [
+        { value: 'office', label: 'اداری', icon: 'fa-briefcase' },
+        { value: 'shop',   label: 'تجاری/مغازه', icon: 'fa-store' }
+      ]
+    },
+    rent_office: {
+      title: 'اجارهٔ اداری و تجاری',
+      trade: 'rent',
+      items: [
+        { value: 'office', label: 'اداری', icon: 'fa-briefcase' },
+        { value: 'shop',   label: 'تجاری/مغازه', icon: 'fa-store' }
+      ]
+    },
+    project: {
+      title: 'پروژه‌های ساخت‌وساز',
+      trade: 'sale',
+      items: [
+        { value: 'land', label: 'زمین/قطعه', icon: 'fa-mountain' },
+        { value: 'garden', label: 'باغ', icon: 'fa-seedling' }
+      ]
+    },
+    short_rent: {
+      title: 'اجارهٔ کوتاه‌مدت',
+      trade: 'rent',
+      items: [
+        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
+        { value: 'villa',     label: 'ویلا',     icon: 'fa-home' }
+      ]
+    }
+  };
+
+  function openSheet(catKey){
+    const cfg = CATS[catKey]; if (!cfg) return;
+    // Update summary and show bottom sheet for subcat choices
+    summaryCat.textContent = cfg.title;
+    summarySubcat.textContent = 'زیر‌دسته انتخاب نشده';
+    trade.value = cfg.trade;
+    selectorsWrap.classList.remove('hidden');
+    sheetTitle.textContent = 'انتخاب زیر‌دسته';
+    sheetItems.innerHTML = '';
+    cfg.items.forEach(it => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600';
+      btn.innerHTML = `<div class="flex items-center gap-2"><i class=\"fas ${it.icon} text-emerald-600\"></i><span class=\"text-sm\">${it.label}</span></div><i class=\"fas fa-check text-transparent\"></i>`;
+      btn.addEventListener('click', ()=>{
+        summarySubcat.textContent = it.label;
+        prop.value = it.value;
+        sheet.classList.add('hidden');
+        updateContinueState();
+      });
+      sheetItems.appendChild(btn);
     });
+    sheet.classList.remove('hidden');
+    continueBtn.disabled = true;
+  }
+
+  // Change subcategory again
+  btnChangeSubcat?.addEventListener('click', ()=>{
+    sheet.classList.remove('hidden');
   });
-  
-  // Initial state
-  updateContinueButton();
-  // City single-select integration
-  (function(){
-    const CITY_OBJ_KEY = 'vinor_city_obj';
-    const EVT_NAME = 'vinor:city-changed';
-    const chip = document.getElementById('cityChip');
-    const label = document.getElementById('cityChipLabel');
-    const input = document.getElementById('cityInput');
-    const warn = document.getElementById('cityWarn');
-    const clearBtn = document.getElementById('cityClear');
 
-    function setState(display, value, valid){
-      if (label) label.textContent = display || 'انتخاب شهر';
-      if (input) input.value = value || '';
-      if (warn) warn.classList.toggle('hidden', !!valid);
-      updateContinueButton();
-    }
+  document.querySelectorAll('[data-cat]').forEach(el => {
+    el.addEventListener('click', ()=> openSheet(el.getAttribute('data-cat')));
+  });
+  function closeSheet(){ sheet.classList.add('hidden'); }
+  sheetBg.addEventListener('click', closeSheet);
+  sheetClose.addEventListener('click', closeSheet);
 
-    function applyFromStorage(){
-      try{
-        const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || 'null');
-        if (obj && obj.city) { setState(obj.city, obj.city, true); return; }
-        if (obj && Array.isArray(obj.cities)){
-          if (obj.cities.length === 1){ setState(obj.cities[0], obj.cities[0], true); return; }
-          if (obj.cities.length > 1){ setState('انتخاب شهر', '', false); return; }
-        }
-        if (obj && obj.province && obj.allProvince){ setState('انتخاب شهر', '', false); return; }
-      }catch(_){ }
-      setState('انتخاب شهر', '', false);
-    }
+  // Enable continue when selections are valid
+  // City comes from localStorage set in city_select
+  const CITY_KEY = 'vinor_city';
+  const CITY_OBJ_KEY = 'vinor_city_obj';
+  function getCityFromStorage(){
+    try{
+      const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || 'null');
+      const label = localStorage.getItem(CITY_KEY) || '';
+      return { label: label || (obj && (obj.city || obj.province)) || '', obj };
+    }catch(_){ return { label:'', obj:null }; }
+  }
+  function applyCityLabel(){
+    const { label } = getCityFromStorage();
+    if (cityLabel) cityLabel.textContent = label || 'انتخاب نشده';
+    if (locationHidden) locationHidden.value = label || '';
+  }
+  function hasValidLocation(){
+    const { label } = getCityFromStorage();
+    return Boolean(label && label.trim());
+  }
 
-    function gotoPicker(){
-      try{
-        const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
-        url.searchParams.set('next', window.location.href);
-        window.location.href = url.toString();
-      }catch(_){ window.location.href = "{{ url_for('main.city_select') }}"; }
-    }
+  function updateContinueState(){
+    const hasSubcat = subcatSelect && subcatSelect.value !== '';
+    continueBtn.disabled = !(hasSubcat && hasValidLocation());
+  }
 
-    chip?.addEventListener('click', (e)=>{ e.preventDefault(); gotoPicker(); });
-    clearBtn?.addEventListener('click', (e)=>{ e.preventDefault(); setState('انتخاب شهر','',false); });
-    document.addEventListener(EVT_NAME, applyFromStorage);
-    window.addEventListener('storage', (e)=>{ if (e.key === 'vinor_city_obj') applyFromStorage(); });
-    applyFromStorage();
-  })();
+  if (subcatSelect) subcatSelect.addEventListener('change', updateContinueState);
+  window.addEventListener('storage', (e)=>{ if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) { applyCityLabel(); updateContinueState(); } });
+  document.addEventListener('vinor:city-changed', ()=>{ applyCityLabel(); updateContinueState(); });
+
+  // Submit handler
+  continueBtn.addEventListener('click', function(){
+    if (!prop.value || !hasValidLocation()) return;
+    applyCityLabel();
+    form.submit();
+  });
+
+  // Initial city label
+  applyCityLabel();
 });
 </script>
+  <!-- Bottom Action Bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-4 py-3 sm:static sm:border-t-0 sm:bg-transparent sm:dark:bg-transparent">
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('main.index') }}" class="flex-1 px-4 py-3 text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        بازگشت
+      </a>
+      <button id="continueBtn" type="button" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" disabled>
+        ادامه
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock %}

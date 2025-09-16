@@ -183,7 +183,11 @@
   <div id="adminPushEnableBar" class="fixed bottom-4 right-4 z-40 hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow">
     <i class="fas fa-bell text-amber-500"></i>
     <span class="text-sm">اعلان‌ها را فعال کنید</span>
-    <button id="adminPushEnableBtn" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">فعال‌سازی</button>
+    <div class="flex items-center gap-2 ms-2">
+      <button id="adminPushEnableBtn" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">فعال‌سازی</button>
+      <button id="adminPushLaterBtn" class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm">بعداً</button>
+      <button id="adminPushNeverBtn" class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm">عدم نمایش</button>
+    </div>
   </div>
 
   <script>
@@ -236,11 +240,36 @@
         return await res.json();
       }
 
+      function isSecure(){
+        try {
+          if (window.isSecureContext) return true;
+          const h = location.hostname;
+          return location.protocol === 'https:' || h === 'localhost' || h === '127.0.0.1';
+        } catch(_) { return false; }
+      }
+
+      function isIOSLike(){
+        try { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; } catch(_) { return false; }
+      }
+
+      function isStandalone(){
+        try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch(_) { return false; }
+      }
+
       async function shouldShowBar(){
         try{
           if (!('serviceWorker' in navigator) || !('Notification' in window)) return false;
           if (Notification.permission === 'denied') return false;
           if (!VAPID_PUBLIC_KEY) return false;
+          if (!isSecure()) return false;
+          // iOS Safari تنها در حالت standalone از Push پشتیبانی دارد
+          if (isIOSLike() && !isStandalone()) return false;
+          // کنترل تناوب نمایش
+          const last = Number(localStorage.getItem('admin_push_last_prompt_at')||'0')||0;
+          const now = Date.now();
+          const sevenDays = 7*24*60*60*1000;
+          if (last && (now - last) < sevenDays) return false;
+          if (localStorage.getItem('admin_push_dismissed_forever') === '1') return false;
           // اطمینان از رجیستر بودن SW ریشه
           const reg = await (async ()=>{ try { return await getRegistration(); } catch(_) { return null; } })();
           if (!reg) return true;
@@ -262,7 +291,20 @@
             if (perm !== 'granted') { bar.classList.add('hidden'); return; }
             const sub = await subscribePush();
             await saveSubscription(sub);
-          }catch(_){} finally { bar.classList.add('hidden'); }
+          }catch(_){} finally {
+            try { localStorage.setItem('admin_push_last_prompt_at', String(Date.now())); } catch(_){ }
+            bar.classList.add('hidden');
+          }
+        });
+        // بعداً
+        document.getElementById('adminPushLaterBtn')?.addEventListener('click', ()=>{
+          try { localStorage.setItem('admin_push_last_prompt_at', String(Date.now())); } catch(_){ }
+          bar.classList.add('hidden');
+        });
+        // عدم نمایش دائمی
+        document.getElementById('adminPushNeverBtn')?.addEventListener('click', ()=>{
+          try { localStorage.setItem('admin_push_dismissed_forever','1'); } catch(_){ }
+          bar.classList.add('hidden');
         });
       });
     })();
