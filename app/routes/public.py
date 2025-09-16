@@ -395,13 +395,19 @@ def city_select_multi():
     return render_template("city_select_multi.html", brand="وینور", domain="vinor.ir")
 
 # --- About Vinor ---
-@main_bp.route("/about")
 @main_bp.route("/درباره-ما")
+@main_bp.route("/about")
 def about():
     """
     صفحهٔ درباره وینور
     هر دو مسیر /about و /درباره-ما به این ویو می‌خورند.
     """
+    # Canonicalize Farsi slug → English
+    try:
+        if request.path.rstrip("/") == "/درباره-ما":
+            return redirect(url_for("main.about"), code=301)
+    except Exception:
+        pass
     return render_template(
         "main/about.html",   # اگر فایل را در ریشه templates گذاشتی، بکنش 'about.html'
         brand="وینور",
@@ -409,12 +415,18 @@ def about():
         current_year=datetime.now().year,
     )
 
-@main_bp.route("/faq")
 @main_bp.route("/سوالات-پرتکرار")
+@main_bp.route("/faq")
 def faq():
     """
     صفحهٔ سوالات پرتکرار (FAQ)
     """
+    # Canonicalize Farsi slug → English
+    try:
+        if request.path.rstrip("/") == "/سوالات-پرتکرار":
+            return redirect(url_for("main.faq"), code=301)
+    except Exception:
+        pass
     return render_template(
         "main/faq.html",
         brand="وینور",
@@ -423,9 +435,15 @@ def faq():
     )
 
 # --- Unified Help page ---
-@main_bp.route("/help", endpoint="help")
 @main_bp.route("/راهنما")
+@main_bp.route("/help", endpoint="help")
 def help_page():
+    # Canonicalize Farsi slug → English
+    try:
+        if request.path.rstrip("/") == "/راهنما":
+            return redirect(url_for("main.help"), code=301)
+    except Exception:
+        pass
     return render_template(
         "main/help.html",
         brand="وینور",
@@ -434,12 +452,18 @@ def help_page():
     )
 
 # --- Buying Guides ---
-@main_bp.route("/guide/safe-buy", endpoint="buy_safe")
 @main_bp.route("/راهنمای-خرید-امن")
+@main_bp.route("/guide/safe-buy", endpoint="buy_safe")
 def buy_safe():
     """
     صفحهٔ راهنمای خرید امن در وینور
     """
+    # Canonicalize Farsi slug → English
+    try:
+        if request.path.rstrip("/") == "/راهنمای-خرید-امن":
+            return redirect(url_for("main.buy_safe"), code=301)
+    except Exception:
+        pass
     return render_template(
         "main/buy_safe.html",
         brand="وینور",
