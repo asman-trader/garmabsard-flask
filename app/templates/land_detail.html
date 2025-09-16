@@ -154,6 +154,11 @@
     {% set _ppm_raw = land.get('price_per_meter') %}
     {% set _ppm = (_ppm_raw if _ppm_raw is not none else ( (_price_total|int)//(_sz|int) if (_price_total and (_sz|int) > 0) else None )) %}
     {% set _city_safe = (land.get('city') or (land.get('location') or '').split('-')[0].strip()) %}
+    {% set ex = land.get('extras') or {} %}
+    {% set apt = ex.get('apartment') or {} %}
+    {% set vil = ex.get('villa') or {} %}
+    {% set lnd = ex.get('land') or {} %}
+    {% set com = ex.get('commercial') or {} %}
 
     <section class="-mt-3 sm:-mt-6" aria-label="خلاصه آگهی">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
@@ -231,54 +236,148 @@
           </div>
         </div>
 
-        <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          <span class="inline-flex items-center gap-1">
-            📊 <strong class="ml-1">قیمت متری:</strong>
+        {# Bold Price Block #}
+        <div class="mt-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/10">
+          <div class="flex items-baseline justify-between gap-3">
+            <div class="flex items-baseline gap-2">
+              {% if _price_total is not none %}
+                <span id="priceTotal" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
+                <span class="text-sm font-bold text-emerald-700/80">تومان</span>
+              {% else %}
+                <span class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">توافقی</span>
+              {% endif %}
+            </div>
+            <div id="priceWords" class="text-xs text-emerald-700/80 dark:text-emerald-300/90"></div>
+          </div>
+          <div class="mt-2 flex items-center flex-wrap gap-2 text-xs">
             {% if _ppm is not none %}
-              {{ "{:,.0f}".format(_ppm|int).replace(",", "٫") }} تومان
-            {% else %}
-              نامشخص
+            <span class="px-2 py-1 rounded-full bg-white/70 dark:bg-slate-700/50 border border-emerald-200/70 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300">
+              قیمت متری: {{ "{:,.0f}".format(_ppm|int).replace(",", "٫") }} تومان
+            </span>
             {% endif %}
-          </span>
-          <span class="mx-2 text-gray-300">•</span>
-          <span class="inline-flex items-center gap-1">
-            💰 <strong class="ml-1">قیمت کل:</strong>
-            {% if _price_total is not none %}
-              <span id="priceTotal">{{ "{:,.0f}".format(_price_total|int).replace(",", "٫") }}</span>
-              <span>تومان</span>
-              <span id="priceWords" class="ms-2 text-xs text-gray-500 dark:text-gray-400"></span>
-            {% else %}
-              نامشخص
+            {% if ex.get('is_negotiable') %}
+            <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">قابل مذاکره</span>
             {% endif %}
-          </span>
-          
+          </div>
         </div>
       </article>
     </section>
 
-    {# --------- Features --------- #}
-    {% set _features = [] %}
-    {% if land.get('features') %}
-      {% if land.get('features') is string %}
-        {% set _features = [land.get('features')] %}
-      {% elif land.get('features') is iterable %}
-        {% set _features = land.get('features') %}
-      {% endif %}
+    {# --------- Transaction & Document --------- #}
+    {% set has_rent = ex.get('deposit') or ex.get('rent') %}
+    {% set has_doc  = ex.get('document_type') %}
+    {% set conds = {
+      'معاوضه': ex.get('accept_exchange'),
+      'اقساط': ex.get('installment'),
+      'فوری': ex.get('urgent')
+    } %}
+    {% if has_rent or has_doc or conds %}
+    <section class="mt-3" aria-label="اطلاعات معامله">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+        <h3 class="font-bold mb-3">اطلاعات معامله</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          {% if has_rent %}
+          <div class="rounded-lg border border-gray-200 dark:border-slate-700 p-3">
+            <div class="text-xs text-gray-500 mb-1">ودیعه / اجاره</div>
+            <div class="font-bold text-gray-900 dark:text-white">
+              {{ ex.get('deposit') or '—' }}{% if ex.get('deposit') %} تومان{% endif %}
+              <span class="mx-1 text-gray-400">/</span>
+              {{ ex.get('rent') or '—' }}{% if ex.get('rent') %} تومان{% endif %}
+            </div>
+            {% if ex.get('convertible') %}<div class="mt-1 text-xs text-emerald-600">قابل تبدیل</div>{% endif %}
+          </div>
+          {% endif %}
+          {% if has_doc %}
+          <div class="rounded-lg border border-gray-200 dark:border-slate-700 p-3">
+            <div class="text-xs text-gray-500 mb-1">نوع سند</div>
+            <div class="font-bold">{{ 'رسمی' if ex.get('document_type')=='official' else 'قراردادی' if ex.get('document_type')=='temporary' else ex.get('document_type') }}</div>
+          </div>
+          {% endif %}
+          <div class="rounded-lg border border-gray-200 dark:border-slate-700 p-3">
+            <div class="text-xs text-gray-500 mb-1">شرایط</div>
+            <div class="flex flex-wrap gap-1">
+              {% for k,v in conds.items() %}
+                {% if v %}<span class="px-2 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ k }}</span>{% endif %}
+              {% endfor %}
+              {% if not (ex.get('accept_exchange') or ex.get('installment') or ex.get('urgent')) %}
+                <span class="text-gray-400">—</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
     {% endif %}
 
-    {% if _features and _features|length > 0 %}
-      <section class="mt-3" aria-label="امکانات">
-        <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <h3 class="font-bold mb-3">امکانات</h3>
-          <div class="flex flex-wrap gap-2">
-            {% for feature in _features %}
-              <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs shadow-sm dark:bg-emerald-900/30 dark:text-emerald-200">
-                <i class="fas fa-check-circle ml-1"></i>{{ feature }}
-              </span>
-            {% endfor %}
-          </div>
-        </article>
-      </section>
+    {# --------- Category-specific Details --------- #}
+    {% if apt or vil %}
+    <section class="mt-3" aria-label="مشخصات واحد مسکونی">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+        <h3 class="font-bold mb-3">مشخصات {{ 'آپارتمان' if apt else 'ویلا' }}</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          {% set y = apt.get('year_built') or ex.get('year_built') %}
+          {% if y %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">سال ساخت</div><div class="font-bold">{{ y }}</div></div>{% endif %}
+          {% set fl = apt.get('floor') or ex.get('floor') %}
+          {% if fl %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">طبقه</div><div class="font-bold">{{ fl }}</div></div>{% endif %}
+          {% set rooms = apt.get('rooms') or ex.get('rooms') %}
+          {% if rooms %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">اتاق</div><div class="font-bold">{{ rooms }}</div></div>{% endif %}
+          {% set baths = ex.get('bathrooms') %}
+          {% if baths %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">حمام</div><div class="font-bold">{{ baths }}</div></div>{% endif %}
+          {% if vil %}
+            {% if vil.get('land_area') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">مساحت زمین</div><div class="font-bold">{{ vil.get('land_area') }} متر</div></div>{% endif %}
+            {% if vil.get('built_area') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">زیربنا</div><div class="font-bold">{{ vil.get('built_area') }} متر</div></div>{% endif %}
+            {% if vil.get('bedrooms') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">اتاق خواب</div><div class="font-bold">{{ vil.get('bedrooms') }}</div></div>{% endif %}
+          {% endif %}
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2 text-xs">
+          {% set el = (apt.get('elevator') or ex.get('elevator')) %}
+          {% set pk = (apt.get('parking') or ex.get('parking')) %}
+          {% set wh = (apt.get('warehouse') or ex.get('warehouse')) %}
+          {% for label,flag in [('آسانسور',el),('پارکینگ',pk),('انباری',wh),('بالکن',ex.get('balcony')),('حیاط',ex.get('yard')),('استخر',ex.get('pool') or vil.get('pool'))] %}
+            {% if flag in ['1',1,true,'true'] %}
+              <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ label }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+    {% endif %}
+
+    {% if lnd %}
+    <section class="mt-3" aria-label="مشخصات زمین/باغ">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+        <h3 class="font-bold mb-3">مشخصات {{ 'زمین' if (lnd and not ex.get('garden')) else 'باغ' }}</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          {% if ex.get('frontage') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">بر</div><div class="font-bold">{{ ex.get('frontage') }} متر</div></div>{% endif %}
+          {% if ex.get('length') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">طول</div><div class="font-bold">{{ ex.get('length') }} متر</div></div>{% endif %}
+          {% if ex.get('street_width') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">عرض گذر</div><div class="font-bold">{{ ex.get('street_width') }} متر</div></div>{% endif %}
+          {% if lnd.get('shape') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">شکل</div><div class="font-bold">{{ lnd.get('shape') }}</div></div>{% endif %}
+          {% if lnd.get('use') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">کاربری</div><div class="font-bold">{{ lnd.get('use') }}</div></div>{% endif %}
+          {% if lnd.get('irrigation') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">آبیاری</div><div class="font-bold">{{ lnd.get('irrigation') }}</div></div>{% endif %}
+          {% if lnd.get('tree_count') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">تعداد درخت</div><div class="font-bold">{{ lnd.get('tree_count') }}</div></div>{% endif %}
+        </div>
+        {% set feats = ex.get('features') or [] %}
+        {% if feats %}
+        <div class="mt-3 flex flex-wrap gap-2 text-xs">
+          {% for f in feats %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ f }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </article>
+    </section>
+    {% endif %}
+
+    {% if com %}
+    <section class="mt-3" aria-label="مشخصات اداری/تجاری">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+        <h3 class="font-bold mb-3">مشخصات {{ 'اداری' if com else 'تجاری' }}</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          {% if com.get('front_width') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">متراژ بر</div><div class="font-bold">{{ com.get('front_width') }} متر</div></div>{% endif %}
+          {% if com.get('floor') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">طبقه</div><div class="font-bold">{{ com.get('floor') }}</div></div>{% endif %}
+          {% if com.get('type') %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">نوع کاربری</div><div class="font-bold">{{ com.get('type') }}</div></div>{% endif %}
+          {% if com.get('has_license') in ['1',1,true,'true'] %}<div class="rounded-lg border p-3"><div class="text-xs text-gray-500">مجوز</div><div class="font-bold text-emerald-600">دارد</div></div>{% endif %}
+        </div>
+      </article>
+    </section>
     {% endif %}
 
     {# --------- Description --------- #}
