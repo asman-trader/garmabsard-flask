@@ -338,6 +338,11 @@ def create_app() -> Flask:
             "/faq", "/سوالات-پرتکرار",
             "/guide/safe-buy", "/راهنمای-خرید-امن",
         }
+        # Public dynamic paths (prefix-based)
+        public_prefixes = ("/land/", "/report/", "/search")
+        if request.path.startswith(public_prefixes):
+            current_app.logger.debug("PASS (public-prefix): %s", request.path)
+            return
         if request.path in safe_paths:
             current_app.logger.debug("PASS (path): %s", request.path)
             return

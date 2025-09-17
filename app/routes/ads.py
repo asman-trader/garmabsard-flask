@@ -173,6 +173,8 @@ def add_land_details():
         price_total = request.form.get('price_total') or None
         size = request.form.get('size') or None
         location = request.form.get('location') or request.form.get('city') or None
+        lat_raw = request.form.get('lat') or None
+        lng_raw = request.form.get('lng') or None
 
         category = (request.form.get('category','') or '').strip()
         if category and category not in CATEGORY_KEYS:
@@ -182,6 +184,19 @@ def add_land_details():
         amenities = request.form.getlist('amenities') or []
         conditions = request.form.getlist('conditions') or []
         
+        # Validate lat/lng
+        def _to_float_in_range(v, lo, hi):
+            try:
+                f = float(str(v).strip())
+                if f < lo or f > hi:
+                    return None
+                return f
+            except Exception:
+                return None
+
+        lat_val = _to_float_in_range(lat_raw, -90.0, 90.0)
+        lng_val = _to_float_in_range(lng_raw, -180.0, 180.0)
+
         extras = {
             'deposit': request.form.get('deposit') or None,
             'rent': request.form.get('rent') or None,
@@ -205,6 +220,8 @@ def add_land_details():
             'urgent': 'immediate' in conditions,
             'features': request.form.getlist('features') or [],
             'document_type': request.form.get('document_type') or None,
+            'lat': lat_val,
+            'lng': lng_val,
             # Apartment
             'apartment': {
                 'year_built': request.form.get('year_built') or None,

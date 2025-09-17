@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 {% set hide_header = True %}
 {% set _title = (land.get('title') or "جزئیات آگهی") ~ " | وینور (Vinor)" %}
+{% set ex = land.get('extras') or {} %}
 {% block title %}{{ _title }}{% endblock %}
 
 {% block head %}
   <meta name="description" content="جزئیات آگهی {{ land.get('title') or '' }} در وینور | بازار آنلاین ملک (vinor.ir)" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  {% set ex = land.get('extras') or {} %}
+  {% if ex.get('lat') and ex.get('lng') %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -341,6 +346,19 @@
     </section>
     {% endif %}
 
+    {# --------- Map Location (if coords available) --------- #}
+    {% if ex.get('lat') and ex.get('lng') %}
+    <section class="mt-4" aria-label="موقعیت روی نقشه">
+      <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+        <h3 class="font-bold mb-3">موقعیت تقریبی</h3>
+        <div id="landMap" class="w-full h-64 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-lat="{{ ex.get('lat') }}" data-lng="{{ ex.get('lng') }}"></div>
+        <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+          <a class="text-emerald-700 dark:text-emerald-300 hover:underline" target="_blank" href="https://maps.google.com/?q={{ ex.get('lat') }},{{ ex.get('lng') }}">باز کردن در گوگل مپ</a>
+        </div>
+      </article>
+    </section>
+    {% endif %}
+
     {% if com %}
     <section class="mt-4" aria-label="مشخصات اداری/تجاری">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
@@ -409,6 +427,9 @@
 
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  {% if ex.get('lat') and ex.get('lng') %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  {% endif %}
   <script>
     "use strict";
 
@@ -619,6 +640,21 @@
           shareLand(url, title);
         });
       }
+    })();
+
+    // -------- Render Leaflet map if coords --------
+    (function(){
+      try{
+        const mapEl = document.getElementById('landMap');
+        if (!mapEl) return;
+        const lat = parseFloat(mapEl.getAttribute('data-lat') || '');
+        const lng = parseFloat(mapEl.getAttribute('data-lng') || '');
+        if (!isNaN(lat) && !isNaN(lng) && window.L){
+          const m = L.map(mapEl).setView([lat, lng], 14);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m);
+          L.marker([lat, lng]).addTo(m);
+        }
+      }catch(_){ }
     })();
   </script>
 {% endblock %}
