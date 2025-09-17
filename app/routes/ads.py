@@ -173,6 +173,7 @@ def add_land_location():
         city = (request.form.get('location') or request.form.get('city') or '').strip()
         lat_raw = request.form.get('lat') or None
         lng_raw = request.form.get('lng') or None
+        loc_text = (request.form.get('location_text') or '').strip()
 
         def _to_float_in_range(v, lo, hi):
             try:
@@ -186,10 +187,17 @@ def add_land_location():
         lat_val = _to_float_in_range(lat_raw, -90.0, 90.0)
         lng_val = _to_float_in_range(lng_raw, -180.0, 180.0)
 
+        # اگر مختصات نامعتبر باشد، پیام بده و بازگرد به همین مرحله
+        if lat_val is None or lng_val is None:
+            flash("مختصات جغرافیایی نامعتبر است.")
+            return redirect(url_for('main.add_land_location'))
+
         lt = session.get('land_temp') or {}
         ex = lt.get('extras') or {}
         if lat_val is not None and lng_val is not None:
             ex.update({'lat': lat_val, 'lng': lng_val})
+        if loc_text:
+            ex.update({'location_text': loc_text})
         lt.update({'location': city or lt.get('location') or '' , 'extras': ex})
         session['land_temp'] = lt
         return redirect(url_for('main.add_land_details'))
