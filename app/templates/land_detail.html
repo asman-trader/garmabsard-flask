@@ -354,15 +354,20 @@
     </section>
     {% endif %}
 
-    {# --------- Map Location (if coords available) --------- #}
-    {% if ex.get('lat') and ex.get('lng') %}
+    {# --------- Map Location --------- #}
     <section class="mt-4" aria-label="موقعیت روی نقشه">
       <article class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-        <h3 class="font-bold mb-3">موقعیت تقریبی</h3>
-        <div id="landMap" class="w-full h-64 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-lat="{{ ex.get('lat') }}" data-lng="{{ ex.get('lng') }}"></div>
-        <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
-          <a class="text-emerald-700 dark:text-emerald-300 hover:underline" target="_blank" href="https://maps.google.com/?q={{ ex.get('lat') }},{{ ex.get('lng') }}">باز کردن در گوگل مپ</a>
-        </div>
+        <h3 class="font-bold mb-3">موقعیت روی نقشه</h3>
+        {% if ex.get('lat') and ex.get('lng') %}
+          <div id="landMap" class="w-full h-64 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-lat="{{ ex.get('lat') }}" data-lng="{{ ex.get('lng') }}"></div>
+          <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+            <a class="text-emerald-700 dark:text-emerald-300 hover:underline" target="_blank" href="https://maps.google.com/?q={{ ex.get('lat') }},{{ ex.get('lng') }}">باز کردن در گوگل مپ</a>
+          </div>
+        {% else %}
+          <div class="p-3 rounded-lg border border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-900/30 text-sm text-gray-600 dark:text-gray-300">
+            مختصات برای این آگهی ثبت نشده است.
+          </div>
+        {% endif %}
       </article>
     </section>
 
@@ -379,7 +384,6 @@
         </div>
       </div>
     </div>
-    {% endif %}
 
     {% if com %}
     <section class="mt-4" aria-label="مشخصات اداری/تجاری">
