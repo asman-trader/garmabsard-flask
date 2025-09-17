@@ -138,7 +138,7 @@ def add_land():
             'land_temp': lt,
             'land_images': image_names,
         })
-        return redirect(url_for('main.add_land_details'))
+        return redirect(url_for('main.add_land_location'))
 
 
 @main_bp.route('/lands/add/step3', methods=['GET','POST'], endpoint='add_land_step3')
@@ -159,6 +159,44 @@ def add_land_step3():
 
 
 # New: Step 3 (Details)
+@main_bp.route('/lands/add/location', methods=['GET','POST'], endpoint='add_land_location')
+def add_land_location():
+    if 'user_phone' not in session:
+        flash("برای ثبت آگهی وارد شوید.")
+        session['next'] = url_for('main.add_land_location')
+        return redirect(url_for('main.login'))
+
+    if not session.get('land_temp'):
+        return redirect(url_for('main.add_land'))
+
+    if request.method == 'POST':
+        city = (request.form.get('location') or request.form.get('city') or '').strip()
+        lat_raw = request.form.get('lat') or None
+        lng_raw = request.form.get('lng') or None
+
+        def _to_float_in_range(v, lo, hi):
+            try:
+                f = float(str(v).strip())
+                if f < lo or f > hi:
+                    return None
+                return f
+            except Exception:
+                return None
+
+        lat_val = _to_float_in_range(lat_raw, -90.0, 90.0)
+        lng_val = _to_float_in_range(lng_raw, -180.0, 180.0)
+
+        lt = session.get('land_temp') or {}
+        ex = lt.get('extras') or {}
+        if lat_val is not None and lng_val is not None:
+            ex.update({'lat': lat_val, 'lng': lng_val})
+        lt.update({'location': city or lt.get('location') or '' , 'extras': ex})
+        session['land_temp'] = lt
+        return redirect(url_for('main.add_land_details'))
+
+    return render_template('add_land_location.html')
+
+
 @main_bp.route('/lands/add/details', methods=['GET','POST'], endpoint='add_land_details')
 def add_land_details():
     if 'user_phone' not in session:
@@ -173,8 +211,6 @@ def add_land_details():
         price_total = request.form.get('price_total') or None
         size = request.form.get('size') or None
         location = request.form.get('location') or request.form.get('city') or None
-        lat_raw = request.form.get('lat') or None
-        lng_raw = request.form.get('lng') or None
 
         category = (request.form.get('category','') or '').strip()
         if category and category not in CATEGORY_KEYS:
@@ -185,18 +221,6 @@ def add_land_details():
         conditions = request.form.getlist('conditions') or []
         
         # Validate lat/lng
-        def _to_float_in_range(v, lo, hi):
-            try:
-                f = float(str(v).strip())
-                if f < lo or f > hi:
-                    return None
-                return f
-            except Exception:
-                return None
-
-        lat_val = _to_float_in_range(lat_raw, -90.0, 90.0)
-        lng_val = _to_float_in_range(lng_raw, -180.0, 180.0)
-
         extras = {
             'deposit': request.form.get('deposit') or None,
             'rent': request.form.get('rent') or None,
@@ -220,8 +244,6 @@ def add_land_details():
             'urgent': 'immediate' in conditions,
             'features': request.form.getlist('features') or [],
             'document_type': request.form.get('document_type') or None,
-            'lat': lat_val,
-            'lng': lng_val,
             # Apartment
             'apartment': {
                 'year_built': request.form.get('year_built') or None,
