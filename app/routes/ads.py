@@ -39,8 +39,8 @@ def _safe_remove_file(path: str) -> None:
 # با endpoint یکتا مشکل رفع می‌شود.
 @main_bp.route('/submit-ad', methods=['GET', 'POST'], endpoint='submit_ad')
 def submit_ad_redirect():
-    # ابتدا انتخاب شهر، سپس رفتن به گام ۱
-    return redirect(url_for('main.city_select', next=url_for('main.add_land_step1')))
+    # مستقیماً به گام ۱ برو (نیازی به انتخاب شهر/استان در ابتدا نیست)
+    return redirect(url_for('main.add_land_step1'))
 
 
 @main_bp.route('/lands/add/step1', methods=['GET','POST'], endpoint='add_land_step1')

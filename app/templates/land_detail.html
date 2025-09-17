@@ -235,6 +235,14 @@
             <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">قابل مذاکره</span>
             {% endif %}
           </div>
+          {% if ex.get('lat') and ex.get('lng') %}
+          <div class="mt-3 flex items-center justify-center">
+            <button id="btnShowMap" type="button" class="px-3 py-2 rounded-lg text-sm border border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+              <i class="fas fa-location-crosshairs"></i>
+              <span class="ms-1">نمایش لوکیشن دقیق روی نقشه</span>
+            </button>
+          </div>
+          {% endif %}
         </div>
       </article>
     </section>
@@ -357,6 +365,20 @@
         </div>
       </article>
     </section>
+
+    <!-- Map Modal (Precise Location) -->
+    <div id="mapModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+      <div class="bg-white dark:bg-slate-900 w-[95vw] max-w-2xl rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+        <div class="flex items-center justify-between p-3 border-b border-gray-200 dark:border-slate-700">
+          <div class="text-sm font-bold text-gray-800 dark:text-gray-100">لوکیشن دقیق روی نقشه</div>
+          <button id="mapModalClose" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="mapModalMap" class="w-full h-[60vh]"></div>
+        <div class="p-3 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-slate-700">
+          <a class="text-emerald-700 dark:text-emerald-300 hover:underline" target="_blank" href="https://maps.google.com/?q={{ ex.get('lat') }},{{ ex.get('lng') }}">باز کردن در گوگل مپ</a>
+        </div>
+      </div>
+    </div>
     {% endif %}
 
     {% if com %}
@@ -655,6 +677,35 @@
           L.marker([lat, lng]).addTo(m);
         }
       }catch(_){ }
+    })();
+
+    // Modal open/close and render precise map
+    (function(){
+      const btn = document.getElementById('btnShowMap');
+      const modal = document.getElementById('mapModal');
+      const closeBtn = document.getElementById('mapModalClose');
+      if (!btn || !modal) return;
+      const show = ()=>{ modal.classList.remove('hidden'); modal.classList.add('flex'); renderModalMap(); };
+      const hide = ()=>{ modal.classList.add('hidden'); modal.classList.remove('flex'); };
+      btn.addEventListener('click', show);
+      closeBtn?.addEventListener('click', hide);
+      modal.addEventListener('click', (e)=>{ if(e.target === modal) hide(); });
+
+      function renderModalMap(){
+        try{
+          if (!window.L) return;
+          const holder = document.getElementById('mapModalMap');
+          if (!holder) return;
+          holder.innerHTML = '';
+          const lat = parseFloat(document.getElementById('landMap')?.getAttribute('data-lat') || '');
+          const lng = parseFloat(document.getElementById('landMap')?.getAttribute('data-lng') || '');
+          if (isNaN(lat) || isNaN(lng)) return;
+          const m2 = L.map(holder).setView([lat, lng], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m2);
+          L.marker([lat, lng]).addTo(m2);
+          setTimeout(()=>{ try { m2.invalidateSize(); } catch(_){} }, 200);
+        }catch(_){ }
+      }
     })();
   </script>
 {% endblock %}

@@ -12,17 +12,17 @@
       <a href="{{ url_for('main.index') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white" aria-label="بازگشت">
         <i class="fas fa-arrow-right text-lg"></i>
       </a>
-      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۱ از ۴</h1>
+      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۱ از ۵</h1>
       <div class="w-6"></div>
     </div>
     <!-- Progress Bar -->
     <div class="pb-3">
       <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
-        <span>انتخاب دسته و موقعیت</span>
-        <span>۲۵٪</span>
+        <span>انتخاب دسته</span>
+        <span>۲۰٪</span>
       </div>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-        <div class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+        <div class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
       </div>
     </div>
   </div>
@@ -100,11 +100,7 @@
             <button id="btnChangeSubcat" type="button" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">تغییر زیر‌دسته</button>
           </div>
 
-          <!-- City hint (picked before this step) -->
-          <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div class="text-xs text-gray-600 dark:text-gray-300">شهر در گام قبل انتخاب می‌شود.</div>
-            <a href="{{ url_for('main.city_select', next=url_for('main.add_land_step1')) }}" class="px-3 py-2 rounded-xl border text-xs hover:bg-gray-50 dark:hover:bg-gray-700">تغییر شهر</a>
-          </div>
+          
         </div>
       </div>
     </form>
@@ -286,14 +282,11 @@ document.addEventListener('DOMContentLoaded', function(){
     }catch(_){ return { label:'', obj:null }; }
   }
   function applyCityLabel(){ /* city is chosen pre-step; no UI binding needed */ }
-  function hasValidLocation(){
-    const { label } = getCityFromStorage();
-    return Boolean(label && label.trim());
-  }
+  function hasValidLocation(){ return true; }
 
   function updateContinueState(){
     const hasSubcat = Boolean(prop && prop.value);
-    continueBtn.disabled = !(hasSubcat && hasValidLocation());
+    continueBtn.disabled = !hasSubcat;
   }
 
   if (subcatSelect) subcatSelect.addEventListener('change', updateContinueState);
@@ -302,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // Submit handler
   continueBtn.addEventListener('click', function(){
-    if (!prop.value || !hasValidLocation()) return;
+    if (!prop.value) return;
     form.submit();
   });
 
