@@ -1,0 +1,150 @@
+<section class="max-w-6xl mx-auto px-2 sm:px-4 pt-4">
+  <div id="quickSearchBox" class="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 sm:p-6 shadow relative">
+    <button id="qsHideBtn" type="button" title="بستن" aria-label="بستن"
+            class="absolute top-2 left-2 w-8 h-8 grid place-items-center rounded-full bg-white/15 hover:bg-white/25">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex items-center gap-3">
+      <span class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur grid place-items-center shadow-inner">
+        <i class="fas fa-seedling text-2xl"></i>
+      </span>
+      <div>
+        <div class="text-lg sm:text-2xl font-black">وینور – بازار آنلاین ملک</div>
+        <div class="text-white/80 text-xs sm:text-sm">جستجو و ثبت آسان آگهی؛ تجربه‌ای سریع و روان</div>
+      </div>
+    </div>
+
+    <!-- Search & Quick Actions -->
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
+      <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="sm:col-span-3">
+        <label class="sr-only" for="q">جستجو</label>
+        <!-- Mobile city chip (separate row) -->
+        <a href="{{ url_for('main.city_select') }}"
+           class="sm:hidden mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 text-white hover:bg-white/25 text-sm">
+          <i class="fas fa-map-marker-alt"></i>
+          <span data-city-label>کل ایران</span>
+        </a>
+        <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
+          <!-- City selector trigger (inline on ≥sm) -->
+          <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
+             class="hidden sm:flex items-center gap-2 px-3 bg-white/20 text-white hover:bg-white/25 text-sm sm:text-base">
+            <i class="fas fa-map-marker-alt"></i>
+            <span data-city-label>کل ایران</span>
+          </a>
+          <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
+                 class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
+          <button id="qClear" type="button" title="بستن" aria-label="بستن"
+                  class="px-3 text-white hover:bg-white/20 transition hidden">*</button>
+          <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        <input type="hidden" id="cityHidden" name="city" value="">
+      </form>
+      <div class="sm:col-span-2 grid grid-cols-3 gap-2">
+        <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-plus-circle"></i> ثبت آگهی
+        </a>
+        <a href="{{ url_for('main.favorites') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-bookmark"></i> علاقه‌مندی
+        </a>
+        <a href="{{ url_for('main.notifications') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
+          <i class="fas fa-bell"></i> اعلان‌ها
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // City label logic: supports province-only or multiple cities
+  (function(){
+    const CITY_KEY = 'vinor_city';            // label (what to display)
+    const CITY_OBJ_KEY = 'vinor_city_obj';    // {province, city}
+    const EVT_NAME = 'vinor:city-changed';
+
+    function applyCityLabelFromStorage(){
+      const labelEls = document.querySelectorAll('[data-city-label]');
+      const hiddenEl = document.getElementById('cityHidden');
+      if (!hiddenEl) return;
+
+      let display = 'کل ایران';
+      let hiddenVal = '';
+      try{
+        const obj = JSON.parse(localStorage.getItem(CITY_OBJ_KEY) || '{}');
+        const rawLabel = localStorage.getItem(CITY_KEY) || '';
+        if (obj && typeof obj === 'object'){
+          if (Array.isArray(obj.cities) && obj.cities.length > 1){
+            display = `${obj.cities.length} شهر`;
+            hiddenVal = obj.cities.join(',');
+          } else if (Array.isArray(obj.cities) && obj.cities.length === 1){
+            display = obj.cities[0];
+            hiddenVal = obj.cities[0];
+          } else if (obj.province && obj.city){
+            display = obj.city;
+            hiddenVal = obj.city;
+          } else if (obj.province && !obj.city){
+            display = obj.province;
+            hiddenVal = obj.province;
+          } else if (rawLabel){
+            display = rawLabel;
+            hiddenVal = rawLabel;
+          }
+        }
+      }catch(_){ }
+
+      labelEls.forEach(el => { try { el.textContent = display || 'کل ایران'; } catch(_){ } });
+      hiddenEl.value = hiddenVal;
+    }
+
+    applyCityLabelFromStorage();
+    document.addEventListener(EVT_NAME, applyCityLabelFromStorage);
+    window.addEventListener('storage', (e)=>{
+      if (e.key === 'vinor_city' || e.key === 'vinor_city_obj') applyCityLabelFromStorage();
+    });
+  })();
+
+  // Quick search clear button (*)
+  (function(){
+    const q = document.getElementById('q');
+    const clr = document.getElementById('qClear');
+    if (!q || !clr) return;
+    function sync(){
+      const has = (q.value || '').trim().length > 0;
+      clr.classList.toggle('hidden', !has);
+    }
+    q.addEventListener('input', sync);
+    clr.addEventListener('click', (e)=>{ e.preventDefault(); q.value=''; q.focus(); sync(); });
+    sync();
+  })();
+
+  // کنترل نمایش جستجوی سریع با تنظیمات کاربر
+  (function(){
+    const box = document.getElementById('quickSearchBox');
+    if (!box) return;
+    function apply(){
+      let on = true;
+      try{ const v = localStorage.getItem('vinor_show_quick_search'); on = v ? v==='1' : true; }catch{}
+      box.classList.toggle('hidden', !on);
+    }
+    apply();
+    window.addEventListener('storage', (e)=>{ if(e.key==='vinor_show_quick_search') apply(); });
+    window.addEventListener('vinor:qs-toggle', apply);
+  })();
+
+  // دکمه بستن نوار جستجو سریع (بالا-چپ)
+  (function(){
+    const btn = document.getElementById('qsHideBtn');
+    const box = document.getElementById('quickSearchBox');
+    if (!btn || !box) return;
+    btn.addEventListener('click', ()=>{
+      box.classList.add('hidden');
+      try{ localStorage.setItem('vinor_show_quick_search','0'); }catch{}
+      try{ window.dispatchEvent(new CustomEvent('vinor:qs-toggle', { detail: false })); }catch{}
+    });
+  })();
+});
+</script>
+
+
