@@ -1,7 +1,7 @@
 # app/routes/diagnostics.py
 import os, subprocess
 from datetime import datetime
-from flask import current_app
+from flask import current_app, render_template
 from . import main_bp
 from ..utils.storage import data_dir, load_ads
 
@@ -31,3 +31,9 @@ def diag():
     except Exception as e:
         info['write_test'] = f'error: {e}'
     return info, 200
+
+
+# صفحه بررسی اتصال اینترنت (PWA)
+@main_bp.route('/connection')
+def connection_check():
+    return render_template('connection.html')

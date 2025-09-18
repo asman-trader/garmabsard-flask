@@ -331,7 +331,7 @@ def create_app() -> Flask:
             "/favicon.ico", "/robots.txt", "/sitemap.xml",
             "/site.webmanifest", "/manifest.webmanifest", "/sw.js",
             "/git-webhook", "/git-webhook/",
-            "/healthz", "/diag",
+            "/healthz", "/diag", "/connection",
             # Public help pages (accessible without login)
             "/help", "/راهنما",
             "/about", "/درباره-ما",

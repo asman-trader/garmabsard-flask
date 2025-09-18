@@ -125,8 +125,32 @@ def add_land():
             os.makedirs(upload_dir, exist_ok=True)
             for img in request.files.getlist('images'):
                 if img and img.filename:
-                    fname = f"{tmp_code}__{secure_filename(img.filename)}"
-                    img.save(os.path.join(upload_dir, fname))
+                    # Resize/compress using Pillow if available
+                    try:
+                        from PIL import Image, ImageOps
+                        from io import BytesIO
+                        data = img.read()
+                        img.stream.seek(0)
+                        with Image.open(BytesIO(data)) as im:
+                            try: im = ImageOps.exif_transpose(im)
+                            except Exception: pass
+                            if im.mode in ("RGBA","LA"):
+                                bg = Image.new("RGB", im.size, (255,255,255))
+                                bg.paste(im, mask=im.split()[-1])
+                                im = bg
+                            elif im.mode != 'RGB':
+                                im = im.convert('RGB')
+                            im.thumbnail((1600,1600), Image.LANCZOS)
+                            buf = BytesIO()
+                            im.save(buf, format='JPEG', quality=82, optimize=True, progressive=True)
+                            data = buf.getvalue()
+                        ext = 'jpg'
+                        fname = f"{tmp_code}__{secure_filename(os.path.splitext(img.filename)[0])}.jpg"
+                        with open(os.path.join(upload_dir, fname), 'wb') as f:
+                            f.write(data)
+                    except Exception:
+                        fname = f"{tmp_code}__{secure_filename(img.filename)}"
+                        img.save(os.path.join(upload_dir, fname))
                     image_names.append(fname)
 
         code = session.get('land_code') or datetime.now().strftime('%Y%m%d%H%M%S')

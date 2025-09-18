@@ -18,7 +18,24 @@
     <h1 style="margin:10px 0 4px;font-size:18px">اتصال اینترنت برقرار نیست</h1>
     <p style="margin:0">برخی صفحات در حافظه ذخیره شده‌اند و آفلاین در دسترس هستند.</p>
     <a class="btn" href="/app">بازگشت به اپ</a>
-    <div class="muted">وقتی آنلاین شدید، صفحه را دوباره امتحان کنید.</div>
+    <button id="retry" class="btn" style="background:#0ea5e9;border:none;margin-inline-start:8px">بررسی اتصال</button>
+    <div class="muted">وقتی آنلاین شدید، صفحه به صورت خودکار رفرش می‌شود.</div>
   </div>
+  <script>
+    (function(){
+      const retry = document.getElementById('retry');
+      async function ping(){
+        try{
+          const res = await fetch('/healthz', { cache: 'no-store' });
+          if(res.ok){ location.reload(); return; }
+        }catch(e){}
+        retry.disabled = false;
+      }
+      retry.addEventListener('click', (e)=>{ e.preventDefault(); retry.disabled = true; ping(); });
+      window.addEventListener('online', ()=> location.reload());
+      // تلاش خودکار هر 5 ثانیه
+      setInterval(ping, 5000);
+    })();
+  </script>
 </body>
 </html>

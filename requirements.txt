@@ -13,3 +13,4 @@ requests==2.32.3
 gunicorn==21.2.0
 Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.23
+Pillow==10.4.0

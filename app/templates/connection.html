@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>بررسی اتصال اینترنت | وینور</title>
+  <link rel="icon" href="/static/favicon-32x32.png">
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto; background:#0b1220; color:#e5e7eb; display:grid; place-items:center; min-height:100vh}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:18px;padding:22px 20px;max-width:560px;width:92%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .btn{display:inline-block;margin-top:14px;padding:10px 14px;border-radius:12px;background:#16a34a;color:#fff;text-decoration:none;border:none}
+    .btn.muted{background:#334155}
+    .btn.info{background:#0ea5e9}
+    .muted{color:#9ca3af;font-size:13px;margin-top:8px}
+    .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  </style>
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script>
+    // جلوگیری از کش شدن این صفحه توسط SW
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      try { navigator.serviceWorker.controller.postMessage({type:'NO_CACHE_THIS'}); } catch(e) {}
+    }
+  </script>
+  </head>
+<body>
+  <div class="card">
+    <div style="font-size:34px">📡</div>
+    <h1 style="margin:10px 0 4px;font-size:18px">بررسی اتصال اینترنت</h1>
+    <p style="margin:0">برای استفاده کامل از وینور به اینترنت نیاز دارید. در صورت قطعی، برخی بخش‌ها آفلاین نمایش داده می‌شود.</p>
+    <div class="row">
+      <button id="btnCheck" class="btn info">بررسی اتصال</button>
+      <a class="btn" href="/">بازگشت به خانه</a>
+      <a class="btn muted" href="/app">خانه اپ</a>
+    </div>
+    <div id="status" class="muted">در انتظار بررسی...</div>
+  </div>
+  <script>
+    (function(){
+      const statusEl = document.getElementById('status');
+      const btn = document.getElementById('btnCheck');
+      async function ping(){
+        statusEl.textContent = 'در حال بررسی اتصال...';
+        btn.disabled = true;
+        try{
+          const res = await fetch('/healthz', { cache:'no-store' });
+          if(res.ok){ statusEl.textContent = '✅ آنلاین هستید. در حال رفرش...'; location.reload(); return; }
+          statusEl.textContent = '❌ پاسخ نامعتبر از سرور.';
+        }catch(e){
+          statusEl.textContent = '❌ اتصال برقرار نیست.';
+        }
+        btn.disabled = false;
+      }
+      btn.addEventListener('click', (e)=>{ e.preventDefault(); ping(); });
+      window.addEventListener('online', ()=>{ statusEl.textContent='✅ آنلاین شدید، در حال رفرش...'; location.reload(); });
+      // تلاش خودکار هر 5 ثانیه
+      setInterval(()=>{ if(!navigator.onLine) return; ping(); }, 5000);
+    })();
+  </script>
+</body>
+</html>
+
+
