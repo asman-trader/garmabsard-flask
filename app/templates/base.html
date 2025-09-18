@@ -220,13 +220,31 @@
           return el && (el.closest('#menuToggle') || el.closest('input,textarea,select,button,a'));
         }
 
+        // نواحی که نباید ژست بازشدن منو با آن‌ها تداخل داشته باشد (گالری، نقشه، فول‌اسکرین)
+        function isSwipeExcluded(el){
+          if (!el) return false;
+          return !!(
+            el.closest('.swiper') ||
+            el.closest('#land-swiper') ||
+            el.closest('#fullscreenOverlay') ||
+            el.closest('#mapModal') ||
+            el.closest('#mapModalMap') ||
+            el.closest('#landMap')
+          );
+        }
+
         function onStart(ev){
           const t = ev.touches ? ev.touches[0] : ev;
           const target = ev.target || null;
           const menuIsOpen = sideMenu?.classList.contains('open');
           // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
-          // وقتی منو بسته است، روی کنترل‌های تعاملی ژست را شروع نکن
-          if (!menuIsOpen && isInteractive(target) && !IS_HOME) return;
+          // وقتی منو بسته است، روی کنترل‌های تعاملی/نواحی حساس ژست را شروع نکن
+          if (!menuIsOpen) {
+            if (isInteractive(target) || isSwipeExcluded(target)) return;
+            // فقط اگر لمس از لبه راست شروع شده باشد (برای جلوگیری از تداخل با اسلایدر تصاویر و ...)
+            const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
+            if (vw && t.clientX < (vw - EDGE)) return;
+          }
           // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
           mode = menuIsOpen ? 'close' : 'open';
