@@ -21,25 +21,8 @@
   </header>
   <div class="h-20"></div>
 
-  <!-- ظاهر: فقط سوییچ تیره/روشن -->
-  <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-    <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">ظاهر</div>
-    <div class="px-4 pb-4 flex items-center justify-between gap-3">
-      <div>
-        <div class="text-sm font-semibold">حالت تیره</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">روشن / تیره</div>
-      </div>
-      <label class="inline-flex items-center cursor-pointer">
-        <input id="darkToggleSettings" type="checkbox" class="sr-only">
-        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
-          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
-        </span>
-      </label>
-    </div>
-  </section>
-
   <!-- نمایش جستجوی سریع -->
-  <section class="mt-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+  <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
     <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">جستجو</div>
     <div class="px-4 pb-4 flex items-center justify-between gap-3">
       <div>
@@ -56,45 +39,21 @@
   </section>
 </div>
 
-<!-- JS: فقط سوییچ تیره/روشن -->
+<!-- JS: تنظیم جستجوی سریع -->
 <script>
   (function(){
-    const root = document.documentElement;
-    const toggle = document.getElementById('darkToggleSettings');
     const quick = document.getElementById('toggleQuickSearch');
     try {
-      const saved = localStorage.getItem('theme');
-      const isDark = saved ? saved==='dark' : root.classList.contains('dark');
-      if (toggle){ toggle.checked = !!isDark; moveDot(); }
-      if (quick){
-        const qs = localStorage.getItem('vinor_show_quick_search');
-        const on = qs ? qs==='1' : true; // پیش‌فرض: نمایش فعال باشد
-        quick.checked = !!on; moveDotQS();
-      }
+      const qs = localStorage.getItem('vinor_show_quick_search');
+      const on = qs ? qs==='1' : true; // پیش‌فرض: نمایش فعال باشد
+      if (quick){ quick.checked = !!on; moveDotQS(); }
     } catch {}
-
-    function moveDot(){
-      const dot = document.querySelector('#darkToggleSettings + span .dot');
-      if (!dot || !toggle) return;
-      dot.style.right = toggle.checked ? '1.5rem' : '0.25rem';
-    }
 
     function moveDotQS(){
       const dot = document.querySelector('#toggleQuickSearch + span .dot');
       if (!dot || !quick) return;
       dot.style.right = quick.checked ? '1.5rem' : '0.25rem';
     }
-
-    toggle?.addEventListener('change', ()=>{
-      try{
-        if (toggle.checked){ root.classList.add('dark'); localStorage.setItem('theme','dark'); }
-        else { root.classList.remove('dark'); localStorage.setItem('theme','light'); }
-        // به‌روزرسانی theme-color برای PWA نوار بالا
-        const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', root.classList.contains('dark') ? '#111827' : '#16a34a');
-      }catch{}
-      moveDot();
-    });
 
     quick?.addEventListener('change', ()=>{
       try{ localStorage.setItem('vinor_show_quick_search', quick.checked ? '1' : '0'); }catch{}
