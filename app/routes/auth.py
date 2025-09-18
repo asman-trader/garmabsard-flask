@@ -60,9 +60,9 @@ def login():
         if nxt:
             session["next"] = nxt
 
-        return render_template("login_step2.html", phone=phone)
+        return render_template("auth/login_step2.html", phone=phone)
 
-    return render_template("login_step1.html")
+    return render_template("auth/login_step1.html")
 
 
 @main_bp.route("/verify", methods=["POST"], endpoint="verify")
@@ -110,4 +110,4 @@ def logout():
 
 @main_bp.route('/push-subscribe-test')
 def push_subscribe_test():
-    return render_template('push_subscribe_test.html')
+    return render_template('system/push_subscribe_test.html')

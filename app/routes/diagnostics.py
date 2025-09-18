@@ -36,4 +36,4 @@ def diag():
 # صفحه بررسی اتصال اینترنت (PWA)
 @main_bp.route('/connection')
 def connection_check():
-    return render_template('connection.html')
+    return render_template('system/connection.html')

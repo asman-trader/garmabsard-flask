@@ -71,7 +71,7 @@ def add_land_step1():
             session['land_temp'] = lt
         return redirect(url_for('main.add_land'))
 
-    return render_template('add_land_step1.html')
+    return render_template('ads/add_land_step1.html')
 
 
 @main_bp.route('/lands/add', methods=['GET','POST'], endpoint='add_land')
@@ -87,7 +87,7 @@ def add_land():
             flash('لطفاً ابتدا دسته ملک را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         # رندر گام ۲ جدید
-        return render_template('add_land_step2.html', ad_category=session.get('ad_category'))
+        return render_template('ads/add_land_step2.html', ad_category=session.get('ad_category'))
 
     if request.method == 'POST':
         # Step 2 (Basics): only images + title + description
@@ -179,7 +179,7 @@ def add_land_step3():
             return redirect(url_for('main.add_land_step3'))
         session['land_ad_type'] = ad_type
         return redirect(url_for('main.finalize_land'))
-    return render_template('add_land_step3.html')
+    return render_template('ads/add_land_step3.html')
 
 
 # New: Step 3 (Details)
@@ -226,7 +226,7 @@ def add_land_location():
         session['land_temp'] = lt
         return redirect(url_for('main.add_land_details'))
 
-    return render_template('add_land_location.html')
+    return render_template('ads/add_land_location.html')
 
 
 @main_bp.route('/lands/add/details', methods=['GET','POST'], endpoint='add_land_details')
@@ -319,7 +319,7 @@ def add_land_details():
         session['land_temp'] = lt
         return redirect(url_for('main.add_land_step3'))
 
-    return render_template('add_land_details.html', ad_category=session.get('ad_category'))
+    return render_template('ads/add_land_details.html', ad_category=session.get('ad_category'))
 
 
 @main_bp.route('/lands/finalize', methods=['GET'], endpoint='finalize_land')
@@ -439,7 +439,7 @@ def my_lands():
         'page': page, 'per_page': per_page, 'pages': pages, 'total': total,
         'has_prev': page > 1, 'has_next': page < pages
     }
-    return render_template('my_lands.html', lands=items, pagination=pagination, page_url=page_url, CATEGORY_MAP=CATEGORY_MAP)
+    return render_template('account/my_lands.html', lands=items, pagination=pagination, page_url=page_url, CATEGORY_MAP=CATEGORY_MAP)
 
 
 @main_bp.route('/lands/edit/<code>', methods=['GET','POST'], endpoint='edit_land')
@@ -484,7 +484,7 @@ def edit_land(code):
         flash("✅ آگهی ویرایش شد.")
         return redirect(url_for('main.my_lands'))
 
-    return render_template('edit_land.html', land=land, CATEGORY_MAP=CATEGORY_MAP)
+    return render_template('ads/edit_land.html', land=land, CATEGORY_MAP=CATEGORY_MAP)
 
 
 @main_bp.route('/lands/delete/<code>', methods=['POST'], endpoint='delete_land')

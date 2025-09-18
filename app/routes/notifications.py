@@ -65,7 +65,7 @@ def notifications_page():
     unread_count_url  = _safe_url("main.api_notifications_unread_count")
 
     return render_template(
-        "notifications.html",
+        "account/notifications.html",
         items=items,
         mark_all_read_url=mark_all_read_url,
         mark_one_read_url=mark_one_read_url,

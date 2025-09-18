@@ -102,7 +102,7 @@ def index():
     """
     if session.get("user_id"):
         return redirect(url_for("main.app_home"))
-    return render_template("landing.html", brand="وینور", domain="vinor.ir")
+    return render_template("home/landing.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/start", endpoint="start")
 def start():
@@ -125,7 +125,7 @@ def app_home():
     """
     lands = _sort_by_created_at_desc(_get_approved_ads())
     return render_template(
-        "index.html",
+        "home/index.html",
         lands=lands,
         CATEGORY_MAP=CATEGORY_MAP,
         brand="وینور",
@@ -146,7 +146,7 @@ def land_detail(code):
         land["price_per_meter"] = ppm
 
     return render_template(
-        "land_detail.html",
+        "lands/land_detail.html",
         land=land,
         CATEGORY_MAP=CATEGORY_MAP,
         brand="وینور",
@@ -188,7 +188,7 @@ def report_ad(code):
         return redirect(url_for("main.land_detail", code=code, reported=1))
 
     return render_template(
-        "report_ad.html",
+        "lands/report_ad.html",
         land=ad,
         code=code,
         brand="وینور",
@@ -316,7 +316,7 @@ def search_page():
         results = _sort_by_created_at_desc(results)
 
     return render_template(
-        "search.html",
+        "search/search.html",
         lands=results,
         all_lands=all_pool,
         category=category,
@@ -385,14 +385,14 @@ def city_select():
     """
     انتخاب شهر تکی (برای ثبت آگهی)
     """
-    return render_template("city_select.html", brand="وینور", domain="vinor.ir")
+    return render_template("city/city_select.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/city/multi", endpoint="city_select_multi")
 def city_select_multi():
     """
     انتخاب چند استان/شهر (برای فیلتر جستجو)
     """
-    return render_template("city_select_multi.html", brand="وینور", domain="vinor.ir")
+    return render_template("city/city_select_multi.html", brand="وینور", domain="vinor.ir")
 
 # --- About Vinor ---
 @main_bp.route("/درباره-ما")

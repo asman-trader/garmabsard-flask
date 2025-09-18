@@ -76,18 +76,23 @@
     function moveDot(){
       const dot = document.querySelector('#darkToggleSettings + span .dot');
       if (!dot || !toggle) return;
-      if (toggle.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
+      dot.style.right = toggle.checked ? '1.5rem' : '0.25rem';
     }
 
     function moveDotQS(){
       const dot = document.querySelector('#toggleQuickSearch + span .dot');
       if (!dot || !quick) return;
-      if (quick.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
+      dot.style.right = quick.checked ? '1.5rem' : '0.25rem';
     }
 
     toggle?.addEventListener('change', ()=>{
-      root.classList.toggle('dark');
-      try{ localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }catch{}
+      try{
+        if (toggle.checked){ root.classList.add('dark'); localStorage.setItem('theme','dark'); }
+        else { root.classList.remove('dark'); localStorage.setItem('theme','light'); }
+        // به‌روزرسانی theme-color برای PWA نوار بالا
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', root.classList.contains('dark') ? '#111827' : '#16a34a');
+      }catch{}
       moveDot();
     });
 

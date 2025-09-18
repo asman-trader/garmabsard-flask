@@ -28,7 +28,7 @@ def profile():
     users = load_users()
     phone = session.get("user_phone")
     user = next((u for u in users if u.get("phone") == phone), None)
-    return render_template("profile.html", user=user)
+    return render_template("account/profile.html", user=user)
 
 
 @main_bp.route("/settings", methods=["GET", "POST"], endpoint="settings")
@@ -59,10 +59,10 @@ def settings():
         flash("✅ تنظیمات با موفقیت ذخیره شد.", "success")
         return redirect(url_for("main.settings"))
 
-    return render_template("settings.html", user=user)
+    return render_template("account/settings.html", user=user)
 
 
 @main_bp.route("/favorites", methods=["GET"], endpoint="favorites")
 def favorites():
     # (در صورت نیاز، موارد نیازمند ورود را هم محافظت کن)
-    return render_template("favorites.html")
+    return render_template("account/favorites.html")
