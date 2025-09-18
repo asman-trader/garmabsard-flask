@@ -242,7 +242,7 @@
           // در سایر صفحات، هم از لبه راست و هم خارج از نواحی حساس.
           if (!menuIsOpen) {
             if (IS_HOME) {
-              if (isInteractive(target)) return;
+              // در صفحه اصلی: اجازه شروع ژست از هر جا (بدون استثنا)
             } else {
               if (isInteractive(target) || isSwipeExcluded(target)) return;
               const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
