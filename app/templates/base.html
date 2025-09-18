@@ -160,25 +160,39 @@
       // سایدبار
       const sideMenu = document.getElementById("sideMenu");
       const menuBackdrop = document.getElementById('menuBackdrop');
+      const menuOverlay  = document.getElementById('menuOverlay');
+
+      function setOverlay(open){
+        const overlays = [menuBackdrop, menuOverlay];
+        overlays.forEach(ov => {
+          if (!ov) return;
+          if (open) {
+            ov.classList.remove('opacity-0','pointer-events-none');
+            ov.classList.add('opacity-100','pointer-events-auto');
+          } else {
+            ov.classList.add('opacity-0','pointer-events-none');
+            ov.classList.remove('opacity-100','pointer-events-auto');
+          }
+        });
+      }
 
       function openMenu(){
         try{ sideMenu?.classList.add('open'); }catch(_){ }
-        if (menuBackdrop){
-          menuBackdrop.classList.remove('opacity-0','pointer-events-none');
-          menuBackdrop.classList.add('opacity-100','pointer-events-auto');
-        }
+        setOverlay(true);
+        try { document.body.style.overflow = 'hidden'; } catch(_){ }
       }
       function closeMenu(){
         try{ sideMenu?.classList.remove('open'); }catch(_){ }
-        if (menuBackdrop){
-          menuBackdrop.classList.add('opacity-0','pointer-events-none');
-          menuBackdrop.classList.remove('opacity-100','pointer-events-auto');
-        }
+        setOverlay(false);
+        try { document.body.style.overflow = ''; } catch(_){ }
       }
 
       document.getElementById("menuToggle")?.addEventListener("click", openMenu);
       document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
       menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
+      menuOverlay?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
+      // Fix BFCache/back navigation dimming
+      window.addEventListener('pageshow', () => { closeMenu(); });
       // اول منو را ببند، سپس اجازه بده سایر کلیک‌ها اجرا شوند (capture)
       window.addEventListener("click", (e)=>{
         try {
