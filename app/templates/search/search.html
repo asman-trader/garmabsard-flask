@@ -15,7 +15,7 @@
       <span id="cityLabel">کل ایران</span>
     </a>
 
-    <form id="searchForm" method="get" action="{{ url_for('main.search_results') }}" class="flex-1">
+    <form id="searchForm" method="get" action="{{ url_for('main.search_page') }}" class="flex-1">
       <div class="relative">
         <input id="q" name="q" type="search" value="{{ request.args.get('q','') }}" placeholder="جستجو: موقعیت، عنوان، کد آگهی..."
                class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
@@ -65,8 +65,8 @@
             <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
               <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
             </a>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 {{ land.location or '?' }} | 📏 {{ ":,".format(land.size | int) if land.size else "?" }} متر</p>
-            <p class="text-base font-extrabold text-emerald-700 dark:text-emerald-400 mt-2">💰 {{ ":,".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 {{ land.location or '?' }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر</p>
+            <p class="text-base font-extrabold text-emerald-700 dark:text-emerald-400 mt-2">💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان</p>
           </div>
         </div>
       {% endfor %}
