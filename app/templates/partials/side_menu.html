@@ -36,17 +36,6 @@
       </a>
 
       <div class="flex items-center gap-2">
-        <!-- City Chip -->
-        <a id="cityChip"
-           href="{{ url_for('main.city_select') }}"
-           class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs
-                  border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200
-                  hover:bg-green-50 dark:hover:bg-green-800"
-           title="انتخاب شهر" aria-label="انتخاب شهر">
-          <i class="fas fa-map-marker-alt text-green-600 dark:text-green-400"></i>
-          <span id="cityChipText">انتخاب شهر</span>
-        </a>
-
         <!-- Notifications icon with badge (زنده) -->
         <a id="notifLink"
            href="{{ url_for('main.notifications') if session.get('user_phone') else url_for('main.login') }}"
@@ -113,7 +102,6 @@
     const sideMenu     = document.getElementById('sideMenu');
     const overlay      = document.getElementById('menuOverlay');
     const closeBtn     = document.getElementById('closeMenu');
-    const cityChipText = document.getElementById('cityChipText');
     const notifBadge   = document.getElementById('notif-badge');
 
     // Open/Close
@@ -181,16 +169,7 @@
       } catch (_) {}
     }, { passive: true });
 
-    // City UI via localStorage
-    const CITY_KEY = 'vinor_city';
-    const getCity = () => { try { return localStorage.getItem(CITY_KEY) || ''; } catch { return ''; } };
-    const updateCityUI = () => {
-      const c = getCity();
-      if (cityChipText) cityChipText.textContent = c || 'انتخاب شهر';
-    };
-    updateCityUI();
-    window.addEventListener('storage', (e) => { if (e.key === CITY_KEY) updateCityUI(); });
-    document.addEventListener('vinor:city-changed', updateCityUI);
+    // (City chip removed)
 
     // Help accordion toggle
     const helpToggle = document.getElementById('helpToggle');
