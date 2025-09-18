@@ -1,5 +1,5 @@
 <section class="max-w-6xl mx-auto px-2 sm:px-4 pt-4">
-  <div id="quickSearchBox" class="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 sm:p-6 shadow relative">
+  <div id="quickSearchBox" class="hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 sm:p-6 shadow relative">
     <button id="qsHideBtn" type="button" title="بستن" aria-label="بستن"
             class="absolute top-2 left-2 w-8 h-8 grid place-items-center rounded-full bg-white/15 hover:bg-white/25">
       <i class="fas fa-times"></i>
@@ -54,6 +54,16 @@
       </div>
     </div>
   </div>
+  <script>
+    (function(){
+      try {
+        var v = localStorage.getItem('vinor_show_quick_search');
+        var on = v ? v === '1' : true;
+        var box = document.getElementById('quickSearchBox');
+        if (box) box.classList.toggle('hidden', !on);
+      } catch(_) {}
+    })();
+  </script>
 </section>
 
 <script>
