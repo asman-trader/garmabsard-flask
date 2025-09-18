@@ -1,439 +1,135 @@
-{# templates/search.html #}
 {% extends "base.html" %}
 {% set hide_header = True %}
-{% block title %}جستجوی زمین - سریع و هوشمند{% endblock %}
+{% block title %}جستجو | وینور{% endblock %}
 
 {% block content %}
 
-{# ====== ماکرو کارت آگهی برای جلوگیری از تکرار ====== #}
-{% macro LandCard(land) -%}
-  {% set images = land.get('images') or [] %}
-  {% set img = images[0] if images else None %}
-  {% set _city = land.get('city') or (land.get('location') or '').split('-')[0].strip() %}
-  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md"
-       data-code="{{ land.code }}"
-       data-city="{{ _city|lower }}"
-       data-title="{{ (land.title or '')|lower }}"
-       data-location="{{ (land.location or '')|lower }}"
-       data-desc="{{ (land.description or '')|lower }}"
-       data-size="{{ land.size or land.area or 0 }}"
-       data-price="{{ land.price_total or land.price or 0 }}">
-    <div class="relative">
-      <a href="{{ url_for('main.land_detail', code=land.code) }}">
-        {% if img %}
-        <img src="{{ url_for('main.uploaded_file', filename=img) }}"
-             alt="زمین {{ land.title }}"
-             class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
-        {% else %}
-        <div class="w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-base">
-          <i class="fas fa-seedling text-2xl text-green-600/70"></i>
-        </div>
-        {% endif %}
-      </a>
-
-      <!-- دکمه علاقه‌مندی -->
-      <button type="button" class="absolute top-3 right-3 favorite-btn z-10" data-code="{{ land.code }}" title="ذخیره آگهی">
-        <i class="fas fa-bookmark text-white text-2xl drop-shadow-md"></i>
-      </button>
-    </div>
-
-    <!-- بخش اطلاعات -->
-    <div class="p-4">
-      <a href="{{ url_for('main.land_detail', code=land.code) }}">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
-      </a>
-      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-        📍 {{ land.location or "?" }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر
-      </p>
-      <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">
-        💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
-      </p>
-    </div>
-  </div>
-{%- endmacro %}
-
-<!-- نوار جستجو به سبک تلگرام (موبایل‌محور، چسبان) -->
 <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-6xl mx-auto px-3 py-2">
-    <form id="search-form" method="get" action="{{ url_for('main.search_results') }}" class="flex items-center gap-2">
-      <input type="hidden" name="city" id="cityHidden" value="{{ request.args.get('city','') }}">
-      <button type="button" onclick="history.back()" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200" aria-label="بازگشت">
-        <i class="fas fa-arrow-right"></i>
-      </button>
-      <button type="button" id="cityChip" class="h-10 px-3 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-xs sm:text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-        <i class="fas fa-map-marker-alt text-green-600"></i>
-        <span id="cityChipLabel">انتخاب شهر</span>
-      </button>
-      <div class="relative flex-1">
-        <input type="text" name="q" id="searchInput" class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="جستجو: دشت اول، جنوبی، بر خیابان، کد آگهی و ..." value="{{ request.args.get('q','') }}">
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-      </div>
-      <details class="group relative">
-        <summary class="w-10 h-10 grid place-items-center rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-gray-700" title="فیلتر">
-          <i class="fas fa-sliders-h"></i>
-        </summary>
-        <div class="absolute right-0 mt-2 w-[92vw] sm:w-[520px] p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl">
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <input type="number" inputmode="numeric" name="min_price" placeholder="حداقل قیمت" value="{{ request.args.get('min_price','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="max_price" placeholder="حداکثر قیمت" value="{{ request.args.get('max_price','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="min_size" placeholder="حداقل متراژ" value="{{ request.args.get('min_size','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <input type="number" inputmode="numeric" name="max_size" placeholder="حداکثر متراژ" value="{{ request.args.get('max_size','') }}" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-          </div>
-          <div class="mt-3 grid grid-cols-2 gap-2">
-            <select name="sort" class="w-full px-3 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm">
-              {% set s = request.args.get('sort','newest') %}
-              <option value="newest" {{ 'selected' if s=='newest' else '' }}>جدیدترین</option>
-              <option value="price_asc" {{ 'selected' if s=='price_asc' else '' }}>ارزان‌ترین</option>
-              <option value="size_desc" {{ 'selected' if s=='size_desc' else '' }}>بزرگ‌ترین متراژ</option>
-            </select>
-            <button type="button" onclick="clearAllFilters()" class="w-full px-3 py-2 rounded-lg border border-red-300/70 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">پاکسازی فیلترها</button>
-          </div>
-          <div class="mt-3 flex gap-2">
-            <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm">اعمال فیلتر</button>
-          </div>
-        </div>
-    </details>
-    
-    <!-- Mobile menu toggle (align with global side menu) -->
-    <button type="button" id="menuToggle" aria-label="منو"
-            class="sm:hidden w-10 h-10 grid place-items-center rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100">
-      <i class="fas fa-bars"></i>
+  <div class="max-w-6xl mx-auto px-3 py-2 flex items-center gap-2">
+    <button type="button" onclick="history.back()" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
     </button>
-    
+
+    <a href="{{ url_for('main.city_select_multi') }}" class="h-10 px-3 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-100 text-xs sm:text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700" aria-label="انتخاب شهر">
+      <i class="fas fa-map-marker-alt text-emerald-600"></i>
+      <span id="cityLabel">کل ایران</span>
+    </a>
+
+    <form id="searchForm" method="get" action="{{ url_for('main.search_results') }}" class="flex-1">
+      <div class="relative">
+        <input id="q" name="q" type="search" value="{{ request.args.get('q','') }}" placeholder="جستجو: موقعیت، عنوان، کد آگهی..."
+               class="w-full h-10 rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="hidden" id="cityHidden" name="city" value="{{ request.args.get('city','') }}">
+      </div>
     </form>
 
-    <!-- تاریخچه جستجو (الهام از تلگرام) -->
-    <div class="mt-2">
-      <div class="flex items-center justify-between">
-        <span class="text-xs text-gray-500 dark:text-gray-400">🕓 جستجوهای اخیر</span>
-        <button onclick="clearAllHistory()" class="text-[11px] text-red-500 hover:text-red-700">حذف همه</button>
-      </div>
-      <div id="search-history" class="mt-1 flex gap-2 overflow-x-auto no-scrollbar"></div>
-    </div>
+    <button type="button" id="menuToggle" class="sm:hidden w-10 h-10 grid place-items-center rounded-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800" aria-label="منو">
+      <i class="fas fa-bars"></i>
+    </button>
   </div>
 </header>
 
-{# ========================= بدنه صفحه ========================= #}
 <main class="max-w-6xl mx-auto px-3 pb-24 pt-3">
-
-  {# -------- بخش نتایج جستجو (در صورت داشتن پرس‌وجو) -------- #}
-  {# نتایج زنده: به صورت کلاینتی نمایش و فیلتر می‌شود #}
-  <div id="liveSummary" class="mb-3 text-xs text-gray-500 dark:text-gray-400" role="status" aria-live="polite"></div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="searchResultsGrid"></div>
-
-  {# --------- بخش نمایش تمامی آگهی‌ها (همیشه نمایش بده) --------- #}
-  {% set all_list = all_lands if all_lands is defined else (lands if not has_query else []) %}
-  {% set all_total = all_list|length %}
-
-  <div class="mb-2 flex items-center justify-between">
-    <h2 class="text-sm font-bold text-gray-800 dark:text-gray-100">
-      {% if has_query %}همه آگهی‌ها{% else %}جدیدترین آگهی‌ها{% endif %}
-      {% if all_total>0 %} ({{ all_total }}){% endif %}
-    </h2>
-  </div>
-
-  {% if all_total == 0 and not has_query %}
-    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-sm text-yellow-800 dark:text-yellow-200">
-      هنوز آگهی‌ای ثبت نشده است.
+  {% set list_ = lands or [] %}
+  {% if list_|length == 0 %}
+    <div class="grid place-items-center py-16 text-center text-gray-500 dark:text-gray-300">
+      <div>
+        <div class="text-4xl mb-2">🔎</div>
+        <div class="text-sm">نتیجه‌ای یافت نشد. کلمات کلیدی یا شهر را تغییر دهید.</div>
+      </div>
     </div>
   {% else %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landListAll">
-      {% for land in all_list %}
-        {{ LandCard(land) }}
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for land in list_ %}
+        {% set images = land.get('images') or [] %}
+        {% set img = images[0] if images else None %}
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group" data-code="{{ land.code }}">
+          <div class="relative">
+            <a href="{{ url_for('main.land_detail', code=land.code) }}">
+              {% if img %}
+              <img src="{{ url_for('main.uploaded_file', filename=img) }}" alt="{{ land.title }}" class="w-full h-64 sm:h-60 object-cover group-hover:scale-105 transition" />
+              {% else %}
+              <div class="w-full h-64 sm:h-60 bg-gray-200 dark:bg-gray-800 grid place-items-center text-gray-500">
+                <i class="fas fa-seedling text-2xl text-emerald-600/70"></i>
+              </div>
+              {% endif %}
+            </a>
+            <button type="button" class="absolute top-3 right-3 favorite-btn z-10" data-code="{{ land.code }}" title="ذخیره آگهی">
+              <i class="fas fa-bookmark text-white text-2xl drop-shadow-md"></i>
+            </button>
+          </div>
+          <div class="p-4">
+            <a href="{{ url_for('main.land_detail', code=land.code) }}" class="block">
+              <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
+            </a>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 {{ land.location or '?' }} | 📏 {{ ":,".format(land.size | int) if land.size else "?" }} متر</p>
+            <p class="text-base font-extrabold text-emerald-700 dark:text-emerald-400 mt-2">💰 {{ ":,".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان</p>
+          </div>
+        </div>
       {% endfor %}
     </div>
-
-    {# صفحه‌بندی همه آگهی‌ها (اختیاری) #}
-    {% if all_pagination %}
-      <div class="mt-4 flex items-center justify-center gap-2">
-        {% if all_pagination.prev_url %}
-          <a href="{{ all_pagination.prev_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">قبلی</a>
-        {% endif %}
-        <span class="text-xs text-gray-500 dark:text-gray-400">صفحه {{ all_pagination.page }} از {{ all_pagination.pages }}</span>
-        {% if all_pagination.next_url %}
-          <a href="{{ all_pagination.next_url }}" class="px-3 py-1 rounded-lg border dark:border-gray-700">بعدی</a>
-        {% endif %}
-      </div>
-    {% endif %}
   {% endif %}
-
-<!-- نوار اکشن پایین (موبایل) - هماهنگ با صفحات دیگر -->
-<div class="fixed bottom-0 inset-x-0 z-40 sm:hidden" role="contentinfo" aria-label="دکمه‌های سریع">
-  <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,.06)]">
-    <button class="px-3 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-sm" onclick="clearAllFilters()">پاکسازی فیلترها</button>
-    <a href="{{ url_for('main.city_select_multi') }}" class="px-3 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-sm flex items-center gap-2">
-      <i class="fas fa-map-marker-alt text-emerald-600"></i>
-      تغییر شهر
-    </a>
-    <button class="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium" onclick="document.getElementById('search-form')?.submit()">اعمال</button>
-  </div>
-</div>
-
-<!-- JSON for lands (safe embed) -->
-<script id="lands-json" type="application/json">{{ (lands or []) | tojson }}</script>
-
 </main>
 
+<!-- Lands JSON for client features -->
+<script id="lands-json" type="application/json">{{ (lands or []) | tojson }}</script>
+
 <script>
-// اسکریپت علاقه‌مندی مشابه صفحه اصلی
-document.addEventListener("DOMContentLoaded", () => {
-  try {
-    const el = document.getElementById('lands-json');
-    const txt = (el && el.textContent) ? el.textContent : '[]';
-    localStorage.setItem('allLandsData', txt);
-  } catch (e) {}
-  const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
-  document.querySelectorAll(".land-card").forEach(card => {
-    const code = card.dataset.code;
-    const btn = card.querySelector(".favorite-btn");
-    if (!btn) return;
-    const icon = btn.querySelector("i") || btn;
-    const updateHeart = () => {
-      const isFav = favorites.includes(code);
-      icon.classList.toggle("text-red-500", isFav);
-      icon.classList.toggle("text-white", !isFav);
-    };
-    updateHeart();
-    btn.addEventListener("click", e => {
-      e.preventDefault();
-      const i = favorites.indexOf(code);
-      if (i > -1) favorites.splice(i, 1); else favorites.push(code);
-      localStorage.setItem("favoriteLands", JSON.stringify(favorites));
-      updateHeart();
-    });
-  });
-});
+  document.addEventListener('DOMContentLoaded', () => {
+    // City label from storage
+    (function(){
+      const label = document.getElementById('cityLabel');
+      const hidden = document.getElementById('cityHidden');
+      if (!label || !hidden) return;
+      let display = 'کل ایران', hiddenVal = '';
+      try{
+        const obj = JSON.parse(localStorage.getItem('vinor_city_obj')||'null');
+        const raw = localStorage.getItem('vinor_city')||'';
+        if (obj && typeof obj==='object'){
+          if (Array.isArray(obj.cities) && obj.cities.length>1){ display = obj.cities.length+' شهر'; hiddenVal = obj.cities.join(','); }
+          else if (Array.isArray(obj.cities) && obj.cities.length===1){ display=obj.cities[0]; hiddenVal=obj.cities[0]; }
+          else if (obj.province && obj.city){ display=obj.city; hiddenVal=obj.city; }
+          else if (obj.province && !obj.city){ display=obj.province; hiddenVal=obj.province; }
+          else if (raw){ display=raw; hiddenVal=raw; }
+        } else if (raw) { display=raw; hiddenVal=raw; }
+      }catch(_){ }
+      label.textContent = display || 'کل ایران';
+      hidden.value = hiddenVal;
+      window.addEventListener('storage', (e)=>{ if(e.key==='vinor_city'||e.key==='vinor_city_obj') location.reload(); });
+    })();
 
-// همگام‌سازی انتخاب شهر با سِرچ و اعمال روی فرم
-document.addEventListener('DOMContentLoaded', () => {
-  const cityBtn = document.getElementById('cityChip');
-  const cityLabel = document.getElementById('cityChipLabel');
-  const cityHidden = document.getElementById('cityHidden');
-  const form = document.getElementById('search-form');
-
-  function gotoCityPicker() {
-    try {
-      const url = new URL("{{ url_for('main.city_select_multi') }}", window.location.origin);
-      url.searchParams.set('next', window.location.href);
-      window.location.href = url.toString();
-    } catch (_) {
-      window.location.href = "{{ url_for('main.city_select_multi') }}";
-    }
-  }
-
-  function setCityUIFromStorage() {
-    let display = '';
-    let hiddenVal = '';
-    try {
-      const obj = JSON.parse(localStorage.getItem('vinor_city_obj') || 'null');
-      if (obj && typeof obj === 'object') {
-        if (Array.isArray(obj.cities) && obj.cities.length > 1) {
-          display = `${obj.cities.length} شهر`;
-          hiddenVal = obj.cities.join(',');
-        } else if (Array.isArray(obj.cities) && obj.cities.length === 1) {
-          display = obj.cities[0];
-          hiddenVal = obj.cities[0];
-        } else if (obj.province && obj.city) {
-          display = obj.city;
-          hiddenVal = obj.city;
-        } else if (obj.province && obj.allProvince) {
-          display = obj.province;
-          // در حالت انتخاب همه استان، cities در storage شامل همه شهرهای آن استان است
-          hiddenVal = (obj.cities || []).join(',');
-        } else if (obj.province && !obj.city) {
-          display = obj.province;
-          hiddenVal = obj.province; // فالبک
-        }
-      }
-    } catch(_) {}
-
-    if (!display) {
-      // fallback به پارامتر آدرس یا کلید قدیمی
-      const qsCity = "{{ (request.args.get('city') or '')|trim }}";
-      if (qsCity) { display = qsCity; hiddenVal = qsCity; }
-      else {
-        const saved = (localStorage.getItem('vinor:selectedCity') || '').split(/[‌,،]/).map(s=>s.trim()).filter(Boolean)[0] || '';
-        if (saved) { display = saved; hiddenVal = saved; }
-      }
-    }
-
-    if (display) {
-      if (cityLabel) cityLabel.textContent = display;
-      if (cityHidden) cityHidden.value = hiddenVal;
-      cityBtn?.classList.add('border-green-500');
-    } else {
-      if (cityLabel) cityLabel.textContent = 'انتخاب شهر';
-      if (cityHidden) cityHidden.value = '';
-      cityBtn?.classList.remove('border-green-500');
-    }
-  }
-
-  if (cityBtn) {
-    cityBtn.addEventListener('click', (e) => { e.preventDefault(); gotoCityPicker(); });
-  }
-
-  setCityUIFromStorage();
-
-  // اگر city در کوئری نبود ولی در storage موجود بود، فرم را برای اعمال فیلتر ارسال کن
-  try {
-    const qsHasCity = !!("{{ (request.args.get('city') or '')|trim }}");
-    if (!qsHasCity && cityHidden && cityHidden.value) {
-      form?.submit();
-    }
-  } catch(_) {}
-
-  document.addEventListener('vinor:city-changed', () => {
-    setCityUIFromStorage();
-    form?.submit();
-  });
-});
-
-/* =============== تاریخچه جستجو (LocalStorage) =============== */
-function storeSearchQuery(q) {
-  q = (q || "").trim();
-  if (!q) return;
-  let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-  const idx = history.indexOf(q);
-  if (idx > -1) { history.splice(idx, 1); }
-  history.unshift(q);
-  if (history.length > 6) history = history.slice(0, 6);
-  localStorage.setItem('searchHistory', JSON.stringify(history));
-  renderSearchHistory();
-}
-
-function deleteHistoryItem(index) {
-  let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-  history.splice(index, 1);
-  localStorage.setItem('searchHistory', JSON.stringify(history));
-  renderSearchHistory();
-}
-
-function clearAllHistory() {
-  localStorage.removeItem('searchHistory');
-  renderSearchHistory();
-}
-
-function selectHistoryItem(q) {
-  const input = document.getElementById('searchInput');
-  if (!input) return;
-  input.value = q;
-  try { storeSearchQuery(q); } catch(_) {}
-  if (typeof runLiveSearch === 'function') runLiveSearch();
-  input.focus();
-}
-
-function renderSearchHistory() {
-  const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-  const container = document.getElementById('search-history');
-  container.innerHTML = '';
-  if (history.length === 0) {
-    container.innerHTML = '<span class="text-gray-400 text-xs">هیچ جستجویی ثبت نشده.</span>';
-    return;
-  }
-  history.forEach((item, index) => {
-    const chip = document.createElement('span');
-    chip.className = "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-100 px-2.5 py-1 rounded-full text-xs flex items-center gap-2";
-    chip.innerHTML = `
-      <button class="hover:underline" onclick="selectHistoryItem('${item.replace(/'/g,"\\'")}')">${item}</button>
-      <button onclick="deleteHistoryItem(${index})" class="text-red-500 hover:text-red-700 text-xs">&times;</button>
-    `;
-    container.appendChild(chip);
-  });
-}
-renderSearchHistory();
-
-// همگام‌سازی اولیه تاریخچه با مقدار ورودی (اگر از لینک آمده باشد)
-try {
-  const initQ = (document.getElementById('searchInput')?.value || '').trim();
-  if (initQ) storeSearchQuery(initQ);
-} catch(_) {}
-
-/* =============== پاک کردن فیلترها =============== */
-function clearAllFilters() {
-  const form = document.getElementById('search-form');
-  const keep = ['sort','city']; // شهر انتخاب‌شده حفظ شود
-  [...form.querySelectorAll('input[type="text"], input[type="number"]')].forEach(inp => inp.value = '');
-  form.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
-
-  const url = new URL(form.action, window.location.origin);
-  keep.forEach(k => {
-    const val = (new URLSearchParams(new FormData(form))).get(k);
-    if (val) url.searchParams.set(k, val);
-  });
-  window.location.href = url.toString();
-}
-
-/* =============== نتایج زنده =============== */
-let liveTimer;
-function runLiveSearch(){
-  clearTimeout(liveTimer);
-  liveTimer = setTimeout(()=>{
-    try{
-      const container = document.getElementById('searchResultsGrid');
-      const summary = document.getElementById('liveSummary');
-      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-      const cityHidden = document.getElementById('cityHidden');
-      const cityList = (cityHidden?.value || '').toLowerCase();
-      const citySet = new Set(cityList.split(',').map(s=>s.trim()).filter(Boolean));
-      const form = document.getElementById('search-form');
-      const params = new URLSearchParams(new FormData(form));
-      const minPrice = parseInt(params.get('min_price')||'')||0;
-      const maxPrice = parseInt(params.get('max_price')||'')||0;
-      const minSize  = parseInt(params.get('min_size')||'')||0;
-      const maxSize  = parseInt(params.get('max_size')||'')||0;
-
-      let cards = Array.from(document.querySelectorAll('.land-card'));
-      if (cards.length === 0){
-        const raw = document.getElementById('lands-json')?.textContent || localStorage.getItem('allLandsData') || '[]';
-        const lands = JSON.parse(raw);
-        const mount = document.getElementById('searchResultsGrid');
-        mount.innerHTML = lands.map(l=>`
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card" data-code="${l.code}" data-city="${(l.city || (l.location||'').split('-')[0]).toLowerCase()}" data-title="${(l.title||'').toLowerCase()}" data-location="${(l.location||'').toLowerCase()}" data-desc="${(l.description||'').toLowerCase()}" data-size="${l.size||l.area||0}" data-price="${l.price_total||l.price||0}">
-            <a href="/land/${l.code}">
-              ${(l.images && l.images.length) ? `<img src="/uploads/${(String(l.images[0]).startsWith('/uploads/')? String(l.images[0]).slice(9): l.images[0])}" class="w-full h-60 object-cover" alt="تصویر آگهی" />` : `<div class=\"w-full h-60 bg-gray-200 dark:bg-gray-800 grid place-items-center\" aria-label=\"بدون تصویر\"><i class=\"fas fa-seedling text-2xl text-green-600/70\"></i></div>`}
-            </a>
-            <div class="p-4">
-              <a href="/land/${l.code}"><h3 class="text-base font-bold truncate">${l.title||''}</h3></a>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 ${l.location||'?'} | 📏 ${(l.size||l.area||'?')} متر</p>
-              <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">💰 ${(l.price_total||l.price||'نامشخص')}</p>
-            </div>
-          </div>
-        `).join('');
-        cards = Array.from(document.querySelectorAll('.land-card'));
-      }
-
-      const filtered = cards.filter(card=>{
-        const title = card.dataset.title || '';
-        const loc   = card.dataset.location || '';
-        const desc  = card.dataset.desc || '';
-        const city  = (card.dataset.city || '').trim();
-        const size  = parseInt(card.dataset.size||'0')||0;
-        const price = parseInt(card.dataset.price||'0')||0;
-
-        if (q && !(title.includes(q) || loc.includes(q) || desc.includes(q))) return false;
-        if (citySet.size>0 && !citySet.has(city)) return false;
-        if (minPrice && (!price || price < minPrice)) return false;
-        if (maxPrice && (!price || price > maxPrice)) return false;
-        if (minSize && size < minSize) return false;
-        if (maxSize && size > maxSize) return false;
-        return true;
+    // Favorites paint
+    (function(){
+      const favs = JSON.parse(localStorage.getItem('favoriteLands')||'[]');
+      document.querySelectorAll('.land-card').forEach(card=>{
+        const code = card.dataset.code;
+        const btn = card.querySelector('.favorite-btn');
+        const icon = btn?.querySelector('i')||btn;
+        if (!btn || !icon) return;
+        const paint = ()=>{
+          const on = favs.includes(code);
+          icon.classList.toggle('text-red-500', on);
+          icon.classList.toggle('text-white', !on);
+        };
+        paint();
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const i = favs.indexOf(code);
+          if (i>-1) favs.splice(i,1); else favs.push(code);
+          localStorage.setItem('favoriteLands', JSON.stringify(favs));
+          paint();
+        });
       });
+    })();
 
-      const total = cards.length;
-      const shown = filtered.length;
-      cards.forEach(c=>c.style.display='none');
-      filtered.forEach(c=>c.style.display='');
-      if (summary) summary.textContent = shown ? `${shown} نتیجه از ${total}` : 'نتیجه‌ای پیدا نشد';
-    }catch(e){}
-  }, 200);
-}
-
-document.getElementById('searchInput')?.addEventListener('input', runLiveSearch);
-document.querySelectorAll('#search-form input, #search-form select').forEach(el=>{
-  el.addEventListener('change', runLiveSearch);
-});
-
-runLiveSearch();
+    // Persist lands for other pages
+    try {
+      const el = document.getElementById('lands-json');
+      const txt = (el && el.textContent) ? el.textContent : '[]';
+      localStorage.setItem('allLandsData', txt);
+    } catch(_){ }
+  });
 </script>
 
 {% endblock %}
