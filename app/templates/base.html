@@ -238,12 +238,16 @@
           const target = ev.target || null;
           const menuIsOpen = sideMenu?.classList.contains('open');
           // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
-          // وقتی منو بسته است، روی کنترل‌های تعاملی/نواحی حساس ژست را شروع نکن
+          // وقتی منو بسته است: در صفحه اصلی، از هرجا (به جز المان‌های تعاملی) شروع شود؛
+          // در سایر صفحات، هم از لبه راست و هم خارج از نواحی حساس.
           if (!menuIsOpen) {
-            if (isInteractive(target) || isSwipeExcluded(target)) return;
-            // فقط اگر لمس از لبه راست شروع شده باشد (برای جلوگیری از تداخل با اسلایدر تصاویر و ...)
-            const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
-            if (vw && t.clientX < (vw - EDGE)) return;
+            if (IS_HOME) {
+              if (isInteractive(target)) return;
+            } else {
+              if (isInteractive(target) || isSwipeExcluded(target)) return;
+              const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
+              if (vw && t.clientX < (vw - EDGE)) return;
+            }
           }
           // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;
