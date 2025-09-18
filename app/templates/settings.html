@@ -21,176 +21,56 @@
   </header>
   <div class="h-20"></div>
 
-  
-
-  {% if user %}
-  <form id="settings-form" method="post" action="{{ url_for('main.settings') }}" class="space-y-8">
-
-    <!-- پروفایل (الهام از تلگرام: ردیف‌های ساده) -->
-    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-      <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">پروفایل</div>
-
-      <div class="px-4 pb-4">
-        <div class="mb-4">
-          <label for="name" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام</label>
-          <input id="name" name="name" type="text" value="{{ user.name or '' }}" required
-                 class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        </div>
-        <div class="mb-4">
-          <label for="lastname" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">نام خانوادگی</label>
-          <input id="lastname" name="lastname" type="text" value="{{ user.lastname or '' }}"
-                 class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شماره موبایل</label>
-          <input type="text" value="{{ user.phone }}" disabled
-                 class="w-full rounded-xl border bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-700 px-3 py-2">
-        </div>
-      </div>
-    </section>
-
-    <!-- موقعیت پیش‌فرض جستجو -->
-    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-4 sm:p-6">
-      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">📍 موقعیت پیش‌فرض جستجو</h2>
-
-      <!-- استان -->
-      <div class="mb-4">
-        <label for="province-select" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">استان</label>
-        <div class="relative">
-          <select id="province-select" name="province" required
-                  class="w-full appearance-none rounded-xl border px-3 py-2 pr-8 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-            <option value="">انتخاب کنید…</option>
-            <option value="تهران" {{ 'selected' if (request.args.get('province') or user.province) == 'تهران' else '' }}>تهران</option>
-            <option value="البرز" {{ 'selected' if (request.args.get('province') or user.province) == 'البرز' else '' }}>البرز</option>
-            <option value="مازندران" {{ 'selected' if (request.args.get('province') or user.province) == 'مازندران' else '' }}>مازندران</option>
-          </select>
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
-        </div>
-        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">استانی که بیشتر در آن جستجو می‌کنید را انتخاب کنید.</p>
-      </div>
-
-      <!-- شهر (انتخاب در صفحه جدا) -->
+  <!-- ظاهر: فقط سوییچ تیره/روشن -->
+  <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">ظاهر</div>
+    <div class="px-4 pb-4 flex items-center justify-between gap-3">
       <div>
-        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">شهر</label>
-
-        <!-- نمایش مقدار انتخاب‌شده -->
-        <input id="city-display" type="text"
-               value="{{ request.args.get('city', user.city or '') }}"
-               disabled
-               class="w-full rounded-xl border bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-200 dark:border-slate-700 px-3 py-2">
-
-        <!-- مقدار واقعی برای ارسال فرم -->
-        <input type="hidden" id="city-hidden" name="city" value="{{ request.args.get('city', user.city or '') }}">
-
-        <!-- رفتن به city_select -->
-        <button type="button" id="city-picker-btn"
-                class="mt-3 w-full rounded-xl px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition active:scale-[0.99]">
-          🗺️ انتخاب / تغییر شهر
-        </button>
-
-        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">با انتخاب شهر، فیلتر پیش‌فرض جستجو در وینور به‌روز می‌شود.</p>
+        <div class="text-sm font-semibold">حالت تیره</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">روشن / تیره</div>
       </div>
-    </section>
-
-    <!-- امنیت و ظاهر -->
-    <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-      <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">امنیت</div>
-      <div class="px-4 pb-4">
-        <label for="password" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">تغییر رمز عبور (اختیاری)</label>
-        <input id="password" name="password" type="password" placeholder="رمز جدید"
-               class="w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">اگر قصد تغییر ندارید، خالی بگذارید.</p>
-      </div>
-
-      <div class="px-4 pt-2 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">ظاهر</div>
-      <div class="px-4 pb-4 flex items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-semibold">حالت تیره</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">روشن/تیره</div>
-        </div>
-        <label class="inline-flex items-center cursor-pointer">
-          <input id="darkToggleSettings" type="checkbox" class="sr-only">
-          <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
-            <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
-          </span>
-        </label>
-      </div>
-    </section>
-
-    <!-- نوار ذخیره چسبان در موبایل -->
-    <div class="fixed bottom-0 right-0 left-0 z-20 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 py-3 sm:static sm:p-0 sm:bg-transparent sm:border-none">
-      <div class="mx-auto max-w-xl">
-        <button type="submit"
-                class="w-full h-12 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-[15px] font-semibold shadow active:scale-[0.99]">
-          💾 ذخیره تغییرات
-        </button>
-      </div>
+      <label class="inline-flex items-center cursor-pointer">
+        <input id="darkToggleSettings" type="checkbox" class="sr-only">
+        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
+          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
+        </span>
+      </label>
     </div>
-  </form>
-  {% else %}
-    <div class="rounded-xl border border-rose-200/60 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 p-4">
-      خطا: اطلاعات کاربر یافت نشد.
-    </div>
-  {% endif %}
+  </section>
 
-  <!-- لینک بازگشت به خانه (فقط دسکتاپ) -->
-  <div class="hidden sm:block mt-6">
-    <a href="{{ url_for('main.index') }}" class="text-sm text-green-700 dark:text-green-400 hover:underline">
-      ← بازگشت به صفحه اصلی
-    </a>
-  </div>
+  <!-- نمایش جستجوی سریع -->
+  <section class="mt-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">جستجو</div>
+    <div class="px-4 pb-4 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-semibold">نمایش جستجوی سریع در خانه</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">نوار جستجوی سریع در صفحه اصلی</div>
+      </div>
+      <label class="inline-flex items-center cursor-pointer">
+        <input id="toggleQuickSearch" type="checkbox" class="sr-only">
+        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
+          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
+        </span>
+      </label>
+    </div>
+  </section>
 </div>
 
-<!-- JS: همگام‌سازی با city_select و ساخت لینک + سوییچ تیره -->
+<!-- JS: فقط سوییچ تیره/روشن -->
 <script>
-  (function () {
-    const $province  = document.getElementById('province-select');
-    const $cityDisp  = document.getElementById('city-display');
-    const $cityHidden= document.getElementById('city-hidden');
-    const $pickBtn   = document.getElementById('city-picker-btn');
-
-    // خواندن QueryString در صورت بازگشت از city_select
-    const params = new URLSearchParams(location.search);
-    const qsProvince = params.get('province');
-    const qsCity     = params.get('city');
-
-    if (qsProvince) $province.value = qsProvince;
-    if (qsCity) {
-      $cityDisp.value   = qsCity;
-      $cityHidden.value = qsCity;
-    }
-
-    // دکمه انتخاب شهر
-    $pickBtn.addEventListener('click', function () {
-      const next = "{{ url_for('main.settings') }}";
-      const province = $province.value || "{{ user.province or '' }}";
-      const city     = $cityHidden.value || "{{ user.city or '' }}";
-
-      const url = new URL("{{ url_for('main.city_select') }}", window.location.origin);
-      url.searchParams.set('next', next);
-      if (province) url.searchParams.set('province', province);
-      if (city)     url.searchParams.set('city', city);
-
-      // اسکرول را پس از بازگشت به بالا ببریم تا UX بهتر شود
-      url.searchParams.set('from', 'settings');
-      window.location.href = url.toString();
-    });
-
-    // در تغییر استان، اگر شهر قبلی به استان جدید تعلق ندارد، نمایش را خالی کن (پرهیز از ناسازگاری)
-    $province.addEventListener('change', function () {
-      // به کاربر یادآوری کنیم شهر را دوباره انتخاب کند
-      $cityDisp.value   = '';
-      $cityHidden.value = '';
-    });
-  })();
-
   (function(){
     const root = document.documentElement;
     const toggle = document.getElementById('darkToggleSettings');
+    const quick = document.getElementById('toggleQuickSearch');
     try {
       const saved = localStorage.getItem('theme');
       const isDark = saved ? saved==='dark' : root.classList.contains('dark');
       if (toggle){ toggle.checked = !!isDark; moveDot(); }
+      if (quick){
+        const qs = localStorage.getItem('vinor_show_quick_search');
+        const on = qs ? qs==='1' : true; // پیش‌فرض: نمایش فعال باشد
+        quick.checked = !!on; moveDotQS();
+      }
     } catch {}
 
     function moveDot(){
@@ -199,10 +79,23 @@
       if (toggle.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
     }
 
+    function moveDotQS(){
+      const dot = document.querySelector('#toggleQuickSearch + span .dot');
+      if (!dot || !quick) return;
+      if (quick.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
+    }
+
     toggle?.addEventListener('change', ()=>{
       root.classList.toggle('dark');
       try{ localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }catch{}
       moveDot();
+    });
+
+    quick?.addEventListener('change', ()=>{
+      try{ localStorage.setItem('vinor_show_quick_search', quick.checked ? '1' : '0'); }catch{}
+      moveDotQS();
+      // اطلاع به صفحه اصلی برای پنهان/نمایش
+      try{ window.dispatchEvent(new CustomEvent('vinor:qs-toggle', { detail: quick.checked })); }catch{}
     });
   })();
 </script>
