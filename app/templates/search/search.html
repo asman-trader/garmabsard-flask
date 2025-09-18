@@ -157,15 +157,15 @@
     {% endif %}
   {% endif %}
 
-<!-- نوار اکشن پایین (موبایل‌محور) -->
-<div class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t border-gray-200 dark:border-gray-800 px-3 py-2 sm:hidden">
-  <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
-    <button class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-sm" onclick="clearAllFilters()">پاکسازی فیلترها</button>
-    <a href="{{ url_for('main.city_select_multi') }}" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-sm flex items-center gap-2">
-      <i class="fas fa-map-marker-alt text-green-600"></i>
+<!-- نوار اکشن پایین (موبایل) - هماهنگ با صفحات دیگر -->
+<div class="fixed bottom-0 inset-x-0 z-40 sm:hidden" role="contentinfo" aria-label="دکمه‌های سریع">
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,.06)]">
+    <button class="px-3 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-sm" onclick="clearAllFilters()">پاکسازی فیلترها</button>
+    <a href="{{ url_for('main.city_select_multi') }}" class="px-3 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-sm flex items-center gap-2">
+      <i class="fas fa-map-marker-alt text-emerald-600"></i>
       تغییر شهر
     </a>
-    <button class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-bold" onclick="document.getElementById('search-form')?.submit()">اعمال</button>
+    <button class="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium" onclick="document.getElementById('search-form')?.submit()">اعمال</button>
   </div>
 </div>
 
