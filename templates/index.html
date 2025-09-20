@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>انتخاب ارز</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="top">
+      <h1>انتخاب ارزها <small id="selected-count">—</small></h1>
+    </header>
+
+    <section class="controls">
+      <input id="coin-search" placeholder="جستجو (BTC, ETH, ...)" />
+      <span id="search-result-count">—</span>
+      <button id="clear-selected" type="button">پاک کردن انتخاب</button>
+    </section>
+
+    <ul id="coin-list" class="grid"></ul>
+
+    <p class="hint">با تیک زدن/برداشتن، انتخاب‌ها در مرورگر شما ذخیره می‌شود و با رفرش باقی می‌ماند.</p>
+  </main>
+
+  <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>
+
+
