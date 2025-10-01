@@ -56,6 +56,11 @@
       <a class="chip" href="/app">اپ</a>
     </div>
 
+    <section id="expressOffline" style="margin-top:12px;text-align:start;display:none">
+      <h2 style="font-size:14px;margin:0 0 6px">آخرین آگهی‌های اکسپرس (کش‌شده)</h2>
+      <div id="expressList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </section>
+
     <div class="muted" id="status" role="status" aria-live="polite">وقتی آنلاین شدید، صفحه به صورت خودکار رفرش می‌شود.</div>
   </main>
 
@@ -97,6 +102,28 @@
         timer = setTimeout(async function(){ await ping(); backoff = Math.min(backoff + 3000, 20000); loop(); }, backoff);
       }
       loop();
+
+      // Render last known express listings from localStorage (if any)
+      try{
+        const cached = JSON.parse(localStorage.getItem('vinor_express_cache')||'{}');
+        const items = Array.isArray(cached.items) ? cached.items.slice(0, 6) : [];
+        if (items.length){
+          const wrap = document.getElementById('expressOffline');
+          const list = document.getElementById('expressList');
+          list.innerHTML = items.map((land)=>{
+            const img = (land.images && land.images.length) ? land.images[0] : '';
+            const src = img ? (img.startsWith('/uploads/')? img : ('/uploads/'+String(img).replace(/^\//,''))) : '';
+            return `
+              <a href="/express/${land.code}" style="display:block;border:1px solid var(--border);border-radius:12px;padding:8px;text-decoration:none;color:inherit;background:transparent">
+                ${src ? `<img src="${src}" alt="${land.title||''}" style="width:100%;height:88px;object-fit:cover;border-radius:8px;">` : ''}
+                <div style="margin-top:6px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${land.title||''}</div>
+                <div style="margin-top:2px;font-size:12px;color:var(--muted)">📍 ${land.location||'?'} • 💰 ${land.price_total? Number(land.price_total).toLocaleString('fa-IR'): '—'}</div>
+              </a>
+            `;
+          }).join('');
+          wrap.style.display = '';
+        }
+      }catch(_){ }
     })();
   </script>
 </body>

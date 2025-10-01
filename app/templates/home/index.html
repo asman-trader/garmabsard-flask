@@ -145,6 +145,7 @@
             console.log('API Response:', data);
             if (data.success && data.lands) {
               console.log('Rendering express listings:', data.lands.length);
+              try { localStorage.setItem('vinor_express_cache', JSON.stringify({ t: Date.now(), items: data.lands })); } catch(_) {}
               renderExpressListings(data.lands);
             } else {
               console.log('No express listings found');
@@ -158,6 +159,11 @@
           })
           .catch(error => {
             console.error('Error loading express listings:', error);
+            try {
+              const cached = JSON.parse(localStorage.getItem('vinor_express_cache')||'{}');
+              const items = Array.isArray(cached.items) ? cached.items : [];
+              if (items.length) { renderExpressListings(items); return; }
+            } catch(_) {}
             expressContent.innerHTML = `
               <div class="text-center py-12">
                 <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>

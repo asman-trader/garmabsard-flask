@@ -37,6 +37,8 @@ self.addEventListener('activate', (event) => {
     await Promise.all(
       keys.filter((k) => ![PRECACHE, RUNTIME, API_CACHE].includes(k)).map((k) => caches.delete(k))
     );
+    // Enable Navigation Preload for faster nav when online
+    try { if (self.registration.navigationPreload) await self.registration.navigationPreload.enable(); } catch(_) {}
     await self.clients.claim();
   })());
 });
@@ -70,7 +72,9 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const resp = await fetch(request);
+        // Use preloaded response if available
+        const preload = await event.preloadResponse;
+        const resp = preload || await fetch(request);
         // Optionally update precache copy of shell routes
         const cache = await caches.open(PRECACHE);
         try { cache.put(request, resp.clone()); } catch(_) {}
@@ -155,6 +159,25 @@ self.addEventListener('message', (event) => {
       const cache = await caches.open(PRECACHE);
       await Promise.all(urls.map(async (u) => {
         try { const req = new Request(u, { credentials: 'same-origin' }); const resp = await fetch(req); cache.put(req, resp); } catch(_) {}
+      }));
+    })());
+  }
+  // Trigger background sync warmup (if supported)
+  if (data && data.type === 'VINOR_WARMUP_SYNC') {
+    if (self.registration && 'sync' in self.registration) {
+      try { self.registration.sync.register('vinor-warmup'); } catch(_) {}
+    }
+  }
+});
+
+// Background sync to refresh important URLs when back online
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'vinor-warmup') {
+    event.waitUntil((async () => {
+      const urls = ['/', '/app', '/api/lands/approved', '/api/express-listings'];
+      const cache = await caches.open(PRECACHE);
+      await Promise.all(urls.map(async (u) => {
+        try { const req = new Request(u, { credentials: 'same-origin' }); const resp = await fetch(req, { cache: 'no-store' }); cache.put(req, resp); } catch(_) {}
       }));
     })());
   }
