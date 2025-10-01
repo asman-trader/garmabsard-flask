@@ -47,6 +47,16 @@ function isSameOrigin(url) {
   try { return new URL(url, self.location.origin).origin === self.location.origin; } catch { return false; }
 }
 
+// Whitelisted external origins to cache (CDN scripts/fonts)
+const EXTERNAL_ORIGINS = [
+  'https://cdn.tailwindcss.com',
+  'https://cdnjs.cloudflare.com',
+  'https://unpkg.com',
+  'https://cdn.jsdelivr.net',
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com'
+];
+
 function isAPI(request) {
   const url = new URL(request.url);
   if (!isSameOrigin(url.href)) return false;
@@ -81,8 +91,12 @@ self.addEventListener('fetch', (event) => {
         return resp;
       } catch (_) {
         const cache = await caches.open(PRECACHE);
+        // Prefer exact cached page; else try cached /app shell; else offline
         const cached = await cache.match(request);
-        return cached || (await cache.match(OFFLINE_URL));
+        if (cached) return cached;
+        const appShell = await cache.match('/app');
+        if (appShell) return appShell;
+        return await cache.match(OFFLINE_URL);
       }
     })());
     return;
@@ -125,6 +139,26 @@ self.addEventListener('fetch', (event) => {
     })());
     return;
   }
+
+  // External CDN assets: cache-first (opaque allowed)
+  try {
+    const url = new URL(request.url);
+    if (EXTERNAL_ORIGINS.includes(url.origin) && request.method === 'GET') {
+      event.respondWith((async () => {
+        const cache = await caches.open(RUNTIME);
+        const cached = await cache.match(request, { ignoreVary: true });
+        if (cached) return cached;
+        try {
+          const resp = await fetch(request, { mode: 'no-cors' }); // may be opaque
+          try { cache.put(request, resp.clone()); } catch(_) {}
+          return resp;
+        } catch (_) {
+          return new Response('', { status: 504 });
+        }
+      })());
+      return;
+    }
+  } catch(_) {}
 
   // Default: network-first with cache fallback for GET
   if (request.method === 'GET') {
