@@ -97,11 +97,9 @@ def inject_vinor_globals():
 @main_bp.route("/", endpoint="index")
 def index():
     """
-    لندینگ وینور (Vinor) – فقط برای اولین بار.
-    اگر کاربر لاگین باشد، مستقیم به /app می‌رود.
+    لندینگ وینور (Vinor) – معرفی وینور و نصب PWA.
+    همیشه محتوای لندینگ را نشان می‌دهد.
     """
-    if session.get("user_id"):
-        return redirect(url_for("main.app_home"))
     return render_template("home/landing.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/start", endpoint="start")
@@ -124,13 +122,21 @@ def app_home():
     عملیات نیازمند ورود (ثبت/علاقه‌مندی و ...) همچنان با گارد کلاینت/سرور حفاظت می‌شود.
     """
     lands = _sort_by_created_at_desc(_get_approved_ads())
-    return render_template(
+    
+    # Set first visit cookie if not already set
+    resp = make_response(render_template(
         "home/index.html",
         lands=lands,
         CATEGORY_MAP=CATEGORY_MAP,
         brand="وینور",
         domain="vinor.ir",
-    )
+    ))
+    
+    if not request.cookies.get(FIRST_VISIT_COOKIE):
+        resp.set_cookie(FIRST_VISIT_COOKIE, "1", max_age=60 * 60 * 24 * 365, samesite="Lax")
+        session.permanent = True
+    
+    return resp
 
 @main_bp.route("/land/<code>", endpoint="land_detail")
 def land_detail(code):

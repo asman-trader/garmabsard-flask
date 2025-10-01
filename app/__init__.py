@@ -354,9 +354,10 @@ def create_app() -> Flask:
             current_app.logger.debug("PASS (logged-in): %s", request.path)
             return
 
+        # New policy: First-time users go directly to app, not landing page
         if not has_seen_landing:
-            current_app.logger.debug("REDIRECT → / (first-visit): %s", request.path)
-            return redirect(url_for("main.index"))
+            current_app.logger.debug("REDIRECT → /app (first-visit): %s", request.path)
+            return redirect(url_for("main.app_home"))
         else:
             current_app.logger.debug("REDIRECT → /login (guest): %s", request.path)
             return redirect(url_for("main.login"))
