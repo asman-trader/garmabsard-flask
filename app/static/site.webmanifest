@@ -13,6 +13,16 @@
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
   "categories": ["business", "shopping", "productivity"],
+  "shortcuts": [
+    { "name": "ثبت آگهی", "short_name": "ثبت", "url": "/submit-ad" },
+    { "name": "آگهی‌های من", "short_name": "آگهی‌ها", "url": "/my-lands" },
+    { "name": "جستجو", "short_name": "جستجو", "url": "/search" }
+  ],
+  "protocol_handlers": [
+    { "protocol": "web+vinor", "url": "/open?uri=%s" }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
 
   "icons": [
     { "src": "/static/icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
