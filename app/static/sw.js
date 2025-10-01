@@ -33,11 +33,24 @@ const PRECACHE_URLS = [
   '/static/icons/icon-512.png',
   '/static/sounds/notify.mp3'
 ];
+// Precache local icon/font assets for full offline
+const LOCAL_ICON_FONT_ASSETS = [
+  '/static/vendor/fontawesome/css/all.min.css',
+  '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
+  '/static/vendor/fontawesome/webfonts/fa-regular-400.woff2',
+  '/static/vendor/fontawesome/webfonts/fa-brands-400.woff2',
+  '/static/fonts/vazirmatn.css',
+  // optional if you add specific woff2 files
+  '/static/fonts/vazirmatn-regular.woff2',
+  '/static/fonts/vazirmatn-bold.woff2',
+  '/static/fonts/vazirmatn-medium.woff2',
+  '/static/fonts/vazirmatn-light.woff2'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(PRECACHE);
-    try { await cache.addAll(PRECACHE_URLS.map((u) => new Request(u, { credentials: 'same-origin' }))); } catch(_) {}
+    try { await cache.addAll(PRECACHE_URLS.concat(LOCAL_ICON_FONT_ASSETS).map((u) => new Request(u, { credentials: 'same-origin' }))); } catch(_) {}
     // Best-effort: prewarm external CSS/fonts/icons into dedicated ICONS cache for offline rendering
     try {
       const icache = await caches.open(ICONS_CACHE);
