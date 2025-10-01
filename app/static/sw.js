@@ -1,3 +1,165 @@
+/*
+  Vinor Service Worker – offline-first shell with runtime caching
+  Scope: '/'
+*/
+
+const VERSION = 'v1.0.0-2025-10-01';
+const PRECACHE = `vinor-precache-${VERSION}`;
+const RUNTIME = `vinor-runtime-${VERSION}`;
+const API_CACHE = `vinor-api-${VERSION}`;
+
+// URLs to precache at install
+const OFFLINE_URL = '/static/offline.html';
+const PRECACHE_URLS = [
+  '/',
+  '/start',
+  '/app',
+  '/search',
+  '/manifest.webmanifest',
+  OFFLINE_URL,
+  // Icons/sounds (best-effort if exist)
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/static/sounds/notify.mp3'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(PRECACHE);
+    try { await cache.addAll(PRECACHE_URLS.map((u) => new Request(u, { credentials: 'same-origin' }))); } catch(_) {}
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter((k) => ![PRECACHE, RUNTIME, API_CACHE].includes(k)).map((k) => caches.delete(k))
+    );
+    await self.clients.claim();
+  })());
+});
+
+function isSameOrigin(url) {
+  try { return new URL(url, self.location.origin).origin === self.location.origin; } catch { return false; }
+}
+
+function isAPI(request) {
+  const url = new URL(request.url);
+  if (!isSameOrigin(url.href)) return false;
+  return url.pathname.startsWith('/api/');
+}
+
+function isStaticAsset(request) {
+  const url = new URL(request.url);
+  if (!isSameOrigin(url.href)) return false;
+  return url.pathname.startsWith('/static/');
+}
+
+function isUploads(request) {
+  const url = new URL(request.url);
+  if (!isSameOrigin(url.href)) return false;
+  return url.pathname.startsWith('/uploads/');
+}
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Navigation requests: App Shell network-first → offline fallback
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const resp = await fetch(request);
+        // Optionally update precache copy of shell routes
+        const cache = await caches.open(PRECACHE);
+        try { cache.put(request, resp.clone()); } catch(_) {}
+        return resp;
+      } catch (_) {
+        const cache = await caches.open(PRECACHE);
+        const cached = await cache.match(request);
+        return cached || (await cache.match(OFFLINE_URL));
+      }
+    })());
+    return;
+  }
+
+  // API: stale-while-revalidate
+  if (isAPI(request) && request.method === 'GET') {
+    event.respondWith((async () => {
+      const cache = await caches.open(API_CACHE);
+      const cached = await cache.match(request);
+      const networkPromise = fetch(request)
+        .then((resp) => { try { cache.put(request, resp.clone()); } catch(_) {} return resp; })
+        .catch(() => undefined);
+      return cached || (await networkPromise) || new Response(JSON.stringify({ ok: false, offline: true }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+    })());
+    return;
+  }
+
+  // Static assets: cache-first
+  if ((isStaticAsset(request) || isUploads(request)) && request.method === 'GET') {
+    event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME);
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      try {
+        const resp = await fetch(request, { credentials: 'same-origin' });
+        try { cache.put(request, resp.clone()); } catch(_) {}
+        return resp;
+      } catch (_) {
+        // Image fallback placeholder (if asset is an image)
+        const accept = request.headers.get('accept') || '';
+        if (accept.includes('image')) {
+          // Tiny SVG placeholder
+          const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="sans-serif" font-size="24">Offline</text></svg>';
+          return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml' } });
+        }
+        // Otherwise let it fail
+        throw _;
+      }
+    })());
+    return;
+  }
+
+  // Default: network-first with cache fallback for GET
+  if (request.method === 'GET') {
+    event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME);
+      try {
+        const resp = await fetch(request);
+        try { cache.put(request, resp.clone()); } catch(_) {}
+        return resp;
+      } catch (_) {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        // As a last resort for same-origin HTML, show offline page
+        const url = new URL(request.url);
+        if (isSameOrigin(url.href) && (request.headers.get('accept') || '').includes('text/html')) {
+          const pc = await caches.open(PRECACHE);
+          const off = await pc.match(OFFLINE_URL);
+          if (off) return off;
+        }
+        return new Response('Offline', { status: 503 });
+      }
+    })());
+  }
+});
+
+// Warm-up handler (list of URLs from the app)
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data && data.type === 'VINOR_WARMUP') {
+    const urls = Array.isArray(data.urls) ? data.urls : [];
+    event.waitUntil((async () => {
+      const cache = await caches.open(PRECACHE);
+      await Promise.all(urls.map(async (u) => {
+        try { const req = new Request(u, { credentials: 'same-origin' }); const resp = await fetch(req); cache.put(req, resp); } catch(_) {}
+      }));
+    })());
+  }
+});
+
 // app/static/sw.js — Vinor PWA (cache + push)
 // تجربه سریع، امن و شفاف
 
