@@ -24,9 +24,12 @@
         <input type="hidden" name="phone" value="{{ phone }}">
         {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
         <input type="hidden" name="otp_code" id="otpHidden" />
+        <!-- WebOTP/iOS one-time-code autocomplete (helps iOS & Android auto-fill) -->
+        <input type="text" inputmode="numeric" autocomplete="one-time-code" name="one-time-code"
+               aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;width:0;height:0;border:0;padding:0" />
 
         <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr" aria-label="ورود کد ۵ رقمی">
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم اول" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم اول" autocomplete="one-time-code" name="one-time-code" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم دوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم سوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم چهارم" />
@@ -59,6 +62,24 @@
     const timerEl = document.getElementById('timer');
 
     boxes[0].focus();
+
+    // WebOTP API (Android Chrome): auto-read SMS with domain-bound OTP
+    (async function(){
+      try{
+        if ('OTPCredential' in window && navigator.credentials) {
+          const ac = new AbortController();
+          // Auto-timeout after 60s
+          setTimeout(()=>ac.abort(), 60000);
+          const cred = await navigator.credentials.get({ otp: { transport: ['sms'] }, signal: ac.signal });
+          if (cred && cred.code) {
+            const digits = String(cred.code).replace(/\D+/g,'').slice(0,5).split('');
+            digits.forEach((d, i) => { if (boxes[i]) boxes[i].value = d; });
+            hidden.value = digits.join('');
+            if (hidden.value.length === 5) form.requestSubmit();
+          }
+        }
+      } catch(_) { /* ignore */ }
+    })();
 
     function syncHiddenAndMaybeSubmit() {
       hidden.value = boxes.map(b => (b.value || '').replace(/\\D/g,'')).join('').slice(0,5);
