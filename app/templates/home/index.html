@@ -85,6 +85,17 @@
 
     const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
 
+    // Helper: normalize uploads URL (handles values like "uploads/FILE" or "FILE")
+    function toUploadUrl(path) {
+      if (!path) return '';
+      try {
+        const p = String(path);
+        if (p.startsWith('/uploads/')) return p;
+        if (p.startsWith('uploads/')) return '/' + p;
+        return '/uploads/' + p.replace(/^\//, '');
+      } catch (_) { return ''; }
+    }
+
     // Tab switching functionality
     const regularTab = document.getElementById('regularTab');
     const expressTab = document.getElementById('expressTab');
@@ -186,7 +197,7 @@
           <div class="relative">
             <a href="/express/${land.code}">
               ${land.images && land.images.length > 0 ? 
-                `<img src="/uploads/${land.images[0]}" alt="${land.title}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />` :
+                `<img src="${toUploadUrl(land.images[0])}" alt="${land.title}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />` :
                 `<div class="w-full h-72 sm:h-60 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 flex items-center justify-center text-green-600 text-base">
                   <i class="fas fa-star text-4xl"></i>
                 </div>`

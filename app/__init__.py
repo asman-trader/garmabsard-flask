@@ -195,6 +195,14 @@ def create_app() -> Flask:
     except Exception as e:
         app.logger.warning(f"Push API disabled: {e}")
 
+    # Express API
+    express_api_bp = None
+    try:
+        from .api.express import express_api_bp as _express_api_bp
+        express_api_bp = _express_api_bp
+    except Exception as e:
+        app.logger.warning(f"Express API disabled: {e}")
+
     # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
@@ -205,6 +213,8 @@ def create_app() -> Flask:
         app.register_blueprint(uploads_bp)
     if push_bp is not None:
         app.register_blueprint(push_bp)
+    if express_api_bp is not None:
+        app.register_blueprint(express_api_bp)
 
     # ---------- CSRF ----------
     if CSRFProtect is not None:
@@ -221,6 +231,13 @@ def create_app() -> Flask:
         try:
             if uploads_bp is not None:
                 csrf.exempt(uploads_bp)
+        except Exception:
+            pass
+
+        # Exempt express API (AJAX JSON)
+        try:
+            if express_api_bp is not None:
+                csrf.exempt(express_api_bp)
         except Exception:
             pass
 
