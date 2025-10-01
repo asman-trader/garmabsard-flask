@@ -138,6 +138,25 @@ def app_home():
     
     return resp
 
+@main_bp.route("/express/<code>", endpoint="express_detail")
+def express_detail(code):
+    """
+    صفحهٔ جزئیات آگهی اکسپرس
+    """
+    lands = load_ads_cached()
+    land = next((l for l in lands if l.get('code') == code and l.get('is_express', False)), None)
+    
+    if not land:
+        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        return redirect(url_for('main.app_home'))
+    
+    return render_template(
+        "lands/express_detail.html",
+        land=land,
+        brand="وینور",
+        domain="vinor.ir",
+    )
+
 @main_bp.route("/land/<code>", endpoint="land_detail")
 def land_detail(code):
     """

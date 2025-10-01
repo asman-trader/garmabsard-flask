@@ -114,6 +114,21 @@
           {% endif %}
         </a>
 
+        <!-- وینور اکسپرس -->
+        <a href="{{ url_for('admin.express_listings') }}"
+           class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition
+                  {% if _endpoint == 'admin.express_listings' %}
+                    bg-green-600 text-white shadow
+                  {% else %}
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-green-600 dark:hover:text-green-400
+                  {% endif %}"
+           {% if _endpoint == 'admin.express_listings' %} aria-current="page" {% endif %}>
+          <span class="flex items-center gap-2">
+            <i class="fas fa-star"></i>
+            وینور اکسپرس
+          </span>
+        </a>
+
         <!-- تأیید شده -->
         <a href="{{ url_for('admin.approved_lands') }}"
            class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}{{ land.title }} | وینور اکسپرس{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <!-- Express Badge -->
+  <div class="mb-6 text-center">
+    <div class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg">
+      <i class="fas fa-star"></i>
+      <span>وینور اکسپرس - تأییدشده</span>
+    </div>
+    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+      ✅ این ملک توسط وینور بررسی و تأیید شده است
+    </p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="grid lg:grid-cols-2 gap-8">
+    <!-- Images -->
+    <div class="space-y-4">
+      {% if land.images and land.images|length > 0 %}
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+          <img src="{{ url_for('main.uploaded_file', filename=land.images[0]) }}" 
+               alt="{{ land.title }}" 
+               class="w-full h-80 object-cover" />
+        </div>
+        
+        {% if land.images|length > 1 %}
+          <div class="grid grid-cols-3 gap-2">
+            {% for img in land.images[1:4] %}
+              <img src="{{ url_for('main.uploaded_file', filename=img) }}" 
+                   alt="{{ land.title }}" 
+                   class="w-full h-24 object-cover rounded-lg" />
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-xl shadow-lg h-80 flex items-center justify-center">
+          <i class="fas fa-star text-6xl text-green-600"></i>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Details -->
+    <div class="space-y-6">
+      <!-- Title & Location -->
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ land.title }}</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300 flex items-center gap-2">
+          <i class="fas fa-map-marker-alt text-green-600"></i>
+          {{ land.location or "موقعیت نامشخص" }}
+        </p>
+      </div>
+
+      <!-- Price -->
+      <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+        <div class="text-center">
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">قیمت کل</p>
+          <p class="text-3xl font-bold text-green-700 dark:text-green-400">
+            {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+          </p>
+          {% if land.price_per_meter %}
+            <p class="text-lg text-gray-600 dark:text-gray-300 mt-2">
+              {{ "{:,}".format(land.price_per_meter | int) }} تومان در متر
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Specifications -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">مشخصات</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-ruler text-green-600"></i>
+            <span class="text-gray-700 dark:text-gray-300">
+              {{ "{:,}".format(land.size | int) if land.size else "نامشخص" }} متر
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <i class="fas fa-tag text-green-600"></i>
+            <span class="text-gray-700 dark:text-gray-300">{{ land.category or "عمومی" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      {% if land.description %}
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">توضیحات</h3>
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ land.description }}</p>
+        </div>
+      {% endif %}
+
+      <!-- Documents -->
+      {% if land.express_documents and land.express_documents|length > 0 %}
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">مدارک تأییدشده</h3>
+          <div class="space-y-3">
+            {% for doc in land.express_documents %}
+              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-file-pdf text-red-600"></i>
+                  <span class="text-gray-700 dark:text-gray-300">{{ doc }}</span>
+                </div>
+                <a href="/express-docs/{{ doc }}" 
+                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+                   target="_blank">
+                  <i class="fas fa-download mr-1"></i>دانلود
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Contact Actions -->
+      <div class="space-y-4">
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+          <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-4">تماس با پشتیبانی وینور</h3>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a href="tel:{{ land.vinor_contact or '09121234567' }}" 
+               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+              <i class="fas fa-phone"></i>
+              تماس مستقیم
+            </a>
+            <button id="consultationBtn" 
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+              <i class="fas fa-comments"></i>
+              درخواست مشاوره
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Consultation Modal -->
+<div id="consultationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">درخواست مشاوره</h3>
+        <button id="closeModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <form id="consultationForm">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام و نام خانوادگی</label>
+            <input type="text" name="name" required 
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">شماره تماس</label>
+            <input type="tel" name="phone" required 
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">پیام (اختیاری)</label>
+            <textarea name="message" rows="3" 
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                      placeholder="سوالات یا درخواست‌های خود را بنویسید..."></textarea>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="button" id="cancelBtn" 
+                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition">
+              انصراف
+            </button>
+            <button type="submit" 
+                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition">
+              ارسال درخواست
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const consultationBtn = document.getElementById('consultationBtn');
+  const consultationModal = document.getElementById('consultationModal');
+  const closeModal = document.getElementById('closeModal');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const consultationForm = document.getElementById('consultationForm');
+
+  consultationBtn.addEventListener('click', function() {
+    consultationModal.classList.remove('hidden');
+  });
+
+  closeModal.addEventListener('click', function() {
+    consultationModal.classList.add('hidden');
+  });
+
+  cancelBtn.addEventListener('click', function() {
+    consultationModal.classList.add('hidden');
+  });
+
+  consultationForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(consultationForm);
+    const data = {
+      name: formData.get('name'),
+      phone: formData.get('phone'),
+      message: formData.get('message')
+    };
+
+    fetch(`/api/express/{{ land.code }}/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        alert('درخواست شما با موفقیت ارسال شد. تیم پشتیبانی وینور با شما تماس خواهد گرفت.');
+        consultationModal.classList.add('hidden');
+        consultationForm.reset();
+      } else {
+        alert('خطا در ارسال درخواست: ' + result.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('خطا در ارسال درخواست');
+    });
+  });
+});
+</script>
+{% endblock %}

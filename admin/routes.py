@@ -28,6 +28,26 @@ except Exception:
 # اعلان‌ها (Vinor Notifications)
 # -----------------------------------------------------------------------------
 from app.services.notifications import add_notification
+
+# -----------------------------------------------------------------------------
+# Express Listings Management
+# -----------------------------------------------------------------------------
+def _get_express_docs_dir():
+    """مسیر ذخیره مدارک اکسپرس"""
+    docs_dir = os.path.join(current_app.instance_path, 'data', 'express_docs')
+    os.makedirs(docs_dir, exist_ok=True)
+    return docs_dir
+
+def _save_express_document(file, land_code):
+    """ذخیره مدارک اکسپرس"""
+    if not file or not file.filename:
+        return None
+    
+    docs_dir = _get_express_docs_dir()
+    filename = secure_filename(f"{land_code}_{file.filename}")
+    file_path = os.path.join(docs_dir, filename)
+    file.save(file_path)
+    return filename
 from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
 from app.utils.storage import load_users, load_reports, save_reports
@@ -1136,6 +1156,157 @@ def reject_land(code):
 
     flash('آگهی رد شد / نیاز به اصلاح دارد.', 'info')
     return redirect(request.referrer or url_for('admin.rejected_lands'))
+
+# -----------------------------------------------------------------------------
+# Express Listings Management
+# -----------------------------------------------------------------------------
+@admin_bp.route('/express')
+@login_required
+def express_listings():
+    """لیست آگهی‌های اکسپرس"""
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    
+    # فیلتر آگهی‌های اکسپرس
+    express_lands = [land for land in lands_list if land.get('is_express', False)]
+    
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))
+    pagination = paginate(express_lands, page, per_page)
+    
+    p, a, r = counts_by_status(express_lands)
+    return render_template(
+        'admin/express_listings.html',
+        lands=pagination["items"],
+        pagination={"page": pagination["page"], "pages": pagination["pages"]},
+        pending_count=p, approved_count=a, rejected_count=r
+    )
+
+@admin_bp.route('/express/add', methods=['GET', 'POST'])
+@login_required
+def add_express_listing():
+    """افزودن آگهی اکسپرس جدید"""
+    if request.method == 'POST':
+        form = request.form
+        files = request.files
+        
+        # تولید کد منحصر به فرد
+        new_code = datetime.now().strftime('%Y%m%d%H%M%S')
+        
+        # ذخیره مدارک
+        documents = []
+        for key, file in files.items():
+            if key.startswith('document_') and file.filename:
+                doc_filename = _save_express_document(file, new_code)
+                if doc_filename:
+                    documents.append(doc_filename)
+        
+        # ایجاد آگهی اکسپرس
+        new_express_land = {
+            'code': new_code,
+            'title': form.get('title', '').strip(),
+            'location': form.get('location', '').strip(),
+            'size': form.get('size', '').strip(),
+            'price_total': int(form.get('price_total', 0) or 0),
+            'price_per_meter': int(form.get('price_per_meter', 0) or 0),
+            'description': form.get('description', '').strip(),
+            'images': _normalize_images_from_form(form, files),
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'owner': 'vinor_support',  # شماره پشتیبانی وینور
+            'status': 'approved',  # آگهی‌های اکسپرس مستقیماً تأیید می‌شوند
+            'ad_type': 'express',
+            'category': form.get('category', ''),
+            'is_express': True,
+            'express_status': 'approved',
+            'express_documents': documents,
+            'vinor_contact': form.get('vinor_contact', '09121234567'),
+            'extras': {}
+        }
+        
+        # ذخیره در فایل
+        lands = load_json(_lands_path())
+        lands.append(new_express_land)
+        save_json(_lands_path(), lands)
+        
+        # ارسال نوتیفیکیشن به کاربران منطقه
+        _send_express_notification(new_express_land)
+        
+        flash(f'آگهی اکسپرس با کد {new_code} با موفقیت ثبت شد.', 'success')
+        return redirect(url_for('admin.express_listings'))
+    
+    # GET
+    cleanup_expired_ads()
+    lands = load_json(_lands_path())
+    p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
+    return render_template('admin/add_express_listing.html',
+                          pending_count=p, approved_count=a, rejected_count=r)
+
+@admin_bp.route('/express/<string:code>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_express_listing(code):
+    """ویرایش آگهی اکسپرس"""
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    
+    land = find_by_code(lands_list, code)
+    if not land or not land.get('is_express', False):
+        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        return redirect(url_for('admin.express_listings'))
+    
+    if request.method == 'POST':
+        form = request.form
+        files = request.files
+        
+        # به‌روزرسانی فیلدها
+        land['title'] = form.get('title', '').strip()
+        land['location'] = form.get('location', '').strip()
+        land['size'] = form.get('size', '').strip()
+        land['price_total'] = int(form.get('price_total', 0) or 0)
+        land['price_per_meter'] = int(form.get('price_per_meter', 0) or 0)
+        land['description'] = form.get('description', '').strip()
+        land['vinor_contact'] = form.get('vinor_contact', '09121234567')
+        
+        # اضافه کردن مدارک جدید
+        for key, file in files.items():
+            if key.startswith('document_') and file.filename:
+                doc_filename = _save_express_document(file, code)
+                if doc_filename:
+                    land['express_documents'].append(doc_filename)
+        
+        # ذخیره تغییرات
+        save_json(_lands_path(), lands_list)
+        flash('آگهی اکسپرس با موفقیت به‌روزرسانی شد.', 'success')
+        return redirect(url_for('admin.express_listings'))
+    
+    # GET
+    p, a, r = counts_by_status(lands_list)
+    return render_template('admin/edit_express_listing.html',
+                          land=land,
+                          pending_count=p, approved_count=a, rejected_count=r)
+
+def _send_express_notification(express_land):
+    """ارسال نوتیفیکیشن برای آگهی اکسپرس جدید"""
+    try:
+        location = express_land.get('location', '')
+        title = express_land.get('title', '')
+        
+        message = f"🏠 ملک تأییدشده جدید در {location} - وینور اکسپرس"
+        
+        # ارسال نوتیفیکیشن به کاربران منطقه
+        add_notification(
+            title="ملک تأییدشده جدید",
+            message=message,
+            notification_type="express_listing",
+            data={
+                "land_code": express_land.get('code'),
+                "location": location,
+                "title": title
+            }
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error sending express notification: {e}")
 
 # -----------------------------------------------------------------------------
 # Push/SMS routes moved to dedicated modules

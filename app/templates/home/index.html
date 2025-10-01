@@ -5,8 +5,20 @@
 <!-- Hero: VINOR PWA Home -->
 {% include 'search/quick_search.html' %}
 
-<!-- Listings -->
-<main class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="landList">
+<!-- Tabs -->
+<div class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-4">
+  <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <button id="regularTab" class="flex-1 py-3 px-4 text-center font-medium text-gray-700 dark:text-gray-300 border-b-2 border-green-600 bg-green-50 dark:bg-green-900/20">
+      <i class="fas fa-home mr-2"></i>همه آگهی‌ها
+    </button>
+    <button id="expressTab" class="flex-1 py-3 px-4 text-center font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+      <i class="fas fa-star mr-2"></i>وینور اکسپرس
+    </button>
+  </div>
+</div>
+
+<!-- Regular Listings -->
+<main id="regularListings" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {% for land in lands %}
     {% set images = land.get('images') or [] %}
     {% set img = images[0] if images else None %}
@@ -49,10 +61,18 @@
   {% endfor %}
 </main>
 
+<!-- Express Listings -->
+<main id="expressListings" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
+  <div id="expressContent" class="col-span-full text-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+    <p class="text-gray-600 dark:text-gray-300">در حال بارگذاری آگهی‌های اکسپرس...</p>
+  </div>
+</main>
+
 <!-- Lands JSON (for client features like favorites) -->
 <script id="lands-json" type="application/json">{{ lands | tojson }}</script>
 
-<!-- اسکریپت علاقه‌مندی -->
+<!-- اسکریپت علاقه‌مندی و تب‌ها -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     try {
@@ -64,6 +84,126 @@
     } catch (e) {}
 
     const favorites = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+
+    // Tab switching functionality
+    const regularTab = document.getElementById('regularTab');
+    const expressTab = document.getElementById('expressTab');
+    const regularListings = document.getElementById('regularListings');
+    const expressListings = document.getElementById('expressListings');
+
+    function switchToRegular() {
+      regularTab.classList.add('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
+      regularTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+      expressTab.classList.remove('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
+      expressTab.classList.add('text-gray-500', 'dark:text-gray-400');
+      
+      regularListings.style.display = 'grid';
+      expressListings.style.display = 'none';
+    }
+
+    function switchToExpress() {
+      expressTab.classList.add('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
+      expressTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+      regularTab.classList.remove('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
+      regularTab.classList.add('text-gray-500', 'dark:text-gray-400');
+      
+      regularListings.style.display = 'none';
+      expressListings.style.display = 'grid';
+      
+      // Load express listings if not loaded yet
+      loadExpressListings();
+    }
+
+    regularTab.addEventListener('click', switchToRegular);
+    expressTab.addEventListener('click', switchToExpress);
+
+    // Load express listings
+    function loadExpressListings() {
+      const expressContent = document.getElementById('expressContent');
+      if (expressContent.innerHTML.includes('بارگذاری')) {
+        fetch('/api/express-listings')
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.lands) {
+              renderExpressListings(data.lands);
+            } else {
+              expressContent.innerHTML = `
+                <div class="text-center py-12">
+                  <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
+                  <p class="text-gray-600 dark:text-gray-300">هنوز آگهی اکسپرس ثبت نشده است</p>
+                </div>
+              `;
+            }
+          })
+          .catch(error => {
+            console.error('Error loading express listings:', error);
+            expressContent.innerHTML = `
+              <div class="text-center py-12">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-300">خطا در بارگذاری آگهی‌های اکسپرس</p>
+              </div>
+            `;
+          });
+      }
+    }
+
+    function renderExpressListings(lands) {
+      const expressContent = document.getElementById('expressContent');
+      if (lands.length === 0) {
+        expressContent.innerHTML = `
+          <div class="text-center py-12">
+            <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-600 dark:text-gray-300">هنوز آگهی اکسپرس ثبت نشده است</p>
+          </div>
+        `;
+        return;
+      }
+
+      expressContent.innerHTML = lands.map(land => `
+        <div class="bg-white dark:bg-gray-900 border-2 border-green-200 dark:border-green-800 rounded-xl shadow-lg overflow-hidden land-card group transition hover:shadow-xl relative">
+          <!-- Express Badge -->
+          <div class="absolute top-3 left-3 z-10 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <i class="fas fa-star"></i>
+            <span>وینور اکسپرس</span>
+          </div>
+          
+          <!-- Image -->
+          <div class="relative">
+            <a href="/express/${land.code}">
+              ${land.images && land.images.length > 0 ? 
+                `<img src="/uploads/${land.images[0]}" alt="${land.title}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />` :
+                `<div class="w-full h-72 sm:h-60 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 flex items-center justify-center text-green-600 text-base">
+                  <i class="fas fa-star text-4xl"></i>
+                </div>`
+              }
+            </a>
+          </div>
+          
+          <!-- Content -->
+          <div class="p-4">
+            <a href="/express/${land.code}">
+              <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">${land.title}</h3>
+            </a>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              📍 ${land.location || "?"} | 📏 ${land.size ? parseInt(land.size).toLocaleString() : "?"} متر
+            </p>
+            <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">
+              💰 ${land.price_total ? parseInt(land.price_total).toLocaleString() : "نامشخص"} تومان
+            </p>
+            
+            <!-- Express Actions -->
+            <div class="mt-4 flex gap-2">
+              <a href="tel:${land.vinor_contact || '09121234567'}" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                <i class="fas fa-phone mr-1"></i>تماس با وینور
+              </a>
+              <a href="/express/${land.code}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                <i class="fas fa-info-circle mr-1"></i>جزئیات
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
 
     document.querySelectorAll(".land-card").forEach(card => {
       const code = card.dataset.code;
