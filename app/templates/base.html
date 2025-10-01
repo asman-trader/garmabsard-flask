@@ -48,6 +48,14 @@
 
   <style>
     body{font-family:'Vazirmatn',sans-serif;scroll-behavior:smooth}
+    /* Disable text selection and copy globally */
+    *, *::before, *::after{
+      -webkit-user-select:none; /* Safari */
+      -moz-user-select:none;    /* Firefox */
+      -ms-user-select:none;     /* IE10+/Edge */
+      user-select:none;         /* Standard */
+      -webkit-touch-callout:none; /* iOS long-press */
+    }
     /* FAB موبایلی */
     .fab{
       position:fixed;bottom:20px;left:20px;z-index:40;background:#16a34a;color:#fff;
@@ -383,6 +391,17 @@
           btn.addEventListener('click', close, { passive: true });
           setTimeout(close, 3500); // auto-hide after a short delay
         } catch(e){}
+      })();
+
+      // Prevent copy, context menu and selection globally
+      (function(){
+        try{
+          document.addEventListener('copy', function(e){ e.preventDefault(); }, true);
+          document.addEventListener('cut', function(e){ e.preventDefault(); }, true);
+          document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, true);
+          document.addEventListener('selectstart', function(e){ e.preventDefault(); }, true);
+          document.addEventListener('dragstart', function(e){ e.preventDefault(); }, true);
+        }catch(_){ }
       })();
     })();
   </script>
