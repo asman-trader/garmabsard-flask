@@ -15,7 +15,7 @@ def get_express_listings():
     """Get all express listings"""
     try:
         lands = load_ads_cached()
-        express_lands = [land for land in lands if land.get('is_express', False) and land.get('status') == 'approved']
+        express_lands = [land for land in lands if land.get('is_express', False) and land.get('express_status') == 'approved']
         
         # Sort by creation date (newest first)
         express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)

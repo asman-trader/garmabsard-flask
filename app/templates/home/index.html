@@ -102,6 +102,7 @@
     }
 
     function switchToExpress() {
+      console.log('Switching to express tab');
       expressTab.classList.add('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
       expressTab.classList.remove('text-gray-500', 'dark:text-gray-400');
       regularTab.classList.remove('border-green-600', 'bg-green-50', 'dark:bg-green-900/20', 'text-gray-700', 'dark:text-gray-300');
@@ -110,6 +111,7 @@
       regularListings.style.display = 'none';
       expressListings.style.display = 'grid';
       
+      console.log('Express listings display set to grid');
       // Load express listings if not loaded yet
       loadExpressListings();
     }
@@ -119,14 +121,22 @@
 
     // Load express listings
     function loadExpressListings() {
+      console.log('Loading express listings...');
       const expressContent = document.getElementById('expressContent');
       if (expressContent.innerHTML.includes('بارگذاری')) {
+        console.log('Fetching from /api/express-listings');
         fetch('/api/express-listings')
-          .then(response => response.json())
+          .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log('API Response:', data);
             if (data.success && data.lands) {
+              console.log('Rendering express listings:', data.lands.length);
               renderExpressListings(data.lands);
             } else {
+              console.log('No express listings found');
               expressContent.innerHTML = `
                 <div class="text-center py-12">
                   <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
@@ -144,12 +154,16 @@
               </div>
             `;
           });
+      } else {
+        console.log('Express listings already loaded');
       }
     }
 
     function renderExpressListings(lands) {
+      console.log('Rendering express listings:', lands);
       const expressContent = document.getElementById('expressContent');
       if (lands.length === 0) {
+        console.log('No lands to render');
         expressContent.innerHTML = `
           <div class="text-center py-12">
             <i class="fas fa-star text-4xl text-gray-300 mb-4"></i>
@@ -159,6 +173,7 @@
         return;
       }
 
+      console.log('Rendering', lands.length, 'express listings');
       expressContent.innerHTML = lands.map(land => `
         <div class="bg-white dark:bg-gray-900 border-2 border-green-200 dark:border-green-800 rounded-xl shadow-lg overflow-hidden land-card group transition hover:shadow-xl relative">
           <!-- Express Badge -->
@@ -203,6 +218,8 @@
           </div>
         </div>
       `).join('');
+      
+      console.log('Express listings rendered successfully');
     }
 
     document.querySelectorAll(".land-card").forEach(card => {
