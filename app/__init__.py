@@ -147,7 +147,7 @@ def create_app() -> Flask:
         PUSH_STORE_PATH=os.environ.get("PUSH_STORE_PATH", default_push_store),
         APP_BRAND_NAME="وینور | Vinor",
         WTF_CSRF_ENABLED=True,
-        WTF_CSRF_TIME_LIMIT=None,
+        WTF_CSRF_TIME_LIMIT=3600,  # 1 hour
         WTF_CSRF_CHECK_DEFAULT=True,
         WTF_CSRF_METHODS=("POST", "PUT", "PATCH", "DELETE"),
     )
