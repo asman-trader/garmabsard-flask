@@ -1193,6 +1193,22 @@ def add_express_listing():
         form = request.form
         files = request.files
         
+        # اعتبارسنجی فیلدهای اجباری
+        title = form.get('title', '').strip()
+        location = form.get('location', '').strip()
+        size = form.get('size', '').strip()
+        price_total = form.get('price_total', '').strip()
+        
+        if not all([title, location, size, price_total]):
+            flash('لطفاً فیلدهای اجباری را پر کنید.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
+        
+        if len(title) < 10:
+            flash('عنوان باید حداقل ۱۰ کاراکتر باشد.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
+        
         # تولید کد منحصر به فرد
         new_code = datetime.now().strftime('%Y%m%d%H%M%S')
         
@@ -1204,25 +1220,24 @@ def add_express_listing():
                 if doc_filename:
                     documents.append(doc_filename)
         
-        # پردازش تصاویر
+        # پردازش تصاویر (از input multiple)
         images = []
-        for i in range(1, 4):  # image_1, image_2, image_3
-            img_key = f'image_{i}'
-            if img_key in files and files[img_key].filename:
-                file = files[img_key]
-                upload_folder = _uploads_root()
-                os.makedirs(upload_folder, exist_ok=True)
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{file.filename}")
-                file.save(os.path.join(upload_folder, filename))
-                images.append(f'uploads/{filename}')
+        if 'images' in files:
+            upload_folder = _uploads_root()
+            os.makedirs(upload_folder, exist_ok=True)
+            for file in files.getlist('images'):
+                if file.filename:
+                    filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{file.filename}")
+                    file.save(os.path.join(upload_folder, filename))
+                    images.append(f'uploads/{filename}')
         
         # ایجاد آگهی اکسپرس
         new_express_land = {
             'code': new_code,
-            'title': form.get('title', '').strip(),
-            'location': form.get('location', '').strip(),
-            'size': form.get('size', '').strip(),
-            'price_total': int(form.get('price_total', 0) or 0),
+            'title': title,
+            'location': location,
+            'size': size,
+            'price_total': int(price_total),
             'price_per_meter': int(form.get('price_per_meter', 0) or 0),
             'description': form.get('description', '').strip(),
             'images': images,
