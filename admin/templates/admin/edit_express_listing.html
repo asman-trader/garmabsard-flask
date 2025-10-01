@@ -1,0 +1,272 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 sm:p-6">
+
+  <!-- هدر صفحه -->
+  <div class="mb-6">
+    <h1 class="text-xl sm:text-2xl font-extrabold text-green-700 dark:text-green-600 flex items-center gap-2">
+      <i class="fas fa-edit"></i>
+      ویرایش آگهی اکسپرس
+    </h1>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">کد آگهی: {{ land.code }}</p>
+  </div>
+
+  <!-- پیام‌های سیستم -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="space-y-3 mb-5" role="status" aria-live="polite">
+        {% for category, msg in messages %}
+          <div class="text-sm rounded-xl px-3 py-2 border
+                      {% if category in ['success', 'ok'] %}
+                        bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
+                      {% elif category in ['warning'] %}
+                        bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
+                      {% elif category in ['info'] %}
+                        bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
+                      {% else %}
+                        bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
+                      {% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- فرم ویرایش آگهی اکسپرس -->
+  <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.edit_express_listing', code=land.code) }}" class="space-y-6">
+    
+    <!-- اطلاعات اصلی -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-info-circle text-green-600"></i>
+        اطلاعات اصلی
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            عنوان آگهی <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="title" required 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 value="{{ land.title or '' }}"
+                 placeholder="مثال: زمین باغی 1000 متری در دشت اول">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            موقعیت <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="location" required 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 value="{{ land.location or '' }}"
+                 placeholder="مثال: دشت اول، گرمابسرد">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            متراژ (متر) <span class="text-red-500">*</span>
+          </label>
+          <input type="number" name="size" required 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 value="{{ land.size or '' }}"
+                 placeholder="1000">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            دسته‌بندی
+          </label>
+          <select name="category" 
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+            <option value="">انتخاب کنید</option>
+            <option value="زمین" {{ 'selected' if land.category == 'زمین' else '' }}>زمین</option>
+            <option value="باغ" {{ 'selected' if land.category == 'باغ' else '' }}>باغ</option>
+            <option value="ویلا" {{ 'selected' if land.category == 'ویلا' else '' }}>ویلا</option>
+            <option value="آپارتمان" {{ 'selected' if land.category == 'آپارتمان' else '' }}>آپارتمان</option>
+            <option value="تجاری" {{ 'selected' if land.category == 'تجاری' else '' }}>تجاری</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            قیمت کل (تومان) <span class="text-red-500">*</span>
+          </label>
+          <input type="number" name="price_total" required 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 value="{{ land.price_total or '' }}"
+                 placeholder="2000000000">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            قیمت در متر (تومان)
+          </label>
+          <input type="number" name="price_per_meter" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 value="{{ land.price_per_meter or '' }}"
+                 placeholder="2000000">
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          توضیحات
+        </label>
+        <textarea name="description" rows="4" 
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="توضیحات کامل درباره ملک...">{{ land.description or '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- تصاویر موجود -->
+    {% if land.images and land.images|length > 0 %}
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-images text-green-600"></i>
+          تصاویر موجود
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {% for img in land.images %}
+            <div class="relative">
+              <img src="{{ img if ('://' in img) else (('/uploads/' + img) if not img.startswith('/uploads/') else img) }}" 
+                   class="w-full h-24 object-cover rounded-lg" alt="تصویر {{ loop.index }}">
+              <div class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                {{ loop.index }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- تصاویر جدید -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-plus text-green-600"></i>
+        افزودن تصاویر جدید
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            تصویر جدید
+          </label>
+          <input type="file" name="image_1" accept="image/*" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            تصویر جدید
+          </label>
+          <input type="file" name="image_2" accept="image/*" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            تصویر جدید
+          </label>
+          <input type="file" name="image_3" accept="image/*" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+        </div>
+      </div>
+    </div>
+
+    <!-- مدارک موجود -->
+    {% if land.express_documents and land.express_documents|length > 0 %}
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <i class="fas fa-file-pdf text-green-600"></i>
+          مدارک موجود
+        </h2>
+        
+        <div class="space-y-2">
+          {% for doc in land.express_documents %}
+            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-file-pdf text-red-600"></i>
+                <span class="text-gray-700 dark:text-gray-300">{{ doc }}</span>
+              </div>
+              <a href="{{ url_for('admin.serve_express_document', filename=doc) }}" target="_blank" 
+                 class="text-blue-600 hover:text-blue-800 text-sm">
+                <i class="fas fa-download"></i> دانلود
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- مدارک جدید -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-plus text-green-600"></i>
+        افزودن مدارک جدید
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            سند ملک (PDF)
+          </label>
+          <input type="file" name="document_1" accept=".pdf,.jpg,.jpeg,.png" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            مدارک اضافی (PDF)
+          </label>
+          <input type="file" name="document_2" accept=".pdf,.jpg,.jpeg,.png" 
+                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+        </div>
+      </div>
+    </div>
+
+    <!-- اطلاعات تماس -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <i class="fas fa-phone text-green-600"></i>
+        اطلاعات تماس
+      </h2>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          شماره تماس پشتیبانی وینور <span class="text-red-500">*</span>
+        </label>
+        <input type="tel" name="vinor_contact" required 
+               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+               value="{{ land.vinor_contact or '09121234567' }}"
+               placeholder="09121234567">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">این شماره برای تماس کاربران با پشتیبانی وینور استفاده می‌شود</p>
+      </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="flex gap-4 justify-end">
+      <a href="{{ url_for('admin.express_listings') }}" 
+         class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition">
+        انصراف
+      </a>
+      
+      <a href="{{ url_for('main.express_detail', code=land.code) }}" target="_blank"
+         class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center gap-2">
+        <i class="fas fa-external-link-alt"></i>
+        مشاهده
+      </a>
+      
+      <button type="submit" 
+              class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
+        <i class="fas fa-save"></i>
+        ذخیره تغییرات
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

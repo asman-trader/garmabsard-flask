@@ -549,6 +549,16 @@ def protocol_open():
     # پیش‌فرض: خانه اپ
     return redirect(url_for("main.app_home"))
 
+@main_bp.route("/express-docs/<filename>")
+def serve_express_document(filename):
+    """سرو کردن مدارک اکسپرس برای کاربران"""
+    try:
+        docs_dir = os.path.join(current_app.instance_path, 'data', 'express_docs')
+        return send_from_directory(docs_dir, filename)
+    except Exception as e:
+        current_app.logger.error(f"Error serving express document {filename}: {e}")
+        abort(404)
+
 # ⚠️ مهم: هیچ مسیر /login /logout /submit-ad در این فایل تعریف نمی‌شود.
 #   - /login و /logout در app/routes/auth.py
 #   - /submit-ad ریدایرکت در app/routes/ads.py (endpoint='submit_ad_redirect')

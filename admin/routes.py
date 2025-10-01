@@ -44,7 +44,9 @@ def _save_express_document(file, land_code):
         return None
     
     docs_dir = _get_express_docs_dir()
-    filename = secure_filename(f"{land_code}_{file.filename}")
+    # اضافه کردن timestamp برای جلوگیری از تداخل نام فایل
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
+    filename = secure_filename(f"{land_code}_{timestamp}_{file.filename}")
     file_path = os.path.join(docs_dir, filename)
     file.save(file_path)
     return filename
@@ -1202,6 +1204,18 @@ def add_express_listing():
                 if doc_filename:
                     documents.append(doc_filename)
         
+        # پردازش تصاویر
+        images = []
+        for i in range(1, 4):  # image_1, image_2, image_3
+            img_key = f'image_{i}'
+            if img_key in files and files[img_key].filename:
+                file = files[img_key]
+                upload_folder = _uploads_root()
+                os.makedirs(upload_folder, exist_ok=True)
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{file.filename}")
+                file.save(os.path.join(upload_folder, filename))
+                images.append(f'uploads/{filename}')
+        
         # ایجاد آگهی اکسپرس
         new_express_land = {
             'code': new_code,
@@ -1211,7 +1225,7 @@ def add_express_listing():
             'price_total': int(form.get('price_total', 0) or 0),
             'price_per_meter': int(form.get('price_per_meter', 0) or 0),
             'description': form.get('description', '').strip(),
-            'images': _normalize_images_from_form(form, files),
+            'images': images,
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'owner': 'vinor_support',  # شماره پشتیبانی وینور
             'status': 'approved',  # آگهی‌های اکسپرس مستقیماً تأیید می‌شوند
@@ -1268,12 +1282,23 @@ def edit_express_listing(code):
         land['description'] = form.get('description', '').strip()
         land['vinor_contact'] = form.get('vinor_contact', '09121234567')
         
+        # اضافه کردن تصاویر جدید
+        for i in range(1, 4):  # image_1, image_2, image_3
+            img_key = f'image_{i}'
+            if img_key in files and files[img_key].filename:
+                file = files[img_key]
+                upload_folder = _uploads_root()
+                os.makedirs(upload_folder, exist_ok=True)
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{file.filename}")
+                file.save(os.path.join(upload_folder, filename))
+                land.setdefault('images', []).append(f'uploads/{filename}')
+        
         # اضافه کردن مدارک جدید
         for key, file in files.items():
             if key.startswith('document_') and file.filename:
                 doc_filename = _save_express_document(file, code)
                 if doc_filename:
-                    land['express_documents'].append(doc_filename)
+                    land.setdefault('express_documents', []).append(doc_filename)
         
         # ذخیره تغییرات
         save_json(_lands_path(), lands_list)
@@ -1307,6 +1332,17 @@ def _send_express_notification(express_land):
         )
     except Exception as e:
         current_app.logger.error(f"Error sending express notification: {e}")
+
+@admin_bp.route('/express-docs/<filename>')
+@login_required
+def serve_express_document(filename):
+    """سرو کردن مدارک اکسپرس"""
+    try:
+        docs_dir = _get_express_docs_dir()
+        return send_from_directory(docs_dir, filename)
+    except Exception as e:
+        current_app.logger.error(f"Error serving express document {filename}: {e}")
+        abort(404)
 
 # -----------------------------------------------------------------------------
 # Push/SMS routes moved to dedicated modules
