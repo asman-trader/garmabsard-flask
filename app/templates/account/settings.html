@@ -54,6 +54,23 @@
       </label>
     </div>
   </section>
+
+  <!-- نمایش دکمه + ثبت آگهی -->
+  <section class="mt-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">میانبرها</div>
+    <div class="px-4 pb-4 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-semibold">نمایش دکمه + ثبت آگهی</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">دکمه شناور (موبایل) و میانبر هدر</div>
+      </div>
+      <label class="inline-flex items-center cursor-pointer">
+        <input id="toggleSubmitBtn" type="checkbox" class="sr-only">
+        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
+          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
+        </span>
+      </label>
+    </div>
+  </section>
 </div>
 
 <!-- JS: تنظیم جستجوی سریع -->
@@ -102,6 +119,31 @@
       moveDotSB();
       // اطلاع به صفحات برای اعمال فوری (اختیاری)
       try{ window.dispatchEvent(new CustomEvent('vinor:sidebar-toggle', { detail: el.checked })); }catch{}
+    });
+  })();
+</script>
+
+<!-- JS: تنظیم دکمه + ثبت آگهی -->
+<script>
+  (function(){
+    const el = document.getElementById('toggleSubmitBtn');
+    try {
+      const v = localStorage.getItem('vinor_show_submit_btn');
+      const on = v ? v==='1' : true; // پیش‌فرض: نمایش فعال
+      if (el){ el.checked = !!on; moveDot(); }
+    } catch {}
+
+    function moveDot(){
+      const dot = document.querySelector('#toggleSubmitBtn + span .dot');
+      if (!dot || !el) return;
+      dot.style.right = el.checked ? '1.5rem' : '0.25rem';
+    }
+
+    el?.addEventListener('change', ()=>{
+      try{ localStorage.setItem('vinor_show_submit_btn', el.checked ? '1' : '0'); }catch{}
+      moveDot();
+      // اطلاع به صفحات برای اعمال فوری
+      try{ window.dispatchEvent(new CustomEvent('vinor:submit-btn-toggle', { detail: el.checked })); }catch{}
     });
   })();
 </script>

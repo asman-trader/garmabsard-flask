@@ -94,7 +94,7 @@
       </a>
       <div class="flex items-center gap-4">
         {% if SHOW_SUBMIT_BUTTON %}
-        <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
+        <a id="headerSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
           <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
         </a>
         {% endif %}
@@ -128,7 +128,7 @@
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
     {% if not hide_header and request.endpoint != 'main.my_lands' and SHOW_SUBMIT_BUTTON %}
-      <a href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index','main.app_home'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
+      <a id="fabSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index','main.app_home'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>
     {% endif %}
@@ -204,6 +204,21 @@
       })();
 
       document.getElementById("menuToggle")?.addEventListener("click", openMenu);
+
+      // کنترل نمایش دکمه + ثبت آگهی (هدر و FAB) بر اساس تنظیم کاربر
+      (function(){
+        const headerBtn = document.getElementById('headerSubmitBtn');
+        const fabBtn = document.getElementById('fabSubmitBtn');
+        function apply(){
+          let on = true;
+          try{ const v = localStorage.getItem('vinor_show_submit_btn'); on = v ? v==='1' : true; }catch{}
+          if (headerBtn) headerBtn.style.display = on ? '' : 'none';
+          if (fabBtn) fabBtn.style.display = on ? '' : 'none';
+        }
+        apply();
+        window.addEventListener('storage', (e)=>{ if(e.key==='vinor_show_submit_btn') apply(); });
+        window.addEventListener('vinor:submit-btn-toggle', apply);
+      })();
       document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
       menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
       menuOverlay?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
