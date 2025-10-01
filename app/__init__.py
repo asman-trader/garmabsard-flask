@@ -13,6 +13,7 @@ from datetime import timedelta, datetime
 from flask import (
     Flask, request, redirect, url_for, session, current_app, send_from_directory
 )
+from .utils.storage import load_settings
 
 # CSRF (Flask-WTF)
 try:
@@ -159,12 +160,17 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_vinor_globals():
         is_logged = bool(session.get("user_id") or session.get("user_phone"))
+        try:
+            settings = load_settings(app)
+        except Exception:
+            settings = {}
         return {
             "VAPID_PUBLIC_KEY": app.config.get("VAPID_PUBLIC_KEY", ""),
             "VINOR_IS_LOGGED_IN": is_logged,
             "VINOR_LOGIN_URL": url_for("main.login"),
             "APP_BRAND_NAME": app.config.get("APP_BRAND_NAME", "Vinor"),
             "csrf_token": generate_csrf,
+            "SHOW_SUBMIT_BUTTON": bool(settings.get("show_submit_button", True)),
         }
 
     # ---------- رجیستر بلوپرینت‌ها ----------

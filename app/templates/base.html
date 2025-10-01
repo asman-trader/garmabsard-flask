@@ -93,9 +93,11 @@
         <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
       </a>
       <div class="flex items-center gap-4">
+        {% if SHOW_SUBMIT_BUTTON %}
         <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
           <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
         </a>
+        {% endif %}
         <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800" aria-label="جستجو">
           <i class="fas fa-search"></i>
         </a>
@@ -125,7 +127,7 @@
 
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
-    {% if not hide_header and request.endpoint != 'main.my_lands' %}
+    {% if not hide_header and request.endpoint != 'main.my_lands' and SHOW_SUBMIT_BUTTON %}
       <a href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index','main.app_home'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>

@@ -48,6 +48,18 @@
       </p>
     </div>
 
+    <!-- نمایش دکمه ثبت آگهی -->
+    <div class="space-y-2">
+      <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+        <input type="checkbox" name="show_submit_button" class="rounded border-gray-300 dark:border-gray-600"
+               {% if settings.show_submit_button %}checked{% endif %}>
+        نمایش دکمه «ثبت آگهی جدید» در سایت
+      </label>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        با غیرفعال‌کردن، میانبرهای «+ ثبت آگهی» در هدر، فوتر موبایل و جستجوی سریع مخفی می‌شوند.
+      </p>
+    </div>
+
 <!-- مدت اعتبار آگهی -->
 <div class="space-y-2">
   <label for="ad_expiry_days" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">

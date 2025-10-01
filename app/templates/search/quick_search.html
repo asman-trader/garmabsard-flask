@@ -42,9 +42,11 @@
         <input type="hidden" id="cityHidden" name="city" value="">
       </form>
       <div class="sm:col-span-2 grid grid-cols-3 gap-2">
+        {% if SHOW_SUBMIT_BUTTON %}
         <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
           <i class="fas fa-plus-circle"></i> ثبت آگهی
         </a>
+        {% endif %}
         <a href="{{ url_for('main.favorites') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
           <i class="fas fa-bookmark"></i> علاقه‌مندی
         </a>

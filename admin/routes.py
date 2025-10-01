@@ -301,6 +301,7 @@ def _default_settings() -> Dict[str, Any]:
     return {
         'approval_method': 'manual',
         'ad_expiry_days': 30,  # 0 = نامحدود
+        'show_submit_button': True,
     }
 
 def get_settings() -> Dict[str, Any]:
@@ -733,7 +734,8 @@ def settings():
 
         save_settings({
             'approval_method': approval_method,
-            'ad_expiry_days': ad_expiry_days
+            'ad_expiry_days': ad_expiry_days,
+            'show_submit_button': (request.form.get('show_submit_button') == 'on')
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))

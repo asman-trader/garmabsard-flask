@@ -131,7 +131,7 @@ def save_users(items, app=None): return _save(ensure_file('USERS_FILE','users.js
 def load_consults(app=None):        return _load(ensure_file('CONSULTS_FILE','consults.json',[],app))
 def save_consults(items, app=None): return _save(ensure_file('CONSULTS_FILE','consults.json',[],app), items)
 
-def load_settings(app=None):  return _load(ensure_file('SETTINGS_FILE','settings.json',{"approval_method":"manual"},app))
+def load_settings(app=None):  return _load(ensure_file('SETTINGS_FILE','settings.json',{"approval_method":"manual","show_submit_button": True},app))
 
 def load_notifications(app=None):        return _load(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app))
 def save_notifications(items, app=None): return _save(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app), items)

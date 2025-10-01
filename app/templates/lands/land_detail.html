@@ -63,9 +63,11 @@
       </div>
 
       <div class="flex items-center gap-1">
+        {% if SHOW_SUBMIT_BUTTON %}
         <a href="{{ url_for('main.submit_ad') }}" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs hover:bg-gray-50 dark:hover:bg-gray-700" title="ثبت آگهی" aria-label="ثبت آگهی">
           <i class="fas fa-plus"></i> ثبت آگهی
         </a>
+        {% endif %}
         <button
           id="shareBtn"
           type="button"
