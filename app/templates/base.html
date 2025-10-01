@@ -189,6 +189,20 @@
         try { document.body.style.overflow = ''; } catch(_){ }
       }
 
+      // کنترل نمایش/پنهان شدن دکمه منو بر اساس تنظیم کاربر
+      (function(){
+        const btn = document.getElementById('menuToggle');
+        if (!btn) return;
+        function apply(){
+          let on = true;
+          try{ const v = localStorage.getItem('vinor_show_sidebar'); on = v ? v==='1' : true; }catch{}
+          btn.style.display = on ? '' : 'none';
+        }
+        apply();
+        window.addEventListener('storage', (e)=>{ if(e.key==='vinor_show_sidebar') apply(); });
+        window.addEventListener('vinor:sidebar-toggle', apply);
+      })();
+
       document.getElementById("menuToggle")?.addEventListener("click", openMenu);
       document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
       menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
