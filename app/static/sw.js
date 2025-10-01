@@ -7,6 +7,7 @@ const VERSION = 'v1.0.0-2025-10-01';
 const PRECACHE = `vinor-precache-${VERSION}`;
 const RUNTIME = `vinor-runtime-${VERSION}`;
 const API_CACHE = `vinor-api-${VERSION}`;
+const ICONS_CACHE = `vinor-icons-${VERSION}`;
 async function trimCache(name, maxEntries) {
   try {
     const cache = await caches.open(name);
@@ -37,11 +38,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(PRECACHE);
     try { await cache.addAll(PRECACHE_URLS.map((u) => new Request(u, { credentials: 'same-origin' }))); } catch(_) {}
-    // Best-effort: prewarm external CSS/fonts/icons into runtime cache for offline rendering
+    // Best-effort: prewarm external CSS/fonts/icons into dedicated ICONS cache for offline rendering
     try {
-      const rcache = await caches.open(RUNTIME);
+      const icache = await caches.open(ICONS_CACHE);
       await Promise.all(EXTERNAL_WARM.map(async (url) => {
-        try { const resp = await fetch(url, { mode: 'no-cors' }); await rcache.put(url, resp.clone()); } catch(_) {}
+        try { const resp = await fetch(url, { mode: 'no-cors' }); await icache.put(url, resp.clone()); } catch(_) {}
       }));
     } catch(_) {}
     await self.skipWaiting();
@@ -178,7 +179,7 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
     if (EXTERNAL_ORIGINS.includes(url.origin) && request.method === 'GET') {
       event.respondWith((async () => {
-        const cache = await caches.open(RUNTIME);
+        const cache = await caches.open(ICONS_CACHE);
         const cached = await cache.match(request, { ignoreVary: true });
         if (cached) return cached;
         try {
