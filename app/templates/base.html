@@ -409,6 +409,7 @@
                 urls.push('/search');
               }
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
+              if (sw) sw.postMessage({ type: 'VINOR_WARMUP_EXT' });
             } catch {}
           })
           .catch(()=>{});

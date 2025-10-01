@@ -37,6 +37,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(PRECACHE);
     try { await cache.addAll(PRECACHE_URLS.map((u) => new Request(u, { credentials: 'same-origin' }))); } catch(_) {}
+    // Best-effort: prewarm external CSS/fonts/icons into runtime cache for offline rendering
+    try {
+      const rcache = await caches.open(RUNTIME);
+      await Promise.all(EXTERNAL_WARM.map(async (url) => {
+        try { const resp = await fetch(url, { mode: 'no-cors' }); await rcache.put(url, resp.clone()); } catch(_) {}
+      }));
+    } catch(_) {}
     await self.skipWaiting();
   })());
 });
@@ -65,6 +72,15 @@ const EXTERNAL_ORIGINS = [
   'https://cdn.jsdelivr.net',
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com'
+];
+
+// External assets to prewarm/cache for offline icons/fonts (best-effort)
+const EXTERNAL_WARM = [
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-solid-900.woff2',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-regular-400.woff2',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-brands-400.woff2',
+  'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap'
 ];
 
 function isAPI(request) {
@@ -125,25 +141,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets: stale-while-revalidate (return cache immediately, update in background)
   if ((isStaticAsset(request) || isUploads(request)) && request.method === 'GET') {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
       const cached = await cache.match(request);
-      if (cached) return cached;
+      if (cached) {
+        // Kick off background update
+        event.waitUntil((async () => {
+          try {
+            const resp = await fetch(request, { credentials: 'same-origin', cache: 'no-store' });
+            try { await cache.put(request, resp.clone()); await trimCache(RUNTIME, 150); } catch(_) {}
+          } catch(_) {}
+        })());
+        return cached;
+      }
       try {
         const resp = await fetch(request, { credentials: 'same-origin' });
-        try { cache.put(request, resp.clone()); await trimCache(RUNTIME, 150); } catch(_) {}
+        try { await cache.put(request, resp.clone()); await trimCache(RUNTIME, 150); } catch(_) {}
         return resp;
       } catch (_) {
         // Image fallback placeholder (if asset is an image)
         const accept = request.headers.get('accept') || '';
         if (accept.includes('image')) {
-          // Tiny SVG placeholder
           const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="sans-serif" font-size="24">Offline</text></svg>';
           return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml' } });
         }
-        // Otherwise let it fail
         throw _;
       }
     })());
@@ -211,6 +234,17 @@ self.addEventListener('message', (event) => {
     if (self.registration && 'sync' in self.registration) {
       try { self.registration.sync.register('vinor-warmup'); } catch(_) {}
     }
+  }
+  // Warm external assets upon request from client
+  if (data && data.type === 'VINOR_WARMUP_EXT') {
+    event.waitUntil((async () => {
+      try {
+        const rcache = await caches.open(RUNTIME);
+        await Promise.all(EXTERNAL_WARM.map(async (url) => {
+          try { const resp = await fetch(url, { mode: 'no-cors', cache: 'no-store' }); await rcache.put(url, resp.clone()); } catch(_) {}
+        }));
+      } catch(_) {}
+    })());
   }
 });
 
