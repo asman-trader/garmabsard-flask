@@ -84,6 +84,10 @@
     .pwa-card{display:flex;flex-direction:column;align-items:center;gap:10px;background:#0b1220;border:1px solid #1f2937;border-radius:20px;padding:22px 24px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .sprout{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:#16a34a;color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.35);animation:sproutPop .9s cubic-bezier(.2,.8,.2,1)}
     @keyframes sproutPop{0%{transform:scale(.6);filter:blur(2px);opacity:.5}60%{transform:scale(1.06);filter:blur(0);opacity:1}100%{transform:scale(1)}}
+    /* Offline status bar */
+    #offlineBar{position:fixed;bottom:12px;right:12px;left:12px;z-index:60;display:none}
+    .offline-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-radius:14px;border:1px solid #374151;background:#111827;color:#e5e7eb;box-shadow:0 8px 22px rgba(0,0,0,.35)}
+    .offline-btn{background:#16a34a;color:#fff;border:0;border-radius:10px;padding:8px 12px;cursor:pointer}
   </style>
 
   {% block head %}{% endblock %}
@@ -146,6 +150,13 @@
   {% include 'partials/side_menu.html' %}
   <!-- Backdrop for side menu (mobile only) -->
   <div id="menuBackdrop" class="fixed inset-0 sm:hidden bg-black/30 opacity-0 pointer-events-none transition-opacity z-40"></div>
+  <!-- Offline status bar -->
+  <div id="offlineBar">
+    <div class="offline-bar">
+      <div id="offlineText">شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.</div>
+      <button id="offlineRefresh" class="offline-btn">بروزرسانی</button>
+    </div>
+  </div>
 
   {# === آماده‌سازی امن متغیرها برای اسکریپت‌ها (بدون استفاده از globals()) === #}
   {% set __is_logged_in = (VINOR_IS_LOGGED_IN if VINOR_IS_LOGGED_IN is defined else (session.get('user_id') and True)) %}
@@ -226,6 +237,34 @@
         apply();
         window.addEventListener('storage', (e)=>{ if(e.key==='vinor_show_submit_btn') apply(); });
         window.addEventListener('vinor:submit-btn-toggle', apply);
+      })();
+      // Offline/Online hybrid UX bar + warmup sync
+      (function(){
+        const bar = document.getElementById('offlineBar');
+        const txt = document.getElementById('offlineText');
+        const btn = document.getElementById('offlineRefresh');
+        function show(on,msg){ if (!bar) return; if (msg && txt) txt.textContent = msg; bar.style.display = on ? '' : 'none'; }
+        async function warmup(){
+          try{
+            const reg = await navigator.serviceWorker?.getRegistration('/');
+            const sw = reg?.active || reg?.waiting || reg?.installing;
+            sw?.postMessage({ type:'VINOR_WARMUP' });
+            sw?.postMessage({ type:'VINOR_WARMUP_SYNC' });
+          }catch(_){ }
+        }
+        function update(){
+          if (navigator.onLine){
+            show(true,'آنلاین شدید؛ در حال بروزرسانی کش...');
+            warmup();
+            setTimeout(()=>{ try { location.reload(); } catch(_){ show(false); } }, 1200);
+          } else {
+            show(true,'شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.');
+          }
+        }
+        window.addEventListener('online', update);
+        window.addEventListener('offline', update);
+        btn?.addEventListener('click', update);
+        if (!navigator.onLine) show(true,'شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.');
       })();
       document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
       menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
