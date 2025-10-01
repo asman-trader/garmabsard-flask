@@ -7,6 +7,16 @@ const VERSION = 'v1.0.0-2025-10-01';
 const PRECACHE = `vinor-precache-${VERSION}`;
 const RUNTIME = `vinor-runtime-${VERSION}`;
 const API_CACHE = `vinor-api-${VERSION}`;
+async function trimCache(name, maxEntries) {
+  try {
+    const cache = await caches.open(name);
+    const keys = await cache.keys();
+    if (keys.length > maxEntries) {
+      const toDelete = keys.slice(0, keys.length - maxEntries);
+      await Promise.all(toDelete.map((req) => cache.delete(req)));
+    }
+  } catch (_) {}
+}
 
 // URLs to precache at install
 const OFFLINE_URL = '/static/offline.html';
@@ -108,7 +118,7 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(API_CACHE);
       const cached = await cache.match(request);
       const networkPromise = fetch(request)
-        .then((resp) => { try { cache.put(request, resp.clone()); } catch(_) {} return resp; })
+        .then(async (resp) => { try { cache.put(request, resp.clone()); await trimCache(API_CACHE, 60); } catch(_) {} return resp; })
         .catch(() => undefined);
       return cached || (await networkPromise) || new Response(JSON.stringify({ ok: false, offline: true }), { status: 503, headers: { 'Content-Type': 'application/json' } });
     })());
@@ -123,7 +133,7 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       try {
         const resp = await fetch(request, { credentials: 'same-origin' });
-        try { cache.put(request, resp.clone()); } catch(_) {}
+        try { cache.put(request, resp.clone()); await trimCache(RUNTIME, 150); } catch(_) {}
         return resp;
       } catch (_) {
         // Image fallback placeholder (if asset is an image)
@@ -166,7 +176,7 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(RUNTIME);
       try {
         const resp = await fetch(request);
-        try { cache.put(request, resp.clone()); } catch(_) {}
+        try { cache.put(request, resp.clone()); await trimCache(RUNTIME, 150); } catch(_) {}
         return resp;
       } catch (_) {
         const cached = await cache.match(request);
