@@ -29,11 +29,11 @@
                aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;width:0;height:0;border:0;padding:0" />
 
         <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr" aria-label="ورود کد ۵ رقمی">
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم اول" autocomplete="one-time-code" name="one-time-code" />
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم دوم" />
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم سوم" />
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم چهارم" />
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم پنجم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم اول" autocomplete="one-time-code" name="one-time-code" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم دوم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم سوم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم چهارم" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم پنجم" />
         </div>
 
         <button type="submit" class="w-full py-3 rounded-xl text-white text-sm font-semibold bg-emerald-600 hover:bg-emerald-700">✅ ورود به وینور</button>
@@ -60,6 +60,7 @@
     const countdownEl = document.getElementById('countdown');
     const resendBtn = document.getElementById('resendBtn');
     const timerEl = document.getElementById('timer');
+    const autoField = document.querySelector('input[name="one-time-code"][aria-hidden="true"]');
 
     boxes[0].focus();
 
@@ -81,15 +82,37 @@
       } catch(_) { /* ignore */ }
     })();
 
+    // Handle iOS/Browser autofill into hidden or first field
+    function fillFromString(str){
+      const digits = String(str||'').replace(/\D+/g,'').slice(0,5).split('');
+      if (!digits.length) return;
+      boxes.forEach(b => b.value = '');
+      digits.forEach((d,i)=>{ if (boxes[i]) boxes[i].value = d; });
+      hidden.value = digits.join('');
+      if (hidden.value.length === 5) form.requestSubmit();
+    }
+    autoField && ['input','change'].forEach(ev => autoField.addEventListener(ev, ()=> fillFromString(autoField.value)));
+
     function syncHiddenAndMaybeSubmit() {
-      hidden.value = boxes.map(b => (b.value || '').replace(/\\D/g,'')).join('').slice(0,5);
+      hidden.value = boxes.map(b => (b.value || '').replace(/\D/g,'')).join('').slice(0,5);
       if (hidden.value.length === 5) form.requestSubmit();
     }
 
     boxes.forEach((box, idx) => {
       box.addEventListener('input', () => {
-        box.value = box.value.replace(/\\D/g,'').slice(0,1);
-        if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
+        // Support multi-digit autofill into a single box
+        const raw = box.value || '';
+        const cleaned = raw.replace(/\D/g,'');
+        if (cleaned.length <= 1) {
+          box.value = cleaned;
+          if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
+        } else {
+          // Distribute across current and next boxes
+          const digits = cleaned.slice(0, 5 - idx).split('');
+          digits.forEach((d, i) => { if (boxes[idx + i]) boxes[idx + i].value = d; });
+          const last = Math.min(idx + digits.length, boxes.length) - 1;
+          if (last >= 0) boxes[last].focus();
+        }
         syncHiddenAndMaybeSubmit();
       });
 
@@ -104,11 +127,8 @@
 
       box.addEventListener('paste', (e) => {
         e.preventDefault();
-        const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/\\D+/g,'').slice(0,5).split('');
-        digits.forEach((d, i) => { if (boxes[idx + i]) boxes[idx + i].value = d; });
-        const last = Math.min(idx + digits.length, boxes.length) - 1;
-        if (last >= 0) boxes[last].focus();
-        syncHiddenAndMaybeSubmit();
+        const val = (e.clipboardData || window.clipboardData).getData('text');
+        fillFromString(val);
       });
     });
 
