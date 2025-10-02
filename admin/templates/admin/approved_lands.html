@@ -42,10 +42,10 @@
       <div class="flex items-center gap-3">
         <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
                 class="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-md transition" aria-label="تغییر حالت">
-          <i class="fas text-gray-600 dark:text-yellow-300 text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+          <i class="fa-solid text-gray-600 dark:text-yellow-300 text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
         </button>
         <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden w-10 h-10 rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-md transition" aria-label="منو">
-          <i class="fas fa-bars text-gray-600 dark:text-gray-200 text-lg"></i>
+          <i class="fa-solid fa-bars text-gray-600 dark:text-gray-200 text-lg"></i>
         </button>
       </div>
     </div>

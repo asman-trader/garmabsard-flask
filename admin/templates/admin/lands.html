@@ -6,12 +6,12 @@
   <!-- هدر صفحه + میانبر ثبت -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl sm:text-2xl font-extrabold text-vinor-700 dark:text-vinor-600 flex items-center gap-2">
-      <i class="fas fa-layer-group"></i>
+      <i class="fa-solid fa-layer-group"></i>
       لیست آگهی‌های ثبت‌شده
     </h1>
     <a href="{{ url_for('admin.add_land') }}"
        class="inline-flex items-center gap-2 bg-vinor-600 hover:bg-vinor-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2 rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600">
-      <i class="fas fa-plus-circle"></i>
+      <i class="fa-solid fa-circle-plus"></i>
       ثبت ملک جدید
     </a>
   </div>
@@ -119,7 +119,7 @@
               </a>
               <a href="{{ url_for('admin.edit_land', code=land.code) }}"
                  class="inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600">
-                <i class="fas fa-edit"></i>
+                <i class="fa-regular fa-pen-to-square"></i>
                 ویرایش
               </a>
               <form method="post" action="{{ url_for('admin.delete_land', code=land.code) }}" class="col-span-2"
@@ -127,7 +127,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit"
                         class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
-                  <i class="fas fa-trash"></i>
+                  <i class="fa-solid fa-trash"></i>
                   حذف
                 </button>
               </form>
@@ -140,7 +140,7 @@
               </a>
               <a href="{{ url_for('admin.edit_land', land_id=loop.index0) }}"
                  class="inline-flex items-center justify-center gap-1.5 bg-vinor-600 hover:bg-vinor-700 text-white text-sm py-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600">
-                <i class="fas fa-edit"></i>
+                <i class="fa-regular fa-pen-to-square"></i>
                 ویرایش
               </a>
               <form method="post" action="{{ url_for('admin.delete_land', land_id=loop.index0) }}" class="col-span-2"
@@ -148,7 +148,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit"
                         class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
-                  <i class="fas fa-trash"></i>
+                  <i class="fa-solid fa-trash"></i>
                   حذف
                 </button>
               </form>
@@ -194,7 +194,7 @@
       <div class="mt-4">
         <a href="{{ url_for('admin.add_land') }}"
            class="inline-flex items-center gap-2 bg-vinor-600 hover:bg-vinor-700 text-white px-4 py-2 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vinor-600">
-          <i class="fas fa-plus-circle"></i>
+          <i class="fa-solid fa-circle-plus"></i>
           ثبت اولین آگهی
         </a>
       </div>
@@ -204,7 +204,7 @@
   <!-- بازگشت -->
   <div class="mt-8 text-center">
     <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center gap-2 text-vinor-700 dark:text-vinor-600 hover:underline decoration-dotted">
-      <i class="fas fa-arrow-right"></i>
+      <i class="fa-solid fa-arrow-right"></i>
       بازگشت به داشبورد
     </a>
   </div>

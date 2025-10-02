@@ -7,7 +7,7 @@
   <!-- عنوان صفحه -->
   <div class="mb-4 sm:mb-6">
     <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-300 flex items-center gap-2">
-      <i class="fas fa-bell"></i>
+      <i class="fa-solid fa-bell"></i>
       تست اعلان پوش (Web Push)
     </h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -42,7 +42,7 @@
       <div class="flex items-center gap-3">
         <button id="sendBtn" type="submit"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-vinor-600 hover:bg-vinor-700 text-white shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed">
-          <i class="fas fa-paper-plane"></i>
+          <i class="fa-solid fa-paper-plane"></i>
           ارسال اعلان آزمایشی
         </button>
         <button id="resetBtn" type="button"
@@ -106,7 +106,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     sendBtn.disabled = true;
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال...';
+    sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال ارسال...';
 
     resultBox.classList.remove('hidden');
     statsBox.classList.add('hidden');
@@ -144,7 +144,7 @@
       resultAlert.textContent = 'خطا در ارتباط با سرور.';
     } finally {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ارسال اعلان آزمایشی';
+      sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ارسال اعلان آزمایشی';
     }
   });
 </script>

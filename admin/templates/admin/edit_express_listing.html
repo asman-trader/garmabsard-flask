@@ -11,7 +11,7 @@
   <!-- هدر صفحه -->
   <div class="mb-6">
     <h1 class="text-xl sm:text-2xl font-extrabold text-green-700 dark:text-green-600 flex items-center gap-2">
-      <i class="fas fa-edit"></i>
+      <i class="fa-regular fa-pen-to-square"></i>
       ویرایش آگهی اکسپرس
     </h1>
     <p class="text-gray-600 dark:text-gray-300 mt-2">کد آگهی: {{ land.code }}</p>
@@ -47,7 +47,7 @@
     <!-- اطلاعات اصلی -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fas fa-info-circle text-green-600"></i>
+        <i class="fa-solid fa-circle-info text-green-600"></i>
         اطلاعات اصلی
       </h2>
       
@@ -132,7 +132,7 @@
     {% if land.images and land.images|length > 0 %}
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fas fa-images text-green-600"></i>
+          <i class="fa-solid fa-images text-green-600"></i>
           تصاویر موجود
         </h2>
         
@@ -153,7 +153,7 @@
     <!-- تصاویر جدید -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fas fa-plus text-green-600"></i>
+        <i class="fa-solid fa-plus text-green-600"></i>
         افزودن تصاویر جدید
       </h2>
       
@@ -188,7 +188,7 @@
     {% if land.express_documents and land.express_documents|length > 0 %}
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fas fa-file-pdf text-green-600"></i>
+          <i class="fa-regular fa-file-pdf text-green-600"></i>
           مدارک موجود
         </h2>
         
@@ -196,12 +196,12 @@
           {% for doc in land.express_documents %}
             <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
               <div class="flex items-center gap-3">
-                <i class="fas fa-file-pdf text-red-600"></i>
+                <i class="fa-regular fa-file-pdf text-red-600"></i>
                 <span class="text-gray-700 dark:text-gray-300">{{ doc }}</span>
               </div>
               <a href="{{ url_for('admin.serve_express_document', filename=doc) }}" target="_blank" 
                  class="text-blue-600 hover:text-blue-800 text-sm">
-                <i class="fas fa-download"></i> دانلود
+                <i class="fa-solid fa-download"></i> دانلود
               </a>
             </div>
           {% endfor %}
@@ -212,7 +212,7 @@
     <!-- مدارک جدید -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fas fa-plus text-green-600"></i>
+        <i class="fa-solid fa-plus text-green-600"></i>
         افزودن مدارک جدید
       </h2>
       
@@ -238,7 +238,7 @@
     <!-- اطلاعات تماس -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fas fa-phone text-green-600"></i>
+        <i class="fa-solid fa-phone text-green-600"></i>
         اطلاعات تماس
       </h2>
       
@@ -263,13 +263,13 @@
       
       <a href="{{ url_for('main.express_detail', code=land.code) }}" target="_blank"
          class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center gap-2">
-        <i class="fas fa-external-link-alt"></i>
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
         مشاهده
       </a>
       
       <button type="submit" 
               class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
-        <i class="fas fa-save"></i>
+        <i class="fa-solid fa-floppy-disk"></i>
         ذخیره تغییرات
       </button>
     </div>

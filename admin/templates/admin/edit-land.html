@@ -6,7 +6,7 @@
 
   <!-- عنوان صفحه -->
   <h1 class="text-xl sm:text-2xl font-bold text-vinor-700 dark:text-vinor-600 mb-6 flex items-center gap-2">
-    <i class="fas fa-pen-to-square"></i>
+    <i class="fa-regular fa-pen-to-square"></i>
     ویرایش آگهی
   </h1>
 
@@ -28,7 +28,7 @@
 
       <label class="w-full cursor-pointer flex items-center justify-center border-dashed border-2 border-vinor-600 rounded-xl p-4
                      text-vinor-700 hover:bg-vinor-600/5 dark:hover:bg-vinor-600/10 transition">
-        <i class="fas fa-upload text-base mr-2"></i>
+        <i class="fa-solid fa-upload text-base mr-2"></i>
         افزودن تصویر (امکان انتخاب چندتایی)
         <input type="file" name="images" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
       </label>
@@ -139,7 +139,7 @@
     <div class="flex justify-between items-center">
       <a href="{{ url_for('admin.lands') }}" class="text-gray-600 dark:text-gray-300 hover:underline">← بازگشت</a>
       <button type="submit" class="bg-vinor-600 hover:bg-vinor-700 text-white px-5 py-2 rounded-lg text-sm sm:text-base font-semibold">
-        <i class="fas fa-save"></i>
+        <i class="fa-solid fa-floppy-disk"></i>
         ذخیره تغییرات
       </button>
     </div>
@@ -186,7 +186,7 @@
 
         const check = document.createElement('div');
         check.className = 'absolute top-1 left-1 bg-vinor-600 text-white text-xs px-1.5 py-0.5 rounded-full';
-        check.innerHTML = '<i class="fas fa-check"></i>';
+        check.innerHTML = '<i class="fa-solid fa-check"></i>';
 
         wrapper.appendChild(img);
         wrapper.appendChild(check);
