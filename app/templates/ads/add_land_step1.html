@@ -293,14 +293,27 @@ document.addEventListener('DOMContentLoaded', function(){
   window.addEventListener('storage', (e)=>{ if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) { updateContinueState(); } });
   document.addEventListener('vinor:city-changed', ()=>{ updateContinueState(); });
 
+  // Persist draft v2 (category + city)
+  function saveDraftV2(){
+    try{
+      const city = (localStorage.getItem('vinor_city')||'');
+      const draft = JSON.parse(localStorage.getItem('adFormDraftV2')||'{}');
+      draft.trade_type = trade.value || draft.trade_type || '';
+      draft.property_type = prop.value || draft.property_type || '';
+      draft.city = draft.city || city;
+      localStorage.setItem('adFormDraftV2', JSON.stringify(draft));
+    }catch(_){ }
+  }
+
   // Submit handler
   continueBtn.addEventListener('click', function(){
     if (!prop.value) return;
+    saveDraftV2();
     form.submit();
   });
 
-  // Initial city label
-  // city already selected on prior page
+  // Initial store
+  saveDraftV2();
 });
 </script>
   <!-- Bottom Action Bar -->

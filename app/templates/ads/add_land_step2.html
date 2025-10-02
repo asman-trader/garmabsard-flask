@@ -242,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let uploadedImages = [];
   let uploadingCount = 0;
   const LS_KEY = 'adStep2Draft';
+  const DRAFT_V2 = 'adFormDraftV2';
   
   // Show toast message
   function showToast(message, type = 'success') {
@@ -459,6 +460,14 @@ document.addEventListener('DOMContentLoaded', function() {
       uploadedIds: ids
     };
     try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch(_) {}
+    // Merge into V2
+    try {
+      const v2 = JSON.parse(localStorage.getItem(DRAFT_V2) || '{}');
+      v2.title = payload.title;
+      v2.description = payload.description;
+      v2.images = ids;
+      localStorage.setItem(DRAFT_V2, JSON.stringify(v2));
+    } catch(_) { }
   }
 
   function loadDraft() {
@@ -668,6 +677,18 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initial state
   loadDraft();
+  // Seed from V2 if present
+  try {
+    const v2 = JSON.parse(localStorage.getItem(DRAFT_V2) || 'null');
+    if (v2) {
+      const titleEl = document.querySelector('input[name="title"]');
+      const descEl = document.querySelector('textarea[name="description"]');
+      if (titleEl && typeof v2.title === 'string' && !titleEl.value) titleEl.value = v2.title;
+      if (descEl && typeof v2.description === 'string' && !descEl.value) descEl.value = v2.description;
+      (Array.isArray(v2.images) ? v2.images : []).forEach(sid=>{ if (sid) createImagePreviewFromUrl(sid); });
+      updateUploadedIds();
+    }
+  } catch(_) {}
   updateContinueButton();
 });
 </script>

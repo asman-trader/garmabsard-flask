@@ -99,6 +99,12 @@ document.addEventListener('DOMContentLoaded', function(){
     const label = localStorage.getItem('vinor_city') || '';
     const city = (obj && Array.isArray(obj.cities) && obj.cities.length === 1) ? obj.cities[0] : (obj && obj.city) || label || '';
     if (cityLabel) cityLabel.textContent = city || '—';
+    // Merge into V2 draft
+    try {
+      const v2 = JSON.parse(localStorage.getItem('adFormDraftV2') || '{}');
+      v2.city = city || v2.city || '';
+      localStorage.setItem('adFormDraftV2', JSON.stringify(v2));
+    } catch(_) {}
   }catch(_){ }
 
   // Initialize map
@@ -121,6 +127,14 @@ document.addEventListener('DOMContentLoaded', function(){
       const p = marker.getLatLng();
       if (latEl) latEl.value = p.lat.toFixed(6);
       if (lngEl) lngEl.value = p.lng.toFixed(6);
+      // Merge into V2 draft
+      try {
+        const v2 = JSON.parse(localStorage.getItem('adFormDraftV2') || '{}');
+        v2.extras = v2.extras || {};
+        v2.extras.lat = latEl.value;
+        v2.extras.lng = lngEl.value;
+        localStorage.setItem('adFormDraftV2', JSON.stringify(v2));
+      } catch(_) {}
       updateContinueButton();
     }catch(_){ }
   }
@@ -165,6 +179,12 @@ document.addEventListener('DOMContentLoaded', function(){
   // Bind address approx
   locTextDisplay?.addEventListener('input', ()=>{
     try{ if (locTextHidden) locTextHidden.value = locTextDisplay.value; }catch(_){ }
+    try {
+      const v2 = JSON.parse(localStorage.getItem('adFormDraftV2') || '{}');
+      v2.extras = v2.extras || {};
+      v2.extras.location_text = locTextDisplay.value || '';
+      localStorage.setItem('adFormDraftV2', JSON.stringify(v2));
+    } catch(_) {}
   });
 
   // Restore from draft if available

@@ -279,15 +279,31 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Form submission
-  form.addEventListener('submit', function(e) {
-    // Clear draft from localStorage
+  form.addEventListener('submit', async function(e) {
+    // If offline, queue finalize and show toast, then short-circuit
+    if (!navigator.onLine) {
+      e.preventDefault();
+      try {
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (reg && reg.active) {
+          reg.active.postMessage({ type: 'VINOR_QUEUE', url: '/lands/finalize', method: 'GET' });
+          showToast('شما آفلاین هستید؛ انتشار در صف قرار گرفت ✅', 'success');
+        } else {
+          showToast('شما آفلاین هستید. انتشار بعداً تلاش می‌شود.', 'error');
+        }
+      } catch(_) {
+        showToast('انتشار در حالت آفلاین صف شد.', 'success');
+      }
+      return;
+    }
+
+    // Online: proceed and clear drafts after submit
     try {
       localStorage.removeItem('adFormDraftV1');
       localStorage.removeItem('adFormDraftV2');
     } catch (error) {
       console.error('Error clearing draft:', error);
     }
-    
     showToast('آگهی شما در حال انتشار است...', 'success');
   });
   
@@ -304,6 +320,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize
   loadSummary();
   updatePublishButton();
+  // Seed V2 draft defaults (no-op if missing)
+  try {
+    const v2 = JSON.parse(localStorage.getItem('adFormDraftV2') || 'null') || {};
+    // Ensure trade/property are present for summary mapping later
+    if (!v2.trade_type || !v2.property_type) {
+      const stored = JSON.parse(localStorage.getItem('adFormDraftV2') || '{}');
+      localStorage.setItem('adFormDraftV2', JSON.stringify(Object.assign({}, stored)));
+    }
+  } catch(_) {}
 });
 </script>
 {% endblock %}
