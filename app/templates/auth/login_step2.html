@@ -24,12 +24,10 @@
         <input type="hidden" name="phone" value="{{ phone }}">
         {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
         <input type="hidden" name="otp_code" id="otpHidden" />
-        <!-- WebOTP/iOS one-time-code autocomplete (helps iOS & Android auto-fill) -->
-        <input type="text" inputmode="numeric" autocomplete="one-time-code" name="one-time-code"
-               aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;width:0;height:0;border:0;padding:0" />
+        <!-- Removed hidden one-time-code input to avoid iOS conflicts -->
 
         <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr" aria-label="ورود کد ۵ رقمی">
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\\d" aria-label="رقم اول" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="6" autocomplete="one-time-code" pattern="\\d*" aria-label="رقم اول" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم دوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم سوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم چهارم" />
@@ -60,15 +58,10 @@
     const countdownEl = document.getElementById('countdown');
     const resendBtn = document.getElementById('resendBtn');
     const timerEl = document.getElementById('timer');
-    const autoField = document.querySelector('input[name="one-time-code"][aria-hidden="true"]');
+    const autoField = boxes[0];
 
-    // Briefly focus the hidden autofill field to capture full code on iOS, then return focus to first box
-    if (autoField) {
-      try { autoField.focus(); } catch(_) {}
-      setTimeout(()=>{ try { boxes[0].focus(); } catch(_) {} }, 400);
-    } else {
-      boxes[0].focus();
-    }
+    // Focus the first box (one-time-code enabled) so iOS can autofill the entire code
+    try { autoField && autoField.focus(); } catch(_) {}
 
     // WebOTP API (Android Chrome): auto-read SMS with domain-bound OTP
     (async function(){
