@@ -5,17 +5,10 @@
 <!-- Hero: VINOR PWA Home -->
 {% include 'search/quick_search.html' %}
 
-<!-- Pull-to-Refresh indicator (hidden by default) -->
-<div id="ptrBar" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4" style="display:none">
-  <div class="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300 py-2">
-    <i class="fas fa-arrow-down animate-bounce"></i>
-    <span>برای بروزرسانی آگهی‌ها بکشید</span>
-  </div>
-  <div id="ptrProgress" class="h-1 bg-green-600 rounded" style="width:0%"></div>
-  <div id="ptrDone" class="text-center text-green-600 dark:text-green-400 text-xs py-1" style="display:none">بروزرسانی شد</div>
-  <div id="ptrError" class="text-center text-red-600 dark:text-red-400 text-xs py-1" style="display:none">خطا در بروزرسانی</div>
+<!-- Pull-to-Refresh (simplified) -->
+<div id="ptrMsg" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4" style="display:none">
+  <div id="ptrText" class="text-center text-sm text-gray-600 dark:text-gray-300 py-2">در حال بروزرسانی...</div>
   <hr class="border-gray-200 dark:border-gray-700" />
-  
 </div>
 
 <!-- Tabs -->
@@ -313,66 +306,43 @@
       });
     }
 
-    // --- Pull-to-refresh gesture ---
+    // --- Pull-to-refresh (simplified) ---
     (function(){
-      const ptrBar = document.getElementById('ptrBar');
-      const ptrProgress = document.getElementById('ptrProgress');
-      const ptrDone = document.getElementById('ptrDone');
-      const ptrError = document.getElementById('ptrError');
-      const THRESH = 70; // px to trigger
-      let startY = 0, pulling = false, active = false, maxPull = 140;
+      const msg = document.getElementById('ptrMsg');
+      const txt = document.getElementById('ptrText');
+      const THRESH = 60; // px
+      let startY = 0, eligible = false;
 
       function atTop(){
         return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0;
       }
+      function show(t){ try { if (txt) txt.textContent = t || 'در حال بروزرسانی...'; } catch(_){}; if (msg) msg.style.display = ''; }
+      function hide(){ if (msg) msg.style.display = 'none'; }
 
-      function resetBar(){
-        try { ptrProgress.style.width = '0%'; } catch(_){ }
-        try { ptrDone.style.display = 'none'; } catch(_){ }
-        try { ptrError.style.display = 'none'; } catch(_){ }
-      }
-
-      function showBar(){ if (ptrBar) ptrBar.style.display = ''; }
-      function hideBar(){ if (ptrBar) ptrBar.style.display = 'none'; }
-
-      function onStart(e){
-        if (!atTop()) return;
-        const t = e.touches ? e.touches[0] : e;
+      document.addEventListener('touchstart', (e)=>{
+        if (!atTop()) { eligible = false; return; }
+        const t = e.touches && e.touches[0];
+        if (!t) { eligible = false; return; }
         startY = t.clientY;
-        pulling = true;
-        active = false;
-        resetBar();
-        showBar();
-      }
-      function onMove(e){
-        if (!pulling) return;
-        const t = e.touches ? e.touches[0] : e;
-        const dy = Math.max(0, t.clientY - startY);
-        if (dy <= 0) return;
-        const p = Math.min(100, Math.round((dy / maxPull) * 100));
-        try { ptrProgress.style.width = p + '%'; } catch(_){ }
-        if (dy > THRESH) active = true; else active = false;
-      }
-      async function onEnd(){
-        if (!pulling) return; pulling = false;
-        if (!active) { hideBar(); return; }
+        eligible = true;
+      }, { passive: true });
+
+      document.addEventListener('touchend', async (e)=>{
+        if (!eligible) return; eligible = false;
+        const t = e.changedTouches && e.changedTouches[0];
+        const endY = t ? t.clientY : startY;
+        const dy = endY - startY;
+        if (dy < THRESH) return;
+        show('در حال بروزرسانی...');
         try {
           const items = await fetchApprovedLands();
           if (items) renderApprovedLands(items);
-          try { ptrDone.style.display = ''; } catch(_){ }
-          setTimeout(()=>{ hideBar(); resetBar(); }, 800);
+          show('بروزرسانی شد');
         } catch(_) {
-          try { ptrError.style.display = ''; } catch(_e){ }
-          setTimeout(()=>{ hideBar(); resetBar(); }, 1200);
+          show('خطا در بروزرسانی');
         }
-      }
-
-      document.addEventListener('touchstart', onStart, { passive: true });
-      document.addEventListener('touchmove', onMove, { passive: true });
-      document.addEventListener('touchend', onEnd, { passive: true });
-      document.addEventListener('pointerdown', (e)=>{ if (e.pointerType !== 'mouse') onStart(e); }, { passive: true });
-      document.addEventListener('pointermove', (e)=>{ if (e.pointerType !== 'mouse') onMove(e); }, { passive: true });
-      document.addEventListener('pointerup', (e)=>{ if (e.pointerType !== 'mouse') onEnd(); }, { passive: true });
+        setTimeout(hide, 900);
+      }, { passive: true });
     })();
 
     document.querySelectorAll(".land-card").forEach(card => {
