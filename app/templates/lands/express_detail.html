@@ -120,11 +120,19 @@
         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
           <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-4">تماس با پشتیبانی وینور</h3>
           <div class="flex flex-col sm:flex-row gap-3">
-            <a href="tel:{{ land.vinor_contact or '09121234567' }}" 
-               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
-              <i class="fas fa-phone"></i>
-              تماس مستقیم
-            </a>
+            {% if VINOR_IS_LOGGED_IN %}
+              <a href="tel:{{ land.vinor_contact or '09121234567' }}" 
+                 class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                <i class="fas fa-phone"></i>
+                تماس مستقیم
+              </a>
+            {% else %}
+              <a href="{{ VINOR_LOGIN_URL }}" 
+                 class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                <i class="fas fa-lock"></i>
+                ورود برای مشاهده تماس
+              </a>
+            {% endif %}
             <button id="consultationBtn" 
                     class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
               <i class="fas fa-comments"></i>

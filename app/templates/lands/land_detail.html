@@ -439,7 +439,11 @@
   <div class="fixed bottom-0 inset-x-0 z-40 sm:hidden" role="contentinfo" aria-label="دکمه‌های سریع">
     <div class="flex justify-between gap-2 p-3 bg-white dark:bg-slate-900 border-t dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,.06)]">
       {% if land.get('owner') %}
-        <a href="tel:{{ land.get('owner') }}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
+        {% if VINOR_IS_LOGGED_IN %}
+          <a href="tel:{{ land.get('owner') }}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-full text-sm font-medium">📞 تماس</a>
+        {% else %}
+          <a href="{{ VINOR_LOGIN_URL }}" class="flex-1 text-center bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-full text-sm font-medium">🔒 ورود برای مشاهده تماس</a>
+        {% endif %}
       {% endif %}
       {# دکمه اشتراک عمداً حذف شده است. #}
     </div>

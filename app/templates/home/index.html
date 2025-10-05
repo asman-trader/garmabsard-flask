@@ -236,9 +236,15 @@
             
             <!-- Express Actions -->
             <div class="mt-4 flex gap-2">
-              <a href="tel:${land.vinor_contact || '09121234567'}" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
-                <i class="fas fa-phone mr-1"></i>تماس با وینور
-              </a>
+              {% if VINOR_IS_LOGGED_IN %}
+                <a href="tel:${land.vinor_contact || '09121234567'}" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                  <i class="fas fa-phone mr-1"></i>تماس با وینور
+                </a>
+              {% else %}
+                <a href="{{ VINOR_LOGIN_URL }}" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                  <i class="fas fa-lock mr-1"></i>ورود برای تماس
+                </a>
+              {% endif %}
               <a href="/express/${land.code}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
                 <i class="fas fa-info-circle mr-1"></i>جزئیات
               </a>
