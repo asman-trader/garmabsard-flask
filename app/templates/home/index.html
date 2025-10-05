@@ -5,10 +5,15 @@
 <!-- Hero: VINOR PWA Home -->
 {% include 'search/quick_search.html' %}
 
-<!-- Pull-to-Refresh (simplified) -->
+<!-- Pull-to-Refresh (styled toast) -->
 <div id="ptrMsg" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4" style="display:none">
-  <div id="ptrText" class="text-center text-sm text-gray-600 dark:text-gray-300 py-2">در حال بروزرسانی...</div>
-  <hr class="border-gray-200 dark:border-gray-700" />
+  <div id="ptrWrap" class="sticky top-0 z-20">
+    <div id="ptrBox" class="mx-auto w-full sm:w-fit flex items-center justify-center gap-2 py-2 px-3 rounded-xl border shadow bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-gray-700 dark:text-gray-200 ring-1 ring-green-300 dark:ring-green-700 border-green-200 dark:border-green-700 opacity-0 -translate-y-2 transition duration-200">
+      <i id="ptrIcon" class="fas fa-rotate-right fa-spin text-green-600 dark:text-green-400"></i>
+      <span id="ptrText" class="text-sm">در حال بروزرسانی...</span>
+    </div>
+  </div>
+  
 </div>
 
 <!-- Tabs -->
@@ -316,8 +321,34 @@
       function atTop(){
         return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0;
       }
-      function show(t){ try { if (txt) txt.textContent = t || 'در حال بروزرسانی...'; } catch(_){}; if (msg) msg.style.display = ''; }
-      function hide(){ if (msg) msg.style.display = 'none'; }
+      const box = document.getElementById('ptrBox');
+      const icon = document.getElementById('ptrIcon');
+      function setState(state, text){
+        try { if (txt) txt.textContent = text; } catch(_){ }
+        if (!box || !icon) return;
+        // reset
+        box.classList.remove('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700','ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700','ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
+        icon.className = '';
+        if (state === 'loading'){
+          icon.className = 'fas fa-rotate-right fa-spin text-green-600 dark:text-green-400';
+          box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
+        } else if (state === 'success'){
+          icon.className = 'fas fa-check-circle text-green-600 dark:text-green-400';
+          box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
+        } else if (state === 'error'){
+          icon.className = 'fas fa-exclamation-circle text-red-600 dark:text-red-400';
+          box.classList.add('ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700');
+        } else if (state === 'warn'){
+          icon.className = 'fas fa-info-circle text-amber-600 dark:text-amber-400';
+          box.classList.add('ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
+        }
+      }
+      function show(t, state='loading'){
+        if (msg) msg.style.display = '';
+        setState(state, t || 'در حال بروزرسانی...');
+        try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ }
+      }
+      function hide(){ try { box.classList.add('opacity-0','-translate-y-2'); box.classList.remove('opacity-100','translate-y-0'); } catch(_){ } if (msg) msg.style.display = 'none'; }
 
       document.addEventListener('touchstart', (e)=>{
         if (!atTop()) { eligible = false; return; }
@@ -346,13 +377,13 @@
         const endY = t ? t.clientY : startY;
         const dy = endY - startY;
         if (!active && dy < THRESH) return;
-        show('در حال بروزرسانی...');
+        show('در حال بروزرسانی...','loading');
         try {
           const items = await fetchApprovedLands();
           if (items) renderApprovedLands(items);
-          show('بروزرسانی شد');
+          show('بروزرسانی شد','success');
         } catch(_) {
-          show('خطا در بروزرسانی');
+          show('خطا در بروزرسانی','error');
         }
         setTimeout(hide, 900);
       }, { passive: true });
