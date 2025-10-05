@@ -306,12 +306,12 @@
       });
     }
 
-    // --- Pull-to-refresh (simplified) ---
+    // --- Pull-to-refresh (Chrome-like, app-controlled) ---
     (function(){
       const msg = document.getElementById('ptrMsg');
       const txt = document.getElementById('ptrText');
       const THRESH = 60; // px
-      let startY = 0, eligible = false;
+      let startY = 0, eligible = false, active = false;
 
       function atTop(){
         return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0;
@@ -325,14 +325,27 @@
         if (!t) { eligible = false; return; }
         startY = t.clientY;
         eligible = true;
+        active = false;
       }, { passive: true });
+
+      document.addEventListener('touchmove', (e)=>{
+        if (!eligible) return;
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        const dy = t.clientY - startY;
+        if (dy > 0) {
+          // Prevent native pull-to-refresh when pulling down
+          try { e.preventDefault(); } catch(_){}
+          active = dy >= THRESH;
+        }
+      }, { passive: false });
 
       document.addEventListener('touchend', async (e)=>{
         if (!eligible) return; eligible = false;
         const t = e.changedTouches && e.changedTouches[0];
         const endY = t ? t.clientY : startY;
         const dy = endY - startY;
-        if (dy < THRESH) return;
+        if (!active && dy < THRESH) return;
         show('در حال بروزرسانی...');
         try {
           const items = await fetchApprovedLands();
