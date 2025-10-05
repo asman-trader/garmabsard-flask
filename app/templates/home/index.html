@@ -258,7 +258,11 @@
 
     // --- Fetch and render approved lands (regular) ---
     async function fetchApprovedLands() {
-      const res = await fetch('/api/lands/approved', { headers: { 'Accept': 'application/json' } });
+      const res = await fetch('/api/lands/approved', {
+        headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' },
+        cache: 'no-cache',
+        credentials: 'same-origin'
+      });
       if (res.status === 304) return null; // not modified
       if (!res.ok) throw new Error('failed');
       const data = await res.json();
@@ -322,7 +326,7 @@
       const msg = document.getElementById('ptrMsg');
       const txt = document.getElementById('ptrText');
       const THRESH = 60; // px
-      let startY = 0, eligible = false, active = false;
+      let startY = 0, eligible = false, active = false, isRefreshing = false;
 
       function atTop(){
         return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0;
@@ -383,13 +387,32 @@
         const endY = t ? t.clientY : startY;
         const dy = endY - startY;
         if (!active && dy < THRESH) return;
+        if (isRefreshing) return; // prevent double refresh
+        isRefreshing = true;
         show('در حال بروزرسانی...','loading');
         try {
           const items = await fetchApprovedLands();
-          if (items) renderApprovedLands(items);
-          show('بروزرسانی شد','success');
+          if (items === null) {
+            // Not modified by server
+            show('اطلاعات از قبل بروز است','warn');
+          } else {
+            // Only rerender if changed (simple meta compare)
+            const currentCards = Array.from(regularListings.querySelectorAll('.land-card'));
+            const currentCount = currentCards.length;
+            const currentFirst = currentCards[0] ? currentCards[0].dataset.code : '';
+            const newCount = items.length;
+            const newFirst = items[0] ? String(items[0].code || '') : '';
+            if (currentCount !== newCount || currentFirst !== newFirst) {
+              renderApprovedLands(items);
+              show('بروزرسانی شد','success');
+            } else {
+              show('اطلاعات از قبل بروز است','warn');
+            }
+          }
         } catch(_) {
           show('خطا در بروزرسانی','error');
+        } finally {
+          setTimeout(()=>{ isRefreshing = false; }, 50);
         }
         setTimeout(hide, 900);
       }, { passive: true });
