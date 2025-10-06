@@ -71,6 +71,17 @@
   {% endfor %}
 </main>
 
+<!-- Infinite Scroll Sentinel -->
+<div id="infiniteSentinel" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6">
+  <div id="infiniteSpinner" class="flex items-center justify-center py-4" style="display:none">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+  </div>
+  <div id="infiniteDone" class="text-center text-sm text-gray-500 dark:text-gray-400" style="display:none">پایان لیست</div>
+  <div id="infiniteError" class="text-center text-sm text-red-600 dark:text-red-400" style="display:none">خطا در بارگذاری بیشتر</div>
+  <div id="infiniteAnchor" style="height:1px"></div>
+  
+</div>
+
 <!-- Express Listings -->
 <main id="expressListings" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style="display: none;">
   <div id="expressContent" class="col-span-full text-center py-12">
@@ -256,8 +267,9 @@
     }
 
     // --- Fetch and render approved lands (regular) ---
-    async function fetchApprovedLands() {
-      const res = await fetch('/api/lands/approved', {
+    async function fetchApprovedLands(offset = 0, limit = 24) {
+      const qs = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+      const res = await fetch('/api/lands/approved?' + qs.toString(), {
         headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' },
         cache: 'no-cache',
         credentials: 'same-origin'
@@ -266,7 +278,7 @@
       if (!res.ok) throw new Error('failed');
       const data = await res.json();
       if (!data || !data.ok || !Array.isArray(data.items)) throw new Error('bad-json');
-      return data.items;
+      return data;
     }
 
     function renderApprovedLands(items) {
@@ -319,6 +331,86 @@
         });
       });
     }
+
+    function appendApprovedLands(items) {
+      if (!Array.isArray(items) || items.length === 0) return;
+      const frag = document.createDocumentFragment();
+      items.forEach(land => {
+        const images = Array.isArray(land.images) ? land.images : [];
+        const img = images.length ? images[0] : null;
+        const wrapper = document.createElement('div');
+        wrapper.className = "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden land-card group transition hover:shadow-md";
+        wrapper.setAttribute('data-code', String(land.code||''));
+        wrapper.innerHTML = `
+          <div class="relative">
+            ${img ? `<a href="/land/${land.code}"><img src="${toUploadUrl(img)}" alt="${land.title||''}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" /></a>` : `<div class=\"w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-base\"><i class=\"fas fa-seedling text-2xl text-green-600/70\"></i></div>`}
+            <button type="button" class="absolute top-3 right-3 favorite-btn z-10" data-code="${land.code}" title="ذخیره آگهی"><i class="fas fa-bookmark text-white text-2xl drop-shadow-md"></i></button>
+          </div>
+          <div class="p-4">
+            <a href="/land/${land.code}"><h3 class="text-base font-bold text-gray-900 dark:text-white truncate">${land.title||''}</h3></a>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">📍 ${land.location||'?'} | 📏 ${land.size ? parseInt(land.size).toLocaleString() : '?' } متر</p>
+            <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">💰 ${land.price_total ? parseInt(land.price_total).toLocaleString() : 'نامشخص'} تومان</p>
+          </div>
+        `;
+        frag.appendChild(wrapper);
+      });
+      regularListings.appendChild(frag);
+      // rebind favorites for new cards
+      document.querySelectorAll(".land-card").forEach(card => {
+        const code = card.dataset.code;
+        const btn = card.querySelector(".favorite-btn");
+        if (!btn) return;
+        const icon = btn.querySelector("i") || btn;
+        const updateHeart = () => {
+          const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+          const isFav = favs.includes(code);
+          icon.classList.toggle("text-red-500", isFav);
+          icon.classList.toggle("text-white", !isFav);
+        };
+        updateHeart();
+        btn.addEventListener("click", e => {
+          e.preventDefault();
+          const favs = JSON.parse(localStorage.getItem("favoriteLands") || "[]");
+          const i = favs.indexOf(code);
+          if (i > -1) favs.splice(i, 1); else favs.push(code);
+          localStorage.setItem("favoriteLands", JSON.stringify(favs));
+          updateHeart();
+        });
+      });
+    }
+
+    // Infinite Scroll
+    (function(){
+      const anchor = document.getElementById('infiniteAnchor');
+      const spin = document.getElementById('infiniteSpinner');
+      const doneEl = document.getElementById('infiniteDone');
+      const errEl = document.getElementById('infiniteError');
+      let offset = document.querySelectorAll('#regularListings .land-card').length;
+      const limit = 24;
+      let loading = false;
+      let hasMore = true;
+
+      async function loadMore(){
+        if (loading || !hasMore) return;
+        loading = true; errEl.style.display = 'none'; spin.style.display = '';
+        try{
+          const data = await fetchApprovedLands(offset, limit);
+          const items = data.items || [];
+          appendApprovedLands(items);
+          offset += items.length;
+          hasMore = !!data.has_more;
+          if (!hasMore) { doneEl.style.display = ''; observer.disconnect(); }
+        }catch(_){ errEl.style.display = ''; }
+        finally{ spin.style.display = 'none'; loading = false; }
+      }
+
+      if ('IntersectionObserver' in window && anchor){
+        const observer = new IntersectionObserver((entries)=>{
+          entries.forEach(entry=>{ if (entry.isIntersecting) loadMore(); });
+        }, { root: null, rootMargin: '200px 0px', threshold: 0 });
+        observer.observe(anchor);
+      }
+    })();
 
     // --- Pull-to-refresh (icon-only, Chrome-like) ---
     (function(){

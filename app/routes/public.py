@@ -371,6 +371,24 @@ def search_results():
 def api_lands_approved():
     try:
         items = _sort_by_created_at_desc(_get_approved_ads())
+
+        # Pagination params (offset/limit)
+        try:
+            offset = max(0, int(request.args.get("offset", 0)))
+        except Exception:
+            offset = 0
+        try:
+            limit = int(request.args.get("limit", 24))
+        except Exception:
+            limit = 24
+        if limit < 1:
+            limit = 1
+        if limit > 60:
+            limit = 60
+
+        total = len(items)
+        page_items = items[offset: offset + limit]
+
         data = [
             {
                 "code": x.get("code"),
@@ -380,28 +398,37 @@ def api_lands_approved():
                 "price_total": x.get("price_total"),
                 "images": x.get("images") or [],
             }
-            for x in items
+            for x in page_items
         ]
 
-        # ETag: تعداد + آخرین created_at (با فرض sort desc)
-        last_dt = (items[0].get("created_at") if items else "") or ""
-        etag_val = f"v-{len(items)}-{last_dt}"
+        # ETag only for the first page (offset==0)
+        if offset == 0:
+            last_dt = (items[0].get("created_at") if items else "") or ""
+            etag_val = f"v-{len(items)}-{last_dt}"
+            inm = request.headers.get("If-None-Match")
+            if inm and inm == etag_val:
+                resp = current_app.response_class(status=304)
+                resp.set_etag(etag_val)
+                resp.headers["Cache-Control"] = "public, max-age=60"
+                return resp
 
-        inm = request.headers.get("If-None-Match")
-        if inm and inm == etag_val:
-            resp = current_app.response_class(status=304)
+            payload = {"ok": True, "items": data, "total": total, "has_more": (offset + len(page_items)) < total}
+            resp = current_app.response_class(
+                response=current_app.json.dumps(payload, ensure_ascii=False),
+                status=200,
+                mimetype="application/json; charset=utf-8",
+            )
             resp.set_etag(etag_val)
             resp.headers["Cache-Control"] = "public, max-age=60"
             return resp
-
-        resp = current_app.response_class(
-            response=current_app.json.dumps({"ok": True, "items": data}, ensure_ascii=False),
-            status=200,
-            mimetype="application/json; charset=utf-8",
-        )
-        resp.set_etag(etag_val)
-        resp.headers["Cache-Control"] = "public, max-age=60"
-        return resp
+        else:
+            # For subsequent pages skip ETag/304 handling
+            payload = {"ok": True, "items": data, "total": total, "has_more": (offset + len(page_items)) < total}
+            return current_app.response_class(
+                response=current_app.json.dumps(payload, ensure_ascii=False),
+                status=200,
+                mimetype="application/json; charset=utf-8",
+            )
     except Exception as e:
         return {"ok": False, "error": str(e)}, 500
 
