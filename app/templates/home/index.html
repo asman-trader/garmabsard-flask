@@ -71,13 +71,8 @@
   {% endfor %}
 </main>
 
-<!-- Infinite Scroll Sentinel -->
-<div id="infiniteSentinel" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-6">
-  <div id="infiniteSpinner" class="flex items-center justify-center py-4" style="display:none">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-  </div>
-  <div id="infiniteDone" class="text-center text-sm text-gray-500 dark:text-gray-400" style="display:none">پایان لیست</div>
-  <div id="infiniteError" class="text-center text-sm text-red-600 dark:text-red-400" style="display:none">خطا در بارگذاری بیشتر</div>
+<!-- Infinite Scroll Sentinel (silent, no messages) -->
+<div id="infiniteSentinel" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4 py-2">
   <div id="infiniteAnchor" style="height:1px"></div>
   
 </div>
@@ -382,9 +377,6 @@
     // Infinite Scroll
     (function(){
       const anchor = document.getElementById('infiniteAnchor');
-      const spin = document.getElementById('infiniteSpinner');
-      const doneEl = document.getElementById('infiniteDone');
-      const errEl = document.getElementById('infiniteError');
       let offset = document.querySelectorAll('#regularListings .land-card').length;
       const limit = 24;
       let loading = false;
@@ -392,16 +384,16 @@
 
       async function loadMore(){
         if (loading || !hasMore) return;
-        loading = true; errEl.style.display = 'none'; spin.style.display = '';
+        loading = true;
         try{
           const data = await fetchApprovedLands(offset, limit);
           const items = data.items || [];
           appendApprovedLands(items);
           offset += items.length;
           hasMore = !!data.has_more;
-          if (!hasMore) { doneEl.style.display = ''; observer.disconnect(); }
-        }catch(_){ errEl.style.display = ''; }
-        finally{ spin.style.display = 'none'; loading = false; }
+          if (!hasMore) { observer.disconnect(); }
+        }catch(_){ /* silent */ }
+        finally{ loading = false; }
       }
 
       if ('IntersectionObserver' in window && anchor){
