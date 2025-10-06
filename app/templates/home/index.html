@@ -5,12 +5,11 @@
 <!-- Hero: VINOR PWA Home -->
 {% include 'search/quick_search.html' %}
 
-<!-- Pull-to-Refresh (styled toast) -->
+<!-- Pull-to-Refresh (icon-only) -->
 <div id="ptrMsg" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4" style="display:none">
   <div id="ptrWrap" class="sticky top-0 z-20">
-    <div id="ptrBox" class="mx-auto w-full sm:w-fit flex items-center justify-center gap-2 py-2 px-3 rounded-xl border shadow bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-gray-700 dark:text-gray-200 ring-1 ring-green-300 dark:ring-green-700 border-green-200 dark:border-green-700 opacity-0 -translate-y-2 transition duration-200">
+    <div id="ptrBox" class="mx-auto w-fit flex items-center justify-center p-2 rounded-full border shadow bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-gray-700 dark:text-gray-200 ring-1 ring-green-300 dark:ring-green-700 border-green-200 dark:border-green-700 opacity-0 -translate-y-2 transition duration-200">
       <i id="ptrIcon" class="fas fa-rotate-right fa-spin text-green-600 dark:text-green-400"></i>
-      <span id="ptrText" class="text-sm">در حال بروزرسانی...</span>
     </div>
   </div>
   
@@ -62,10 +61,10 @@
           <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
         </a>
         <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-          📍 {{ land.location or "?" }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر
+          📍 {{ land.location or "?" }} | 📏 {{ ":,".format(land.size | int) if land.size else "?" }} متر
         </p>
         <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">
-          💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+          💰 {{ ":,".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
         </p>
       </div>
     </div>
@@ -321,10 +320,9 @@
       });
     }
 
-    // --- Pull-to-refresh (Chrome-like, app-controlled) ---
+    // --- Pull-to-refresh (icon-only, Chrome-like) ---
     (function(){
       const msg = document.getElementById('ptrMsg');
-      const txt = document.getElementById('ptrText');
       const THRESH = 60; // px
       let startY = 0, eligible = false, active = false, isRefreshing = false;
 
@@ -333,29 +331,27 @@
       }
       const box = document.getElementById('ptrBox');
       const icon = document.getElementById('ptrIcon');
-      function setState(state, text){
-        try { if (txt) txt.textContent = text; } catch(_){ }
+      function setState(state){
         if (!box || !icon) return;
-        // reset
         box.classList.remove('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700','ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700','ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
         icon.className = '';
         if (state === 'loading'){
           icon.className = 'fas fa-rotate-right fa-spin text-green-600 dark:text-green-400';
           box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
         } else if (state === 'success'){
-          icon.className = 'fas fa-check-circle text-green-600 dark:text-green-400';
+          icon.className = 'fas fa-check text-green-600 dark:text-green-400';
           box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
         } else if (state === 'error'){
-          icon.className = 'fas fa-exclamation-circle text-red-600 dark:text-red-400';
+          icon.className = 'fas fa-exclamation text-red-600 dark:text-red-400';
           box.classList.add('ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700');
         } else if (state === 'warn'){
-          icon.className = 'fas fa-info-circle text-amber-600 dark:text-amber-400';
+          icon.className = 'fas fa-info text-amber-600 dark:text-amber-400';
           box.classList.add('ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
         }
       }
-      function show(t, state='loading'){
+      function show(state='loading'){
         if (msg) msg.style.display = '';
-        setState(state, t || 'در حال بروزرسانی...');
+        setState(state);
         try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ }
       }
       function hide(){ try { box.classList.add('opacity-0','-translate-y-2'); box.classList.remove('opacity-100','translate-y-0'); } catch(_){ } if (msg) msg.style.display = 'none'; }
@@ -375,8 +371,7 @@
         if (!t) return;
         const dy = t.clientY - startY;
         if (dy > 0) {
-          // Prevent native pull-to-refresh when pulling down
-          try { e.preventDefault(); } catch(_){}
+          try { e.preventDefault(); } catch(_){ }
           active = dy >= THRESH;
         }
       }, { passive: false });
@@ -387,16 +382,14 @@
         const endY = t ? t.clientY : startY;
         const dy = endY - startY;
         if (!active && dy < THRESH) return;
-        if (isRefreshing) return; // prevent double refresh
+        if (isRefreshing) return;
         isRefreshing = true;
-        show('در حال بروزرسانی...','loading');
+        show('loading');
         try {
           const items = await fetchApprovedLands();
           if (items === null) {
-            // Not modified by server
-            show('اطلاعات از قبل بروز است','warn');
+            show('warn');
           } else {
-            // Only rerender if changed (simple meta compare)
             const currentCards = Array.from(regularListings.querySelectorAll('.land-card'));
             const currentCount = currentCards.length;
             const currentFirst = currentCards[0] ? currentCards[0].dataset.code : '';
@@ -404,13 +397,13 @@
             const newFirst = items[0] ? String(items[0].code || '') : '';
             if (currentCount !== newCount || currentFirst !== newFirst) {
               renderApprovedLands(items);
-              show('بروزرسانی شد','success');
+              show('success');
             } else {
-              show('اطلاعات از قبل بروز است','warn');
+              show('warn');
             }
           }
         } catch(_) {
-          show('خطا در بروزرسانی','error');
+          show('error');
         } finally {
           setTimeout(()=>{ isRefreshing = false; }, 50);
         }
