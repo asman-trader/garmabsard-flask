@@ -399,7 +399,7 @@
               })());
               const urls = [];
               // شل مهمان
-              urls.push('/','/start','/login','/search');
+              urls.push('/','/start','/login','/verify','/search','/about','/help','/faq','/guide/safe-buy','/connection','/city','/city/multi');
               // شل اپ در صورت ورود
               if (IS_LOGGED_IN) {
                 urls.push('/app');
@@ -410,18 +410,10 @@
                 urls.push('/lands/add/details');
                 urls.push('/lands/add/step3');
                 // صفحات اصلی کاربر
-                urls.push('/notifications');
-                urls.push('/favorites');
-                urls.push('/profile');
-                urls.push('/my-lands');
-                urls.push('/settings');
-                urls.push('/search');
+                urls.push('/notifications','/favorites','/profile','/my-lands','/settings','/search');
               } else {
                 // صفحات مهم مهمان
-                urls.push('/');
-                urls.push('/start');
-                urls.push('/login');
-                urls.push('/search');
+                urls.push('/','/start','/login','/verify','/search','/about','/help','/faq','/guide/safe-buy');
               }
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP_EXT' });
