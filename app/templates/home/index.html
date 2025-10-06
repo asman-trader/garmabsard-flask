@@ -61,10 +61,10 @@
           <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">{{ land.title }}</h3>
         </a>
         <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-          📍 {{ land.location or "?" }} | 📏 {{ ":,".format(land.size | int) if land.size else "?" }} متر
+          📍 {{ land.location or "?" }} | 📏 {{ "{:,}".format(land.size | int) if land.size else "?" }} متر
         </p>
         <p class="text-base font-extrabold text-green-700 dark:text-green-400 mt-2">
-          💰 {{ ":,".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+          💰 {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
         </p>
       </div>
     </div>
