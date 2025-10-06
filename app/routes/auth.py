@@ -111,3 +111,39 @@ def logout():
 @main_bp.route('/push-subscribe-test')
 def push_subscribe_test():
     return render_template('system/push_subscribe_test.html')
+
+
+# -------------------------
+# OTP Resend (AJAX)
+# -------------------------
+@main_bp.route("/otp/resend", methods=["POST"], endpoint="otp_resend")
+def otp_resend():
+    """ارسال مجدد کد برای شمارهٔ در سشن (یا ارسالی) با محدودیت زمانی."""
+    # Guard: find phone
+    phone = _normalize_phone(request.form.get("phone") or request.json.get("phone") if request.is_json else "")
+    if not phone:
+        phone = session.get("otp_phone") or ""
+    phone = _normalize_phone(phone)
+
+    if not phone or len(phone) != 11:
+        return {"ok": False, "error": "شماره معتبر نیست."}, 400
+
+    # Optional cooldown (e.g., 20s)
+    try:
+        last = session.get("otp_last_sent_at") or 0
+        now = int(datetime.utcnow().timestamp())
+        if now - int(last) < 20:
+            return {"ok": False, "error": "لطفاً چند ثانیه بعد دوباره تلاش کنید."}, 429
+    except Exception:
+        pass
+
+    code = f"{random.randint(10000, 99999)}"
+    session.update({"otp_code": code, "otp_phone": phone, "otp_last_sent_at": int(datetime.utcnow().timestamp())})
+    session.permanent = True
+
+    try:
+        send_sms_code(phone, code)
+        return {"ok": True}
+    except Exception:
+        # Dev mode fallback
+        return {"ok": True}

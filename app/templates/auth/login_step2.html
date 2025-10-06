@@ -39,12 +39,8 @@
 
       <footer class="pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
         <p id="timer" class="text-xs text-gray-600 dark:text-gray-400">ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر</p>
-        <form method="POST" action="{{ url_for('main.login') }}" id="resendForm" class="inline-block mt-2">
-          <input type="hidden" name="phone" value="{{ phone }}">
-          {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-          <button type="submit" id="resendBtn" disabled
-                  class="text-emerald-600 dark:text-emerald-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed">🔄 ارسال مجدد کد</button>
-        </form>
+        <button type="button" id="resendBtn" disabled
+                class="inline-block mt-2 text-emerald-600 dark:text-emerald-400 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed">🔄 ارسال مجدد کد</button>
       </footer>
     </section>
 
@@ -136,6 +132,34 @@
       counter--; countdownEl.textContent = String(counter);
       if (counter <= 0) { clearInterval(t); timerEl.textContent = 'هنوز کد را دریافت نکردید؟'; resendBtn.disabled = false; }
     }, 1000);
+
+    // Resend via AJAX → replaces session OTP
+    resendBtn.addEventListener('click', async () => {
+      if (resendBtn.disabled) return;
+      try{
+        resendBtn.disabled = true;
+        timerEl.textContent = 'در حال ارسال مجدد...';
+        const resp = await fetch('{{ url_for("main.otp_resend") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ phone: '{{ phone }}' })
+        });
+        const data = await resp.json();
+        if (data && data.ok){
+          // reset timer
+          let c = 60; countdownEl.textContent = String(c);
+          timerEl.textContent = 'ارسال مجدد کد تا ' + c + ' ثانیه دیگر';
+          const tt = setInterval(()=>{ c--; countdownEl.textContent = String(c); if (c<=0){ clearInterval(tt); timerEl.textContent='هنوز کد را دریافت نکردید؟'; resendBtn.disabled=false; } }, 1000);
+        } else {
+          timerEl.textContent = (data && data.error) ? data.error : 'خطا در ارسال مجدد';
+          setTimeout(()=>{ resendBtn.disabled = false; }, 2000);
+        }
+      }catch(_){
+        timerEl.textContent = 'خطا در ارسال مجدد';
+        setTimeout(()=>{ resendBtn.disabled = false; }, 2000);
+      }
+    });
   </script>
 </body>
 </html>
