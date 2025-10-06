@@ -27,7 +27,7 @@
         <!-- Removed hidden one-time-code input to avoid iOS conflicts -->
 
         <div class="flex items-center justify-center gap-2 sm:gap-3" dir="ltr" aria-label="ورود کد ۵ رقمی">
-          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="6" autocomplete="one-time-code" pattern="\\d*" aria-label="رقم اول" />
+          <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="5" autocomplete="one-time-code" name="otp" autocapitalize="off" autocorrect="off" pattern="\\d*" aria-label="رقم اول" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم دوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم سوم" />
           <input class="otp-box w-12 h-12 sm:w-14 sm:h-14 text-center text-xl rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم چهارم" />
@@ -132,6 +132,14 @@
       counter--; countdownEl.textContent = String(counter);
       if (counter <= 0) { clearInterval(t); timerEl.textContent = 'هنوز کد را دریافت نکردید؟'; resendBtn.disabled = false; }
     }, 1000);
+
+    // Global paste handler: paste anywhere → توزیع خودکار ارقام
+    document.addEventListener('paste', (e)=>{
+      try{
+        const val = (e.clipboardData || window.clipboardData).getData('text');
+        if (val) fillFromString(val);
+      }catch(_){ }
+    });
 
     // Resend via AJAX → replaces session OTP
     resendBtn.addEventListener('click', async () => {
