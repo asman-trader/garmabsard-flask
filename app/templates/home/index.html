@@ -5,11 +5,11 @@
 <!-- Hero: VINOR PWA Home -->
 {% include 'search/quick_search.html' %}
 
-<!-- Pull-to-Refresh (icon-only) -->
+<!-- Pull-to-Refresh (icon-only, Divar-like) -->
 <div id="ptrMsg" class="max-w-md sm:max-w-6xl mx-auto px-2 sm:px-4" style="display:none">
   <div id="ptrWrap" class="sticky top-0 z-20">
-    <div id="ptrBox" class="mx-auto w-fit flex items-center justify-center p-2 rounded-full border shadow bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-gray-700 dark:text-gray-200 ring-1 ring-green-300 dark:ring-green-700 border-green-200 dark:border-green-700 opacity-0 -translate-y-2 transition duration-200">
-      <i id="ptrIcon" class="fas fa-rotate-right fa-spin text-green-600 dark:text-green-400"></i>
+    <div id="ptrBox" class="mx-auto w-9 h-9 flex items-center justify-center rounded-full border shadow bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-gray-700 dark:text-gray-200 ring-1 ring-gray-300 dark:ring-gray-700 border-gray-200 dark:border-gray-700 opacity-0 -translate-y-2 transition duration-200">
+      <i id="ptrIcon" class="fas fa-arrow-down text-gray-500 dark:text-gray-300"></i>
     </div>
   </div>
   
@@ -333,27 +333,28 @@
       const icon = document.getElementById('ptrIcon');
       function setState(state){
         if (!box || !icon) return;
-        box.classList.remove('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700','ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700','ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
+        icon.style.transform = '';
         icon.className = '';
-        if (state === 'loading'){
+        // neutral ring by default
+        box.classList.remove('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700','ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700','ring-gray-300','dark:ring-gray-700','border-gray-200','dark:border-gray-700');
+        box.classList.add('ring-gray-300','dark:ring-gray-700','border-gray-200','dark:border-gray-700');
+        if (state === 'pull'){
+          icon.className = 'fas fa-arrow-down ' + (active ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-300');
+        } else if (state === 'loading'){
           icon.className = 'fas fa-rotate-right fa-spin text-green-600 dark:text-green-400';
+          box.classList.remove('ring-gray-300','dark:ring-gray-700','border-gray-200','dark:border-gray-700');
           box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
         } else if (state === 'success'){
           icon.className = 'fas fa-check text-green-600 dark:text-green-400';
+          box.classList.remove('ring-gray-300','dark:ring-gray-700','border-gray-200','dark:border-gray-700');
           box.classList.add('ring-green-300','dark:ring-green-700','border-green-200','dark:border-green-700');
         } else if (state === 'error'){
           icon.className = 'fas fa-exclamation text-red-600 dark:text-red-400';
+          box.classList.remove('ring-gray-300','dark:ring-gray-700','border-gray-200','dark:border-gray-700');
           box.classList.add('ring-red-300','dark:ring-red-700','border-red-200','dark:border-red-700');
-        } else if (state === 'warn'){
-          icon.className = 'fas fa-info text-amber-600 dark:text-amber-400';
-          box.classList.add('ring-amber-300','dark:ring-amber-700','border-amber-200','dark:border-amber-700');
         }
       }
-      function show(state='loading'){
-        if (msg) msg.style.display = '';
-        setState(state);
-        try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ }
-      }
+      function show(){ if (msg) msg.style.display = ''; try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ } }
       function hide(){ try { box.classList.add('opacity-0','-translate-y-2'); box.classList.remove('opacity-100','translate-y-0'); } catch(_){ } if (msg) msg.style.display = 'none'; }
 
       document.addEventListener('touchstart', (e)=>{
@@ -373,6 +374,10 @@
         if (dy > 0) {
           try { e.preventDefault(); } catch(_){ }
           active = dy >= THRESH;
+          // rotate arrow proportionally (0→180deg)
+          try { icon.style.transform = 'rotate(' + Math.min(180, Math.round((dy / THRESH) * 180)) + 'deg)'; } catch(_){ }
+          show();
+          setState('pull');
         }
       }, { passive: false });
 
@@ -384,11 +389,11 @@
         if (!active && dy < THRESH) return;
         if (isRefreshing) return;
         isRefreshing = true;
-        show('loading');
+        show(); setState('loading');
         try {
           const items = await fetchApprovedLands();
           if (items === null) {
-            show('warn');
+            setState('success');
           } else {
             const currentCards = Array.from(regularListings.querySelectorAll('.land-card'));
             const currentCount = currentCards.length;
@@ -397,13 +402,13 @@
             const newFirst = items[0] ? String(items[0].code || '') : '';
             if (currentCount !== newCount || currentFirst !== newFirst) {
               renderApprovedLands(items);
-              show('success');
+              setState('success');
             } else {
-              show('warn');
+              setState('success');
             }
           }
         } catch(_) {
-          show('error');
+          setState('error');
         } finally {
           setTimeout(()=>{ isRefreshing = false; }, 50);
         }
@@ -437,3 +442,4 @@
   });
 </script>
 {% endblock %}
+
