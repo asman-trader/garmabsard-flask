@@ -138,19 +138,14 @@
 
   <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm divide-y divide-gray-100 dark:divide-gray-800 mt-4">
     <div class="px-4 py-3 text-xs font-bold text-gray-500 dark:text-gray-400">تنظیمات</div>
-    <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
       <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-700 dark:text-slate-300"><i class="fas fa-circle-half-stroke"></i></div>
       <div class="flex-1">
-        <div class="text-sm font-semibold">حالت تیره</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">روشن/تیره</div>
+        <div class="text-sm font-semibold">حالت نمایش</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">مد تیره/روشن را از اینجا تنظیم کنید</div>
       </div>
-      <label class="inline-flex items-center cursor-pointer">
-        <input id="darkToggleProfile" type="checkbox" class="sr-only">
-        <span class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full relative">
-          <span class="dot absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition"></span>
-        </span>
-      </label>
-    </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </a>
     <a href="{{ url_for('main.faq') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
       <div class="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/30 grid place-items-center text-indigo-700 dark:text-indigo-300"><i class="fas fa-circle-question"></i></div>
       <div class="flex-1">
@@ -176,26 +171,6 @@
     const copyBtn = document.getElementById('copyPhone');
     copyBtn?.addEventListener('click', async ()=>{
       try{ await navigator.clipboard.writeText((document.getElementById('userPhone')?.textContent||'').trim()); copyBtn.textContent='کپی شد'; setTimeout(()=>copyBtn.textContent='کپی',1200);}catch(e){}
-    });
-
-    const root = document.documentElement;
-    const toggle = document.getElementById('darkToggleProfile');
-    try {
-      const saved = localStorage.getItem('theme');
-      const isDark = saved ? saved==='dark' : root.classList.contains('dark');
-      if (toggle){ toggle.checked = !!isDark; moveDot(); }
-    } catch {}
-
-    function moveDot(){
-      const dot = document.querySelector('#darkToggleProfile + span .dot');
-      if (!dot || !toggle) return;
-      if (toggle.checked){ dot.style.right='1.5rem'; } else { dot.style.right='0.25rem'; }
-    }
-
-    toggle?.addEventListener('change', ()=>{
-      root.classList.toggle('dark');
-      try{ localStorage.setItem('theme', root.classList.contains('dark')?'dark':'light'); }catch{}
-      moveDot();
     });
   })();
 </script>
