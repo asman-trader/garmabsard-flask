@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}همکاری با وینور اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <h1 class="text-2xl font-extrabold text-green-700 dark:text-green-400 mb-3">همکاری با وینور اکسپرس</h1>
+  <p class="text-gray-700 dark:text-gray-200 mb-6">اگر مشاور املاک هستید یا علاقه‌مند به فعالیت در حوزهٔ املاک هستید، به وینور اکسپرس بپیوندید.</p>
+  <a href="{{ url_for('main.careers_consultant_apply') }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+    <i class="fas fa-user-plus"></i>
+    ارسال درخواست همکاری
+  </a>
+</div>
+{% endblock %}
+

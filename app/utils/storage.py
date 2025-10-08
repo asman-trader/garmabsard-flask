@@ -139,3 +139,9 @@ def save_notifications(items, app=None): return _save(ensure_file('NOTIFICATIONS
 # Reports (user-reported ads)
 def load_reports(app=None):        return _load(ensure_file('REPORTS_FILE','reports.json',[],app))
 def save_reports(items, app=None): return _save(ensure_file('REPORTS_FILE','reports.json',[],app), items)
+
+# Consultants & Applications
+def load_consultant_apps(app=None):        return _load(ensure_file('CONSULTANT_APPS_FILE','consultant_applications.json',[],app))
+def save_consultant_apps(items, app=None): return _save(ensure_file('CONSULTANT_APPS_FILE','consultant_applications.json',[],app), items)
+def load_consultants(app=None):           return _load(ensure_file('CONSULTANTS_FILE','consultants.json',[],app))
+def save_consultants(items, app=None):    return _save(ensure_file('CONSULTANTS_FILE','consultants.json',[],app), items)

@@ -72,6 +72,9 @@
       {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
       {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
+      {{ MenuItem(url_for('main.careers_consultant'), 'fa-user-tie', 'همکاری با وینور اکسپرس', False) }}
+      {{ MenuItem(url_for('main.careers_consultant_apply'), 'fa-file-signature', 'ثبت درخواست پنل مشاور', False) }}
+
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
       {{ MenuItem(url_for('main.index'),   'fa-home',    'معرفی وینور', False) }}
     </div>

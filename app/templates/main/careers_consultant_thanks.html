@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}درخواست ثبت شد{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto text-center">
+  <div class="text-3xl mb-4 text-green-600"><i class="fas fa-check-circle"></i></div>
+  <h1 class="text-xl font-extrabold mb-2">{{ name }} عزیز، درخواست شما ثبت شد.</h1>
+  <p class="text-gray-700 dark:text-gray-300">پس از بررسی با شما تماس خواهیم گرفت.</p>
+  <a href="{{ url_for('main.app_home') }}" class="inline-block mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">بازگشت به خانه</a>
+</div>
+{% endblock %}
+

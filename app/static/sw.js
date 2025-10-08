@@ -35,6 +35,10 @@ const PRECACHE_URLS = [
   '/connection',
   '/city',
   '/city/multi',
+  // careers & consultant
+  '/careers/consultant',
+  '/careers/consultant/apply',
+  '/consultant/dashboard',
   // user pages (will cache shell or redirect)
   '/favorites',
   '/profile',
