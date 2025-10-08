@@ -17,6 +17,7 @@
         <th class="p-3">سابقه</th>
         <th class="p-3">وضعیت</th>
         <th class="p-3">تاریخ</th>
+        <th class="p-3">اقدامات</th>
       </tr>
     </thead>
     <tbody>
@@ -29,9 +30,23 @@
         <td class="p-3">{{ a.experience or '—' }}</td>
         <td class="p-3">{{ a.status or 'new' }}</td>
         <td class="p-3">{{ a.created_at or '—' }}</td>
+        <td class="p-3">
+          <div class="flex items-center gap-2">
+            <form method="post" action="{{ url_for('admin.consultant_application_approve', aid=a.id) }}" class="contents" x-data>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
+                      class="px-3 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">تأیید</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.consultant_application_reject', aid=a.id) }}" class="contents" x-data>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" @click.prevent="if(confirm('رد این درخواست؟')) $el.closest('form').submit()"
+                      class="px-3 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700">رد</button>
+            </form>
+          </div>
+        </td>
       </tr>
       {% else %}
-      <tr><td class="p-3 text-center text-gray-500" colspan="7">موردی یافت نشد.</td></tr>
+      <tr><td class="p-3 text-center text-gray-500" colspan="8">موردی یافت نشد.</td></tr>
       {% endfor %}
     </tbody>
   </table>

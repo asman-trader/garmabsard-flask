@@ -1401,6 +1401,104 @@ def consultants():
     return render_template('admin/consultants.html', items=items)
 
 # -----------------------------------------------------------------------------
+# Consultants: Approve / Reject applications
+# -----------------------------------------------------------------------------
+@admin_bp.post('/consultants/applications/<int:aid>/approve')
+@login_required
+def consultant_application_approve(aid: int):
+    apps = load_consultant_apps() or []
+    consultants = load_consultants() or []
+    target = None
+    for a in apps:
+        try:
+            if int(a.get('id', 0)) == int(aid):
+                target = a
+                break
+        except Exception:
+            continue
+    if not target:
+        flash('درخواست یافت نشد.', 'warning')
+        return redirect(url_for('admin.consultant_applications'))
+
+    phone = str(target.get('phone') or '').strip()
+    name = (target.get('name') or '').strip()
+    city = (target.get('city') or '').strip()
+
+    # Add or update consultant record
+    cons = next((c for c in consultants if str(c.get('phone')) == phone), None)
+    if not cons:
+        cons = {
+            'id': (max([int(x.get('id',0) or 0) for x in consultants], default=0) or 0) + 1,
+            'name': name,
+            'phone': phone,
+            'cities': city,
+            'status': 'approved',
+            'created_at': iso_z(utcnow()),
+        }
+        consultants.append(cons)
+    else:
+        cons.update({'name': name or cons.get('name'), 'cities': city or cons.get('cities'), 'status': 'approved'})
+
+    # Update application status
+    target['status'] = 'approved'
+    target['approved_at'] = iso_z(utcnow())
+    save_consultants(consultants)
+    save_consultant_apps(apps)
+
+    # Notify user
+    try:
+        if phone:
+            add_notification(
+                user_id=phone,
+                title='پذیرش درخواست مشاور',
+                body='درخواست شما برای همکاری به عنوان مشاور تأیید شد.',
+                ntype='success',
+                action_url=url_for('main.consultant_dashboard')
+            )
+    except Exception:
+        pass
+
+    flash('درخواست مشاور تأیید شد.', 'success')
+    return redirect(url_for('admin.consultant_applications'))
+
+@admin_bp.post('/consultants/applications/<int:aid>/reject')
+@login_required
+def consultant_application_reject(aid: int):
+    apps = load_consultant_apps() or []
+    target = None
+    for a in apps:
+        try:
+            if int(a.get('id', 0)) == int(aid):
+                target = a
+                break
+        except Exception:
+            continue
+    if not target:
+        flash('درخواست یافت نشد.', 'warning')
+        return redirect(url_for('admin.consultant_applications'))
+
+    target['status'] = 'rejected'
+    target['rejected_at'] = iso_z(utcnow())
+    save_consultant_apps(apps)
+
+    # Notify user
+    try:
+        phone = str(target.get('phone') or '')
+        if phone:
+            add_notification(
+                user_id=phone,
+                title='رد درخواست مشاور',
+                body='درخواست شما در حال حاضر تأیید نشد.',
+                ntype='warning',
+                action_url=url_for('main.careers_consultant_apply')
+            )
+    except Exception:
+        pass
+
+    flash('درخواست مشاور رد شد.', 'info')
+    return redirect(url_for('admin.consultant_applications'))
+
+# -----------------------------------------------------------------------------
 # Express Partners: Applications & Partners list + actions
 # -----------------------------------------------------------------------------
 @admin_bp.route('/express/partners/applications')
