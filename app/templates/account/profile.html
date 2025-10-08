@@ -45,6 +45,162 @@
     </a>
   </section>
 
+  {% set is_consultant = consultant_profile and (consultant_profile.status in ['approved', True]) %}
+  {% set is_partner = partner_profile and (partner_profile.status in ['approved', True]) %}
+
+  {% if is_consultant or is_partner %}
+  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm divide-y dark:divide-gray-800">
+    <div class="px-4 py-3 text-xs font-bold text-gray-500 dark:text-gray-400">همکاری با وینور</div>
+    {% if is_consultant %}
+      <div class="px-4 py-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">مشاور وینور</h3>
+          <span class="text-xs px-2 py-1 rounded-md bg-emerald-100 text-emerald-700">تأیید شده</span>
+        </div>
+        <div class="text-sm text-gray-600 dark:text-gray-300">شهر: {{ consultant_profile.city or '—' }}</div>
+        <div class="mt-3">
+          <div class="text-xs text-gray-500 mb-1">درخواست‌ها</div>
+          <ul class="text-sm list-disc pr-5 space-y-1">
+            {% for a in consultant_apps %}
+              <li>{{ a.created_at }} — وضعیت: {{ a.status or 'new' }}</li>
+            {% else %}
+              <li class="text-gray-500">درخواستی ثبت نشده است.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if is_partner %}
+      <div class="px-4 py-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">پنل همکاری وینور اکسپرس</h3>
+          <span class="text-xs px-2 py-1 rounded-md bg-emerald-100 text-emerald-700">تأیید شده</span>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <div class="font-medium mb-2">یادداشت‌ها</div>
+            <form method="post" action="{{ url_for('main.express_partner_add_note') }}" class="mb-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="flex gap-2">
+                <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="یک یادداشت بنویسید...">
+                <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">افزودن</button>
+              </div>
+            </form>
+            <ul class="space-y-2 text-sm">
+              {% for n in partner_notes %}
+                <li class="flex items-center justify-between p-2 border rounded-md">
+                  <span class="truncate">{{ n.content }}</span>
+                  <form method="post" action="{{ url_for('main.express_partner_delete_note', nid=n.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="text-rose-600 hover:underline">حذف</button>
+                  </form>
+                </li>
+              {% else %}
+                <li class="text-gray-500">یادداشتی ثبت نشده است.</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div>
+            <div class="font-medium mb-2">فایل‌های اختصاصی</div>
+            <form method="post" action="{{ url_for('main.express_partner_upload_file') }}" enctype="multipart/form-data" class="mb-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="flex items-center gap-2">
+                <input type="file" name="file" class="flex-1 text-sm">
+                <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">آپلود</button>
+              </div>
+            </form>
+            <ul class="space-y-2 text-sm">
+              {% for f in partner_files %}
+                <li class="p-2 border rounded-md">
+                  <span class="font-mono">{{ f.filename }}</span>
+                  <span class="text-gray-500"> — {{ f.stored_at }}</span>
+                </li>
+              {% else %}
+                <li class="text-gray-500">فایلی ثبت نشده است.</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="font-medium mb-2">فروش‌ها / قراردادها</div>
+          <form method="post" action="{{ url_for('main.express_partner_add_sale') }}" class="grid md:grid-cols-4 gap-2 mb-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="title" class="border rounded-md px-3 py-2" placeholder="عنوان" required>
+            <input type="text" name="amount" class="border rounded-md px-3 py-2" placeholder="مبلغ (تومان)">
+            <input type="text" name="note" class="border rounded-md px-3 py-2" placeholder="یادداشت">
+            <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">ثبت</button>
+          </form>
+          {% if partner_sales_monthly or partner_sales_yearly %}
+          <div class="grid md:grid-cols-2 gap-3 mb-3">
+            <div class="rounded-lg border p-3">
+              <div class="text-xs text-gray-500 mb-2">جمع‌کل ماهانه</div>
+              <ul class="text-sm space-y-1 max-h-44 overflow-auto">
+                {% for ym, total in partner_sales_monthly.items() %}
+                  <li class="flex justify-between"><span>{{ ym }}</span><span class="font-medium">{{ total }}</span></li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="rounded-lg border p-3">
+              <div class="text-xs text-gray-500 mb-2">جمع‌کل سالانه</div>
+              <ul class="text-sm space-y-1">
+                {% for y, total in partner_sales_yearly.items() %}
+                  <li class="flex justify-between"><span>{{ y }}</span><span class="font-medium">{{ total }}</span></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-right text-gray-600">
+                  <th class="p-2">#</th>
+                  <th class="p-2">عنوان</th>
+                  <th class="p-2">مبلغ</th>
+                  <th class="p-2">یادداشت</th>
+                  <th class="p-2">تاریخ</th>
+                  <th class="p-2">اقدامات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in partner_sales %}
+                  <tr class="border-t">
+                    <td class="p-2">{{ s.id }}</td>
+                    <td class="p-2">{{ s.title }}</td>
+                    <td class="p-2">{{ s.amount }}</td>
+                    <td class="p-2">{{ s.note or '—' }}</td>
+                    <td class="p-2">{{ s.created_at }}</td>
+                    <td class="p-2">
+                      <details>
+                        <summary class="text-xs text-gray-600 cursor-pointer">ویرایش/حذف</summary>
+                        <form method="post" action="{{ url_for('main.express_partner_update_sale', sid=s.id) }}" class="grid grid-cols-4 gap-1 mt-1">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <input type="text" name="title" value="{{ s.title }}" class="border rounded px-2 py-1 text-xs">
+                          <input type="text" name="amount" value="{{ s.amount }}" class="border rounded px-2 py-1 text-xs">
+                          <input type="text" name="note" value="{{ s.note }}" class="border rounded px-2 py-1 text-xs">
+                          <button class="px-2 py-1 rounded bg-emerald-600 text-white text-xs">ثبت</button>
+                        </form>
+                        <form method="post" action="{{ url_for('main.express_partner_delete_sale', sid=s.id) }}" class="mt-1">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button class="px-2 py-1 rounded bg-rose-600 text-white text-xs" onclick="return confirm('حذف این رکورد؟')">حذف</button>
+                        </form>
+                      </details>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td class="p-2 text-gray-500" colspan="5">فروشی ثبت نشده است.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
   <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm divide-y divide-gray-100 dark:divide-gray-800">
     <div class="px-4 py-3 text-xs font-bold text-gray-500 dark:text-gray-400">حساب</div>
     <a href="{{ url_for('main.settings') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">

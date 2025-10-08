@@ -329,6 +329,85 @@ def express_partner_upload_file():
     save_partner_files_meta(metas)
     return redirect(url_for("main.express_partner_dashboard"))
 
+
+@main_bp.get("/express/partner/files/<int:fid>/download")
+def express_partner_download_file(fid: int):
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    metas = load_partner_files_meta() or []
+    meta = next((m for m in metas if int(m.get('id',0) or 0) == int(fid) and str(m.get('phone')) == me_phone), None)
+    if not meta:
+        abort(404)
+    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', me_phone)
+    fp = os.path.join(base, meta.get('filename') or '')
+    if not (os.path.isfile(fp)):
+        abort(404)
+    return send_from_directory(base, os.path.basename(fp), as_attachment=True)
+
+
+@main_bp.post("/express/partner/files/<int:fid>/delete")
+def express_partner_delete_file(fid: int):
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    metas = load_partner_files_meta() or []
+    kept = []
+    removed: dict | None = None
+    for m in metas:
+        try:
+            if int(m.get('id',0) or 0) == int(fid) and str(m.get('phone')) == me_phone:
+                removed = m
+            else:
+                kept.append(m)
+        except Exception:
+            kept.append(m)
+    save_partner_files_meta(kept)
+    if removed:
+        try:
+            base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', me_phone)
+            fp = os.path.join(base, removed.get('filename') or '')
+            if os.path.isfile(fp):
+                os.remove(fp)
+        except Exception:
+            pass
+    return redirect(url_for("main.express_partner_dashboard"))
+
+
+@main_bp.post("/express/partner/sales/<int:sid>/update")
+def express_partner_update_sale(sid: int):
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    items = load_partner_sales() or []
+    for s in items:
+        try:
+            if int(s.get('id',0) or 0) == int(sid) and str(s.get('phone')) == me_phone:
+                title = (request.form.get("title") or "").strip() or s.get('title')
+                amount = (request.form.get("amount") or "").strip()
+                note = (request.form.get("note") or "").strip()
+                try:
+                    amount_num = int(str(amount).replace(',', '').strip()) if amount else s.get('amount') or 0
+                except Exception:
+                    amount_num = s.get('amount') or 0
+                s.update({ 'title': title, 'amount': amount_num, 'note': note })
+                break
+        except Exception:
+            continue
+    save_partner_sales(items)
+    return redirect(url_for("main.express_partner_dashboard"))
+
+
+@main_bp.post("/express/partner/sales/<int:sid>/delete")
+def express_partner_delete_sale(sid: int):
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    items = load_partner_sales() or []
+    items = [s for s in items if not (int(s.get('id',0) or 0) == int(sid) and str(s.get('phone')) == me_phone)]
+    save_partner_sales(items)
+    return redirect(url_for("main.express_partner_dashboard"))
+
 @main_bp.route("/consultant/dashboard", methods=["GET"], endpoint="consultant_dashboard")
 def consultant_dashboard():
     """داشبورد سادهٔ مشاور (MVP)."""
