@@ -53,6 +53,12 @@ def _save_express_document(file, land_code):
 from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
 from app.utils.storage import load_users, load_reports, save_reports, load_consultant_apps, save_consultant_apps, load_consultants, save_consultants
+from app.utils.storage import (
+    load_express_partner_apps,
+    save_express_partner_apps,
+    load_express_partners,
+    save_express_partners,
+)
 from app.services.notifications import add_notification
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
@@ -1393,3 +1399,126 @@ def consultants():
     except Exception:
         items = []
     return render_template('admin/consultants.html', items=items)
+
+# -----------------------------------------------------------------------------
+# Express Partners: Applications & Partners list + actions
+# -----------------------------------------------------------------------------
+@admin_bp.route('/express/partners/applications')
+@login_required
+def express_partner_applications():
+    try:
+        items = load_express_partner_apps() or []
+        if not isinstance(items, list):
+            items = []
+        try:
+            items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+        except Exception:
+            pass
+    except Exception:
+        items = []
+    return render_template('admin/express_partner_applications.html', items=items)
+
+@admin_bp.route('/express/partners')
+@login_required
+def express_partners():
+    try:
+        items = load_express_partners() or []
+        if not isinstance(items, list):
+            items = []
+    except Exception:
+        items = []
+    return render_template('admin/express_partners.html', items=items)
+
+@admin_bp.post('/express/partners/applications/<int:aid>/approve')
+@login_required
+def express_partner_application_approve(aid: int):
+    apps = load_express_partner_apps() or []
+    partners = load_express_partners() or []
+    target = None
+    for a in apps:
+        try:
+            if int(a.get('id', 0)) == int(aid):
+                target = a
+                break
+        except Exception:
+            continue
+    if not target:
+        flash('درخواست یافت نشد.', 'warning')
+        return redirect(url_for('admin.express_partner_applications'))
+
+    # به فهرست همکاران منتقل و وضعیت را تنظیم کن
+    phone = str(target.get('phone') or '').strip()
+    name = (target.get('name') or '').strip()
+    city = (target.get('city') or '').strip()
+    partner = next((p for p in partners if str(p.get('phone')) == phone), None)
+    if not partner:
+        partner = {
+            'id': (max([int(x.get('id',0) or 0) for x in partners], default=0) or 0) + 1,
+            'name': name,
+            'phone': phone,
+            'city': city,
+            'status': 'approved',
+            'created_at': iso_z(utcnow()),
+        }
+        partners.append(partner)
+    else:
+        partner.update({'name': name or partner.get('name'), 'city': city or partner.get('city'), 'status': 'approved'})
+
+    # وضعیت درخواست
+    target['status'] = 'approved'
+    target['approved_at'] = iso_z(utcnow())
+    save_express_partners(partners)
+    save_express_partner_apps(apps)
+
+    # اعلان به کاربر
+    try:
+        if phone:
+            add_notification(
+                user_id=phone,
+                title='تأیید همکاری وینور اکسپرس',
+                body='درخواست شما تأیید شد. اکنون می‌توانید از پنل همکاری استفاده کنید.',
+                ntype='success',
+                action_url=url_for('main.express_partner_dashboard')
+            )
+    except Exception:
+        pass
+
+    flash('درخواست تأیید شد و کاربر به همکاران اکسپرس افزوده شد.', 'success')
+    return redirect(url_for('admin.express_partner_applications'))
+
+@admin_bp.post('/express/partners/applications/<int:aid>/reject')
+@login_required
+def express_partner_application_reject(aid: int):
+    apps = load_express_partner_apps() or []
+    target = None
+    for a in apps:
+        try:
+            if int(a.get('id', 0)) == int(aid):
+                target = a
+                break
+        except Exception:
+            continue
+    if not target:
+        flash('درخواست یافت نشد.', 'warning')
+        return redirect(url_for('admin.express_partner_applications'))
+
+    target['status'] = 'rejected'
+    target['rejected_at'] = iso_z(utcnow())
+    save_express_partner_apps(apps)
+
+    # اعلان به کاربر
+    try:
+        phone = str(target.get('phone') or '')
+        if phone:
+            add_notification(
+                user_id=phone,
+                title='رد درخواست همکاری وینور اکسپرس',
+                body='درخواست شما در حال حاضر تأیید نشد.',
+                ntype='warning',
+                action_url=url_for('main.express_partner_apply')
+            )
+    except Exception:
+        pass
+
+    flash('درخواست رد شد.', 'info')
+    return redirect(url_for('admin.express_partner_applications'))

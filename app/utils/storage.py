@@ -145,3 +145,9 @@ def load_consultant_apps(app=None):        return _load(ensure_file('CONSULTANT_
 def save_consultant_apps(items, app=None): return _save(ensure_file('CONSULTANT_APPS_FILE','consultant_applications.json',[],app), items)
 def load_consultants(app=None):           return _load(ensure_file('CONSULTANTS_FILE','consultants.json',[],app))
 def save_consultants(items, app=None):    return _save(ensure_file('CONSULTANTS_FILE','consultants.json',[],app), items)
+
+# Express Partners & Applications
+def load_express_partner_apps(app=None):   return _load(ensure_file('EXPRESS_PARTNER_APPS_FILE','express_partner_applications.json',[],app))
+def save_express_partner_apps(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_APPS_FILE','express_partner_applications.json',[],app), items)
+def load_express_partners(app=None):       return _load(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app))
+def save_express_partners(items, app=None): return _save(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app), items)

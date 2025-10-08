@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}پنل همکاری وینور اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">پنل همکاری وینور اکسپرس</h1>
+    <a href="{{ url_for('main.express_partner_apply') }}" class="text-sm text-vinor-700 hover:underline">ویرایش/ارسال درخواست</a>
+  </div>
+
+  {% if not is_approved %}
+    <div class="bg-yellow-50 border border-yellow-200 text-yellow-900 p-4 rounded-md mb-6">
+      درخواست شما در صف بررسی است. پس از تأیید توسط ادمین، دسترسی کامل به پنل برای شما فعال می‌شود.
+    </div>
+  {% else %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-md mb-6">
+      شما به عنوان همکار اکسپرس تأیید شده‌اید. می‌توانید از خدمات ویژه استفاده کنید.
+    </div>
+  {% endif %}
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white border rounded-xl p-4">
+      <h2 class="font-semibold mb-3">پروفایل</h2>
+      <dl class="text-sm text-gray-700 space-y-2">
+        <div class="flex justify-between"><dt>نام</dt><dd>{{ (profile and profile.name) or '—' }}</dd></div>
+        <div class="flex justify-between"><dt>شماره</dt><dd>{{ (profile and profile.phone) or session.get('user_phone') }}</dd></div>
+        <div class="flex justify-between"><dt>شهر</dt><dd>{{ (profile and profile.city) or '—' }}</dd></div>
+        <div class="flex justify-between"><dt>وضعیت</dt><dd>{{ (profile and profile.status) or 'در انتظار' }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-white border rounded-xl p-4">
+      <h2 class="font-semibold mb-3">درخواست‌های من</h2>
+      <div class="text-sm text-gray-700">
+        {% if my_apps %}
+          <ul class="list-disc pr-5 space-y-1">
+            {% for a in my_apps %}
+              <li>
+                <span class="font-medium">{{ a.created_at }}</span>
+                — وضعیت: {{ a.status or 'new' }}
+                {% if a.note %} — {{ a.note }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>درخواستی ثبت نکرده‌اید. از لینک بالا درخواست خود را ثبت کنید.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

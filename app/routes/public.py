@@ -12,6 +12,12 @@ from flask import (
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads_cached, load_reports, save_reports
 from ..utils.storage import load_consultant_apps, save_consultant_apps, load_consultants, save_consultants
+from ..utils.storage import (
+    load_express_partner_apps,
+    save_express_partner_apps,
+    load_express_partners,
+    save_express_partners,
+)
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_MAP
 
@@ -126,6 +132,73 @@ def careers_consultant_apply():
         save_consultant_apps(items)
         return render_template("main/careers_consultant_thanks.html", name=name, brand="وینور", domain="vinor.ir")
     return render_template("main/careers_consultant_apply.html", brand="وینور", domain="vinor.ir")
+
+# -------------------------
+# Vinor Express: Partner Application & Dashboard
+# -------------------------
+
+@main_bp.route("/express/partner/apply", methods=["GET", "POST"], endpoint="express_partner_apply")
+def express_partner_apply():
+    """فرم درخواست همکاری با وینور اکسپرس (نیازمند ورود)."""
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_apply")))
+
+    me_phone = (session.get("user_phone") or "").strip()
+
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        city = (request.form.get("city") or "").strip()
+        experience = (request.form.get("experience") or "").strip()
+        note = (request.form.get("note") or "").strip()
+
+        apps = load_express_partner_apps()
+        if not isinstance(apps, list):
+            apps = []
+
+        # اگر قبلاً تأیید شده، مستقیماً به داشبورد برو
+        partners = load_express_partners() or []
+        if any(str(p.get("phone")) == me_phone for p in partners if isinstance(p, dict)):
+            return redirect(url_for("main.express_partner_dashboard"))
+
+        new_id = (max([int(x.get("id", 0) or 0) for x in apps if isinstance(x, dict)], default=0) or 0) + 1
+        apps.append({
+            "id": new_id,
+            "name": name,
+            "phone": me_phone,
+            "city": city,
+            "experience": experience,
+            "note": note,
+            "status": "new",
+            "created_at": datetime.utcnow().isoformat()+"Z",
+        })
+        save_express_partner_apps(apps)
+        return render_template("main/express_partner_thanks.html", name=name, brand="وینور", domain="vinor.ir")
+
+    return render_template("main/express_partner_apply.html", brand="وینور", domain="vinor.ir")
+
+
+@main_bp.route("/express/partner/dashboard", methods=["GET"], endpoint="express_partner_dashboard")
+def express_partner_dashboard():
+    """داشبورد همکاری اکسپرس: فقط برای همکاران تأییدشده."""
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+
+    me_phone = (session.get("user_phone") or "").strip()
+    partners = load_express_partners() or []
+    profile = next((p for p in partners if str(p.get("phone")) == me_phone), None)
+
+    apps = load_express_partner_apps() or []
+    my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
+
+    is_approved = bool(profile and (profile.get("status") in ("approved", True)))
+    return render_template(
+        "express/partner_dashboard.html",
+        profile=profile,
+        is_approved=is_approved,
+        my_apps=my_apps,
+        brand="وینور",
+        domain="vinor.ir",
+    )
 
 @main_bp.route("/consultant/dashboard", methods=["GET"], endpoint="consultant_dashboard")
 def consultant_dashboard():

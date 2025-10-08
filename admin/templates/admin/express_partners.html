@@ -1,0 +1,39 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}همکاران وینور اکسپرس{% endblock %}
+{% block page_title %}
+<h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-vinor-700 dark:text-green-400 flex items-center gap-2">
+  <i class="fas fa-people-group"></i>
+  همکاران وینور اکسپرس
+{% endblock %}
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 dark:bg-gray-900/40">
+      <tr class="text-right text-gray-700 dark:text-gray-300">
+        <th class="p-3">#</th>
+        <th class="p-3">نام</th>
+        <th class="p-3">شماره</th>
+        <th class="p-3">شهر</th>
+        <th class="p-3">وضعیت</th>
+        <th class="p-3">تاریخ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in items %}
+      <tr class="border-t dark:border-gray-700">
+        <td class="p-3">{{ c.id or loop.index }}</td>
+        <td class="p-3">{{ c.name or '—' }}</td>
+        <td class="p-3">{{ c.phone or '—' }}</td>
+        <td class="p-3">{{ c.city or '—' }}</td>
+        <td class="p-3">{{ c.status or 'approved' }}</td>
+        <td class="p-3">{{ c.created_at or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="p-3 text-center text-gray-500" colspan="6">موردی ثبت نشده است.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+
