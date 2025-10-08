@@ -318,5 +318,45 @@
   </script>
 
   {% block scripts %}{% endblock %}
+  <script>
+    // Generic AJAX handler for approve/reject forms in lists
+    document.addEventListener('DOMContentLoaded', function(){
+      document.querySelectorAll('form[data-ajax="1"]').forEach(function(form){
+        form.addEventListener('submit', async function(e){
+          e.preventDefault();
+          try {
+            const action = form.getAttribute('action');
+            const fd = new FormData(form);
+            const res = await fetch(action, {
+              method: 'POST',
+              headers: { 'Accept': 'application/json' },
+              credentials: 'same-origin',
+              body: fd
+            });
+            if(res.headers.get('content-type')?.includes('application/json')){
+              const j = await res.json();
+              if(j && j.ok && j.id){
+                const row = document.querySelector(`[data-row-id="${j.id}"]`);
+                if(row){
+                  const st = row.querySelector('[data-status]');
+                  if(st) st.textContent = j.status || st.textContent;
+                }
+                // Optional toast
+              } else {
+                // fallback
+                location.reload();
+              }
+            } else {
+              // non-JSON → fallback
+              location.reload();
+            }
+          } catch(_) {
+            // network error → fallback
+            location.reload();
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>

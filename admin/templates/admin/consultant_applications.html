@@ -22,22 +22,22 @@
     </thead>
     <tbody>
       {% for a in items %}
-      <tr class="border-t dark:border-gray-700">
+      <tr class="border-t dark:border-gray-700" data-row-id="{{ a.id }}">
         <td class="p-3">{{ a.id }}</td>
         <td class="p-3">{{ a.name or '—' }}</td>
         <td class="p-3">{{ a.phone or '—' }}</td>
         <td class="p-3">{{ a.city or '—' }}</td>
         <td class="p-3">{{ a.experience or '—' }}</td>
-        <td class="p-3">{{ a.status or 'new' }}</td>
+        <td class="p-3" data-status>{{ a.status or 'new' }}</td>
         <td class="p-3">{{ a.created_at or '—' }}</td>
         <td class="p-3">
           <div class="flex items-center gap-2">
-            <form method="post" action="{{ url_for('admin.consultant_application_approve', aid=a.id) }}" class="contents" x-data>
+            <form method="post" action="{{ url_for('admin.consultant_application_approve', aid=a.id) }}" class="contents" x-data data-ajax="1">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
                       class="px-3 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">تأیید</button>
             </form>
-            <form method="post" action="{{ url_for('admin.consultant_application_reject', aid=a.id) }}" class="contents" x-data>
+            <form method="post" action="{{ url_for('admin.consultant_application_reject', aid=a.id) }}" class="contents" x-data data-ajax="1">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" @click.prevent="if(confirm('رد این درخواست؟')) $el.closest('form').submit()"
                       class="px-3 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700">رد</button>

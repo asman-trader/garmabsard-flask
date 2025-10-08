@@ -1458,6 +1458,9 @@ def consultant_application_approve(aid: int):
     except Exception:
         pass
 
+    # AJAX JSON response if requested
+    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
+        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'approved' })
     flash('درخواست مشاور تأیید شد.', 'success')
     return redirect(url_for('admin.consultant_applications'))
 
@@ -1495,6 +1498,8 @@ def consultant_application_reject(aid: int):
     except Exception:
         pass
 
+    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
+        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'rejected' })
     flash('درخواست مشاور رد شد.', 'info')
     return redirect(url_for('admin.consultant_applications'))
 
@@ -1581,6 +1586,8 @@ def express_partner_application_approve(aid: int):
     except Exception:
         pass
 
+    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
+        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'approved' })
     flash('درخواست تأیید شد و کاربر به همکاران اکسپرس افزوده شد.', 'success')
     return redirect(url_for('admin.express_partner_applications'))
 
@@ -1618,5 +1625,7 @@ def express_partner_application_reject(aid: int):
     except Exception:
         pass
 
+    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
+        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'rejected' })
     flash('درخواست رد شد.', 'info')
     return redirect(url_for('admin.express_partner_applications'))
