@@ -17,6 +17,12 @@ from ..utils.storage import (
     save_express_partner_apps,
     load_express_partners,
     save_express_partners,
+    load_partner_notes,
+    save_partner_notes,
+    load_partner_sales,
+    save_partner_sales,
+    load_partner_files_meta,
+    save_partner_files_meta,
 )
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_MAP
@@ -223,15 +229,105 @@ def express_partner_dashboard():
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
 
+    # Load partner assets
+    notes = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
+    sales = [s for s in (load_partner_sales() or []) if str(s.get('phone')) == me_phone]
+    files = [f for f in (load_partner_files_meta() or []) if str(f.get('phone')) == me_phone]
+
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     return render_template(
         "express/partner_dashboard.html",
         profile=profile,
         is_approved=is_approved,
         my_apps=my_apps,
+        notes=notes,
+        sales=sales,
+        files=files,
         brand="وینور",
         domain="vinor.ir",
     )
+
+
+@main_bp.post("/express/partner/notes/add")
+def express_partner_add_note():
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    content = (request.form.get("content") or "").strip()
+    if not content:
+        return redirect(url_for("main.express_partner_dashboard"))
+    items = load_partner_notes() or []
+    new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+    items.append({"id": new_id, "phone": me_phone, "content": content, "created_at": datetime.utcnow().isoformat()+"Z"})
+    save_partner_notes(items)
+    return redirect(url_for("main.express_partner_dashboard"))
+
+
+@main_bp.post("/express/partner/notes/<int:nid>/delete")
+def express_partner_delete_note(nid: int):
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    items = load_partner_notes() or []
+    items = [n for n in items if not (int(n.get('id',0) or 0) == int(nid) and str(n.get('phone')) == me_phone)]
+    save_partner_notes(items)
+    return redirect(url_for("main.express_partner_dashboard"))
+
+
+@main_bp.post("/express/partner/sales/add")
+def express_partner_add_sale():
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    title = (request.form.get("title") or "").strip()
+    amount = (request.form.get("amount") or "").strip()
+    note = (request.form.get("note") or "").strip()
+    if not title:
+        return redirect(url_for("main.express_partner_dashboard"))
+    items = load_partner_sales() or []
+    new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+    try:
+        amount_num = int(str(amount).replace(',', '').strip() or '0')
+    except Exception:
+        amount_num = 0
+    items.append({
+        "id": new_id,
+        "phone": me_phone,
+        "title": title,
+        "amount": amount_num,
+        "note": note,
+        "created_at": datetime.utcnow().isoformat()+"Z"
+    })
+    save_partner_sales(items)
+    return redirect(url_for("main.express_partner_dashboard"))
+
+
+@main_bp.post("/express/partner/files/upload")
+def express_partner_upload_file():
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return redirect(url_for("main.express_partner_dashboard"))
+    # Save to instance/data/uploads/partner/<phone>/
+    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', me_phone)
+    os.makedirs(base, exist_ok=True)
+    tsname = datetime.utcnow().strftime('%Y%m%d%H%M%S%f') + "__" + f.filename
+    safe_name = tsname.replace('..','_').replace('/','_').replace('\\','_')
+    path = os.path.join(base, safe_name)
+    f.save(path)
+    # Save metadata
+    metas = load_partner_files_meta() or []
+    new_id = (max([int(x.get('id',0) or 0) for x in metas if isinstance(x, dict)], default=0) or 0) + 1
+    metas.append({
+        "id": new_id,
+        "phone": me_phone,
+        "filename": safe_name,
+        "stored_at": datetime.utcnow().isoformat()+"Z"
+    })
+    save_partner_files_meta(metas)
+    return redirect(url_for("main.express_partner_dashboard"))
 
 @main_bp.route("/consultant/dashboard", methods=["GET"], endpoint="consultant_dashboard")
 def consultant_dashboard():

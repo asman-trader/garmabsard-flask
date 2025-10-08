@@ -151,3 +151,11 @@ def load_express_partner_apps(app=None):   return _load(ensure_file('EXPRESS_PAR
 def save_express_partner_apps(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_APPS_FILE','express_partner_applications.json',[],app), items)
 def load_express_partners(app=None):       return _load(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app))
 def save_express_partners(items, app=None): return _save(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app), items)
+
+# Express Partner: Notes, Sales, Files (metadata)
+def load_partner_notes(app=None):          return _load(ensure_file('EXPRESS_PARTNER_NOTES_FILE','express_partner_notes.json',[],app))
+def save_partner_notes(items, app=None):   return _save(ensure_file('EXPRESS_PARTNER_NOTES_FILE','express_partner_notes.json',[],app), items)
+def load_partner_sales(app=None):          return _load(ensure_file('EXPRESS_PARTNER_SALES_FILE','express_partner_sales.json',[],app))
+def save_partner_sales(items, app=None):   return _save(ensure_file('EXPRESS_PARTNER_SALES_FILE','express_partner_sales.json',[],app), items)
+def load_partner_files_meta(app=None):     return _load(ensure_file('EXPRESS_PARTNER_FILES_META_FILE','express_partner_files.json',[],app))
+def save_partner_files_meta(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_FILES_META_FILE','express_partner_files.json',[],app), items)

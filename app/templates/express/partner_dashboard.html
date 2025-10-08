@@ -46,6 +46,88 @@
         {% endif %}
       </div>
     </div>
+
+    <div class="bg-white border rounded-xl p-4">
+      <h2 class="font-semibold mb-3">یادداشت‌های خصوصی</h2>
+      <form method="post" action="{{ url_for('main.express_partner_add_note') }}" class="mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="flex gap-2">
+          <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="یک یادداشت بنویسید...">
+          <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">افزودن</button>
+        </div>
+      </form>
+      <ul class="space-y-2 text-sm">
+        {% for n in notes %}
+          <li class="flex items-center justify-between p-2 border rounded-md">
+            <span class="truncate">{{ n.content }}</span>
+            <form method="post" action="{{ url_for('main.express_partner_delete_note', nid=n.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="text-rose-600 hover:underline">حذف</button>
+            </form>
+          </li>
+        {% else %}
+          <li class="text-gray-500">یادداشتی ثبت نشده است.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-white border rounded-xl p-4">
+      <h2 class="font-semibold mb-3">فایل‌های اختصاصی</h2>
+      <form method="post" action="{{ url_for('main.express_partner_upload_file') }}" enctype="multipart/form-data" class="mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="flex items-center gap-2">
+          <input type="file" name="file" class="flex-1 text-sm">
+          <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">آپلود</button>
+        </div>
+      </form>
+      <ul class="space-y-2 text-sm">
+        {% for f in files %}
+          <li class="p-2 border rounded-md">
+            <span class="font-mono">{{ f.filename }}</span>
+            <span class="text-gray-500"> — {{ f.stored_at }}</span>
+          </li>
+        {% else %}
+          <li class="text-gray-500">فایلی ثبت نشده است.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-white border rounded-xl p-4 md:col-span-2">
+      <h2 class="font-semibold mb-3">فروش‌ها / قراردادها</h2>
+      <form method="post" action="{{ url_for('main.express_partner_add_sale') }}" class="grid md:grid-cols-4 gap-2 mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="title" class="border rounded-md px-3 py-2" placeholder="عنوان (مثلاً فروش زمین در ...)" required>
+        <input type="text" name="amount" class="border rounded-md px-3 py-2" placeholder="مبلغ (تومان)">
+        <input type="text" name="note" class="border rounded-md px-3 py-2" placeholder="یادداشت">
+        <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">ثبت</button>
+      </form>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-right text-gray-600">
+              <th class="p-2">#</th>
+              <th class="p-2">عنوان</th>
+              <th class="p-2">مبلغ</th>
+              <th class="p-2">یادداشت</th>
+              <th class="p-2">تاریخ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in sales %}
+              <tr class="border-t">
+                <td class="p-2">{{ s.id }}</td>
+                <td class="p-2">{{ s.title }}</td>
+                <td class="p-2">{{ s.amount }}</td>
+                <td class="p-2">{{ s.note or '—' }}</td>
+                <td class="p-2">{{ s.created_at }}</td>
+              </tr>
+            {% else %}
+              <tr><td class="p-2 text-gray-500" colspan="5">فروشی ثبت نشده است.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
