@@ -36,6 +36,11 @@
         <a href="{{ url_for('main.my_lands') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-xs shadow">
           <i class="fas fa-layer-group"></i> آگهی‌های من
         </a>
+        {% if session.get('user_phone') %}
+        <a href="{{ url_for('main.logout') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 text-xs shadow">
+          <i class="fas fa-sign-out-alt"></i> خروج
+        </a>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -120,13 +125,7 @@
 
   
 
-  <div class="mt-6 flex items-center justify-between">
-    {% if session.get('user_phone') %}
-      <a href="{{ url_for('main.logout') }}" class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 transition"><i class="fas fa-sign-out-alt ml-1"></i> خروج از حساب</a>
-    {% else %}
-      <a href="{{ VINOR_LOGIN_URL }}" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"><i class="fas fa-sign-in-alt ml-1"></i> ورود</a>
-    {% endif %}
-  </div>
+  
 
 </main>
 
