@@ -7,6 +7,7 @@ from ..utils.storage import (
     load_express_partners, load_express_partner_apps,
     load_partner_notes, load_partner_sales, load_partner_files_meta,
 )
+from ..utils.storage import load_ads_cached
 
 # -------------------------
 # Helpers
@@ -69,6 +70,17 @@ def profile():
         if ym:
             monthly[ym] = monthly.get(ym, 0) + amt
 
+    # My ads (for counts and sample grid)
+    try:
+        all_ads = load_ads_cached() or []
+    except Exception:
+        all_ads = []
+    def _ad_owner(ad):
+        return str(ad.get('owner') or ad.get('user_phone') or ad.get('phone') or '')
+    my_ads = [ad for ad in all_ads if _ad_owner(ad) == str(phone)]
+    my_ads_count = len(my_ads)
+    my_ads_sample = my_ads[:6]
+
     return render_template(
         "account/profile.html",
         user=user,
@@ -80,6 +92,8 @@ def profile():
         partner_files=partner_files,
         partner_sales_monthly=monthly,
         partner_sales_yearly=yearly,
+        my_ads_count=my_ads_count,
+        my_ads_sample=my_ads_sample,
     )
 
 
