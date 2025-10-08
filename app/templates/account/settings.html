@@ -88,6 +88,34 @@
       </label>
     </div>
   </section>
+
+  <!-- حریم‌خصوصی و امنیت -->
+  <section class="mt-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="px-4 pt-4 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400">حساب</div>
+    <div class="px-4 pb-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 grid place-items-center text-yellow-700 dark:text-yellow-300"><i class="fas fa-shield-alt"></i></div>
+        <div>
+          <div class="text-sm font-semibold">حریم‌خصوصی و امنیت</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">ورود با پیامک؛ مدیریت مجوزها و امنیت حساب</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- نشست‌ها و دستگاه‌ها -->
+  <section class="mt-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div class="px-4 pb-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/30 grid place-items-center text-orange-700 dark:text-orange-300"><i class="fas fa-laptop"></i></div>
+        <div>
+          <div class="text-sm font-semibold">نشست‌ها و دستگاه‌ها</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">در صورت نیاز از همه دستگاه‌ها خارج شوید</div>
+        </div>
+      </div>
+      <a href="{{ url_for('main.logout') }}" class="px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700">خروج از حساب</a>
+    </div>
+  </section>
 </div>
 
 <!-- JS: تنظیم جستجوی سریع -->
