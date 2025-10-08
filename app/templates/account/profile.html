@@ -8,16 +8,16 @@
 {% set _display = _full if _full else (session.get('user_phone') or 'کاربر وینور') %}
 {% set _initial = (_full or (session.get('user_phone') or 'و')) | trim | first %}
 
-<main class="max-w-2xl mx-auto px-3 sm:px-4 py-6">
+<main class="max-w-xl mx-auto px-3 sm:px-4 py-5">
 
-  <section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-emerald-50 dark:from-gray-900 dark:to-gray-800 shadow-sm p-5">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-      <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center text-2xl font-extrabold shadow">
+  <section class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-emerald-50 dark:from-gray-900 dark:to-gray-800 shadow-sm p-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div class="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center text-xl font-extrabold shadow">
         <span aria-hidden="true">{{ _initial }}</span>
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center flex-wrap gap-2">
-          <div class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white truncate">{{ _display }}</div>
+          <div class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white truncate">{{ _display }}</div>
           {% if VINOR_IS_CONSULTANT %}
             <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-emerald-100 text-emerald-700"><i class="fas fa-user-tie"></i> مشاور وینور</span>
           {% endif %}
@@ -25,31 +25,31 @@
             <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-green-100 text-green-700"><i class="fas fa-star"></i> همکار اکسپرس</span>
           {% endif %}
         </div>
-        <div class="mt-1 text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
+        <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-300 flex items-center gap-2">
           <span id="userPhone">{% if session.get('user_phone') %}{{ session['user_phone'] }}{% else %}—{% endif %}</span>
           {% if session.get('user_phone') %}
-          <button id="copyPhone" class="px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">کپی</button>
+          <button id="copyPhone" class="px-1.5 py-0.5 text-[11px] rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">کپی</button>
           {% endif %}
         </div>
       </div>
       <div class="flex items-center gap-2 ml-auto">
-        <a href="{{ url_for('main.my_lands') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm shadow">
+        <a href="{{ url_for('main.my_lands') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-xs shadow">
           <i class="fas fa-layer-group"></i> آگهی‌های من
         </a>
       </div>
     </div>
   </section>
 
-  <section class="grid grid-cols-3 gap-3 sm:gap-4 my-4">
-    <a href="{{ url_for('main.my_lands') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+  <section class="grid grid-cols-3 gap-2 sm:gap-3 my-3">
+    <a href="{{ url_for('main.my_lands') }}" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 text-center hover:shadow transition">
       <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center text-emerald-700 dark:text-emerald-300"><i class="fas fa-layer-group"></i></div>
       <div class="mt-2 text-sm font-semibold">{{ my_ads_count }} آگهی</div>
     </a>
-    <a href="{{ url_for('main.favorites') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+    <a href="{{ url_for('main.favorites') }}" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 text-center hover:shadow transition">
       <div class="w-10 h-10 mx-auto rounded-full bg-rose-100 dark:bg-rose-900/30 grid place-items-center text-rose-700 dark:text-rose-300"><i class="fas fa-bookmark"></i></div>
       <div class="mt-2 text-sm font-semibold">ذخیره‌شده‌ها</div>
     </a>
-    <a href="{{ url_for('main.settings') }}" class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center hover:shadow transition">
+    <a href="{{ url_for('main.settings') }}" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 text-center hover:shadow transition">
       <div class="w-10 h-10 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/30 grid place-items-center text-amber-700 dark:text-amber-300"><i class="fas fa-user-cog"></i></div>
       <div class="mt-2 text-sm font-semibold">تنظیمات</div>
     </a>
@@ -57,23 +57,14 @@
 
   {# خلاصه فروش در صورت وجود #}
   {% if partner_sales_monthly or partner_sales_yearly %}
-  <section class="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-      <div class="text-xs text-gray-500">جمع‌کل ماه جاری</div>
-      {% set mkey = (partner_sales_monthly|list)[0] if partner_sales_monthly else None %}
-      {% set mtotal = (partner_sales_monthly[mkey] if mkey) if partner_sales_monthly else 0 %}
-      <div class="text-xl font-extrabold mt-1">{{ mtotal }}</div>
-    </div>
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-      <div class="text-xs text-gray-500">جمع‌کل سال جاری</div>
-      {% set ykey = (partner_sales_yearly|list)[0] if partner_sales_yearly else None %}
-      {% set ytotal = (partner_sales_yearly[ykey] if ykey) if partner_sales_yearly else 0 %}
-      <div class="text-xl font-extrabold mt-1">{{ ytotal }}</div>
-    </div>
-    <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-      <div class="text-xs text-gray-500">تعداد فروش ثبت‌شده</div>
-      <div class="text-xl font-extrabold mt-1">{{ partner_sales|length }}</div>
-    </div>
+  <section class="flex items-center gap-2 mb-3 overflow-x-auto">
+    {% set mkey = (partner_sales_monthly|list)[0] if partner_sales_monthly else None %}
+    {% set mtotal = (partner_sales_monthly[mkey] if mkey) if partner_sales_monthly else 0 %}
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs">ماه: {{ mtotal }}</span>
+    {% set ykey = (partner_sales_yearly|list)[0] if partner_sales_yearly else None %}
+    {% set ytotal = (partner_sales_yearly[ykey] if ykey) if partner_sales_yearly else 0 %}
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">سال: {{ ytotal }}</span>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-xs">فروش‌ها: {{ partner_sales|length }}</span>
   </section>
   {% endif %}
 
