@@ -52,7 +52,7 @@ def _save_express_document(file, land_code):
     return filename
 from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
-from app.utils.storage import load_users, load_reports, save_reports
+from app.utils.storage import load_users, load_reports, save_reports, load_consultant_apps, save_consultant_apps, load_consultants, save_consultants
 from app.services.notifications import add_notification
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
@@ -1363,3 +1363,33 @@ def serve_express_document(filename):
 
 # -----------------------------------------------------------------------------
 # Push/SMS routes moved to dedicated modules
+
+
+# -----------------------------------------------------------------------------
+# Consultants: Applications & List (MVP)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/consultants/applications')
+@login_required
+def consultant_applications():
+    try:
+        items = load_consultant_apps() or []
+        if not isinstance(items, list):
+            items = []
+        try:
+            items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+        except Exception:
+            pass
+    except Exception:
+        items = []
+    return render_template('admin/consultant_applications.html', items=items)
+
+@admin_bp.route('/consultants')
+@login_required
+def consultants():
+    try:
+        items = load_consultants() or []
+        if not isinstance(items, list):
+            items = []
+    except Exception:
+        items = []
+    return render_template('admin/consultants.html', items=items)

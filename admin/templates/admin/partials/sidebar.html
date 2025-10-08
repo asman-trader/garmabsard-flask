@@ -201,13 +201,13 @@
     </a>
 
     <!-- جذب و مدیریت مشاورین -->
-    <a href="{{ url_for('admin.consultant_applications') if 'admin.consultant_applications' in current_app.view_functions else '#' }}"
+    <a href="{{ url_for('admin.consultant_applications') }}"
        class="flex items-center gap-2 px-2 py-2 rounded-md transition
               text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400">
       <i class="fa-solid fa-user-tie"></i>
       <span>درخواست‌های مشاورین</span>
     </a>
-    <a href="{{ url_for('admin.consultants') if 'admin.consultants' in current_app.view_functions else '#' }}"
+    <a href="{{ url_for('admin.consultants') }}"
        class="flex items-center gap-2 px-2 py-2 rounded-md transition
               text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400">
       <i class="fa-solid fa-users"></i>
