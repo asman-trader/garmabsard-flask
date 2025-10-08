@@ -72,8 +72,20 @@
       {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
       {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
-      {{ MenuItem(url_for('main.careers_consultant'), 'fa-user-tie', 'همکاری با وینور اکسپرس', False) }}
-      {{ MenuItem(url_for('main.careers_consultant_apply'), 'fa-file-signature', 'ثبت درخواست پنل مشاور', False) }}
+      {# اگر مشاور تأیید شده است: لینک داشبورد؛ در غیر این صورت لینک ثبت درخواست #}
+      {% if VINOR_IS_CONSULTANT %}
+        {{ MenuItem(url_for('main.consultant_dashboard'), 'fa-user-tie', 'داشبورد مشاور وینور', True) }}
+      {% else %}
+        {{ MenuItem(url_for('main.careers_consultant'), 'fa-user-tie', 'همکاری با وینور اکسپرس', False) }}
+        {{ MenuItem(url_for('main.careers_consultant_apply'), 'fa-file-signature', 'ثبت درخواست پنل مشاور', True) }}
+      {% endif %}
+
+      {# همکار اکسپرس: بعد از تأیید، لینک داشبورد نمایش داده شود و فرم غیرفعال/مخفی شود #}
+      {% if VINOR_IS_EXPRESS_PARTNER %}
+        {{ MenuItem(url_for('main.express_partner_dashboard'), 'fa-star', 'پنل همکاری وینور اکسپرس', True) }}
+      {% else %}
+        {{ MenuItem(url_for('main.express_partner_apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
+      {% endif %}
 
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
       {{ MenuItem(url_for('main.index'),   'fa-home',    'معرفی وینور', False) }}

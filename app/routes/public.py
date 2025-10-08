@@ -89,12 +89,45 @@ def inject_vinor_globals():
     """
     متغیرهای عمومیِ وینور برای استفاده در تمپلیت‌ها
     """
+    # وضعیت‌های نقش/تأیید برای ناوبری هوشمند
+    try:
+        me = str(session.get("user_phone") or "").strip()
+    except Exception:
+        me = ""
+
+    # مشاور تأییدشده
+    try:
+        _consultants = load_consultants()
+        is_consultant = any(
+            isinstance(c, dict)
+            and str(c.get("phone") or "").strip() == me
+            and (str(c.get("status") or "").lower() == "approved" or c.get("status") is True)
+            for c in (_consultants or [])
+        )
+    except Exception:
+        is_consultant = False
+
+    # همکار اکسپرس تأییدشده
+    try:
+        _partners = load_express_partners()
+        is_express_partner = any(
+            isinstance(p, dict)
+            and str(p.get("phone") or "").strip() == me
+            and (str(p.get("status") or "").lower() == "approved" or p.get("status") is True)
+            for p in (_partners or [])
+        )
+    except Exception:
+        is_express_partner = False
+
     return {
         "VINOR_IS_LOGGED_IN": bool(session.get("user_id")),
         "VINOR_LOGIN_URL": url_for("main.login"),
         "VINOR_HOME_URL": url_for("main.app_home"),
         "VINOR_BRAND": "وینور",
         "VINOR_DOMAIN": "vinor.ir",
+        # نقش‌ها
+        "VINOR_IS_CONSULTANT": is_consultant,
+        "VINOR_IS_EXPRESS_PARTNER": is_express_partner,
     }
 
 # -------------------------
