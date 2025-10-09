@@ -159,3 +159,9 @@ def load_partner_sales(app=None):          return _load(ensure_file('EXPRESS_PAR
 def save_partner_sales(items, app=None):   return _save(ensure_file('EXPRESS_PARTNER_SALES_FILE','express_partner_sales.json',[],app), items)
 def load_partner_files_meta(app=None):     return _load(ensure_file('EXPRESS_PARTNER_FILES_META_FILE','express_partner_files.json',[],app))
 def save_partner_files_meta(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_FILES_META_FILE','express_partner_files.json',[],app), items)
+
+# Express Assignments & Commissions
+def load_express_assignments(app=None):    return _load(ensure_file('EXPRESS_ASSIGNMENTS_FILE','express_assignments.json',[],app))
+def save_express_assignments(items, app=None): return _save(ensure_file('EXPRESS_ASSIGNMENTS_FILE','express_assignments.json',[],app), items)
+def load_express_commissions(app=None):    return _load(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app))
+def save_express_commissions(items, app=None): return _save(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app), items)

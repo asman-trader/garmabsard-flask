@@ -58,6 +58,10 @@ from app.utils.storage import (
     save_express_partner_apps,
     load_express_partners,
     save_express_partners,
+    load_express_assignments,
+    save_express_assignments,
+    load_express_commissions,
+    save_express_commissions,
 )
 from app.services.notifications import add_notification
 
@@ -1413,6 +1417,154 @@ def express_partners():
     except Exception:
         items = []
     return render_template('admin/express_partners.html', items=items)
+
+# -----------------------------------------------------------------------------
+# Express Assignments (assign lands to partners)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/express/assignments')
+@login_required
+def express_assignments():
+    try:
+        items = load_express_assignments() or []
+        if not isinstance(items, list):
+            items = []
+        items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    except Exception:
+        items = []
+    # partners list for quick assignment
+    partners = load_express_partners() or []
+    # lands pool
+    lands = load_json(_lands_path()) or []
+    express_pool = [l for l in lands if l.get('is_express', False) and str(l.get('status')) == 'approved']
+    return render_template('admin/express_assignments.html', items=items, partners=partners, lands=express_pool)
+
+@admin_bp.post('/express/assignments/new')
+@login_required
+def express_assignment_new():
+    partner_phone = (request.form.get('partner_phone') or '').strip()
+    land_code = (request.form.get('land_code') or '').strip()
+    commission_pct = (request.form.get('commission_pct') or '').strip()
+    try:
+        pct = float(commission_pct or '0')
+    except Exception:
+        pct = 0.0
+    items = load_express_assignments() or []
+    new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+    items.append({
+        'id': new_id,
+        'partner_phone': partner_phone,
+        'land_code': land_code,
+        'commission_pct': pct,
+        'status': 'active',
+        'created_at': iso_z(utcnow())
+    })
+    save_express_assignments(items)
+    flash('فایل به همکار اختصاص یافت.', 'success')
+    return redirect(url_for('admin.express_assignments'))
+
+@admin_bp.post('/express/assignments/<int:aid>/close')
+@login_required
+def express_assignment_close(aid: int):
+    items = load_express_assignments() or []
+    changed = False
+    for a in items:
+        try:
+            if int(a.get('id',0) or 0) == int(aid):
+                a['status'] = 'closed'
+                a['closed_at'] = iso_z(utcnow())
+                changed = True
+                break
+        except Exception:
+            continue
+    if changed:
+        save_express_assignments(items)
+        flash('انتساب بسته شد.', 'info')
+    return redirect(url_for('admin.express_assignments'))
+
+# -----------------------------------------------------------------------------
+# Express Commissions (list/approve/pay)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/express/commissions')
+@login_required
+def express_commissions():
+    try:
+        items = load_express_commissions() or []
+        if not isinstance(items, list):
+            items = []
+        items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    except Exception:
+        items = []
+    return render_template('admin/express_commissions.html', items=items)
+
+@admin_bp.post('/express/commissions/new')
+@login_required
+def express_commission_new():
+    partner_phone = (request.form.get('partner_phone') or '').strip()
+    land_code = (request.form.get('land_code') or '').strip()
+    sale_amount = (request.form.get('sale_amount') or '').strip()
+    commission_pct = (request.form.get('commission_pct') or '').strip()
+    try:
+        sale = int(str(sale_amount).replace(',','').strip() or '0')
+    except Exception:
+        sale = 0
+    try:
+        pct = float(commission_pct or '0')
+    except Exception:
+        pct = 0.0
+    commission_amount = int(round(sale * (pct/100.0))) if sale and pct else 0
+    items = load_express_commissions() or []
+    new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+    items.append({
+        'id': new_id,
+        'partner_phone': partner_phone,
+        'land_code': land_code,
+        'sale_amount': sale,
+        'commission_pct': pct,
+        'commission_amount': commission_amount,
+        'status': 'pending',
+        'created_at': iso_z(utcnow())
+    })
+    save_express_commissions(items)
+    flash('پورسانت ثبت شد (در انتظار تایید).', 'success')
+    return redirect(url_for('admin.express_commissions'))
+
+@admin_bp.post('/express/commissions/<int:cid>/approve')
+@login_required
+def express_commission_approve(cid: int):
+    items = load_express_commissions() or []
+    changed = False
+    for c in items:
+        try:
+            if int(c.get('id',0) or 0) == int(cid):
+                c['status'] = 'approved'
+                c['approved_at'] = iso_z(utcnow())
+                changed = True
+                break
+        except Exception:
+            continue
+    if changed:
+        save_express_commissions(items)
+        flash('پورسانت تایید شد.', 'success')
+    return redirect(url_for('admin.express_commissions'))
+
+@admin_bp.post('/express/commissions/<int:cid>/pay')
+@login_required
+def express_commission_pay(cid: int):
+    items = load_express_commissions() or []
+    changed = False
+    for c in items:
+        try:
+            if int(c.get('id',0) or 0) == int(cid):
+                c['status'] = 'paid'
+                c['paid_at'] = iso_z(utcnow())
+                changed = True
+                break
+        except Exception:
+            continue
+    if changed:
+        save_express_commissions(items)
+        flash('پورسانت پرداخت شد.', 'success')
+    return redirect(url_for('admin.express_commissions'))
 
 @admin_bp.post('/express/partners/applications/<int:aid>/approve')
 @login_required
