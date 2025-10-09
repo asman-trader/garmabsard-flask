@@ -1374,134 +1374,16 @@ def serve_express_document(filename):
 # -----------------------------------------------------------------------------
 # Consultants: Applications & List (MVP)
 # -----------------------------------------------------------------------------
-@admin_bp.route('/consultants/applications')
-@login_required
-def consultant_applications():
-    try:
-        items = load_consultant_apps() or []
-        if not isinstance(items, list):
-            items = []
-        try:
-            items.sort(key=lambda x: x.get('created_at',''), reverse=True)
-        except Exception:
-            pass
-    except Exception:
-        items = []
-    return render_template('admin/consultant_applications.html', items=items)
+## روت‌های مربوط به درخواست‌های مشاورین حذف شدند
 
-@admin_bp.route('/consultants')
-@login_required
-def consultants():
-    try:
-        items = load_consultants() or []
-        if not isinstance(items, list):
-            items = []
-    except Exception:
-        items = []
-    return render_template('admin/consultants.html', items=items)
+## روت فهرست مشاورین حذف شد
 
 # -----------------------------------------------------------------------------
 # Consultants: Approve / Reject applications
 # -----------------------------------------------------------------------------
-@admin_bp.post('/consultants/applications/<int:aid>/approve')
-@login_required
-def consultant_application_approve(aid: int):
-    apps = load_consultant_apps() or []
-    consultants = load_consultants() or []
-    target = None
-    for a in apps:
-        try:
-            if int(a.get('id', 0)) == int(aid):
-                target = a
-                break
-        except Exception:
-            continue
-    if not target:
-        flash('درخواست یافت نشد.', 'warning')
-        return redirect(url_for('admin.consultant_applications'))
+## روت تایید درخواست مشاور حذف شد
 
-    phone = str(target.get('phone') or '').strip()
-    name = (target.get('name') or '').strip()
-    city = (target.get('city') or '').strip()
-
-    # Add or update consultant record
-    cons = next((c for c in consultants if str(c.get('phone')) == phone), None)
-    if not cons:
-        cons = {
-            'id': (max([int(x.get('id',0) or 0) for x in consultants], default=0) or 0) + 1,
-            'name': name,
-            'phone': phone,
-            'cities': city,
-            'status': 'approved',
-            'created_at': iso_z(utcnow()),
-        }
-        consultants.append(cons)
-    else:
-        cons.update({'name': name or cons.get('name'), 'cities': city or cons.get('cities'), 'status': 'approved'})
-
-    # Update application status
-    target['status'] = 'approved'
-    target['approved_at'] = iso_z(utcnow())
-    save_consultants(consultants)
-    save_consultant_apps(apps)
-
-    # Notify user
-    try:
-        if phone:
-            add_notification(
-                user_id=phone,
-                title='پذیرش درخواست مشاور',
-                body='درخواست شما برای همکاری به عنوان مشاور تأیید شد.',
-                ntype='success',
-                action_url=url_for('main.consultant_dashboard')
-            )
-    except Exception:
-        pass
-
-    # AJAX JSON response if requested
-    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
-        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'approved' })
-    flash('درخواست مشاور تأیید شد.', 'success')
-    return redirect(url_for('admin.consultant_applications'))
-
-@admin_bp.post('/consultants/applications/<int:aid>/reject')
-@login_required
-def consultant_application_reject(aid: int):
-    apps = load_consultant_apps() or []
-    target = None
-    for a in apps:
-        try:
-            if int(a.get('id', 0)) == int(aid):
-                target = a
-                break
-        except Exception:
-            continue
-    if not target:
-        flash('درخواست یافت نشد.', 'warning')
-        return redirect(url_for('admin.consultant_applications'))
-
-    target['status'] = 'rejected'
-    target['rejected_at'] = iso_z(utcnow())
-    save_consultant_apps(apps)
-
-    # Notify user
-    try:
-        phone = str(target.get('phone') or '')
-        if phone:
-            add_notification(
-                user_id=phone,
-                title='رد درخواست مشاور',
-                body='درخواست شما در حال حاضر تأیید نشد.',
-                ntype='warning',
-                action_url=url_for('main.careers_consultant_apply')
-            )
-    except Exception:
-        pass
-
-    if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
-        return jsonify({ 'ok': True, 'id': int(aid), 'status': 'rejected' })
-    flash('درخواست مشاور رد شد.', 'info')
-    return redirect(url_for('admin.consultant_applications'))
+## روت رد درخواست مشاور حذف شد
 
 # -----------------------------------------------------------------------------
 # Express Partners: Applications & Partners list + actions

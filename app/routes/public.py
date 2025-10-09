@@ -148,29 +148,7 @@ def index():
     """
     return render_template("home/landing.html", brand="وینور", domain="vinor.ir")
 
-@main_bp.route("/careers/consultant", methods=["GET"], endpoint="careers_consultant")
-def careers_consultant():
-    """صفحه فرود جذب مشاور وینور اکسپرس."""
-    return render_template("main/careers_consultant.html", brand="وینور", domain="vinor.ir")
-
-@main_bp.route("/careers/consultant/apply", methods=["GET","POST"], endpoint="careers_consultant_apply")
-def careers_consultant_apply():
-    """فرم درخواست همکاری مشاور."""
-    if request.method == "POST":
-        name = (request.form.get("name") or "").strip()
-        phone = (request.form.get("phone") or "").strip()
-        city = (request.form.get("city") or "").strip()
-        exp  = (request.form.get("experience") or "").strip()
-        note = (request.form.get("note") or "").strip()
-        items = load_consultant_apps()
-        items.append({
-            "id": (max([x.get("id",0) for x in items], default=0) or 0) + 1,
-            "name": name, "phone": phone, "city": city, "experience": exp,
-            "note": note, "status": "new", "created_at": datetime.utcnow().isoformat()+"Z"
-        })
-        save_consultant_apps(items)
-        return render_template("main/careers_consultant_thanks.html", name=name, brand="وینور", domain="vinor.ir")
-    return render_template("main/careers_consultant_apply.html", brand="وینور", domain="vinor.ir")
+## مسیرهای مشاورین (careers/apply) حذف شدند
 
 # -------------------------
 # Vinor Express: Partner Application & Dashboard
@@ -408,17 +386,7 @@ def express_partner_delete_sale(sid: int):
     save_partner_sales(items)
     return redirect(url_for("main.express_partner_dashboard"))
 
-@main_bp.route("/consultant/dashboard", methods=["GET"], endpoint="consultant_dashboard")
-def consultant_dashboard():
-    """داشبورد سادهٔ مشاور (MVP)."""
-    if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("main.consultant_dashboard")))
-    me = (session.get("user_phone") or "").strip()
-    consultants = load_consultants()
-    profile = next((c for c in consultants if c.get("phone") == me), None)
-    apps = load_consultant_apps()
-    my_apps = [a for a in apps if a.get("phone") == me]
-    return render_template("consultant/dashboard.html", profile=profile, my_apps=my_apps, brand="وینور", domain="vinor.ir")
+## مسیر داشبورد مشاور حذف شد
 
 @main_bp.route("/start", endpoint="start")
 def start():
