@@ -73,14 +73,7 @@
       {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
       {# اگر مشاور تأیید شده است: لینک داشبورد؛ در غیر این صورت لینک ثبت درخواست #}
-      {% if VINOR_IS_CONSULTANT %}
-        {# داشبورد مشاور به پروفایل منتقل شد #}
-      {% else %}
-        {{ MenuItem(url_for('main.careers_consultant'), 'fa-user-tie', 'همکاری با وینور اکسپرس', False) }}
-        {{ MenuItem(url_for('main.careers_consultant_apply'), 'fa-file-signature', 'ثبت درخواست پنل مشاور', True) }}
-      {% endif %}
-
-      {# همکار اکسپرس: بعد از تأیید، لینک داشبورد نمایش داده شود و فرم غیرفعال/مخفی شود #}
+      {# فقط درخواست همکاری اکسپرس نمایش داده شود #}
       {% if VINOR_IS_EXPRESS_PARTNER %}
         {# پنل همکاری به پروفایل منتقل شد #}
       {% else %}
