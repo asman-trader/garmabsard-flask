@@ -1,10 +1,28 @@
 {% extends 'base.html' %}
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto py-8">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">پنل همکاری وینور اکسپرس</h1>
-    <a href="{{ url_for('main.express_partner_apply') }}" class="text-sm text-vinor-700 hover:underline">ویرایش/ارسال درخواست</a>
+<div class="max-w-6xl mx-auto py-5 px-3 sm:px-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-3 mb-4">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-lg bg-[#7C3AED] grid place-items-center text-white text-lg shadow"><i class="fas fa-bolt"></i></div>
+      <div>
+        <div class="text-sm font-extrabold">وینور اکسپرس</div>
+        <div class="text-[12px] text-gray-500">همکار: {{ (profile and profile.name) or session.get('user_phone') }}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('main.profile') }}" class="px-3 py-1.5 rounded-md border text-sm">پروفایل</a>
+      <a href="{{ url_for('main.logout') }}" class="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm">خروج</a>
+    </div>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1">
+    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs"><i class="fas fa-wallet"></i> کل درآمد: {{ total_commission }}</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-xs"><i class="fas fa-hourglass"></i> در انتظار: {{ pending_commission }}</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs"><i class="fas fa-check"></i> فروش‌های من: {{ sold_count }}</span>
+    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs"><i class="fas fa-list"></i> فایل‌های فعال: {{ assigned_lands|length }}</span>
   </div>
 
   {% if not is_approved %}
@@ -17,7 +35,36 @@
     </div>
   {% endif %}
 
-  <div class="grid md:grid-cols-2 gap-6">
+  <!-- Assigned lands cards -->
+  <div class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    {% for land in assigned_lands %}
+      <div class="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+        {% set img = (land.images[0] if land.images and land.images[0] else None) %}
+        <div class="aspect-video bg-gray-200 dark:bg-gray-700">
+          {% if img %}
+            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover">
+          {% endif %}
+        </div>
+        <div class="p-3 space-y-2">
+          <div class="text-sm font-bold line-clamp-1">{{ land.title }}</div>
+          <div class="text-[12px] text-gray-500">{{ land.location or (land.city or '') }}</div>
+          <div class="text-sm font-extrabold text-gray-900 dark:text-white">{{ land.price_total or '—' }}</div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700">وضعیت: {{ land._assignment_status or 'active' }}</span>
+            {% if land._commission_pct %}
+              <span class="text-[11px] px-2 py-1 rounded-md bg-purple-100 text-purple-700">٪{{ land._commission_pct }}</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md border text-[13px] text-center">جزئیات</a>
+            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md bg-[#7C3AED] text-white text-[13px] text-center">اشتراک لینک</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-6 mt-6">
     <div class="bg-white border rounded-xl p-4">
       <h2 class="font-semibold mb-3">پروفایل</h2>
       <dl class="text-sm text-gray-700 space-y-2">

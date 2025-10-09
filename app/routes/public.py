@@ -240,7 +240,8 @@ def express_partner_dashboard():
     except Exception:
         my_comms = []
     total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms)
-    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if c.get('status') in (None,'','pending'))
+    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending') == 'pending')
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
 
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     return render_template(
@@ -254,6 +255,7 @@ def express_partner_dashboard():
         assigned_lands=assigned_lands,
         total_commission=total_commission,
         pending_commission=pending_commission,
+        sold_count=sold_count,
         brand="وینور",
         domain="vinor.ir",
     )
