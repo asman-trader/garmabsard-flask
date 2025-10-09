@@ -115,16 +115,14 @@
   <!-- Lower panels -->
   <div class="grid md:grid-cols-2 gap-6 mt-6">
 
-    <!-- Profile -->
-    <aside class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+    <!-- Profile link -->
+    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
       <h2 class="font-semibold mb-3 text-[#7C3AED]">پروفایل</h2>
-      <dl class="text-sm text-gray-700 space-y-2">
-        <div class="flex justify-between border-b pb-2"><dt>نام</dt><dd class="text-right">{{ (profile and profile.name) or '—' }}</dd></div>
-        <div class="flex justify-between border-b pb-2"><dt>شماره</dt><dd class="text-right">{{ (profile and profile.phone) or session.get('user_phone') }}</dd></div>
-        <div class="flex justify-between border-b pb-2"><dt>شهر</dt><dd class="text-right">{{ (profile and profile.city) or '—' }}</dd></div>
-        <div class="flex justify-between"><dt>وضعیت</dt><dd class="text-right">{{ (profile and profile.status) or 'در انتظار' }}</dd></div>
-      </dl>
-    </aside>
+      <p class="text-sm text-gray-600 mb-3">برای مشاهده و ویرایش اطلاعات، به صفحه پروفایل بروید.</p>
+      <a href="{{ url_for('main.profile') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#7C3AED] text-white text-sm">
+        مشاهده پروفایل
+      </a>
+    </section>
 
     <!-- My Requests -->
     <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
