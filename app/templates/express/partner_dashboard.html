@@ -124,36 +124,6 @@
   <!-- Lower panels -->
   <div class="grid md:grid-cols-2 gap-6 mt-6">
 
-    <!-- Profile link -->
-    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3 text-[#7C3AED]">پروفایل</h2>
-      <p class="text-sm text-gray-600 mb-3">برای مشاهده و ویرایش اطلاعات، به صفحه پروفایل بروید.</p>
-      <a href="{{ url_for('main.profile') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#7C3AED] text-white text-sm">
-        مشاهده پروفایل
-      </a>
-    </section>
-
-    <!-- My Requests -->
-    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3 text-[#7C3AED]">درخواست‌های من</h2>
-      <div class="text-sm text-gray-700">
-        {% if my_apps %}
-          <ul class="list-disc pr-5 space-y-1">
-            {% for a in my_apps %}
-              <li class="flex justify-between items-start">
-                <div>
-                  <span class="font-medium">{{ a.created_at }}</span> — {{ a.note or '' }}
-                </div>
-                <div class="text-sm px-2 py-0.5 rounded-md bg-gray-50 text-gray-600">{{ a.status or 'new' }}</div>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="text-gray-500">درخواستی ثبت نکرده‌اید. از صفحه پروفایل درخواست خود را ثبت کنید.</p>
-        {% endif %}
-      </div>
-    </section>
-
     <!-- Notes -->
     <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
       <h2 class="font-semibold mb-3 text-[#7C3AED]">یادداشت‌های خصوصی</h2>
