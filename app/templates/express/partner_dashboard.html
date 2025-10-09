@@ -1,124 +1,160 @@
 {% extends 'base.html' %}
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto py-5 px-3 sm:px-4">
-  <!-- Header -->
-  <div class="rounded-2xl bg-gradient-to-l from-[#7C3AED] to-[#A78BFA] text-white p-4 mb-4 shadow">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 font-iranyekan">
+
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-40 rounded-2xl bg-gradient-to-l from-[#7C3AED] to-[#A78BFA] text-white p-3 mb-4 shadow-md backdrop-blur-md">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur grid place-items-center text-white text-xl">
-          <i class="fas fa-bolt"></i>
+        <!-- SVG logo (replace with actual brand SVG if available) -->
+        <div class="w-12 h-12 rounded-xl bg-white/10 grid place-items-center text-white text-xl">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 12h18" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 3v18" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <div>
+        <div class="leading-tight">
           <div class="text-base font-extrabold">وینور اکسپرس</div>
           <div class="text-[12px] opacity-90">همکار: {{ (profile and profile.name) or session.get('user_phone') }}</div>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <a href="{{ url_for('main.profile') }}" class="px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 transition text-sm">پروفایل</a>
-        <a href="{{ url_for('main.logout') }}" class="px-3 py-1.5 rounded-md bg-white text-[#7C3AED] text-sm font-semibold">خروج</a>
-      </div>
-    </div>
-    <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="rounded-xl bg-white/10 p-3">
-        <div class="text-[12px] opacity-90">کل درآمد</div>
-        <div class="text-lg font-extrabold">{{ total_commission }}</div>
-      </div>
-      <div class="rounded-xl bg-white/10 p-3">
-        <div class="text-[12px] opacity-90">در انتظار</div>
-        <div class="text-lg font-extrabold">{{ pending_commission }}</div>
-      </div>
-      <div class="rounded-xl bg-white/10 p-3">
-        <div class="text-[12px] opacity-90">فروش‌های من</div>
-        <div class="text-lg font-extrabold">{{ sold_count }}</div>
-      </div>
-      <div class="rounded-xl bg-white/10 p-3">
-        <div class="text-[12px] opacity-90">فایل‌های فعال</div>
-        <div class="text-lg font-extrabold">{{ assigned_lands|length }}</div>
-      </div>
-    </div>
-  </div>
 
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('main.profile') }}" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 border border-white/10 transition-all duration-200 text-sm">پروفایل</a>
+        <a href="{{ url_for('main.logout') }}" class="px-3 py-1.5 rounded-lg bg-white text-[#7C3AED] text-sm font-semibold shadow-sm">خروج</a>
+      </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="rounded-xl bg-white/10 hover:bg-white/15 p-3 cursor-pointer transition-all duration-200">
+        <div class="text-[12px] opacity-90 flex items-center gap-2"><span class="text-sm">💰</span> <span>کل درآمد</span></div>
+        <div class="text-lg font-extrabold mt-1">{{ total_commission or '—' }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 hover:bg-white/15 p-3 transition-all duration-200">
+        <div class="text-[12px] opacity-90 flex items-center gap-2"><span class="text-sm">⌛</span> <span>در انتظار</span></div>
+        <div class="text-lg font-extrabold mt-1">{{ pending_commission or '—' }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 hover:bg-white/15 p-3 transition-all duration-200">
+        <div class="text-[12px] opacity-90 flex items-center gap-2"><span class="text-sm">🏷️</span> <span>فروش‌های من</span></div>
+        <div class="text-lg font-extrabold mt-1">{{ sold_count or 0 }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 hover:bg-white/15 p-3 transition-all duration-200">
+        <div class="text-[12px] opacity-90 flex items-center gap-2"><span class="text-sm">📂</span> <span>فایل‌های فعال</span></div>
+        <div class="text-lg font-extrabold mt-1">{{ assigned_lands|length }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Approval Notice -->
   {% if not is_approved %}
-    <div class="bg-yellow-50 border border-yellow-200 text-yellow-900 p-4 rounded-md mb-6">
-      درخواست شما در صف بررسی است. پس از تأیید توسط ادمین، دسترسی کامل به پنل برای شما فعال می‌شود.
-    </div>
+    <div class="bg-yellow-50 border border-yellow-200 text-yellow-900 p-4 rounded-md mb-6">درخواست شما در صف بررسی است. پس از تأیید توسط ادمین، دسترسی کامل به پنل فعال می‌شود.</div>
   {% else %}
-    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-md mb-6">
-      شما به عنوان همکار اکسپرس تأیید شده‌اید. می‌توانید از خدمات ویژه استفاده کنید.
-    </div>
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-md mb-6">شما به‌عنوان همکار اکسپرس تأیید شده‌اید. می‌توانید از خدمات ویژه استفاده کنید.</div>
   {% endif %}
 
-  <!-- Assigned lands cards -->
+  <!-- Loading skeleton -->
+  {% if loading %}
+    <div class="space-y-4">
+      <div class="h-40 rounded-2xl bg-gray-100 animate-pulse"></div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for i in range(6) %}
+          <div class="h-56 rounded-2xl bg-gray-100 animate-pulse"></div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+
+  <!-- Assigned lands -->
   {% if assigned_lands|length == 0 %}
     <div class="mt-2 bg-white border rounded-2xl p-6 text-center text-gray-600">هنوز ملکی برای شما ارسال نشده است.</div>
   {% endif %}
-  <div class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+  <section class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for land in assigned_lands %}
-      <div class="group relative bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-200">
+      <article class="group relative bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-200">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-        <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
+        <div class="relative aspect-video bg-gray-100">
           {% if img %}
-            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200">
+            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-200">
+          {% else %}
+            <div class="w-full h-full grid place-items-center text-gray-400">تصویر ندارد</div>
           {% endif %}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-          <div class="absolute top-2 left-2 text-[11px] px-2 py-1 rounded-md bg-white/90 text-gray-800">{{ land._assignment_status or 'active' }}</div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+
+          <!-- status badge -->
+          <div class="absolute top-3 left-3 text-[12px] px-2 py-1 rounded-md bg-white/90 text-gray-800">
+            {{ land._assignment_status|default('active') }}
+          </div>
+
+          <!-- commission badge -->
           {% if land._commission_pct %}
-            <div class="absolute top-2 right-2 text-[11px] px-2 py-1 rounded-md bg-purple-600 text-white">٪{{ land._commission_pct }}</div>
+            <div class="absolute top-3 right-3 text-[12px] px-2 py-1 rounded-md bg-[#7C3AED] text-white">٪{{ land._commission_pct }}</div>
           {% endif %}
-          <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-white text-[13px]">
-            <span class="font-bold drop-shadow">{{ land.price_total or '—' }}</span>
+
+          <!-- price -->
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[13px]">
+            <span class="font-extrabold text-lg drop-shadow">{{ land.price_total or '—' }}</span>
+            <span class="text-sm opacity-90">{{ land.location or (land.city or '') }}</span>
           </div>
         </div>
+
         <div class="p-3 space-y-1.5">
-          <div class="text-sm font-bold line-clamp-1">{{ land.title }}</div>
+          <h3 class="text-sm font-bold line-clamp-1">{{ land.title }}</h3>
           <div class="text-[12px] text-gray-500">{{ land.location or (land.city or '') }}</div>
-          <div class="flex items-center gap-2 pt-1">
-            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md border text-[13px] text-center">جزئیات</a>
+          <div class="flex items-center gap-2 pt-2">
+            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md border text-[13px] text-center hover:bg-gray-50 transition">جزئیات</a>
             <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md bg-[#7C3AED] hover:bg-[#6D28D9] transition text-white text-[13px] text-center">اشتراک لینک</a>
           </div>
         </div>
-      </div>
+      </article>
     {% endfor %}
-  </div>
+  </section>
 
+  <!-- Lower panels -->
   <div class="grid md:grid-cols-2 gap-6 mt-6">
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3">پروفایل</h2>
-      <dl class="text-sm text-gray-700 space-y-2">
-        <div class="flex justify-between"><dt>نام</dt><dd>{{ (profile and profile.name) or '—' }}</dd></div>
-        <div class="flex justify-between"><dt>شماره</dt><dd>{{ (profile and profile.phone) or session.get('user_phone') }}</dd></div>
-        <div class="flex justify-between"><dt>شهر</dt><dd>{{ (profile and profile.city) or '—' }}</dd></div>
-        <div class="flex justify-between"><dt>وضعیت</dt><dd>{{ (profile and profile.status) or 'در انتظار' }}</dd></div>
-      </dl>
-    </div>
 
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3">درخواست‌های من</h2>
+    <!-- Profile -->
+    <aside class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+      <h2 class="font-semibold mb-3 text-[#7C3AED]">پروفایل</h2>
+      <dl class="text-sm text-gray-700 space-y-2">
+        <div class="flex justify-between border-b pb-2"><dt>نام</dt><dd class="text-right">{{ (profile and profile.name) or '—' }}</dd></div>
+        <div class="flex justify-between border-b pb-2"><dt>شماره</dt><dd class="text-right">{{ (profile and profile.phone) or session.get('user_phone') }}</dd></div>
+        <div class="flex justify-between border-b pb-2"><dt>شهر</dt><dd class="text-right">{{ (profile and profile.city) or '—' }}</dd></div>
+        <div class="flex justify-between"><dt>وضعیت</dt><dd class="text-right">{{ (profile and profile.status) or 'در انتظار' }}</dd></div>
+      </dl>
+    </aside>
+
+    <!-- My Requests -->
+    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+      <h2 class="font-semibold mb-3 text-[#7C3AED]">درخواست‌های من</h2>
       <div class="text-sm text-gray-700">
         {% if my_apps %}
           <ul class="list-disc pr-5 space-y-1">
             {% for a in my_apps %}
-              <li>
-                <span class="font-medium">{{ a.created_at }}</span>
-                — وضعیت: {{ a.status or 'new' }}
-                {% if a.note %} — {{ a.note }}{% endif %}
+              <li class="flex justify-between items-start">
+                <div>
+                  <span class="font-medium">{{ a.created_at }}</span> — {{ a.note or '' }}
+                </div>
+                <div class="text-sm px-2 py-0.5 rounded-md bg-gray-50 text-gray-600">{{ a.status or 'new' }}</div>
               </li>
             {% endfor %}
           </ul>
         {% else %}
-          <p>درخواستی ثبت نکرده‌اید. از لینک بالا درخواست خود را ثبت کنید.</p>
+          <p class="text-gray-500">درخواستی ثبت نکرده‌اید. از صفحه پروفایل درخواست خود را ثبت کنید.</p>
         {% endif %}
       </div>
-    </div>
+    </section>
 
+    <!-- Notes -->
     <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3">یادداشت‌های خصوصی</h2>
+      <h2 class="font-semibold mb-3 text-[#7C3AED]">یادداشت‌های خصوصی</h2>
       <form method="post" action="{{ url_for('main.express_partner_add_note') }}" class="mb-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="flex gap-2">
-          <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="یک یادداشت بنویسید...">
-          <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">افزودن</button>
+          <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="برای خودت یادداشت بگذار تا چیزی از قلم نیفتد...">
+          <button class="px-3 py-2 rounded-md bg-[#7C3AED] text-white">افزودن</button>
         </div>
       </form>
       <ul class="space-y-2 text-sm">
@@ -136,20 +172,21 @@
       </ul>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <h2 class="font-semibold mb-3">فایل‌های اختصاصی</h2>
+    <!-- Files Upload -->
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:col-span-2">
+      <h2 class="font-semibold mb-3 text-[#7C3AED]">فایل‌های اختصاصی</h2>
       <form method="post" action="{{ url_for('main.express_partner_upload_file') }}" enctype="multipart/form-data" class="mb-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="flex items-center gap-2">
           <input type="file" name="file" class="flex-1 text-sm">
-          <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">آپلود</button>
+          <button class="px-3 py-2 rounded-md bg-[#7C3AED] text-white">آپلود</button>
         </div>
       </form>
       <ul class="space-y-2 text-sm">
         {% for f in files %}
-          <li class="p-2 border rounded-md">
-            <span class="font-mono">{{ f.filename }}</span>
-            <span class="text-gray-500"> — {{ f.stored_at }}</span>
+          <li class="p-2 border rounded-md flex justify-between items-center">
+            <span class="font-mono truncate">{{ f.filename }}</span>
+            <span class="text-gray-500 text-xs">{{ f.stored_at }}</span>
           </li>
         {% else %}
           <li class="text-gray-500">فایلی ثبت نشده است.</li>
@@ -157,15 +194,17 @@
       </ul>
     </div>
 
+    <!-- Sales / Contracts -->
     <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:col-span-2">
-      <h2 class="font-semibold mb-3">فروش‌ها / قراردادها</h2>
+      <h2 class="font-semibold mb-3 text-[#7C3AED]">فروش‌ها / قراردادها</h2>
       <form method="post" action="{{ url_for('main.express_partner_add_sale') }}" class="grid md:grid-cols-4 gap-2 mb-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="title" class="border rounded-md px-3 py-2" placeholder="عنوان (مثلاً فروش زمین در ...)" required>
         <input type="text" name="amount" class="border rounded-md px-3 py-2" placeholder="مبلغ (تومان)">
         <input type="text" name="note" class="border rounded-md px-3 py-2" placeholder="یادداشت">
-        <button class="px-3 py-2 rounded-md bg-vinor-600 text-white">ثبت</button>
+        <button class="px-3 py-2 rounded-md bg-[#7C3AED] text-white">ثبت</button>
       </form>
+
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -179,7 +218,7 @@
           </thead>
           <tbody>
             {% for s in sales %}
-              <tr class="border-t">
+              <tr class="border-t hover:bg-gray-50 transition">
                 <td class="p-2">{{ s.id }}</td>
                 <td class="p-2">{{ s.title }}</td>
                 <td class="p-2">{{ s.amount }}</td>
@@ -193,8 +232,39 @@
         </table>
       </div>
     </div>
-  </div>
+
+  </div> <!-- end lower panels -->
+  {% endif %} <!-- end loading check -->
+
+  <!-- Mobile bottom nav -->
+  <nav class="fixed bottom-2 left-2 right-2 z-50 sm:hidden">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
+      <a href="{{ url_for('main.express_partner_dashboard') }}" class="flex flex-col items-center text-xs text-[#7C3AED]">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#7C3AED" stroke-width="1.5"/></svg>
+        فایل‌ها
+      </a>
+      <a href="{{ url_for('main.express_partner_dashboard') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#6B7280" stroke-width="1.5"/></svg>
+        پورسانت
+      </a>
+      <a href="{{ url_for('main.help') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke="#6B7280" stroke-width="1.2"/></svg>
+        پشتیبانی
+      </a>
+      <a href="{{ url_for('main.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#6B7280" stroke-width="1.5"/><path d="M6 20c1.5-4 9-4 12 0" stroke="#6B7280" stroke-width="1.5"/></svg>
+        من
+      </a>
+    </div>
+  </nav>
+
 </div>
+
+<!-- Optional small script for accessibility enhancements -->
+<script>
+  // add focus outline for keyboard users
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
+  });
+</script>
 {% endblock %}
-
-
