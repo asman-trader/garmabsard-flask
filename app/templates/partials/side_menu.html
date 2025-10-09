@@ -51,7 +51,12 @@
           </span>
         </a>
 
-        
+        {% if VINOR_IS_EXPRESS_PARTNER %}
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-700 text-[11px]">
+          <i class="fas fa-star"></i>
+          همکار اکسپرس
+        </span>
+        {% endif %}
       </div>
     </div>
   </header>

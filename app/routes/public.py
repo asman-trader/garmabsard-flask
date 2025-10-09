@@ -23,6 +23,8 @@ from ..utils.storage import (
     save_partner_sales,
     load_partner_files_meta,
     save_partner_files_meta,
+    load_express_assignments,
+    load_express_commissions,
 )
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_MAP
@@ -212,6 +214,34 @@ def express_partner_dashboard():
     sales = [s for s in (load_partner_sales() or []) if str(s.get('phone')) == me_phone]
     files = [f for f in (load_partner_files_meta() or []) if str(f.get('phone')) == me_phone]
 
+    # Assigned express lands for this partner
+    try:
+        assignments = load_express_assignments() or []
+    except Exception:
+        assignments = []
+    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved')]
+    lands_all = load_ads_cached() or []
+    code_to_land = {str(l.get('code')): l for l in lands_all}
+    assigned_lands = []
+    for a in my_assignments:
+        land = code_to_land.get(str(a.get('land_code')))
+        if not land:
+            continue
+        item = dict(land)
+        item['_assignment_id'] = a.get('id')
+        item['_assignment_status'] = a.get('status','active')
+        item['_commission_pct'] = a.get('commission_pct')
+        assigned_lands.append(item)
+
+    # Commissions summary
+    try:
+        comms = load_express_commissions() or []
+        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
+    except Exception:
+        my_comms = []
+    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms)
+    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if c.get('status') in (None,'','pending'))
+
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     return render_template(
         "express/partner_dashboard.html",
@@ -221,6 +251,9 @@ def express_partner_dashboard():
         notes=notes,
         sales=sales,
         files=files,
+        assigned_lands=assigned_lands,
+        total_commission=total_commission,
+        pending_commission=pending_commission,
         brand="وینور",
         domain="vinor.ir",
     )
