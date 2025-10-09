@@ -2,23 +2,40 @@
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-5 px-3 sm:px-4">
-  <!-- Compact KPI summary (header removed) -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-    <div class="rounded-xl bg-white border border-gray-200 p-3">
-      <div class="text-[12px] text-gray-500">کل درآمد</div>
-      <div class="text-lg font-extrabold">{{ total_commission }}</div>
+  <!-- Header -->
+  <div class="rounded-2xl bg-gradient-to-l from-[#7C3AED] to-[#A78BFA] text-white p-4 mb-4 shadow">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur grid place-items-center text-white text-xl">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div>
+          <div class="text-base font-extrabold">وینور اکسپرس</div>
+          <div class="text-[12px] opacity-90">همکار: {{ (profile and profile.name) or session.get('user_phone') }}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('main.profile') }}" class="px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 transition text-sm">پروفایل</a>
+        <a href="{{ url_for('main.logout') }}" class="px-3 py-1.5 rounded-md bg-white text-[#7C3AED] text-sm font-semibold">خروج</a>
+      </div>
     </div>
-    <div class="rounded-xl bg-white border border-gray-200 p-3">
-      <div class="text-[12px] text-gray-500">در انتظار</div>
-      <div class="text-lg font-extrabold">{{ pending_commission }}</div>
-    </div>
-    <div class="rounded-xl bg-white border border-gray-200 p-3">
-      <div class="text-[12px] text-gray-500">فروش‌های من</div>
-      <div class="text-lg font-extrabold">{{ sold_count }}</div>
-    </div>
-    <div class="rounded-xl bg-white border border-gray-200 p-3">
-      <div class="text-[12px] text-gray-500">فایل‌های فعال</div>
-      <div class="text-lg font-extrabold">{{ assigned_lands|length }}</div>
+    <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="rounded-xl bg-white/10 p-3">
+        <div class="text-[12px] opacity-90">کل درآمد</div>
+        <div class="text-lg font-extrabold">{{ total_commission }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 p-3">
+        <div class="text-[12px] opacity-90">در انتظار</div>
+        <div class="text-lg font-extrabold">{{ pending_commission }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 p-3">
+        <div class="text-[12px] opacity-90">فروش‌های من</div>
+        <div class="text-lg font-extrabold">{{ sold_count }}</div>
+      </div>
+      <div class="rounded-xl bg-white/10 p-3">
+        <div class="text-[12px] opacity-90">فایل‌های فعال</div>
+        <div class="text-lg font-extrabold">{{ assigned_lands|length }}</div>
+      </div>
     </div>
   </div>
 
