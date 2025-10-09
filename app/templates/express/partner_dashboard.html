@@ -47,6 +47,15 @@
     </div>
   </header>
 
+  <!-- Pull-to-Refresh (purple themed) -->
+  <div id="ptrMsg" class="max-w-6xl mx-auto px-2" style="display:none">
+    <div id="ptrWrap" class="sticky top-0 z-30">
+      <div id="ptrBox" class="mx-auto w-9 h-9 flex items-center justify-center rounded-full border shadow bg-white/90 backdrop-blur-md text-gray-700 ring-1 ring-gray-300 border-gray-200 opacity-0 -translate-y-2 transition duration-200">
+        <i id="ptrIcon" class="fas fa-arrow-down text-gray-500"></i>
+      </div>
+    </div>
+  </div>
+
   <!-- Approval Notice -->
   {% if not is_approved %}
     <div class="bg-yellow-50 border border-yellow-200 text-yellow-900 p-4 rounded-md mb-6">درخواست شما در صف بررسی است. پس از تأیید توسط ادمین، دسترسی کامل به پنل فعال می‌شود.</div>
@@ -258,11 +267,66 @@
 
 </div>
 
-<!-- Optional small script for accessibility enhancements -->
+<!-- PTR + small script for accessibility enhancements -->
 <script>
   // add focus outline for keyboard users
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
+  // Pull-to-refresh (purple)
+  (function(){
+    const msg = document.getElementById('ptrMsg');
+    const box = document.getElementById('ptrBox');
+    const icon = document.getElementById('ptrIcon');
+    const THRESH = 60; // px
+    let startY = 0, eligible = false, active = false, isRefreshing = false;
+    function atTop(){ return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0; }
+    function setState(state){
+      if (!box || !icon) return;
+      icon.style.transform = '';
+      icon.className = '';
+      box.classList.remove('ring-purple-300','border-purple-200','ring-red-300','border-red-200','ring-gray-300','border-gray-200');
+      box.classList.add('ring-gray-300','border-gray-200');
+      if (state === 'pull'){
+        icon.className = 'fas fa-arrow-down ' + (active ? 'text-purple-600' : 'text-gray-500');
+      } else if (state === 'loading'){
+        icon.className = 'fas fa-rotate-right fa-spin text-purple-600';
+        box.classList.remove('ring-gray-300','border-gray-200');
+        box.classList.add('ring-purple-300','border-purple-200');
+      } else if (state === 'success'){
+        icon.className = 'fas fa-check text-purple-600';
+        box.classList.remove('ring-gray-300','border-gray-200');
+        box.classList.add('ring-purple-300','border-purple-200');
+      } else if (state === 'error'){
+        icon.className = 'fas fa-exclamation text-red-600';
+        box.classList.remove('ring-gray-300','border-gray-200');
+        box.classList.add('ring-red-300','border-red-200');
+      }
+    }
+    function show(){ if (msg) msg.style.display = ''; try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ } }
+    function hide(){ try { box.classList.add('opacity-0','-translate-y-2'); box.classList.remove('opacity-100','translate-y-0'); } catch(_){ } if (msg) msg.style.display = 'none'; }
+
+    document.addEventListener('touchstart', (e)=>{
+      if (!atTop()) { eligible = false; return; }
+      const t = e.touches && e.touches[0];
+      if (!t) { eligible = false; return; }
+      startY = t.clientY; eligible = true; active = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e)=>{
+      if (!eligible) return;
+      const t = e.touches && e.touches[0]; if (!t) return;
+      const dy = t.clientY - startY; if (dy > 0){
+        try { e.preventDefault(); } catch(_){ }
+        active = dy >= THRESH; icon.style.transform = 'rotate(' + Math.min(180, Math.round((dy / THRESH) * 180)) + 'deg)';
+        show(); setState('pull');
+      }
+    }, { passive: false });
+    document.addEventListener('touchend', async ()=>{
+      if (!eligible) return; eligible = false; if (!active) return; if (isRefreshing) return;
+      isRefreshing = true; show(); setState('loading');
+      try { location.reload(); setState('success'); } catch(_) { setState('error'); }
+      finally { setTimeout(()=>{ isRefreshing = false; hide(); }, 900); }
+    }, { passive: true });
+  })();
 </script>
 {% endblock %}
