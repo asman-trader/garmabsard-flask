@@ -263,6 +263,23 @@ def express_partner_dashboard():
     )
 
 
+@main_bp.get("/express/partner/notes", endpoint="express_partner_notes")
+def express_partner_notes():
+    """صفحهٔ اختصاصی یادداشت‌های همکار اکسپرس."""
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_notes")))
+    me_phone = (session.get("user_phone") or "").strip()
+    items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
+    return render_template(
+        "express/partner_notes.html",
+        notes=items,
+        hide_header=True,
+        SHOW_SUBMIT_BUTTON=False,
+        brand="وینور",
+        domain="vinor.ir",
+    )
+
+
 @main_bp.post("/express/partner/notes/add")
 def express_partner_add_note():
     if not session.get("user_phone"):
@@ -275,6 +292,16 @@ def express_partner_add_note():
     new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
     items.append({"id": new_id, "phone": me_phone, "content": content, "created_at": datetime.utcnow().isoformat()+"Z"})
     save_partner_notes(items)
+    # هدایت مجدد: اگر از صفحهٔ یادداشت‌ها آمدیم، به همان برگرد
+    try:
+        ref = request.referrer or ""
+    except Exception:
+        ref = ""
+    if "/express/partner/notes" in ref:
+        return redirect(url_for("main.express_partner_notes"))
+    nxt = (request.form.get("next") or request.args.get("next") or "").strip()
+    if nxt.startswith("/express/partner/notes"):
+        return redirect(nxt)
     return redirect(url_for("main.express_partner_dashboard"))
 
 
@@ -286,6 +313,16 @@ def express_partner_delete_note(nid: int):
     items = load_partner_notes() or []
     items = [n for n in items if not (int(n.get('id',0) or 0) == int(nid) and str(n.get('phone')) == me_phone)]
     save_partner_notes(items)
+    # هدایت مجدد: اگر از صفحهٔ یادداشت‌ها آمدیم، به همان برگرد
+    try:
+        ref = request.referrer or ""
+    except Exception:
+        ref = ""
+    if "/express/partner/notes" in ref:
+        return redirect(url_for("main.express_partner_notes"))
+    nxt = (request.form.get("next") or request.args.get("next") or "").strip()
+    if nxt.startswith("/express/partner/notes"):
+        return redirect(nxt)
     return redirect(url_for("main.express_partner_dashboard"))
 
 
