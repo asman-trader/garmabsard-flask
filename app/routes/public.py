@@ -256,6 +256,8 @@ def express_partner_dashboard():
         total_commission=total_commission,
         pending_commission=pending_commission,
         sold_count=sold_count,
+        hide_header=True,
+        SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
         domain="vinor.ir",
     )
