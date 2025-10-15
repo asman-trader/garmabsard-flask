@@ -82,39 +82,63 @@
 
   <section class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for land in assigned_lands %}
-      <article class="group relative bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-200">
+      <article class="group relative bg-white border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-200">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-        <div class="relative aspect-video bg-gray-100">
+        <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
           {% if img %}
             <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-200">
           {% else %}
             <div class="w-full h-full grid place-items-center text-gray-400">تصویر ندارد</div>
           {% endif %}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
 
-          <!-- status badge -->
-          <div class="absolute top-3 left-3 text-[12px] px-2 py-1 rounded-md bg-white/90 text-gray-800">
-            {{ land._assignment_status|default('active') }}
+          {% set _st = (land._assignment_status|default('active')) %}
+          <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/90 text-gray-800 shadow">
+            {% if _st == 'closed' %} بسته {% elif _st == 'pending' %} در انتظار {% else %} فعال {% endif %}
           </div>
 
-          <!-- commission badge -->
           {% if land._commission_pct %}
-            <div class="absolute top-3 right-3 text-[12px] px-2 py-1 rounded-md bg-[#7C3AED] text-white">٪{{ land._commission_pct }}</div>
+            <div class="absolute top-3 right-3 text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
           {% endif %}
 
-          <!-- price -->
-          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[13px]">
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
             <span class="font-extrabold text-lg drop-shadow">{{ land.price_total or '—' }}</span>
-            <span class="text-sm opacity-90">{{ land.location or (land.city or '') }}</span>
+            <span class="text-[12px] opacity-90">{{ land.location or (land.city or '') }}</span>
           </div>
         </div>
 
-        <div class="p-3 space-y-1.5">
-          <h3 class="text-sm font-bold line-clamp-1">{{ land.title }}</h3>
-          <div class="text-[12px] text-gray-500">{{ land.location or (land.city or '') }}</div>
-          <div class="flex items-center gap-2 pt-2">
-            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md border text-[13px] text-center hover:bg-gray-50 transition">جزئیات</a>
-            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="flex-1 px-3 py-1.5 rounded-md bg-[#7C3AED] hover:bg-[#6D28D9] transition text-white text-[13px] text-center">اشتراک لینک</a>
+        <div class="p-3">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{{ land.title or '—' }}</h3>
+          <div class="mt-1 flex flex-wrap items-center gap-1.5">
+            {% if land.size %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-[11px]"><i class="fas fa-ruler-combined"></i> {{ land.size }} متر</span>
+            {% endif %}
+            {% if land.code %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-[11px]"><i class="fas fa-hashtag"></i> {{ land.code }}</span>
+            {% endif %}
+            {% if land.category %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 text-[11px]"><i class="fas fa-tag"></i> {{ land.category }}</span>
+            {% endif %}
+          </div>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+              <i class="far fa-eye"></i>
+              مشاهده
+            </a>
+            {% set _link = url_for('main.express_detail', code=land.code, _external=True) %}
+            <button type="button" class="share-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[13px] transition" data-url="{{ _link }}">
+              <i class="fas fa-share-nodes"></i>
+              اشتراک
+            </button>
+            <button type="button" class="copy-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 transition col-span-2 sm:col-span-1" data-url="{{ _link }}">
+              <i class="fas fa-link"></i>
+              کپی لینک
+            </button>
+            <a target="_blank" rel="noopener" href="https://wa.me/?text={{ (_link ~ ' - ' ~ (land.title or ''))|urlencode }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-green-200 text-green-700 hover:bg-green-50 transition text-[13px] sm:col-span-1">
+              <i class="fab fa-whatsapp"></i>
+              واتساپ
+            </a>
           </div>
         </div>
       </article>
@@ -148,7 +172,7 @@
 
 </div>
 
-<!-- PTR + small script for accessibility enhancements -->
+<!-- PTR + small script for accessibility enhancements + share/copy -->
 <script>
   // add focus outline for keyboard users
   document.addEventListener('keyup', (e) => {
@@ -208,6 +232,36 @@
       try { location.reload(); setState('success'); } catch(_) { setState('error'); }
       finally { setTimeout(()=>{ isRefreshing = false; hide(); }, 900); }
     }, { passive: true });
+  })();
+
+  // Share and copy buttons
+  (function(){
+    function toast(msg){
+      try{
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.dir = 'rtl';
+        t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-emerald-600 text-white shadow z-[60]';
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(), 1500);
+      }catch(_){ }
+    }
+    document.querySelectorAll('.share-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const url = btn.getAttribute('data-url')||location.href;
+        const title = document.title || 'وینور اکسپرس';
+        try{
+          if (navigator.share) { await navigator.share({ title, url }); }
+          else { await navigator.clipboard.writeText(url); toast('لینک کپی شد'); }
+        }catch(_){ }
+      }, { passive: true });
+    });
+    document.querySelectorAll('.copy-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const url = btn.getAttribute('data-url')||location.href;
+        try{ await navigator.clipboard.writeText(url); toast('کپی شد'); }catch(_){ }
+      }, { passive: true });
+    });
   })();
 </script>
 {% endblock %}
