@@ -7,6 +7,12 @@
   <header class="sticky top-0 z-40 rounded-2xl bg-gradient-to-l from-[#7C3AED] to-[#A78BFA] text-white p-3 mb-4 shadow-md backdrop-blur-md">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
+        <!-- Back (RTL) -->
+        <a href="{{ request.referrer or url_for('main.profile') }}"
+           class="w-10 h-10 grid place-items-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/10"
+           aria-label="بازگشت">
+          <i class="fas fa-arrow-right"></i>
+        </a>
         <!-- SVG logo (replace with actual brand SVG if available) -->
         <div class="w-12 h-12 rounded-xl bg-white/10 grid place-items-center text-white text-xl">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
