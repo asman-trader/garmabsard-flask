@@ -493,7 +493,7 @@ def login():
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
             flash('خوش آمدید؛ ورود موفق.', 'success')
-            return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('admin.select_portal'))
         flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
     return render_template('admin/login.html')
 
@@ -510,6 +510,12 @@ def logout():
 # -----------------------------------------------------------------------------
 # داشبورد و صفحات کلی
 # -----------------------------------------------------------------------------
+@admin_bp.route('/select', endpoint='select_portal')
+@login_required
+def select_portal():
+    """صفحه انتخاب پنل بعد از لاگین: وینور اصلی یا وینور اکسپرس."""
+    return render_template('admin/select_portal.html')
+
 @admin_bp.route('/', endpoint='dashboard')
 @login_required
 def dashboard():
@@ -1196,6 +1202,67 @@ def express_listings():
         pagination={"page": pagination["page"], "pages": pagination["pages"]},
         pending_count=p, approved_count=a, rejected_count=r
     )
+
+@admin_bp.route('/express/hub', endpoint='express_hub')
+@login_required
+def express_hub():
+    """مرکز مدیریت اکسپرس: لینک‌های سریع + اکشن انتقال داده."""
+    return render_template('admin/express_hub.html')
+
+@admin_bp.post('/express/transfer')
+@login_required
+def express_transfer():
+    """انتقال داده‌های اکسپرس از مجموعه داده‌های وینور به ساختار اکسپرس (idempotent)."""
+    # داده‌ها در فایل‌های JSON ذخیره می‌شوند؛ این تابع اقلام مرتبط را به فایل‌های مقصد merge می‌کند
+    try:
+        # مبداً: lands.json حاوی آگهی‌هایی که ممکن است فیلدهای express داشته باشند
+        lands = load_json(_lands_path()) or []
+        if not isinstance(lands, list):
+            lands = []
+
+        # مقصدها: فایل‌های express_*
+        partners = load_express_partners() or []
+        partner_apps = load_express_partner_apps() or []
+        assignments = load_express_assignments() or []
+        commissions = load_express_commissions() or []
+
+        # از app.routes.public توابع کمکی بارگذاری متعلقات همکار استفاده نمی‌کنیم؛ تنها merge ایمن
+        # چون در این پروژه، متعلقات همکار در فایل‌های جدا ذخیره می‌شوند، انتقال اینجا idempotent است.
+
+        # اگر آگهی‌های اکسپرس در lands باشند، فقط ensure کنیم is_express و express_status ست است.
+        changed_lands = False
+        for ad in lands:
+            if ad.get('is_express') and not ad.get('ad_type'):
+                ad['ad_type'] = 'express'
+                changed_lands = True
+            if ad.get('is_express') and not ad.get('express_status'):
+                ad['express_status'] = str(ad.get('status') or 'approved')
+                changed_lands = True
+        if changed_lands:
+            save_json(_lands_path(), lands)
+
+        # چون داده‌های partner_* در فایل‌های مستقل هستند، تنها normalize ساده انجام می‌دهیم
+        def _unique(items, key):
+            seen = set()
+            out = []
+            for it in items:
+                k = str(it.get(key))
+                if not k or k in seen:
+                    continue
+                seen.add(k)
+                out.append(it)
+            return out
+
+        save_express_partners(partners if isinstance(partners, list) else [])
+        save_express_partner_apps(partner_apps if isinstance(partner_apps, list) else [])
+        save_express_assignments(assignments if isinstance(assignments, list) else [])
+        save_express_commissions(commissions if isinstance(commissions, list) else [])
+
+        flash('انتقال داده‌های اکسپرس انجام شد.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Express transfer error: {e}")
+        flash('خطا در اجرای انتقال.', 'danger')
+    return redirect(url_for('admin.express_hub'))
 
 @admin_bp.route('/express/add', methods=['GET', 'POST'])
 @login_required
