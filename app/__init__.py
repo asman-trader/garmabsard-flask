@@ -9,6 +9,7 @@ Vinor (vinor.ir) – Flask App Factory (Final)
 """
 import os
 import logging
+import mimetypes
 from datetime import timedelta, datetime
 from flask import (
     Flask, request, redirect, url_for, session, current_app, send_from_directory
@@ -114,6 +115,13 @@ def _register_jinja_filters(app: Flask) -> None:
 
 
 def create_app() -> Flask:
+    # اطمینان از MIME صحیح برای فونت‌ها (برخی سرورها پسوند woff2 را نمی‌شناسند)
+    try:
+        mimetypes.add_type('font/woff2', '.woff2')
+        mimetypes.add_type('font/woff', '.woff')
+    except Exception:
+        pass
+
     app = Flask(__name__, instance_relative_config=True)
 
     # ---------- پایه‌های امنیت/پیکربندی ----------
