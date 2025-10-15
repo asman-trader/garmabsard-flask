@@ -280,6 +280,49 @@ def express_partner_notes():
     )
 
 
+@main_bp.get("/express/partner/commissions", endpoint="express_partner_commissions")
+def express_partner_commissions():
+    """صفحهٔ پورسانت‌های همکار اکسپرس + آمار."""
+    if not session.get("user_phone"):
+        return redirect(url_for("main.login", next=url_for("main.express_partner_commissions")))
+
+    me_phone = (session.get("user_phone") or "").strip()
+    try:
+        comms = load_express_commissions() or []
+        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
+    except Exception:
+        my_comms = []
+
+    def _i(v):
+        try:
+            return int(str(v).replace(',', '').strip() or '0')
+        except Exception:
+            return 0
+
+    total_commission = sum(_i(c.get('commission_amount')) for c in my_comms)
+    pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending') == 'pending')
+    paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') == 'paid')
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
+
+    # آخرین موارد ابتدا
+    try:
+        my_comms.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    except Exception:
+        pass
+
+    return render_template(
+        "express/partner_commissions.html",
+        items=my_comms,
+        total_commission=total_commission,
+        pending_commission=pending_commission,
+        paid_commission=paid_commission,
+        sold_count=sold_count,
+        hide_header=True,
+        SHOW_SUBMIT_BUTTON=False,
+        brand="وینور",
+        domain="vinor.ir",
+    )
+
 @main_bp.post("/express/partner/notes/add")
 def express_partner_add_note():
     if not session.get("user_phone"):

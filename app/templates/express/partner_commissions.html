@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}پورسانت‌ها | همکار اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 font-iranyekan">
+
+  <!-- Simple fixed header -->
+  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
+      <a href="{{ url_for('main.help') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
+        <i class="fas fa-life-ring"></i>
+      </a>
+    </div>
+  </header>
+  <div class="h-20"></div>
+
+  <!-- Stats moved from dashboard -->
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+      <div class="text-[12px] text-gray-500 dark:text-gray-400">کل درآمد</div>
+      <div class="text-lg font-extrabold mt-1">{{ total_commission or '—' }}</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+      <div class="text-[12px] text-gray-500 dark:text-gray-400">در انتظار</div>
+      <div class="text-lg font-extrabold mt-1">{{ pending_commission or '—' }}</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+      <div class="text-[12px] text-gray-500 dark:text-gray-400">پرداخت‌شده</div>
+      <div class="text-lg font-extrabold mt-1">{{ paid_commission or '—' }}</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+      <div class="text-[12px] text-gray-500 dark:text-gray-400">فروش‌های تایید/پرداخت</div>
+      <div class="text-lg font-extrabold mt-1">{{ sold_count or 0 }}</div>
+    </div>
+  </section>
+
+  <!-- List of commissions -->
+  {% if items and items|length > 0 %}
+  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+    <div class="divide-y divide-gray-200 dark:divide-gray-800">
+      {% for c in items %}
+      <div class="p-3 sm:p-4 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">کد ملک: {{ c.land_code or '—' }}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">درصد پورسانت: {{ c.commission_pct or 0 }}%</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">مبلغ پورسانت: {{ c.commission_amount or 0 }}</div>
+        </div>
+        <div class="shrink-0">
+          {% set st = (c.status or 'pending') %}
+          {% if st == 'paid' %}
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-[12px]"><i class="fas fa-check-circle"></i> پرداخت‌شده</span>
+          {% elif st == 'approved' %}
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-100 text-indigo-700 text-[12px]"><i class="fas fa-badge-check"></i> تایید شده</span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-[12px]"><i class="fas fa-clock"></i> در انتظار</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 text-center text-gray-600">هنوز پورسانتی ثبت نشده است.</div>
+  {% endif %}
+
+  <!-- Bottom nav (keep consistent) -->
+  <nav class="fixed bottom-2 left-2 right-2 z-50 sm:hidden">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
+      <a href="{{ url_for('main.express_partner_dashboard') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#6B7280" stroke-width="1.5"/></svg>
+        فایل‌ها
+      </a>
+      <a href="{{ url_for('main.express_partner_commissions') }}" class="flex flex-col items-center text-xs text-[#7C3AED]">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#7C3AED" stroke-width="1.5"/></svg>
+        پورسانت
+      </a>
+      <a href="{{ url_for('main.help') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke="#6B7280" stroke-width="1.2"/></svg>
+        پشتیبانی
+      </a>
+      <a href="{{ url_for('main.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#6B7280" stroke-width="1.5"/><path d="M6 20c1.5-4 9-4 12 0" stroke="#6B7280" stroke-width="1.5"/></svg>
+        من
+      </a>
+    </div>
+  </nav>
+
+</div>
+{% endblock %}
+
