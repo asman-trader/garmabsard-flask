@@ -17,6 +17,14 @@
   </header>
   <div class="h-20"></div>
 
+  <style>
+    /* رنگ‌بندی خواناتر برای کارت‌ها (روشن/تاریک) */
+    .express-card h3 { color: #111827; }
+    .dark .express-card h3 { color: #F3F4F6; }
+    .express-card .chip { color: #374151; background-color: #F3F4F6; }
+    .dark .express-card .chip { color: #D1D5DB; background-color: #1F2937; }
+  </style>
+
   <!-- Pull-to-Refresh (purple themed) -->
   <div id="ptrMsg" class="max-w-6xl mx-auto px-2" style="display:none">
     <div id="ptrWrap" class="sticky top-0 z-30">
@@ -82,7 +90,7 @@
 
   <section class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for land in assigned_lands %}
-      <article class="group relative bg-white border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200">
+      <article class="group express-card relative bg-white border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
           {% if img %}
@@ -109,13 +117,13 @@
           <h3 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{{ land.title or '—' }}</h3>
           <div class="mt-1 flex flex-wrap items-center gap-1.5">
             {% if land.size %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[11px]"><i class="fas fa-ruler-combined"></i> {{ land.size }} متر</span>
+              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-ruler-combined"></i> {{ land.size }} متر</span>
             {% endif %}
             {% if land.code %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[11px]"><i class="fas fa-hashtag"></i> {{ land.code }}</span>
+              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-hashtag"></i> {{ land.code }}</span>
             {% endif %}
             {% if land.category %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[11px]"><i class="fas fa-tag"></i> {{ land.category }}</span>
+              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-tag"></i> {{ land.category }}</span>
             {% endif %}
           </div>
 
