@@ -85,8 +85,8 @@
         {{ MenuItem(url_for('main.express_partner_apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
       {% endif %}
 
-      {# ورود به پنل وینور اکسپرس (ادمین) #}
-      {{ MenuItem(url_for('admin.express_hub'), 'fa-rocket', 'ورود به پنل وینور اکسپرس', False) }}
+      {# ورود به پنل همکار اکسپرس #}
+      {{ MenuItem(url_for('main.express_partner_dashboard'), 'fa-rocket', 'ورود به پنل همکار اکسپرس', True) }}
 
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
       {{ MenuItem(url_for('main.index'),   'fa-home',    'معرفی وینور', False) }}
