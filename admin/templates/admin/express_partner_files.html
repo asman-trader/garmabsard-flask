@@ -25,13 +25,13 @@
   <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
     <form method="post" enctype="multipart/form-data" class="grid sm:grid-cols-3 gap-3 items-end">
       <div>
-        <label class="block text-sm mb-1">انتخاب همکار</label>
-        <select name="partner_phone" required class="border rounded-md px-3 py-2 w-full">
-          <option value="" disabled selected>انتخاب...</option>
+        <label class="block text-sm mb-1">انتخاب همکار (جستجو یا شماره را وارد کنید)</label>
+        <input type="text" name="partner_phone" list="partner_phones" required class="border rounded-md px-3 py-2 w-full" placeholder="شماره همکار یا جستجو...">
+        <datalist id="partner_phones">
           {% for p in partners %}
-            <option value="{{ p.phone }}">{{ p.name or p.phone }} ({{ p.phone }})</option>
+            <option value="{{ p.phone }}">{{ p.name or p.phone }}</option>
           {% endfor %}
-        </select>
+        </datalist>
       </div>
       <div>
         <label class="block text-sm mb-1">انتخاب فایل</label>
