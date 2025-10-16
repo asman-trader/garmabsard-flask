@@ -18,11 +18,9 @@
   <div class="h-20"></div>
 
   <style>
-    /* رنگ‌بندی خواناتر برای کارت‌ها (روشن/تاریک) */
-    .express-card h3 { color: #111827; }
-    .dark .express-card h3 { color: #F3F4F6; }
-    .express-card .chip { color: #F9FAFB; background-color: #111827; }
-    .dark .express-card .chip { color: #F9FAFB; background-color: #000000; }
+    /* کارت‌های جدید همکاران اکسپرس: مینیمال و خوانا */
+    .express-card { transition: box-shadow .2s ease, transform .2s ease; }
+    .express-card:hover { transform: translateY(-2px); }
   </style>
 
   <!-- Pull-to-Refresh (purple themed) -->
@@ -90,15 +88,15 @@
 
   <section class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for land in assigned_lands %}
-      <article class="group express-card relative bg-white border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200">
+      <article class="group express-card relative bg-white border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
           {% if img %}
-            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-200">
+            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200">
           {% else %}
             <div class="w-full h-full grid place-items-center text-gray-400">تصویر ندارد</div>
           {% endif %}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent"></div>
 
           {% set _st = (land._assignment_status|default('active')) %}
           <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/95 text-gray-800 shadow">{% if _st == 'closed' %}بسته{% elif _st == 'pending' %}در انتظار{% else %}فعال{% endif %}</div>
@@ -106,28 +104,34 @@
           {% if land._commission_pct %}
             <div class="absolute top-3 right-3 text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
           {% endif %}
-
-          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-            <span class="font-extrabold text-[18px] drop-shadow-md">{{ land.price_total or '—' }}</span>
-            <span class="text-[12px] drop-shadow">{{ land.location or (land.city or '') }}</span>
-          </div>
         </div>
 
-        <div class="p-3">
-          <h3 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{{ land.title or '—' }}</h3>
-          <div class="mt-1 flex flex-wrap items-center gap-1.5">
-            {% if land.size %}
-              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-ruler-combined"></i> {{ land.size }} متر</span>
-            {% endif %}
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{{ land.title or '—' }}</h3>
             {% if land.code %}
-              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-hashtag"></i> {{ land.code }}</span>
-            {% endif %}
-            {% if land.category %}
-              <span class="chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"><i class="fas fa-tag"></i> {{ land.category }}</span>
+              <span class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-hashtag"></i>{{ land.code }}</span>
             {% endif %}
           </div>
 
-          <div class="mt-3 grid grid-cols-2 gap-2">
+          <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">
+            {% if land.size %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-ruler-combined"></i>{{ land.size }} متر</span>
+            {% endif %}
+            {% if land.category %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-tag"></i>{{ land.category }}</span>
+            {% endif %}
+            {% if land.location or land.city %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-location-dot"></i>{{ land.location or (land.city or '') }}</span>
+            {% endif %}
+          </div>
+
+          <div class="mt-3 flex items-center justify-between text-[13px]">
+            <div class="font-extrabold text-emerald-700 dark:text-emerald-400">{{ land.price_total or '—' }}</div>
+            <div class="text-gray-500 dark:text-gray-400">وینور اکسپرس</div>
+          </div>
+
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
             <a href="{{ url_for('main.express_detail', code=land.code) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 transition">
               <i class="far fa-eye"></i>
               مشاهده
