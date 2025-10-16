@@ -83,6 +83,7 @@
         {# پنل همکاری به پروفایل منتقل شد #}
       {% else %}
         {{ MenuItem(url_for('express_partner.apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
+        {{ MenuItem(url_for('express_partner.login'), 'fa-right-to-bracket', 'ورود همکار اکسپرس', False) }}
       {% endif %}
 
       {# ورود به پنل همکار اکسپرس (تم بنفش مانند داشبورد همکار) #}
@@ -95,6 +96,9 @@
         <span class="text-[15px] font-semibold text-violet-700 dark:text-violet-300">ورود به پنل همکار اکسپرس</span>
       </a>
 
+      {% if VINOR_IS_EXPRESS_PARTNER %}
+        {{ MenuItem(url_for('express_partner.profile'), 'fa-id-badge', 'پروفایل همکار اکسپرس', True) }}
+      {% endif %}
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
       {{ MenuItem(url_for('main.index'),   'fa-home',    'معرفی وینور', False) }}
     </div>
