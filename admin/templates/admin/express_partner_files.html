@@ -1,0 +1,80 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}فایل‌های همکاران اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto py-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold">فایل‌های همکاران اکسپرس</h1>
+    <a class="px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700" href="{{ url_for('admin.express_hub') }}">بازگشت</a>
+  </div>
+
+  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+    <form method="get" class="flex flex-wrap gap-2 items-end">
+      <div>
+        <label class="block text-sm mb-1">فیلتر بر اساس همکار</label>
+        <select name="partner" class="border rounded-md px-3 py-2 min-w-[220px]">
+          <option value="">همه</option>
+          {% for p in partners %}
+            <option value="{{ p.phone }}" {% if partner_filter == p.phone %}selected{% endif %}>{{ p.name or p.phone }} ({{ p.phone }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="px-4 py-2 rounded-md bg-emerald-600 text-white">اعمال فیلتر</button>
+    </form>
+  </section>
+
+  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+    <form method="post" enctype="multipart/form-data" class="grid sm:grid-cols-3 gap-3 items-end">
+      <div>
+        <label class="block text-sm mb-1">انتخاب همکار</label>
+        <select name="partner_phone" required class="border rounded-md px-3 py-2 w-full">
+          <option value="" disabled selected>انتخاب...</option>
+          {% for p in partners %}
+            <option value="{{ p.phone }}">{{ p.name or p.phone }} ({{ p.phone }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm mb-1">انتخاب فایل</label>
+        <input type="file" name="file" required class="border rounded-md px-3 py-2 w-full bg-white">
+      </div>
+      <div>
+        <button class="px-4 py-2 rounded-md bg-indigo-600 text-white w-full">بارگذاری فایل</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 dark:bg-gray-800">
+        <tr class="text-right text-gray-700 dark:text-gray-300">
+          <th class="p-3">#</th>
+          <th class="p-3">همکار</th>
+          <th class="p-3">نام فایل</th>
+          <th class="p-3">تاریخ</th>
+          <th class="p-3">عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in items %}
+        <tr class="border-t dark:border-gray-700">
+          <td class="p-3">{{ m.id }}</td>
+          <td class="p-3">{{ m.phone }}</td>
+          <td class="p-3">{{ m.filename }}</td>
+          <td class="p-3">{{ m.stored_at }}</td>
+          <td class="p-3 flex gap-2">
+            <a class="px-3 py-1.5 rounded-md border" href="{{ url_for('admin.express_partner_file_download', fid=m.id) }}">دانلود</a>
+            <form method="post" action="{{ url_for('admin.express_partner_file_delete', fid=m.id) }}" onsubmit="return confirm('حذف فایل؟');">
+              <button class="px-3 py-1.5 rounded-md border text-rose-600">حذف</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td class="p-3 text-center text-gray-500" colspan="5">فایلی موجود نیست.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}
+
+

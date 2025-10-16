@@ -62,6 +62,8 @@ from app.utils.storage import (
     save_express_assignments,
     load_express_commissions,
     save_express_commissions,
+    load_partner_files_meta,
+    save_partner_files_meta,
 )
 from app.services.notifications import add_notification
 
@@ -1632,6 +1634,92 @@ def express_commission_pay(cid: int):
         save_express_commissions(items)
         flash('پورسانت پرداخت شد.', 'success')
     return redirect(url_for('admin.express_commissions'))
+
+# -----------------------------------------------------------------------------
+# Express Partner Files (upload/list/download/delete by admin)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/express/partner-files', methods=['GET', 'POST'])
+@login_required
+def express_partner_files():
+    partners = load_express_partners() or []
+    # Upload handler
+    if request.method == 'POST':
+        partner_phone = (request.form.get('partner_phone') or '').strip()
+        f = request.files.get('file')
+        if partner_phone and f and f.filename:
+            base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', partner_phone)
+            os.makedirs(base, exist_ok=True)
+            tsname = datetime.now().strftime('%Y%m%d%H%M%S%f') + "__" + secure_filename(f.filename)
+            path = os.path.join(base, tsname)
+            f.save(path)
+            metas = load_partner_files_meta() or []
+            new_id = (max([int(x.get('id',0) or 0) for x in metas if isinstance(x, dict)], default=0) or 0) + 1
+            metas.append({
+                'id': new_id,
+                'phone': partner_phone,
+                'filename': tsname,
+                'stored_at': datetime.now().isoformat() + 'Z'
+            })
+            save_partner_files_meta(metas)
+            flash('فایل بارگذاری شد.', 'success')
+            return redirect(url_for('admin.express_partner_files', partner=partner_phone))
+
+    # List
+    try:
+        partner_filter = (request.args.get('partner') or '').strip()
+    except Exception:
+        partner_filter = ''
+    items = load_partner_files_meta() or []
+    if partner_filter:
+        items = [m for m in items if str(m.get('phone')) == partner_filter]
+    try:
+        items.sort(key=lambda x: x.get('stored_at',''), reverse=True)
+    except Exception:
+        pass
+    return render_template('admin/express_partner_files.html', partners=partners, items=items, partner_filter=partner_filter)
+
+
+@admin_bp.get('/express/partner-files/<int:fid>/download')
+@login_required
+def express_partner_file_download(fid: int):
+    metas = load_partner_files_meta() or []
+    meta = next((m for m in metas if int(m.get('id',0) or 0) == int(fid)), None)
+    if not meta:
+        abort(404)
+    phone = str(meta.get('phone') or '').strip()
+    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', phone)
+    fp = os.path.join(base, meta.get('filename') or '')
+    if not os.path.isfile(fp):
+        abort(404)
+    return send_from_directory(base, os.path.basename(fp), as_attachment=True)
+
+
+@admin_bp.post('/express/partner-files/<int:fid>/delete')
+@login_required
+def express_partner_file_delete(fid: int):
+    metas = load_partner_files_meta() or []
+    kept = []
+    removed = None
+    for m in metas:
+        try:
+            if int(m.get('id',0) or 0) == int(fid):
+                removed = m
+            else:
+                kept.append(m)
+        except Exception:
+            kept.append(m)
+    save_partner_files_meta(kept)
+    if removed:
+        try:
+            phone = str(removed.get('phone') or '').strip()
+            base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', phone)
+            fp = os.path.join(base, removed.get('filename') or '')
+            if os.path.isfile(fp):
+                os.remove(fp)
+        except Exception:
+            pass
+    flash('فایل حذف شد.', 'info')
+    return redirect(url_for('admin.express_partner_files', partner=request.args.get('partner') or ''))
 
 @admin_bp.post('/express/partners/applications/<int:aid>/approve')
 @login_required
