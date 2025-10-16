@@ -112,6 +112,17 @@ def dashboard():
         item['_assignment_id'] = a.get('id')
         item['_assignment_status'] = a.get('status','active')
         item['_commission_pct'] = a.get('commission_pct')
+        # محاسبه مبلغ پورسانت همکار از روی price_total (اگر موجود) و درصد کمیسیون
+        try:
+            total_price_str = str(item.get('price_total') or item.get('price') or '0').replace(',', '').strip()
+            total_price = int(total_price_str) if total_price_str else 0
+        except Exception:
+            total_price = 0
+        try:
+            pct = float(item.get('_commission_pct') or 0)
+        except Exception:
+            pct = 0.0
+        item['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
         assigned_lands.append(item)
 
     try:
