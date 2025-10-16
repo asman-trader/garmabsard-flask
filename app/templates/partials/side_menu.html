@@ -82,11 +82,11 @@
       {% if VINOR_IS_EXPRESS_PARTNER %}
         {# پنل همکاری به پروفایل منتقل شد #}
       {% else %}
-        {{ MenuItem(url_for('main.express_partner_apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
+        {{ MenuItem(url_for('express_partner.apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
       {% endif %}
 
       {# ورود به پنل همکار اکسپرس (تم بنفش مانند داشبورد همکار) #}
-      <a href="{{ url_for('main.express_partner_dashboard') }}"
+      <a href="{{ url_for('express_partner.dashboard') }}"
          class="group flex items-center gap-3 p-3 rounded-xl transition
                 hover:bg-violet-100 dark:hover:bg-violet-900/40 active:scale-[0.98]
                 require-login"

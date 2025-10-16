@@ -1682,7 +1682,7 @@ def express_partner_application_approve(aid: int):
                 title='تأیید همکاری وینور اکسپرس',
                 body='درخواست شما تأیید شد. اکنون می‌توانید از پنل همکاری استفاده کنید.',
                 ntype='success',
-                action_url=url_for('main.express_partner_dashboard')
+                action_url=url_for('express_partner.dashboard')
             )
     except Exception:
         pass
@@ -1721,7 +1721,7 @@ def express_partner_application_reject(aid: int):
                 title='رد درخواست همکاری وینور اکسپرس',
                 body='درخواست شما در حال حاضر تأیید نشد.',
                 ntype='warning',
-                action_url=url_for('main.express_partner_apply')
+                action_url=url_for('express_partner.apply')
             )
     except Exception:
         pass

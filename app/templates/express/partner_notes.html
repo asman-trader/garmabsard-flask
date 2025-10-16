@@ -14,14 +14,14 @@
           <div class="text-[12px] opacity-90">مخصوص شما؛ فقط خودتان می‌بینید</div>
         </div>
       </div>
-      <a href="{{ url_for('main.express_partner_dashboard') }}" class="px-3 py-1.5 rounded-lg bg-white text-[#7C3AED] text-sm font-semibold shadow-sm">بازگشت</a>
+      <a href="{{ url_for('express_partner.dashboard') }}" class="px-3 py-1.5 rounded-lg bg-white text-[#7C3AED] text-sm font-semibold shadow-sm">بازگشت</a>
     </div>
   </header>
 
   <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-    <form method="post" action="{{ url_for('main.express_partner_add_note') }}" class="mb-4">
+    <form method="post" action="{{ url_for('express_partner.add_note') }}" class="mb-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="next" value="{{ url_for('main.express_partner_notes') }}">
+      <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
       <div class="flex gap-2">
         <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="متن یادداشت..." required>
         <button class="px-3 py-2 rounded-md bg-[#7C3AED] text-white">افزودن</button>
@@ -45,9 +45,9 @@
               <td class="p-2">{{ n.content }}</td>
               <td class="p-2">{{ n.created_at }}</td>
               <td class="p-2">
-                <form method="post" action="{{ url_for('main.express_partner_delete_note', nid=n.id) }}" onsubmit="return confirm('حذف شود؟');">
+                <form method="post" action="{{ url_for('express_partner.delete_note', nid=n.id) }}" onsubmit="return confirm('حذف شود؟');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="hidden" name="next" value="{{ url_for('main.express_partner_notes') }}">
+                  <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
                   <button class="text-rose-600 hover:underline">حذف</button>
                 </form>
               </td>

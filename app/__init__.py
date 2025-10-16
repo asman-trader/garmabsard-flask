@@ -230,6 +230,13 @@ def create_app() -> Flask:
     if express_api_bp is not None:
         app.register_blueprint(express_api_bp)
 
+    # Express Partner blueprint
+    try:
+        from .express_partner import express_partner_bp
+        app.register_blueprint(express_partner_bp)
+    except Exception as e:
+        app.logger.warning(f"Express Partner blueprint not available: {e}")
+
     # ---------- CSRF ----------
     if CSRFProtect is not None:
         csrf = CSRFProtect()
