@@ -6,8 +6,9 @@ from typing import Any, Dict, List
 
 from flask import (
     render_template, request, redirect, url_for, session,
-    send_from_directory, current_app, abort
+    send_from_directory, current_app, abort, flash
 )
+import random, re
 
 from . import express_partner_bp
 from ..utils.storage import (
@@ -23,6 +24,15 @@ from ..utils.storage import (
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from ..utils.dates import parse_datetime_safe
     return sorted(items, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+
+
+def _normalize_phone(phone: str) -> str:
+    p = (phone or "").strip()
+    p = re.sub(r"\D+", "", p)
+    if p.startswith("0098"): p = "0" + p[4:]
+    elif p.startswith("98"): p = "0" + p[2:]
+    if not p.startswith("0"): p = "0" + p
+    return p[:11]
 
 
 @express_partner_bp.app_context_processor
@@ -49,7 +59,7 @@ def inject_role_flags():
 @express_partner_bp.route('/apply', methods=['GET', 'POST'], endpoint='apply')
 def apply():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.apply")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.apply")))
 
     me_phone = (session.get("user_phone") or "").strip()
     if request.method == "POST":
@@ -83,7 +93,7 @@ def apply():
 @express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
 def dashboard():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
 
     me_phone = (session.get("user_phone") or "").strip()
     partners = load_express_partners() or []
@@ -157,7 +167,7 @@ def dashboard():
 @express_partner_bp.get('/notes', endpoint='notes')
 def notes_page():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.notes")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.notes")))
     me_phone = (session.get("user_phone") or "").strip()
     items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
     return render_template("express_partner/notes.html", notes=items, hide_header=True, SHOW_SUBMIT_BUTTON=False, brand="وینور", domain="vinor.ir")
@@ -166,7 +176,7 @@ def notes_page():
 @express_partner_bp.get('/commissions', endpoint='commissions')
 def commissions_page():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.commissions")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.commissions")))
     me_phone = (session.get("user_phone") or "").strip()
     try:
         comms = load_express_commissions() or []
@@ -202,7 +212,7 @@ def commissions_page():
 @express_partner_bp.post('/notes/add')
 def add_note():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     content = (request.form.get("content") or "").strip()
     if not content:
@@ -226,7 +236,7 @@ def add_note():
 @express_partner_bp.post('/notes/<int:nid>/delete')
 def delete_note(nid: int):
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_notes() or []
     items = [n for n in items if not (int(n.get('id',0) or 0) == int(nid) and str(n.get('phone')) == me_phone)]
@@ -246,7 +256,7 @@ def delete_note(nid: int):
 @express_partner_bp.post('/sales/add')
 def add_sale():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     title = (request.form.get("title") or "").strip()
     amount = (request.form.get("amount") or "").strip()
@@ -274,7 +284,7 @@ def add_sale():
 @express_partner_bp.post('/files/upload')
 def upload_file():
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     f = request.files.get('file')
     if not f or not f.filename:
@@ -295,7 +305,98 @@ def upload_file():
 @express_partner_bp.get('/files/<int:fid>/download')
 def download_file(fid: int):
     if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
+
+
+# -------------------------
+# Auth (Express Partner themed)
+# -------------------------
+@express_partner_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
+def login():
+    if request.method == 'POST':
+        phone_raw = request.form.get('phone', '')
+        phone = _normalize_phone(phone_raw)
+        if not phone or len(phone) != 11:
+            flash('شماره موبایل معتبر نیست.', 'error')
+            return redirect(url_for('express_partner.login'))
+
+        code = f"{random.randint(10000, 99999)}"
+        session.update({'otp_code': code, 'otp_phone': phone})
+        session.permanent = True
+
+        # Try sending SMS; ignore errors in dev
+        try:
+            from ..services.sms import send_sms_code
+            send_sms_code(phone, code)
+            flash('کد تأیید ارسال شد.', 'info')
+        except Exception:
+            flash('کد تأیید ارسال شد.', 'info')
+
+        nxt = request.args.get('next')
+        if nxt:
+            session['next'] = nxt
+        return render_template('express_partner/auth/login_step2.html', phone=phone)
+    return render_template('express_partner/auth/login_step1.html')
+
+
+@express_partner_bp.route('/verify', methods=['POST'], endpoint='verify')
+def verify():
+    code = (request.form.get('otp_code') or '').strip()
+    phone = _normalize_phone(request.form.get('phone') or '')
+    if not code or not phone:
+        flash('اطلاعات ناقص است.', 'error')
+        return redirect(url_for('express_partner.login'))
+
+    if session.get('otp_code') == code and session.get('otp_phone') == phone:
+        session['user_id'] = phone
+        session['user_phone'] = phone
+        session.permanent = True
+        # ensure user exists
+        try:
+            from ..utils.storage import load_users, save_users
+            users = load_users()
+            if not any(u.get('phone') == phone for u in users):
+                from datetime import datetime
+                users.append({'phone': phone, 'registered_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+                save_users(users)
+        except Exception:
+            pass
+        flash('✅ ورود موفقیت‌آمیز بود.', 'success')
+        return redirect(session.pop('next', None) or url_for('express_partner.dashboard'))
+
+    flash('❌ کد واردشده نادرست است.', 'error')
+    return redirect(url_for('express_partner.login'))
+
+
+@express_partner_bp.route('/logout', methods=['GET'], endpoint='logout')
+def logout():
+    for k in ('user_id', 'user_phone', 'otp_code', 'otp_phone'):
+        session.pop(k, None)
+    flash('از حساب خارج شدید.', 'info')
+    return redirect(url_for('express_partner.login'))
+
+
+@express_partner_bp.route('/otp/resend', methods=['POST'], endpoint='otp_resend')
+def otp_resend():
+    phone = _normalize_phone(request.form.get('phone') or (session.get('otp_phone') or ''))
+    if not phone or len(phone) != 11:
+        return {'ok': False, 'error': 'شماره معتبر نیست.'}, 400
+    try:
+        code = f"{random.randint(10000, 99999)}"
+        session.update({'otp_code': code, 'otp_phone': phone})
+        from ..services.sms import send_sms_code
+        send_sms_code(phone, code)
+        return {'ok': True}
+    except Exception:
+        return {'ok': True}
+
+
+@express_partner_bp.route('/profile', methods=['GET'], endpoint='profile')
+def profile_page():
+    if not session.get('user_phone'):
+        return redirect(url_for('express_partner.login', next=url_for('express_partner.profile')))
+    me_phone = (session.get('user_phone') or '').strip()
+    return render_template('express_partner/profile.html', me_phone=me_phone)
     me_phone = (session.get("user_phone") or "").strip()
     metas = load_partner_files_meta() or []
     meta = next((m for m in metas if int(m.get('id',0) or 0) == int(fid) and str(m.get('phone')) == me_phone), None)

@@ -390,6 +390,8 @@ def create_app() -> Flask:
             "/about", "/درباره-ما",
             "/faq", "/سوالات-پرتکرار",
             "/guide/safe-buy", "/راهنمای-خرید-امن",
+            # Express Partner auth paths (public)
+            "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
         }
         # Public dynamic paths (prefix-based)
         public_prefixes = ("/land/", "/report/", "/search")
