@@ -113,6 +113,21 @@ def _register_jinja_filters(app: Flask) -> None:
         except Exception:
             return ""
 
+    @app.template_filter("toman")
+    def toman_filter(value, suffix: bool = True):
+        try:
+            s = str(value).replace(',', '').strip()
+            if s == '' or s.lower() == 'none':
+                return ''
+            num = int(float(s))
+            out = f"{num:,}".replace(",", "٬")
+            return (out + " تومان") if suffix else out
+        except Exception:
+            try:
+                return (str(value) + (" تومان" if suffix else "")) if value is not None else ''
+            except Exception:
+                return ''
+
 
 def create_app() -> Flask:
     # اطمینان از MIME صحیح برای فونت‌ها (برخی سرورها پسوند woff2 را نمی‌شناسند)
