@@ -6,25 +6,8 @@
       <i class="fas fa-times text-sm"></i>
     </button>
 
-    <!-- موبایل: انتخاب شهر (بالا و جدا) -->
-    <div class="sm:hidden mb-3">
-      <a href="{{ url_for('main.city_select') }}"
-         class="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-600 text-sm touch-manipulation min-h-[44px]">
-        <i class="fas fa-map-marker-alt text-emerald-600 text-xs flex-shrink-0"></i>
-        <span data-city-label class="flex-1 text-xs truncate">کل ایران</span>
-        <i class="fas fa-chevron-left text-xs text-gray-400 flex-shrink-0"></i>
-      </a>
-    </div>
-
     <!-- فرم جستجو -->
     <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="flex items-stretch gap-2 flex-col sm:flex-row">
-      <!-- انتخاب شهر (دسکتاپ: داخل فرم) -->
-      <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
-         class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm transition whitespace-nowrap flex-shrink-0">
-        <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
-        <span data-city-label class="max-w-[100px] truncate">کل ایران</span>
-      </a>
-
       <!-- فیلد جستجو -->
       <div class="flex-1 relative flex items-stretch rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition min-w-0">
         <input id="q" name="q" type="search" placeholder="جستجو: موقعیت، عنوان..." autocomplete="off"
@@ -52,6 +35,13 @@
         <span>ثبت آگهی</span>
       </a>
       {% endif %}
+      <!-- انتخاب شهر (کنار علاقه‌مندی - موبایل و دسکتاپ) -->
+      <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
+         class="inline-flex items-center justify-center gap-1.5 w-10 h-10 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition whitespace-nowrap flex-shrink-0 touch-manipulation"
+         title="انتخاب شهر">
+        <i class="fas fa-map-marker-alt text-emerald-600 text-[10px]"></i>
+        <span data-city-label class="hidden sm:inline max-w-[100px] truncate">کل ایران</span>
+      </a>
       <a href="{{ url_for('main.favorites') }}" 
          class="inline-flex items-center justify-center gap-1.5 w-10 h-10 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition touch-manipulation flex-shrink-0"
          title="علاقه‌مندی">
