@@ -53,7 +53,7 @@ def add_land_step1():
 
     if request.method == 'POST':
         property_type = (request.form.get('property_type') or '').strip()
-        # property_type format: categoryId_subcategoryId_item or categoryId_subcategoryId or categoryId
+        # property_type format: categoryId_subcategoryId_itemIndex or categoryId_subcategoryId or categoryId
         location = (request.form.get('location') or '').strip()
         
         if not property_type:
@@ -68,11 +68,44 @@ def add_land_step1():
             flash('دسته انتخاب شده نامعتبر است.')
             return redirect(url_for('main.add_land_step1'))
         
+        # اگر index وجود دارد، متن واقعی آیتم را پیدا کن
+        category_obj = CATEGORIES[category_id]
+        full_path = [category_id]
+        
+        if len(parts) > 1:
+            subcat_id = parts[1]
+            subcats = category_obj.get('subcategories', {})
+            if subcat_id in subcats:
+                subcat_obj = subcats[subcat_id]
+                full_path.append(subcat_id)
+                
+                # اگر index آیتم وجود دارد
+                if len(parts) > 2:
+                    try:
+                        item_index = int(parts[2])
+                        items = subcat_obj.get('items', [])
+                        if 0 <= item_index < len(items):
+                            item_text = items[item_index]
+                            full_path.append(item_text)
+                            # ساخت property_type کامل با متن آیتم
+                            property_type_full = f"{category_id}_{subcat_id}_{item_text}"
+                        else:
+                            property_type_full = property_type
+                    except (ValueError, IndexError):
+                        # اگر index نامعتبر بود، همان مقدار را نگه دار
+                        property_type_full = property_type
+                else:
+                    property_type_full = property_type
+            else:
+                property_type_full = property_type
+        else:
+            property_type_full = property_type
+        
         # ذخیره اطلاعات دسته در session
         session['ad_category'] = {
             'category_id': category_id,
-            'property_type': property_type,  # full path: category_subcategory_item
-            'category_path': parts,  # برای دسترسی راحت‌تر
+            'property_type': property_type_full,  # full path: category_subcategory_itemText
+            'category_path': full_path,  # برای دسترسی راحت‌تر
         }
         
         # اختیاری: اگر کاربر در گام ۱ شهر را انتخاب کرده، در پیش‌نویس ذخیره کن

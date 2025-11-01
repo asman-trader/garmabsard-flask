@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function(){
     sheetTitle.textContent = `انتخاب ${subcat.title}`;
     sheetItems.innerHTML = '';
     
-    items.forEach(item => {
+    items.forEach((item, index) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600';
@@ -195,7 +195,10 @@ document.addEventListener('DOMContentLoaded', function(){
       btn.addEventListener('click', ()=>{
         currentItem = item;
         summarySubcat.textContent = `${subcat.title} - ${item}`;
-        prop.value = `${catId}_${subcatId}_${item}`;
+        // استفاده از index برای جلوگیری از مشکل با فاصله و کاراکترهای خاص
+        prop.value = `${catId}_${subcatId}_${index}`;
+        // همچنین یک data attribute برای ذخیره متن واقعی آیتم
+        prop.setAttribute('data-item-text', item);
         sheet.classList.add('hidden');
         updateContinueState();
       });
