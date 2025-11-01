@@ -100,9 +100,17 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
+  const form  = document.getElementById('step1Form');
   const trade = document.getElementById('trade_type');
   const prop  = document.getElementById('property_type');
-  const form  = document.getElementById('step1Form');
+  
+  // Debug: Check if elements exist
+  if (!prop || !form) {
+    console.error('Critical elements not found! prop:', !!prop, 'form:', !!form);
+    return;
+  }
+  
+  console.log('Elements found - prop:', prop, 'prop.value:', prop.value, 'form:', form);
   const sheet = document.getElementById('sheet');
   const sheetBg = document.getElementById('sheetBg');
   const sheetClose = document.getElementById('sheetClose');
@@ -120,6 +128,19 @@ document.addEventListener('DOMContentLoaded', function(){
   const btnChangeSubcat = document.getElementById('btnChangeSubcat');
   const summaryCat = document.getElementById('summaryCat');
   const summarySubcat = document.getElementById('summarySubcat');
+  
+  // Debug: Check if elements are found
+  console.log('Elements check:', {
+    prop: !!prop,
+    form: !!form,
+    continueBtn: !!continueBtn,
+    sheet: !!sheet
+  });
+  
+  if (!prop || !form || !continueBtn) {
+    console.error('Critical elements not found!');
+    return;
+  }
 
   // ساختار دسته‌بندی از سرور
   const CATEGORIES = {{ categories | tojson }};
@@ -147,9 +168,12 @@ document.addEventListener('DOMContentLoaded', function(){
     
     if (subcatKeys.length === 0) {
       // اگر زیردسته‌ای نیست، مستقیماً ادامه بده
-      prop.value = catId;
+      if (prop) {
+        prop.value = catId;
+        console.log('Category selected (no subcats):', catId);
+        updateContinueState();
+      }
       sheet.classList.add('hidden');
-      updateContinueState();
       return;
     }
     
@@ -177,9 +201,12 @@ document.addEventListener('DOMContentLoaded', function(){
     const items = subcat.items || [];
     if (items.length === 0) {
       // اگر آیتمی ندارد، مستقیماً انتخاب کن
-      prop.value = `${catId}_${subcatId}`;
+      if (prop) {
+        prop.value = `${catId}_${subcatId}`;
+        console.log('Subcategory selected (no items):', prop.value);
+        updateContinueState();
+      }
       sheet.classList.add('hidden');
-      updateContinueState();
       return;
     }
     
@@ -196,11 +223,14 @@ document.addEventListener('DOMContentLoaded', function(){
         currentItem = item;
         summarySubcat.textContent = `${subcat.title} - ${item}`;
         // استفاده از index برای جلوگیری از مشکل با فاصله و کاراکترهای خاص
-        prop.value = `${catId}_${subcatId}_${index}`;
-        // همچنین یک data attribute برای ذخیره متن واقعی آیتم
-        prop.setAttribute('data-item-text', item);
+        if (prop) {
+          prop.value = `${catId}_${subcatId}_${index}`;
+          console.log('Item selected:', prop.value, 'Item text:', item);
+          // همچنین یک data attribute برای ذخیره متن واقعی آیتم
+          prop.setAttribute('data-item-text', item);
+          updateContinueState();
+        }
         sheet.classList.add('hidden');
-        updateContinueState();
       });
       sheetItems.appendChild(btn);
     });
@@ -244,8 +274,11 @@ document.addEventListener('DOMContentLoaded', function(){
   function hasValidLocation(){ return true; }
 
   function updateContinueState(){
-    const hasSubcat = Boolean(prop && prop.value);
-    continueBtn.disabled = !hasSubcat;
+    const hasSubcat = Boolean(prop && prop.value && prop.value.trim());
+    if (continueBtn) {
+      continueBtn.disabled = !hasSubcat;
+      console.log('Continue button state:', hasSubcat, 'prop.value:', prop ? prop.value : 'prop is null');
+    }
   }
 
   if (subcatSelect) subcatSelect.addEventListener('change', updateContinueState);
@@ -264,21 +297,52 @@ document.addEventListener('DOMContentLoaded', function(){
     }catch(_){ }
   }
 
-  // Submit handler
-  continueBtn.addEventListener('click', function(){
-    if (!prop.value) return;
+  // Submit handler for button click
+  continueBtn.addEventListener('click', function(e){
+    if (!prop || !prop.value || !prop.value.trim()) {
+      e.preventDefault();
+      console.log('Cannot submit: prop.value is empty');
+      alert('لطفاً دسته را انتخاب کنید.');
+      return false;
+    }
+    console.log('Button clicked - submitting form with property_type:', prop.value);
     saveDraftV2();
-    form.submit();
+    // Allow form to submit naturally (button is type="submit" with form="step1Form")
+  });
+  
+  // Also handle form submit directly
+  form.addEventListener('submit', function(e){
+    // Ensure prop is inside the form
+    const propInput = form.querySelector('#property_type') || prop;
+    
+    if (!propInput || !propInput.value || !propInput.value.trim()) {
+      e.preventDefault();
+      console.log('Form submit prevented: prop.value is empty', 'propInput:', propInput, 'value:', propInput?.value);
+      alert('لطفاً دسته را انتخاب کنید.');
+      return false;
+    }
+    
+    // Sync values
+    if (propInput.value !== prop.value) {
+      propInput.value = prop.value;
+    }
+    
+    console.log('Form submitting with property_type:', propInput.value, 'Form action:', form.action);
+    console.log('Form data will be:', new FormData(form).get('property_type'));
   });
 
-  // Initial store
+  // Initial state check
+  updateContinueState();
   saveDraftV2();
+  
+  // Debug: Log initial state
+  console.log('Initial state - prop.value:', prop.value, 'continueBtn.disabled:', continueBtn.disabled);
 });
 </script>
   <!-- Bottom Action Bar -->
   <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-4 py-3 sm:static sm:border-t-0 sm:bg-transparent sm:dark:bg-transparent">
     <div class="flex items-center gap-3">
-      <button id="continueBtn" type="button" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" disabled>
+      <button id="continueBtn" type="submit" form="step1Form" class="flex-1 px-4 py-3 text-center text-white bg-emerald-500 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" disabled>
         ادامه
       </button>
     </div>

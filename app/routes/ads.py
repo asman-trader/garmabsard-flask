@@ -56,15 +56,32 @@ def add_land_step1():
         # property_type format: categoryId_subcategoryId_itemIndex or categoryId_subcategoryId or categoryId
         location = (request.form.get('location') or '').strip()
         
+        # Debug logging
+        from flask import current_app
+        current_app.logger.info(f"POST /lands/add/step1 - property_type: '{property_type}', form data: {dict(request.form)}")
+        
         if not property_type:
+            current_app.logger.warning("Property type is empty - redirecting to step1")
             flash('لطفاً دسته را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         
         # بررسی وجود دسته در ساختار
         parts = property_type.split('_')
-        category_id = parts[0]
         
-        if category_id not in CATEGORIES:
+        # پیدا کردن category_id که می‌تواند شامل underscore باشد (مثل real_estate)
+        category_id = None
+        remaining_parts = []
+        for i in range(len(parts), 0, -1):
+            candidate = '_'.join(parts[:i])
+            if candidate in CATEGORIES:
+                category_id = candidate
+                remaining_parts = parts[i:]
+                break
+        
+        current_app.logger.info(f"Category ID: '{category_id}', Parts: {parts}, Remaining parts: {remaining_parts}, Available categories: {list(CATEGORIES.keys())[:3]}")
+        
+        if not category_id or category_id not in CATEGORIES:
+            current_app.logger.warning(f"Category ID '{category_id}' not found in CATEGORIES")
             flash('دسته انتخاب شده نامعتبر است.')
             return redirect(url_for('main.add_land_step1'))
         
@@ -72,31 +89,53 @@ def add_land_step1():
         category_obj = CATEGORIES[category_id]
         full_path = [category_id]
         
-        if len(parts) > 1:
-            subcat_id = parts[1]
+        # استفاده از remaining_parts به جای parts
+        # پیدا کردن subcategory_id که می‌تواند شامل underscore باشد (مثل construction_project)
+        if remaining_parts and len(remaining_parts) > 0:
             subcats = category_obj.get('subcategories', {})
-            if subcat_id in subcats:
+            subcat_id = None
+            item_remaining_parts = []
+            
+            # جستجوی معکوس برای پیدا کردن subcategory_id معتبر
+            for i in range(len(remaining_parts), 0, -1):
+                candidate = '_'.join(remaining_parts[:i])
+                if candidate in subcats:
+                    subcat_id = candidate
+                    item_remaining_parts = remaining_parts[i:]
+                    break
+            
+            current_app.logger.info(f"Looking for subcategory in {list(subcats.keys())}, remaining: {remaining_parts}, found: {subcat_id}")
+            
+            if subcat_id and subcat_id in subcats:
                 subcat_obj = subcats[subcat_id]
                 full_path.append(subcat_id)
+                current_app.logger.info(f"Subcategory '{subcat_id}' found. Items: {subcat_obj.get('items', [])}")
                 
                 # اگر index آیتم وجود دارد
-                if len(parts) > 2:
+                if item_remaining_parts and len(item_remaining_parts) > 0:
                     try:
-                        item_index = int(parts[2])
+                        item_index = int(item_remaining_parts[0])
                         items = subcat_obj.get('items', [])
+                        current_app.logger.info(f"Item index: {item_index}, Total items: {len(items)}")
+                        
                         if 0 <= item_index < len(items):
                             item_text = items[item_index]
                             full_path.append(item_text)
                             # ساخت property_type کامل با متن آیتم
                             property_type_full = f"{category_id}_{subcat_id}_{item_text}"
+                            current_app.logger.info(f"Item found: '{item_text}', property_type_full: '{property_type_full}'")
                         else:
+                            current_app.logger.warning(f"Item index {item_index} out of range (0-{len(items)-1})")
                             property_type_full = property_type
-                    except (ValueError, IndexError):
+                    except (ValueError, IndexError) as e:
                         # اگر index نامعتبر بود، همان مقدار را نگه دار
+                        current_app.logger.error(f"Error processing item index: {e}")
                         property_type_full = property_type
                 else:
-                    property_type_full = property_type
+                    property_type_full = f"{category_id}_{subcat_id}"
+                    current_app.logger.info(f"No item index, property_type_full: '{property_type_full}'")
             else:
+                current_app.logger.warning(f"Subcategory '{subcat_id}' not found in subcategories")
                 property_type_full = property_type
         else:
             property_type_full = property_type
@@ -107,12 +146,19 @@ def add_land_step1():
             'property_type': property_type_full,  # full path: category_subcategory_itemText
             'category_path': full_path,  # برای دسترسی راحت‌تر
         }
+        session.modified = True  # اطمینان از ذخیره session
         
         # اختیاری: اگر کاربر در گام ۱ شهر را انتخاب کرده، در پیش‌نویس ذخیره کن
         if location:
             lt = session.get('land_temp') or {}
             lt.update({'location': location})
             session['land_temp'] = lt
+            session.modified = True
+        
+        # Debug: لاگ session برای بررسی
+        current_app.logger.info(f"Category saved to session: {session.get('ad_category')}")
+        current_app.logger.info(f"Redirecting to /lands/add")
+        
         return redirect(url_for('main.add_land'))
 
     return render_template('ads/add_land_step1.html', categories=CATEGORIES)
@@ -127,11 +173,16 @@ def add_land():
 
     # Guard: اگر دسته انتخاب نشده باشد کاربر را به گام ۱ بفرست
     if request.method == 'GET':
-        if not session.get('ad_category'):
+        ad_cat = session.get('ad_category')
+        from flask import current_app
+        current_app.logger.info(f"GET /lands/add - ad_category in session: {ad_cat is not None}, session keys: {list(session.keys())}")
+        if not ad_cat:
+            current_app.logger.warning("No ad_category in session - redirecting to step1")
             flash('لطفاً ابتدا دسته ملک را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         # رندر گام ۲ جدید
-        return render_template('ads/add_land_step2.html', ad_category=session.get('ad_category'), categories=CATEGORIES)
+        current_app.logger.info(f"Rendering step2 with ad_category: {ad_cat}")
+        return render_template('ads/add_land_step2.html', ad_category=ad_cat, categories=CATEGORIES)
 
     if request.method == 'POST':
         # Step 2 (Basics): only images + title + description
