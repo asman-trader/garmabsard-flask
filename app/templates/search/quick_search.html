@@ -2,7 +2,7 @@
   <div id="quickSearchBox" class="hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-4 relative">
     <!-- دکمه بستن -->
     <button id="qsHideBtn" type="button" title="بستن" aria-label="بستن"
-            class="absolute top-2 left-2 w-7 h-7 grid place-items-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            class="absolute top-2 left-2 w-8 h-8 sm:w-7 sm:h-7 grid place-items-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition touch-manipulation">
       <i class="fas fa-times text-sm"></i>
     </button>
 
@@ -17,7 +17,7 @@
       
       <!-- موبایل: انتخاب شهر به صورت جدا -->
       <a href="{{ url_for('main.city_select') }}"
-         class="sm:hidden flex items-center gap-1.5 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm">
+         class="sm:hidden flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm touch-manipulation">
         <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
         <span data-city-label class="whitespace-nowrap text-xs">کل ایران</span>
       </a>
@@ -25,13 +25,16 @@
       <!-- فیلد جستجو -->
       <div class="flex-1 relative flex items-stretch rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition">
         <input id="q" name="q" type="search" placeholder="جستجو: موقعیت، عنوان..." autocomplete="off"
-               class="flex-1 px-3 py-2 text-sm bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none">
+               class="flex-1 px-3 py-2.5 sm:py-2 text-base sm:text-sm bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none">
         <button id="qClear" type="button" title="پاک کردن" aria-label="پاک کردن"
-                class="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hidden">
+                class="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hidden touch-manipulation">
           <i class="fas fa-times text-xs"></i>
         </button>
-        <button type="submit" class="px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-r-lg transition" title="جستجو" aria-label="جستجو">
+        <button type="submit" 
+                class="px-4 sm:px-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:from-emerald-800 active:to-emerald-900 text-white rounded-r-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] touch-manipulation flex items-center justify-center gap-1.5" 
+                title="جستجو" aria-label="جستجو">
           <i class="fas fa-search text-sm"></i>
+          <span class="hidden sm:inline text-xs font-medium">جستجو</span>
         </button>
       </div>
       <input type="hidden" id="cityHidden" name="city" value="">
@@ -41,24 +44,37 @@
     <div class="mt-2 flex items-center gap-2 justify-end">
       {% if SHOW_SUBMIT_BUTTON %}
       <a href="{{ url_for('main.submit_ad') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-xs transition">
+         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-xs transition touch-manipulation">
         <i class="fas fa-plus text-[10px]"></i>
         <span>ثبت آگهی</span>
       </a>
       {% endif %}
       <a href="{{ url_for('main.favorites') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition"
+         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition touch-manipulation"
          title="علاقه‌مندی">
         <i class="fas fa-bookmark text-[10px]"></i>
       </a>
       <a href="{{ url_for('main.notifications') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition relative"
+         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition relative touch-manipulation"
          title="اعلان‌ها">
         <i class="fas fa-bell text-[10px]"></i>
         <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center">0</span>
       </a>
     </div>
   </div>
+
+  <style>
+    /* بهبود لمس در موبایل */
+    @media (max-width: 640px) {
+      #quickSearchBox * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      #quickSearchBox button,
+      #quickSearchBox a {
+        min-height: 44px;
+      }
+    }
+  </style>
 
   <script>
     (function(){
