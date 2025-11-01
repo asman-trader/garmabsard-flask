@@ -448,3 +448,128 @@ async function handleJsonPostWithQueue(request) {
   }
 }
 
+// ===== Push Notifications Handler (Background) =====
+self.addEventListener('push', (event) => {
+  let payload = {};
+  let title = 'وینور';
+  let body = 'اعلان جدید دریافت شد';
+  let icon = '/static/icons/icon-192.png';
+  let badge = '/static/icons/icon-96.png';
+  let url = '/app/notifications';
+  let tag = 'vinor-notification';
+  let requireInteraction = false;
+
+  try {
+    if (event.data) {
+      const data = event.data.json();
+      if (data && typeof data === 'object') {
+        payload = data;
+        title = data.title || title;
+        body = data.body || body;
+        icon = data.icon || icon;
+        badge = data.badge || badge;
+        url = data.url || data.action_url || url;
+        tag = data.tag || data.id || tag;
+        requireInteraction = data.requireInteraction === true;
+      } else if (typeof event.data.text === 'function') {
+        try {
+          const textData = event.data.text();
+          payload = JSON.parse(textData);
+          title = payload.title || title;
+          body = payload.body || body;
+          icon = payload.icon || icon;
+          badge = payload.badge || badge;
+          url = payload.url || payload.action_url || url;
+          tag = payload.tag || payload.id || tag;
+          requireInteraction = payload.requireInteraction === true;
+        } catch (_) {
+          body = event.data.text() || body;
+        }
+      }
+    }
+  } catch (e) {
+    // Fallback: use default values
+    try {
+      if (event.data && typeof event.data.text === 'function') {
+        body = event.data.text() || body;
+      }
+    } catch (_) {}
+  }
+
+  const notificationOptions = {
+    body: body,
+    icon: icon,
+    badge: badge,
+    tag: tag,
+    requireInteraction: requireInteraction,
+    data: { ...payload, url: url },
+    actions: []
+  };
+
+  // اضافه کردن action برای باز کردن اعلان
+  if (url) {
+    notificationOptions.actions.push({
+      action: 'open',
+      title: 'مشاهده'
+    });
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, notificationOptions)
+      .then(() => {
+        // ارسال پیام به کلاینت برای پخش صدا
+        return self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+          .then(clients => {
+            clients.forEach(client => {
+              try {
+                client.postMessage({
+                  type: 'PUSH_RECEIVED',
+                  data: payload
+                });
+              } catch (_) {}
+            });
+          });
+      })
+      .catch(err => {
+        // لاگ خطا در صورت عدم موفقیت
+        console.error('Failed to show notification:', err);
+      })
+  );
+});
+
+// ===== Notification Click Handler =====
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const notificationData = event.notification.data || {};
+  const urlToOpen = notificationData.url || '/app/notifications';
+  const action = event.action;
+
+  if (action === 'open' || !action) {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clients => {
+          // اگر پنجره باز است، روی آن فوکوس کن
+          for (const client of clients) {
+            if (client.url.includes(urlToOpen) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          // اگر پنجره‌ای باز نیست، یک پنجره جدید باز کن
+          if (self.clients.openWindow) {
+            return self.clients.openWindow(urlToOpen);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to open notification:', err);
+        })
+    );
+  }
+});
+
+// ===== Notification Close Handler =====
+self.addEventListener('notificationclose', (event) => {
+  // در صورت نیاز می‌توانید عملیاتی را اینجا انجام دهید
+  // مثلاً ارسال رویداد به سرور برای ردیابی
+});
+

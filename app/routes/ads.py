@@ -1,12 +1,12 @@
 # app/routes/ads.py
 # -*- coding: utf-8 -*-
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import render_template, request, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from . import main_bp
 from ..utils.storage import data_dir, load_ads, save_ads, load_settings
-from ..utils.dates import parse_datetime_safe
+from ..utils.dates import parse_datetime_safe, utcnow, iso_z
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
 from ..categories import CATEGORIES
 
@@ -457,6 +457,15 @@ def finalize_land():
     settings = load_settings()
     status = 'approved' if settings.get('approval_method','manual') == 'auto' else 'pending'
 
+    # محاسبه تاریخ انقضا (۰ = نامحدود → expires_at ست نمی‌شود)
+    created_at_dt = utcnow()
+    try:
+        expiry_days = int(settings.get('ad_expiry_days', 30))
+    except Exception:
+        expiry_days = 30
+    if expiry_days < 0:
+        expiry_days = 0
+
     lands = load_ads()
     lt = session['land_temp']
     ad_cat = session.get('ad_category', {})
@@ -469,7 +478,7 @@ def finalize_land():
         'price_total': lt['price_total'],
         'description': lt.get('description'),
         'images': session['land_images'],
-        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'created_at': iso_z(created_at_dt),
         'owner': session.get('user_phone'),
         'status': status,
         'ad_type': session['land_ad_type'],
@@ -478,6 +487,12 @@ def finalize_land():
         'category_path': ad_cat.get('category_path', []),  # Full path array
         'extras': lt.get('extras', {})
     }
+    
+    # تنظیم تاریخ انقضا در صورت وجود مدت اعتبار
+    if expiry_days > 0:
+        expires_at_dt = created_at_dt + timedelta(days=expiry_days)
+        new_land['expires_at'] = iso_z(expires_at_dt)
+    
     lands.append(new_land)
     save_ads(lands)
 

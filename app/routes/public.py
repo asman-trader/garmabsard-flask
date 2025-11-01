@@ -26,7 +26,7 @@ from ..utils.storage import (
     load_express_assignments,
     load_express_commissions,
 )
-from ..utils.dates import parse_datetime_safe
+from ..utils.dates import parse_datetime_safe, is_ad_expired
 from ..constants import CATEGORY_MAP
 
 # ثابت‌ها
@@ -64,8 +64,9 @@ def _compute_price_per_meter(land: Dict[str, Any]) -> Optional[int]:
     return None
 
 def _get_approved_ads() -> List[Dict[str, Any]]:
-    # همهٔ آگهی‌های تأییدشده (شامل اکسپرس)
-    return [ad for ad in load_ads_cached() if ad.get("status") == "approved"]
+    """همهٔ آگهی‌های تأییدشده و منقضی‌نشده (شامل اکسپرس)"""
+    return [ad for ad in load_ads_cached() 
+            if ad.get("status") == "approved" and not is_ad_expired(ad)]
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return sorted(
@@ -220,6 +221,10 @@ def land_detail(code):
     land = _find_by_code(code)
     if not land:
         abort(404, description="آگهی مورد نظر پیدا نشد.")
+
+    # بررسی انقضای آگهی: اگر آگهی منقضی شده و تأییدشده باشد، به عنوان 404 نمایش داده می‌شود
+    if land.get("status") == "approved" and is_ad_expired(land):
+        abort(404, description="این آگهی منقضی شده است.")
 
     ppm = _compute_price_per_meter(land)
     if ppm is not None:

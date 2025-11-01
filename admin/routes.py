@@ -441,31 +441,55 @@ def _delete_ad_images(ad: Dict[str, Any]):
 
 def cleanup_expired_ads() -> None:
     """حذف کامل آگهی‌های منقضی‌شده از JSON و حذف تصاویرشان."""
-    lands_path = _lands_path()
-    lands = load_json(lands_path)
-    if not isinstance(lands, list) or not lands:
-        return
+    try:
+        lands_path = _lands_path()
+        lands = load_json(lands_path)
+        if not isinstance(lands, list) or not lands:
+            return
 
-    now = utcnow()
-    kept: List[Dict[str, Any]] = []
-    changed = False
+        kept: List[Dict[str, Any]] = []
+        changed = False
 
-    for ad in lands:
-        exp_str = ad.get("expires_at")
-        expired_flag = False
-        if exp_str:
-            exp_dt = parse_iso_to_naive_utc(exp_str)
-            if exp_dt is None or exp_dt < now:
-                expired_flag = True
+        for ad in lands:
+            exp_str = ad.get("expires_at")
+            expired_flag = False
+            if exp_str:
+                exp_dt = parse_iso_to_naive_utc(exp_str)
+                if exp_dt is None or exp_dt < utcnow():
+                    expired_flag = True
 
-        if expired_flag:
-            _delete_ad_images(ad)
-            changed = True
-            continue
-        kept.append(ad)
+            if expired_flag:
+                try:
+                    _delete_ad_images(ad)
+                except Exception as e:
+                    # لاگ خطا در صورت عدم موفقیت در حذف تصاویر
+                    try:
+                        current_app.logger.warning(f"Failed to delete images for expired ad {ad.get('code')}: {e}")
+                    except Exception:
+                        pass
+                changed = True
+                continue
+            kept.append(ad)
 
-    if changed:
-        save_json(lands_path, kept)
+        if changed:
+            try:
+                save_json(lands_path, kept)
+                try:
+                    current_app.logger.info(f"Cleaned up {len(lands) - len(kept)} expired ads")
+                except Exception:
+                    pass
+            except Exception as e:
+                # لاگ خطا در صورت عدم موفقیت در ذخیره
+                try:
+                    current_app.logger.error(f"Failed to save cleaned ads: {e}")
+                except Exception:
+                    pass
+    except Exception as e:
+        # لاگ خطای کلی
+        try:
+            current_app.logger.error(f"Error in cleanup_expired_ads: {e}")
+        except Exception:
+            pass
 
 # -----------------------------------------------------------------------------
 # دکوراتور لاگین

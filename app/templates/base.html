@@ -547,6 +547,113 @@
         }
       });
 
+      // ===== فعال‌سازی خودکار اعلان‌ها در پس‌زمینه هنگام ورود =====
+      async function autoEnableNotificationsInBackground() {
+        try {
+          // بررسی لاگین بودن کاربر (از طریق context processor)
+          {% if __is_logged_in %}
+          const isLoggedIn = true;
+          {% else %}
+          const isLoggedIn = false;
+          {% endif %}
+          
+          if (!isLoggedIn) return; // فقط اگر کاربر لاگین باشد
+          
+          if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+          if (!VAPID_PUBLIC_KEY) return;
+          
+          // بررسی اینکه قبلاً درخواست نشده باشد (برای جلوگیری از مزاحمت)
+          const NOTIFICATION_AUTO_ENABLED_FLAG = 'vinor_notifications_auto_enabled';
+          const AUTO_PROMPT_DISMISSED = 'vinor_notifications_auto_prompt_dismissed';
+          const lastPromptTime = localStorage.getItem('vinor_notifications_last_prompt');
+          const dismissed = localStorage.getItem(AUTO_PROMPT_DISMISSED);
+          
+          // اگر کاربر قبلاً رد کرده یا کمتر از 24 ساعت پیش درخواست داده‌ایم، صبر کن
+          if (dismissed === '1') return;
+          if (lastPromptTime) {
+            const hoursSinceLastPrompt = (Date.now() - parseInt(lastPromptTime)) / (1000 * 60 * 60);
+            if (hoursSinceLastPrompt < 24) return;
+          }
+          
+          const currentPerm = Notification.permission;
+          
+          // اگر اجازه داده نشده، در پس‌زمینه درخواست بده
+          if (currentPerm === 'default') {
+            // ثبت زمان درخواست
+            try { localStorage.setItem('vinor_notifications_last_prompt', String(Date.now())); } catch(_) {}
+            
+            // درخواست اجازه (در پس‌زمینه - بدون مزاحمت برای کاربر)
+            const perm = await Notification.requestPermission().catch(() => 'default');
+            
+            if (perm !== 'granted') {
+              // اگر رد شد، علامت بزن که دیگر درخواست ندهیم
+              try { localStorage.setItem(AUTO_PROMPT_DISMISSED, '1'); } catch(_) {}
+              return;
+            }
+          }
+          
+          // اگر اجازه داده شد، ادامه بده
+          if (currentPerm === 'granted' || Notification.permission === 'granted') {
+            // ثبت Service Worker
+            let reg = await navigator.serviceWorker.getRegistration('/');
+            if (!reg) {
+              reg = await navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' }).catch(() => null);
+            }
+            
+            if (!reg) return;
+            
+            // بررسی subscription موجود
+            const existing = await reg.pushManager.getSubscription().catch(() => null);
+            if (existing) {
+              // بررسی اینکه subscription در سرور ثبت شده باشد
+              try {
+                const subObj = existing.toJSON();
+                const res = await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  body: JSON.stringify(subObj)
+                }).catch(() => null);
+                if (res && res.ok) {
+                  try { localStorage.setItem(NOTIFICATION_AUTO_ENABLED_FLAG, '1'); } catch(_) {}
+                }
+              } catch(_) {}
+              return;
+            }
+            
+            // ایجاد subscription جدید
+            try {
+              const sub = await subscribePush();
+              if (sub) {
+                await saveSubscription(sub);
+                try { localStorage.setItem(NOTIFICATION_AUTO_ENABLED_FLAG, '1'); } catch(_) {}
+                
+                // علامت‌گذاری موفقیت در localStorage
+                try {
+                  window.dispatchEvent(new CustomEvent('vinor:notifications-auto-enabled', { detail: { success: true } }));
+                } catch(_) {}
+              }
+            } catch(err) {
+              // در صورت خطا، سکوت کن (تا مزاحم کاربر نشویم)
+              console.debug('Auto-enable notifications failed:', err);
+            }
+          }
+        } catch(err) {
+          // سکوت در صورت خطا (اجرای پس‌زمینه)
+          console.debug('Auto-enable notifications error:', err);
+        }
+      }
+      
+      // اجرای خودکار هنگام بارگذاری صفحه (در پس‌زمینه)
+      // با تأخیر کوتاه تا صفحه کامل بارگذاری شود
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(autoEnableNotificationsInBackground, 2000); // 2 ثانیه تأخیر
+        });
+      } else {
+        setTimeout(autoEnableNotificationsInBackground, 2000);
+      }
+      
       // تلاش خودکار برای ثبت پوش اگر قبلاً اجازه داده شده و سابسکرایب نداریم
       document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -566,40 +673,7 @@
     })();
   </script>
 
-  <!-- نوار فعال‌سازی اعلان (فقط وقتی اجازه داده نشده/ثبت نشده) -->
-  <div id="pushEnableBar" class="fixed bottom-4 right-4 z-40 hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow">
-    <i class="fas fa-bell text-amber-500"></i>
-    <span class="text-sm">اعلان‌ها را فعال کنید</span>
-    <button id="pushEnableBtn" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">فعال‌سازی</button>
-  </div>
-
-  <script>
-    (function(){
-      async function shouldShowBar(){
-        try{
-          if (!('serviceWorker' in navigator) || !('Notification' in window)) return false;
-          if (Notification.permission === 'denied') return false;
-          const reg = await navigator.serviceWorker.getRegistration('/');
-          if (!reg) return true;
-          const sub = await reg.pushManager.getSubscription();
-          return !sub;
-        }catch(_) { return false; }
-      }
-      document.addEventListener('DOMContentLoaded', async ()=>{
-        const bar = document.getElementById('pushEnableBar');
-        const btn = document.getElementById('pushEnableBtn');
-        if (!bar || !btn) return;
-        if (await shouldShowBar()) bar.classList.remove('hidden');
-        btn.addEventListener('click', async ()=>{
-          try{
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') { bar.classList.add('hidden'); return; }
-            if (window.VinorPush) await window.VinorPush.subscribe();
-          }catch(_){} finally { bar.classList.add('hidden'); }
-        });
-      });
-    })();
-  </script>
+  <!-- نوار فعال‌سازی اعلان حذف شد - فعال‌سازی به صورت خودکار در پس‌زمینه انجام می‌شود -->
 
   <script>
     (function(){
