@@ -1,70 +1,75 @@
-<section class="max-w-6xl mx-auto px-2 sm:px-4 pt-2 sm:pt-3">
-  <div id="quickSearchBox" class="hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-4 relative">
+<section class="max-w-6xl mx-auto px-3 sm:px-4 pt-2 sm:pt-3">
+  <div id="quickSearchBox" class="hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-4 relative overflow-hidden">
     <!-- دکمه بستن -->
     <button id="qsHideBtn" type="button" title="بستن" aria-label="بستن"
-            class="absolute top-2 left-2 w-8 h-8 sm:w-7 sm:h-7 grid place-items-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition touch-manipulation">
+            class="absolute top-2 left-2 z-10 w-8 h-8 sm:w-7 sm:h-7 grid place-items-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition touch-manipulation">
       <i class="fas fa-times text-sm"></i>
     </button>
 
-    <!-- فرم جستجو -->
-    <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="flex items-stretch gap-2">
-      <!-- انتخاب شهر (موبایل: جدا، دسکتاپ: داخل فرم) -->
-      <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
-         class="hidden sm:flex items-center gap-1.5 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm transition">
-        <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
-        <span data-city-label class="whitespace-nowrap">کل ایران</span>
-      </a>
-      
-      <!-- موبایل: انتخاب شهر به صورت جدا -->
+    <!-- موبایل: انتخاب شهر (بالا و جدا) -->
+    <div class="sm:hidden mb-3">
       <a href="{{ url_for('main.city_select') }}"
-         class="sm:hidden flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm touch-manipulation">
+         class="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-600 text-sm touch-manipulation min-h-[44px]">
+        <i class="fas fa-map-marker-alt text-emerald-600 text-xs flex-shrink-0"></i>
+        <span data-city-label class="flex-1 text-xs truncate">کل ایران</span>
+        <i class="fas fa-chevron-left text-xs text-gray-400 flex-shrink-0"></i>
+      </a>
+    </div>
+
+    <!-- فرم جستجو -->
+    <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="flex items-stretch gap-2 flex-col sm:flex-row">
+      <!-- انتخاب شهر (دسکتاپ: داخل فرم) -->
+      <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
+         class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm transition whitespace-nowrap flex-shrink-0">
         <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
-        <span data-city-label class="whitespace-nowrap text-xs">کل ایران</span>
+        <span data-city-label class="max-w-[100px] truncate">کل ایران</span>
       </a>
 
       <!-- فیلد جستجو -->
-      <div class="flex-1 relative flex items-stretch rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition">
+      <div class="flex-1 relative flex items-stretch rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition min-w-0">
         <input id="q" name="q" type="search" placeholder="جستجو: موقعیت، عنوان..." autocomplete="off"
-               class="flex-1 px-3 py-2.5 sm:py-2 text-base sm:text-sm bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none">
+               class="flex-1 min-w-0 px-3 py-2.5 sm:py-2 text-base sm:text-sm bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none">
         <button id="qClear" type="button" title="پاک کردن" aria-label="پاک کردن"
-                class="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hidden touch-manipulation">
+                class="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hidden touch-manipulation flex-shrink-0">
           <i class="fas fa-times text-xs"></i>
         </button>
         <button type="submit" 
-                class="px-4 sm:px-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:from-emerald-800 active:to-emerald-900 text-white rounded-r-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] touch-manipulation flex items-center justify-center gap-1.5" 
+                class="px-4 sm:px-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:from-emerald-800 active:to-emerald-900 text-white rounded-r-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] touch-manipulation flex items-center justify-center gap-1.5 flex-shrink-0 min-h-[44px] sm:min-h-0" 
                 title="جستجو" aria-label="جستجو">
           <i class="fas fa-search text-sm"></i>
-          <span class="hidden sm:inline text-xs font-medium">جستجو</span>
+          <span class="hidden lg:inline text-xs font-medium">جستجو</span>
         </button>
       </div>
       <input type="hidden" id="cityHidden" name="city" value="">
     </form>
 
-    <!-- دکمه‌های سریع (فشرده) -->
-    <div class="mt-2 flex items-center gap-2 justify-end">
+    <!-- دکمه‌های سریع (فشرده و responsive) -->
+    <div class="mt-3 sm:mt-2 flex items-center gap-2 justify-end flex-wrap">
       {% if SHOW_SUBMIT_BUTTON %}
       <a href="{{ url_for('main.submit_ad') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-xs transition touch-manipulation">
+         class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-xs transition touch-manipulation min-h-[44px] sm:min-h-0 whitespace-nowrap">
         <i class="fas fa-plus text-[10px]"></i>
         <span>ثبت آگهی</span>
       </a>
       {% endif %}
       <a href="{{ url_for('main.favorites') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition touch-manipulation"
+         class="inline-flex items-center justify-center gap-1.5 w-10 h-10 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition touch-manipulation flex-shrink-0"
          title="علاقه‌مندی">
         <i class="fas fa-bookmark text-[10px]"></i>
+        <span class="hidden sm:inline">علاقه‌مندی</span>
       </a>
       <a href="{{ url_for('main.notifications') }}" 
-         class="inline-flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition relative touch-manipulation"
+         class="inline-flex items-center justify-center gap-1.5 w-10 h-10 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition relative touch-manipulation flex-shrink-0"
          title="اعلان‌ها">
         <i class="fas fa-bell text-[10px]"></i>
+        <span class="hidden sm:inline">اعلان‌ها</span>
         <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center">0</span>
       </a>
     </div>
   </div>
 
   <style>
-    /* بهبود لمس در موبایل */
+    /* بهبود لمس و responsive در موبایل */
     @media (max-width: 640px) {
       #quickSearchBox * {
         -webkit-tap-highlight-color: transparent;
@@ -72,6 +77,16 @@
       #quickSearchBox button,
       #quickSearchBox a {
         min-height: 44px;
+      }
+      #quickSearchBox input {
+        font-size: 16px; /* جلوگیری از zoom در iOS */
+      }
+    }
+    
+    /* سایزهای میانی (tablet) */
+    @media (min-width: 640px) and (max-width: 1024px) {
+      #quickSearchBox #cityTrigger span {
+        max-width: 80px;
       }
     }
   </style>
@@ -126,10 +141,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }catch(_){ }
 
-      labelEls.forEach(el => { try { el.textContent = display || 'کل ایران'; } catch(_){ } });
-      if (display.length > 12) {
-        labelEls.forEach(el => { try { el.textContent = display.substring(0, 10) + '...'; } catch(_){ } });
-      }
+      labelEls.forEach(el => { 
+        try { 
+          let text = display || 'کل ایران';
+          // کوتاه کردن متن برای موبایل و tablet
+          const isMobile = window.innerWidth < 640;
+          const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+          
+          if (isMobile && text.length > 15) {
+            text = text.substring(0, 13) + '...';
+          } else if (isTablet && text.length > 12) {
+            text = text.substring(0, 10) + '...';
+          } else if (text.length > 18) {
+            text = text.substring(0, 16) + '...';
+          }
+          el.textContent = text;
+        } catch(_){ } 
+      });
       hiddenEl.value = hiddenVal;
     }
 
@@ -137,6 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener(EVT_NAME, applyCityLabelFromStorage);
     window.addEventListener('storage', (e)=>{
       if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) applyCityLabelFromStorage();
+    });
+    // به‌روزرسانی مجدد در resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(applyCityLabelFromStorage, 250);
     });
   })();
 
@@ -153,6 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     q.addEventListener('focus', sync);
     clr.addEventListener('click', (e)=>{ 
       e.preventDefault(); 
+      e.stopPropagation();
       q.value=''; 
       q.focus(); 
       sync(); 
@@ -179,7 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById('qsHideBtn');
     const box = document.getElementById('quickSearchBox');
     if (!btn || !box) return;
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
       box.classList.add('hidden');
       try{ localStorage.setItem('vinor_show_quick_search','0'); }catch{}
       try{ window.dispatchEvent(new CustomEvent('vinor:qs-toggle', { detail: false })); }catch{}
