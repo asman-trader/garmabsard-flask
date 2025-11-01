@@ -8,6 +8,7 @@ from . import main_bp
 from ..utils.storage import data_dir, load_ads, save_ads, load_settings
 from ..utils.dates import parse_datetime_safe
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
+from ..categories import CATEGORIES
 
 # ✅ سرویس اعلان‌ها
 try:
@@ -51,19 +52,29 @@ def add_land_step1():
         return redirect(url_for('main.login'))
 
     if request.method == 'POST':
-        trade_type = (request.form.get('trade_type') or '').strip()  # sale|rent
-        property_type = (request.form.get('property_type') or '').strip()  # apartment|villa|land|shop|office|garden
+        property_type = (request.form.get('property_type') or '').strip()
+        # property_type format: categoryId_subcategoryId_item or categoryId_subcategoryId or categoryId
         location = (request.form.get('location') or '').strip()
-        if trade_type not in {'sale','rent','exchange'}:
-            flash('نوع معامله نامعتبر است.')
+        
+        if not property_type:
+            flash('لطفاً دسته را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
-        if property_type not in {'apartment','villa','land','shop','office','garden'}:
-            flash('نوع ملک نامعتبر است.')
+        
+        # بررسی وجود دسته در ساختار
+        parts = property_type.split('_')
+        category_id = parts[0]
+        
+        if category_id not in CATEGORIES:
+            flash('دسته انتخاب شده نامعتبر است.')
             return redirect(url_for('main.add_land_step1'))
+        
+        # ذخیره اطلاعات دسته در session
         session['ad_category'] = {
-            'trade_type': trade_type,
-            'property_type': property_type,
+            'category_id': category_id,
+            'property_type': property_type,  # full path: category_subcategory_item
+            'category_path': parts,  # برای دسترسی راحت‌تر
         }
+        
         # اختیاری: اگر کاربر در گام ۱ شهر را انتخاب کرده، در پیش‌نویس ذخیره کن
         if location:
             lt = session.get('land_temp') or {}
@@ -71,7 +82,7 @@ def add_land_step1():
             session['land_temp'] = lt
         return redirect(url_for('main.add_land'))
 
-    return render_template('ads/add_land_step1.html')
+    return render_template('ads/add_land_step1.html', categories=CATEGORIES)
 
 
 @main_bp.route('/lands/add', methods=['GET','POST'], endpoint='add_land')
@@ -87,7 +98,7 @@ def add_land():
             flash('لطفاً ابتدا دسته ملک را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         # رندر گام ۲ جدید
-        return render_template('ads/add_land_step2.html', ad_category=session.get('ad_category'))
+        return render_template('ads/add_land_step2.html', ad_category=session.get('ad_category'), categories=CATEGORIES)
 
     if request.method == 'POST':
         # Step 2 (Basics): only images + title + description
@@ -244,9 +255,10 @@ def add_land_details():
         size = request.form.get('size') or None
         location = request.form.get('location') or request.form.get('city') or None
 
-        category = (request.form.get('category','') or '').strip()
-        if category and category not in CATEGORY_KEYS:
-            category = ""
+        # Category is now set in step1, read from session
+        category = ""
+        if session.get('ad_category'):
+            category = session['ad_category'].get('property_type', '')
 
         # Handle amenities from checkboxes
         amenities = request.form.getlist('amenities') or []
@@ -319,7 +331,7 @@ def add_land_details():
         session['land_temp'] = lt
         return redirect(url_for('main.add_land_step3'))
 
-    return render_template('ads/add_land_details.html', ad_category=session.get('ad_category'))
+    return render_template('ads/add_land_details.html', ad_category=session.get('ad_category'), categories=CATEGORIES)
 
 
 @main_bp.route('/lands/finalize', methods=['GET'], endpoint='finalize_land')
@@ -334,6 +346,8 @@ def finalize_land():
 
     lands = load_ads()
     lt = session['land_temp']
+    ad_cat = session.get('ad_category', {})
+    
     new_land = {
         'code': session['land_code'],
         'title': lt['title'],
@@ -346,7 +360,9 @@ def finalize_land():
         'owner': session.get('user_phone'),
         'status': status,
         'ad_type': session['land_ad_type'],
-        'category': lt.get('category',''),
+        'category': ad_cat.get('property_type', ''),  # Full category path: category_subcategory_item
+        'category_id': ad_cat.get('category_id', ''),  # Main category ID
+        'category_path': ad_cat.get('category_path', []),  # Full path array
         'extras': lt.get('extras', {})
     }
     lands.append(new_land)

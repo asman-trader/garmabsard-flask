@@ -123,37 +123,37 @@
 
     
 
-    <!-- دسته‌بندی (از گام ۱) -->
+    <!-- دسته‌بندی (از گام ۱ انتخاب شده) -->
+    {% if ad_category %}
     <section aria-label="دسته‌بندی" class="space-y-2">
-      {% if ad_category %}
-        <div class="flex items-center gap-2 text-sm">
-          <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ 'فروش' if ad_category.trade_type=='sale' else 'اجاره' }}</span>
-          <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">{{ ad_category.property_type|default('ملک') }}</span>
-          <a href="{{ url_for('main.add_land_step1') }}" class="ms-auto text-xs text-emerald-700 hover:underline">ویرایش دسته</a>
-        </div>
-      {% else %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_main">نوع معامله (گروه)*</label>
-            <select id="category_main" name="category_main" required class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-              <option value="" disabled selected>انتخاب کنید...</option>
-              <option value="فروش مسکونی">فروش مسکونی</option>
-              <option value="اجاره مسکونی">اجاره مسکونی</option>
-              <option value="اجاره اداری و تجاری">اجاره اداری و تجاری</option>
-              <option value="فروش اداری و تجاری">فروش اداری و تجاری</option>
-              <option value="اجاره کوتاه‌مدت">اجاره کوتاه‌مدت</option>
-              <option value="پروژه‌های ساخت‌وساز">پروژه‌های ساخت‌وساز</option>
-            </select>
+      <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+            دسته انتخاب شده: 
+            {% set cat_path = ad_category.get('category_path', []) %}
+            {% set cat_id = ad_category.get('category_id', '') %}
+            {% if cat_id %}
+              {% set cat_info = categories.get(cat_id) if categories else None %}
+              {% if cat_info %}
+                {{ cat_info.title }}
+                {% if cat_path|length > 1 %}
+                  - {{ cat_path[1] }}
+                {% endif %}
+                {% if cat_path|length > 2 %}
+                  - {{ cat_path[2] }}
+                {% endif %}
+              {% else %}
+                {{ cat_id }}
+              {% endif %}
+            {% else %}
+              نامشخص
+            {% endif %}
           </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="category_sub">دسته‌بندی (زیرشاخه)*</label>
-            <select id="category_sub" name="category_sub" required disabled class="w-full border rounded-lg px-3 py-2 dark:bg-gray-700 dark:text-white">
-              <option value="" disabled selected>ابتدا گروه را انتخاب کنید...</option>
-            </select>
-          </div>
+          <a href="{{ url_for('main.add_land_step1') }}" class="text-xs text-emerald-700 dark:text-emerald-300 hover:underline">تغییر دسته</a>
         </div>
-      {% endif %}
+      </div>
     </section>
+    {% endif %}
 
     
 
@@ -255,8 +255,7 @@
   const totalPriceInput     = document.getElementById('price_total');
   const pricePerMeterInput  = document.getElementById('price_per_meter');
   const priceWords          = document.getElementById('price_words');
-  const mainSelect          = document.getElementById('category_main');
-  const subSelect           = document.getElementById('category_sub');
+  // Category selection removed - now in step1
   const imagesInput         = document.getElementById('imagesInput');
   const previewContainer    = document.getElementById('preview-container');
   const uploadStatus        = document.getElementById('upload-status');
@@ -273,14 +272,7 @@
   const progressBarStep     = document.getElementById('progressBarStep');
 
   /* =========================[ ابزارهای کمکی ]========================= */
-  const categoriesMap = {
-    "فروش مسکونی": ["آپارتمان","خانه و ویلا","زمین و ملک کلنگی"],
-    "اجاره مسکونی": ["آپارتمان","خانه و ویلا"],
-    "اجاره اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
-    "فروش اداری و تجاری": ["دفتر کار، اتاق اداری، مطب","مغازه و غرفه","صنعتی، کشاورزی، تجاری"],
-    "اجاره کوتاه‌مدت": ["آپارتمان و سوئیت","ویلا و باغ","دفتر کار و فضای آموزشی"],
-    "پروژه‌های ساخت‌وساز": ["مشارکت در ساخت","پیش‌فروش"]
-  };
+  // Category selection moved to step1
 
   const numfmt = new Intl.NumberFormat('fa-IR');
   const formatNumber = (n) => n ? numfmt.format(n) : '';
@@ -354,49 +346,28 @@
   totalPriceInput.addEventListener('input', recalc);
 
   /* =====================[ منطق دسته‌بندی/زیرشاخه ]==================== */
-  function fillSub(main, setValue=null){
-    subSelect.innerHTML = '';
-    const def = document.createElement('option');
-    def.value=''; def.disabled=true; def.selected=true; def.textContent='زیرشاخه را انتخاب کنید...';
-    subSelect.appendChild(def);
-    (categoriesMap[main] || []).forEach(item=>{
-      const opt=document.createElement('option'); opt.value=item; opt.textContent=item; subSelect.appendChild(opt);
-    });
-    subSelect.disabled = !(categoriesMap[main]||[]).length;
-    if(setValue && !subSelect.disabled){
-      subSelect.value = setValue;
-      if(!subSelect.value) subSelect.selectedIndex = 0;
-    }
-  }
-  mainSelect.addEventListener('change', e=>fillSub(e.target.value));
+  // Category selection moved to step1 - removed from here
 
   /* =====================[ نمایش فیلدهای اختصاصی ]==================== */
+  // Category-specific fields logic - can be enhanced based on category_id from session
   const catWrap      = document.getElementById('categorySpecific');
   const rentFields   = document.getElementById('rentFields');
   const aptFields    = document.getElementById('apartmentFields');
-  function updateCategorySpecific(){
-    const mainVal = (mainSelect?.value||'');
-    const subVal  = (subSelect?.value||'');
-    const isRent  = /اجاره/.test(mainVal);
-    const isApt   = /آپارتمان/.test(subVal);
-    if (!catWrap) return;
-    if (!mainVal){ catWrap.classList.add('hidden'); return; }
-    catWrap.classList.remove('hidden');
-    rentFields?.classList.toggle('hidden', !isRent);
-    aptFields?.classList.toggle('hidden', !isApt);
-  }
-  mainSelect?.addEventListener('change', updateCategorySpecific);
-  subSelect?.addEventListener('change', updateCategorySpecific);
-
+  
   // اگر از گام ۱ آمده‌ایم و دسته معلوم است، فیلدهای اختصاصی را فعال کن
   try{
     const hasAdCat = {{ 'true' if ad_category else 'false' }};
-    if (hasAdCat){
-      // شبیه‌سازی مقداردهی: اجاره/فروش از سشن → نمایش بلاک مرتبط
-      const tradeType = '{{ ad_category.trade_type if ad_category else '' }}';
-      const property  = '{{ ad_category.property_type if ad_category else '' }}';
-      if (tradeType === 'rent') { catWrap?.classList.remove('hidden'); rentFields?.classList.remove('hidden'); }
-      if (property === 'apartment') { catWrap?.classList.remove('hidden'); aptFields?.classList.remove('hidden'); }
+    if (hasAdCat && catWrap){
+      {% if ad_category %}
+        {% set cat_id = ad_category.get('category_id', '') %}
+        {% if cat_id == 'real_estate' %}
+          // برای املاک: فیلدهای اجاره/فروش و نوع ملک
+          catWrap.classList.remove('hidden');
+          const propertyType = '{{ ad_category.get("property_type", "") }}';
+          if (propertyType.includes('rent')) { rentFields?.classList.remove('hidden'); }
+          if (propertyType.includes('apartment') || propertyType.includes('villa')) { aptFields?.classList.remove('hidden'); }
+        {% endif %}
+      {% endif %}
     }
   }catch(_){}
 
@@ -631,7 +602,7 @@
           if(k==='_images_meta') return;
           const el = form.elements[k]; if(el) el.value = v;
         });
-        if(obj.category_main){ fillSub(obj.category_main, obj.category_sub || null); }
+        // Category selection moved to step1 - no longer needed here
         if(obj._images_meta){
           imageItems = obj._images_meta.map(m=>({id:m.id,url:m.url,file:null,isCover:m.isCover,serverId:m.serverId||null,uploading:false}));
           renderThumbs();

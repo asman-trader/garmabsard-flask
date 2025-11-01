@@ -40,50 +40,15 @@
 
       <!-- Category grid -->
       <section class="mt-2">
-        <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">ابتدا دسته اصلی را انتخاب کنید</div>
-        <div id="catButtonsWrap" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <button type="button" data-cat="rent_residential" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-key text-emerald-600"></i>
-              <span class="text-[14px]">اجارهٔ مسکونی</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
-        </button>
-          <button type="button" data-cat="sale_residential" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-sign-hanging text-emerald-600"></i>
-              <span class="text-[14px]">فروش مسکونی</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
-        </button>
-          <button type="button" data-cat="sale_office" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-briefcase text-emerald-600"></i>
-              <span class="text-[14px]">فروش اداری/تجاری</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
-        </button>
-          <button type="button" data-cat="rent_office" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-building text-emerald-600"></i>
-              <span class="text-[14px]">اجاره اداری/تجاری</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
-        </button>
-          <button type="button" data-cat="project" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-mountain text-emerald-600"></i>
-              <span class="text-[14px]">پروژه‌های ساخت‌وساز</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
-        </button>
-          <button type="button" data-cat="short_rent" class="flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-            <div class="flex items-center gap-2">
-              <i class="fas fa-clock text-emerald-600"></i>
-              <span class="text-[14px]">اجارهٔ کوتاه‌مدت</span>
-            </div>
-          <i class="fas fa-angle-left text-gray-400"></i>
+        <div class="mb-3 text-sm text-gray-600 dark:text-gray-300">ابتدا دسته اصلی را انتخاب کنید</div>
+        <div id="catButtonsWrap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {% for cat_id, cat_data in categories.items() %}
+          <button type="button" data-cat="{{ cat_id }}" class="flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-emerald-500 transition-all">
+            <i class="fas {{ cat_data.icon }} text-emerald-600 text-xl"></i>
+            <span class="text-[13px] font-medium text-center">{{ cat_data.title }}</span>
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 text-center hidden sm:block">{{ cat_data.description[:20] }}...</span>
           </button>
+          {% endfor %}
         </div>
       </section>
 
@@ -114,7 +79,7 @@
         <div id="sheetTitle" class="text-sm font-bold"></div>
         <button id="sheetClose" class="p-2 text-gray-500 hover:text-gray-700" aria-label="بستن"><i class="fas fa-times"></i></button>
       </div>
-      <div id="sheetItems" class="mt-1 grid grid-cols-2 gap-2"></div>
+      <div id="sheetItems" class="mt-1 grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto"></div>
     </div>
   </div>
 </div>
@@ -156,102 +121,93 @@ document.addEventListener('DOMContentLoaded', function(){
   const summaryCat = document.getElementById('summaryCat');
   const summarySubcat = document.getElementById('summarySubcat');
 
-  const CATS = {
-    rent_residential: {
-      title: 'اجارهٔ مسکونی',
-      trade: 'rent',
-      items: [
-        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
-        { value: 'apartment', label: 'سوئیت', icon: 'fa-bed' },
-        { value: 'apartment', label: 'پنت‌هاوس', icon: 'fa-city' },
-        { value: 'apartment', label: 'نوساز', icon: 'fa-star' },
-        { value: 'apartment', label: 'قدیمی‌ساز', icon: 'fa-house' },
-        { value: 'villa',     label: 'خانه ویلایی', icon: 'fa-home' },
-        { value: 'villa',     label: 'باغ‌ویلا', icon: 'fa-tree' }
-      ]
-    },
-    sale_residential: {
-      title: 'فروش مسکونی',
-      trade: 'sale',
-      items: [
-        { value: 'apartment', label: 'آپارتمان', icon: 'fa-building' },
-        { value: 'apartment', label: 'پنت‌هاوس', icon: 'fa-city' },
-        { value: 'villa',     label: 'خانه و ویلا', icon: 'fa-house' },
-        { value: 'land',      label: 'زمین مسکونی', icon: 'fa-mountain' }
-      ]
-    },
-    sale_office: {
-      title: 'فروش اداری و تجاری',
-      trade: 'sale',
-      items: [
-        { value: 'office', label: 'دفتر اداری', icon: 'fa-briefcase' },
-        { value: 'office', label: 'مطب/پزشکی', icon: 'fa-stethoscope' },
-        { value: 'office', label: 'فضای آموزشی', icon: 'fa-chalkboard-user' },
-        { value: 'shop',   label: 'مغازه و غرفه', icon: 'fa-store' },
-        { value: 'shop',   label: 'فروشگاه/کافی‌شاپ', icon: 'fa-mug-hot' }
-      ]
-    },
-    rent_office: {
-      title: 'اجارهٔ اداری و تجاری',
-      trade: 'rent',
-      items: [
-        { value: 'office', label: 'دفتر اداری', icon: 'fa-briefcase' },
-        { value: 'office', label: 'مطب/پزشکی', icon: 'fa-stethoscope' },
-        { value: 'office', label: 'فضای آموزشی', icon: 'fa-chalkboard-user' },
-        { value: 'shop',   label: 'مغازه و غرفه', icon: 'fa-store' },
-        { value: 'shop',   label: 'کارگاه/انبار سبک', icon: 'fa-warehouse' }
-      ]
-    },
-    project: {
-      title: 'پروژه‌های ساخت‌وساز',
-      trade: 'sale',
-      items: [
-        { value: 'land',   label: 'زمین/قطعه', icon: 'fa-mountain' },
-        { value: 'garden', label: 'باغ', icon: 'fa-seedling' },
-        { value: 'land',   label: 'پیش‌فروش', icon: 'fa-calendar-days' },
-        { value: 'land',   label: 'مشارکت در ساخت', icon: 'fa-people-carry' }
-      ]
-    },
-    short_rent: {
-      title: 'اجارهٔ کوتاه‌مدت',
-      trade: 'rent',
-      items: [
-        { value: 'apartment', label: 'آپارتمان و سوئیت', icon: 'fa-building' },
-        { value: 'villa',     label: 'ویلا و باغ',     icon: 'fa-home' },
-        { value: 'office',    label: 'دفتر/فضای آموزشی', icon: 'fa-chalkboard-user' }
-      ]
-    }
-  };
+  // ساختار دسته‌بندی از سرور
+  const CATEGORIES = {{ categories | tojson }};
+  
+  let currentCategoryId = null;
+  let currentSubcategoryId = null;
+  let currentItem = null;
 
-  function openSheet(catKey){
-    const cfg = CATS[catKey]; if (!cfg) return;
-    // Update summary and show bottom sheet for subcat choices
-    summaryCat.textContent = cfg.title;
+  function openSheet(catId){
+    const cat = CATEGORIES[catId];
+    if (!cat) return;
+    
+    currentCategoryId = catId;
+    currentSubcategoryId = null;
+    currentItem = null;
+    
+    summaryCat.textContent = cat.title;
     summarySubcat.textContent = 'زیر‌دسته انتخاب نشده';
-    trade.value = cfg.trade;
     selectorsWrap.classList.remove('hidden');
-    sheetTitle.textContent = 'انتخاب زیر‌دسته';
+    sheetTitle.textContent = `انتخاب زیر‌دسته - ${cat.title}`;
     sheetItems.innerHTML = '';
-    cfg.items.forEach(it => {
+    
+    const subcats = cat.subcategories || {};
+    const subcatKeys = Object.keys(subcats);
+    
+    if (subcatKeys.length === 0) {
+      // اگر زیردسته‌ای نیست، مستقیماً ادامه بده
+      prop.value = catId;
+      sheet.classList.add('hidden');
+      updateContinueState();
+      return;
+    }
+    
+    // نمایش زیردسته‌ها
+    subcatKeys.forEach(subcatKey => {
+      const subcat = subcats[subcatKey];
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600';
-      btn.innerHTML = `<div class="flex items-center gap-2"><i class=\"fas ${it.icon} text-emerald-600\"></i><span class=\"text-sm\">${it.label}</span></div><i class=\"fas fa-check text-transparent\"></i>`;
+      btn.innerHTML = `<div class="flex items-center gap-2"><i class="fas ${subcat.icon || 'fa-circle'} text-emerald-600"></i><span class="text-sm">${subcat.title}</span></div><i class="fas fa-angle-left text-gray-400"></i>`;
       btn.addEventListener('click', ()=>{
-        summarySubcat.textContent = it.label;
-        prop.value = it.value;
+        currentSubcategoryId = subcatKey;
+        handleSubcategorySelect(catId, subcatKey, subcat);
+      });
+      sheetItems.appendChild(btn);
+    });
+    
+    sheet.classList.remove('hidden');
+    continueBtn.disabled = true;
+  }
+  
+  function handleSubcategorySelect(catId, subcatId, subcat){
+    summarySubcat.textContent = subcat.title;
+    
+    const items = subcat.items || [];
+    if (items.length === 0) {
+      // اگر آیتمی ندارد، مستقیماً انتخاب کن
+      prop.value = `${catId}_${subcatId}`;
+      sheet.classList.add('hidden');
+      updateContinueState();
+      return;
+    }
+    
+    // نمایش آیتم‌های زیردسته
+    sheetTitle.textContent = `انتخاب ${subcat.title}`;
+    sheetItems.innerHTML = '';
+    
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'flex items-center justify-between gap-2 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600';
+      btn.innerHTML = `<div class="flex items-center gap-2"><span class="text-sm">${item}</span></div><i class="fas fa-check text-transparent"></i>`;
+      btn.addEventListener('click', ()=>{
+        currentItem = item;
+        summarySubcat.textContent = `${subcat.title} - ${item}`;
+        prop.value = `${catId}_${subcatId}_${item}`;
         sheet.classList.add('hidden');
         updateContinueState();
       });
       sheetItems.appendChild(btn);
     });
-    sheet.classList.remove('hidden');
-    continueBtn.disabled = true;
   }
 
   // Change subcategory again
   btnChangeSubcat?.addEventListener('click', ()=>{
-    sheet.classList.remove('hidden');
+    if (currentCategoryId) {
+      openSheet(currentCategoryId);
+    }
   });
 
   document.querySelectorAll('[data-cat]').forEach(el => {
