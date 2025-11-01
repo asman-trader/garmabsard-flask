@@ -348,6 +348,10 @@ def add_land_details():
         amenities = request.form.getlist('amenities') or []
         conditions = request.form.getlist('conditions') or []
         
+        # Get category info from session
+        ad_cat = session.get('ad_category', {})
+        cat_id = ad_cat.get('category_id', '')
+        
         # Validate lat/lng
         extras = {
             'deposit': request.form.get('deposit') or None,
@@ -372,7 +376,7 @@ def add_land_details():
             'urgent': 'immediate' in conditions,
             'features': request.form.getlist('features') or [],
             'document_type': request.form.get('document_type') or None,
-            # Apartment
+            # Real Estate - Apartment
             'apartment': {
                 'year_built': request.form.get('year_built') or None,
                 'floor': request.form.get('floor') or None,
@@ -381,27 +385,52 @@ def add_land_details():
                 'parking': request.form.get('parking') if request.form.get('parking') in {'0','1'} else None,
                 'warehouse': request.form.get('warehouse') if request.form.get('warehouse') in {'0','1'} else None,
             },
-            # Villa
+            # Real Estate - Villa
             'villa': {
                 'land_area': request.form.get('villa_land_area') or None,
                 'built_area': request.form.get('villa_built_area') or None,
                 'bedrooms': request.form.get('villa_bedrooms') or None,
                 'pool': request.form.get('villa_pool') if request.form.get('villa_pool') in {'0','1'} else None,
             },
-            # Land / Garden
+            # Real Estate - Land / Garden
             'land': {
                 'shape': request.form.get('land_shape') or None,
                 'use': request.form.get('land_use') or None,
                 'irrigation': request.form.get('irrigation') or None,
                 'tree_count': request.form.get('tree_count') or None,
             },
-            # Commercial
+            # Real Estate - Commercial
             'commercial': {
                 'front_width': request.form.get('front_width') or None,
                 'floor': request.form.get('commercial_floor') or None,
                 'has_license': request.form.get('has_license') if request.form.get('has_license') in {'0','1'} else None,
                 'type': request.form.get('commercial_type') or None,
             },
+            # Vehicles
+            'vehicle': {
+                'brand_model': request.form.get('vehicle_brand_model') or None,
+                'year': request.form.get('vehicle_year') or None,
+                'mileage': request.form.get('vehicle_mileage') or None,
+                'color': request.form.get('vehicle_color') or None,
+                'fuel': request.form.get('vehicle_fuel') or None,
+                'condition': request.form.get('vehicle_condition') or None,
+            } if cat_id == 'vehicles' else {},
+            # Digital
+            'digital': {
+                'brand': request.form.get('digital_brand') or None,
+                'model': request.form.get('digital_model') or None,
+                'storage': request.form.get('digital_storage') or None,
+                'color': request.form.get('digital_color') or None,
+                'condition': request.form.get('digital_condition') or None,
+                'warranty': request.form.get('digital_warranty') or None,
+            } if cat_id == 'digital' else {},
+            # Home & Kitchen
+            'home_kitchen': {
+                'brand': request.form.get('home_brand') or None,
+                'model': request.form.get('home_model') or None,
+                'condition': request.form.get('home_condition') or None,
+                'warranty': request.form.get('home_warranty') or None,
+            } if cat_id == 'home_kitchen' else {},
         }
 
         lt = session.get('land_temp') or {}

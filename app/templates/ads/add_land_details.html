@@ -37,8 +37,19 @@
     <form id="step3Form" method="POST" class="space-y-6" action="{{ url_for('main.add_land_details') }}">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       <input type="hidden" name="location" id="loc_hidden" value="">
-      {% set _pt = (ad_category.property_type if ad_category else '') %}
-      {% set _tt = (ad_category.trade_type if ad_category else '') %}
+      {% set ad_cat = ad_category if ad_category else {} %}
+      {% set cat_id = ad_cat.get('category_id', '') %}
+      {% set cat_path = ad_cat.get('category_path', []) %}
+      {% set prop_type = ad_cat.get('property_type', '') %}
+      
+      {% set cat_info = categories.get(cat_id, {}) if cat_id else {} %}
+      {% set cat_title = cat_info.get('title', cat_id) if cat_info else cat_id %}
+      
+      {% set subcat_id = cat_path[1] if cat_path|length > 1 else '' %}
+      {% set subcat_info = cat_info.get('subcategories', {}).get(subcat_id, {}) if cat_id and subcat_id else {} %}
+      {% set subcat_title = subcat_info.get('title', subcat_id) if subcat_info else '' %}
+      
+      {% set item_text = cat_path[2] if cat_path|length > 2 else '' %}
 
       <!-- Selection summary -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
@@ -47,8 +58,19 @@
           <h2 class="text-sm font-bold text-gray-900 dark:text-white">انتخاب شما</h2>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs">
-          {% if _tt %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{{ 'فروش' if _tt=='sale' else 'اجاره' }}</span>{% endif %}
-          {% if _pt %}<span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">{{ 'آپارتمان' if _pt=='apartment' else 'ویلا' if _pt=='villa' else 'زمین' if _pt=='land' else 'باغ' if _pt=='garden' else 'اداری' if _pt=='office' else 'مغازه' if _pt=='shop' else 'ملک' }}</span>{% endif %}
+          {% if cat_title %}
+            <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+              <i class="fas {{ cat_info.get('icon', 'fa-tag') }} text-[10px] ml-1"></i>{{ cat_title }}
+            </span>
+          {% endif %}
+          {% if subcat_title %}
+            <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+              <i class="fas {{ subcat_info.get('icon', 'fa-circle') }} text-[10px] ml-1"></i>{{ subcat_title }}
+            </span>
+          {% endif %}
+          {% if item_text %}
+            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">{{ item_text }}</span>
+          {% endif %}
           <a href="{{ url_for('main.add_land_step1') }}" class="ms-auto text-[11px] text-emerald-700 hover:underline">تغییر دسته</a>
         </div>
       </div>
@@ -81,7 +103,7 @@
           </label>
         </div>
 
-        {% if _tt=='rent' %}
+        {% if cat_id == 'real_estate' and ('rent' in prop_type or 'rent' in subcat_id) %}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ودیعه (تومان)</label>
@@ -104,12 +126,12 @@
       </div>
       
 
-      {% if _pt in ['apartment','villa'] %}
+      {% if cat_id == 'real_estate' and (item_text == 'آپارتمان' or item_text == 'خانه و ویلا' or subcat_id in ['rent_residential', 'sale_residential'] or 'apartment' in prop_type.lower() or 'villa' in prop_type.lower()) %}
       <!-- Residential: Apartment/Villa -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-home text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات {{ 'آپارتمان' if _pt=='apartment' else 'ویلا' }}</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات مسکونی</h2>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
@@ -150,7 +172,7 @@
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="yard" class="w-4 h-4 text-emerald-600"><span class="text-sm">حیاط</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="pool" class="w-4 h-4 text-emerald-600"><span class="text-sm">استخر</span></label>
         </div>
-        {% if _pt=='villa' %}
+        {% if item_text == 'خانه و ویلا' or 'villa' in prop_type.lower() %}
         <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">مساحت زمین (متر)</label>
@@ -172,12 +194,12 @@
       </div>
       {% endif %}
 
-      {% if _pt in ['land','garden'] %}
+      {% if cat_id == 'real_estate' and (item_text == 'زمین و کلنگی' or 'land' in prop_type.lower() or 'garden' in prop_type.lower()) %}
       <!-- Land/Garden -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-mountain text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات {{ 'زمین' if _pt=='land' else 'باغ' }}</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات زمین</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -212,12 +234,12 @@
       </div>
       {% endif %}
 
-      {% if _pt in ['office','shop'] %}
+      {% if cat_id == 'real_estate' and (subcat_id in ['sale_commercial', 'rent_commercial'] or item_text in ['دفتر کار', 'مغازه و غرفه', 'مغازه'] or 'commercial' in prop_type.lower() or 'office' in prop_type.lower() or 'shop' in prop_type.lower()) %}
       <!-- Commercial: Office/Shop -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-briefcase text-emerald-500"></i>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات {{ 'اداری' if _pt=='office' else 'تجاری' }}</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات اداری/تجاری</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -239,7 +261,8 @@
       </div>
       {% endif %}
 
-      <!-- Document Type Section -->
+      {% if cat_id == 'real_estate' %}
+      <!-- Document Type Section (Only for Real Estate) -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center gap-2 mb-4">
           <i class="fas fa-file-contract text-emerald-500"></i>
@@ -268,6 +291,7 @@
           </label>
         </div>
       </div>
+      {% endif %}
 
       <!-- Amenities Section -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
@@ -277,14 +301,14 @@
         </div>
         
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {% if _pt in ['apartment','villa'] %}
+          {% if cat_id == 'real_estate' and (item_text == 'آپارتمان' or item_text == 'خانه و ویلا' or subcat_id in ['rent_residential', 'sale_residential']) %}
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="elevator" class="w-4 h-4 text-emerald-600"><span class="text-sm">آسانسور</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="parking" class="w-4 h-4 text-emerald-600"><span class="text-sm">پارکینگ</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="storage" class="w-4 h-4 text-emerald-600"><span class="text-sm">انباری</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="balcony" class="w-4 h-4 text-emerald-600"><span class="text-sm">بالکن</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="yard" class="w-4 h-4 text-emerald-600"><span class="text-sm">حیاط</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="amenities" value="pool" class="w-4 h-4 text-emerald-600"><span class="text-sm">استخر</span></label>
-          {% elif _pt in ['land','garden'] %}
+          {% elif cat_id == 'real_estate' and (item_text == 'زمین و کلنگی' or 'land' in prop_type.lower() or 'garden' in prop_type.lower()) %}
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="دیوارکشی" class="w-4 h-4 text-emerald-600"><span class="text-sm">دیوارکشی</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="برق" class="w-4 h-4 text-emerald-600"><span class="text-sm">برق</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="آب" class="w-4 h-4 text-emerald-600"><span class="text-sm">آب</span></label>
@@ -292,12 +316,145 @@
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="سند تک‌برگ" class="w-4 h-4 text-emerald-600"><span class="text-sm">سند تک‌برگ</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="چاه" class="w-4 h-4 text-emerald-600"><span class="text-sm">چاه</span></label>
           {% else %}
+          <!-- Generic amenities for other categories -->
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="کولر" class="w-4 h-4 text-emerald-600"><span class="text-sm">کولر</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="گرمایش مرکزی" class="w-4 h-4 text-emerald-600"><span class="text-sm">گرمایش مرکزی</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="features" value="دوربین" class="w-4 h-4 text-emerald-600"><span class="text-sm">دوربین</span></label>
           {% endif %}
         </div>
       </div>
+
+      <!-- Vehicles Category Fields -->
+      {% if cat_id == 'vehicles' %}
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-car text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات وسیله نقلیه</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">برند و مدل</label>
+            <input type="text" name="vehicle_brand_model" placeholder="مثال: پژو ۲۰۶" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">سال ساخت</label>
+            <input type="number" name="vehicle_year" placeholder="مثال: ۱۴۰۰" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">کیلومتر</label>
+            <input type="number" name="vehicle_mileage" placeholder="مثال: ۵۰۰۰۰" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">رنگ</label>
+            <input type="text" name="vehicle_color" placeholder="مثال: سفید" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نوع سوخت</label>
+            <select name="vehicle_fuel" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="بنزین">بنزین</option>
+              <option value="گازوئیل">گازوئیل</option>
+              <option value="دوگانه‌سوز">دوگانه‌سوز</option>
+              <option value="برقی">برقی</option>
+              <option value="هیبرید">هیبرید</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">وضعیت</label>
+            <select name="vehicle_condition" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="عالی">عالی</option>
+              <option value="خوب">خوب</option>
+              <option value="متوسط">متوسط</option>
+              <option value="نیاز به تعمیر">نیاز به تعمیر</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Digital Category Fields -->
+      {% if cat_id == 'digital' %}
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-laptop text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات کالای دیجیتال</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">برند</label>
+            <input type="text" name="digital_brand" placeholder="مثال: سامسونگ، اپل، ال جی..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">مدل</label>
+            <input type="text" name="digital_model" placeholder="مثال: Galaxy S21, iPhone 13..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">حافظه/ظرفیت</label>
+            <input type="text" name="digital_storage" placeholder="مثال: ۱۲۸ گیگابایت، ۵۱۲ گیگابایت..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">رنگ</label>
+            <input type="text" name="digital_color" placeholder="مثال: مشکی، سفید..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">وضعیت</label>
+            <select name="digital_condition" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="نو">نو</option>
+              <option value="در حد نو">در حد نو</option>
+              <option value="کارکرده">کارکرده</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">گارانتی</label>
+            <select name="digital_warranty" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="دارد">دارد</option>
+              <option value="ندارد">ندارد</option>
+              <option value="انقضا شده">انقضا شده</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Home & Kitchen Category Fields -->
+      {% if cat_id == 'home_kitchen' %}
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-couch text-emerald-500"></i>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">مشخصات کالا</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">برند</label>
+            <input type="text" name="home_brand" placeholder="مثال: ال جی، سامسونگ..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">مدل</label>
+            <input type="text" name="home_model" placeholder="مثال: مدل دستگاه..." class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">وضعیت</label>
+            <select name="home_condition" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="نو">نو</option>
+              <option value="در حد نو">در حد نو</option>
+              <option value="کارکرده">کارکرده</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">گارانتی</label>
+            <select name="home_warranty" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+              <option value="">انتخاب کنید</option>
+              <option value="دارد">دارد</option>
+              <option value="ندارد">ندارد</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
 
       <!-- Transaction Conditions Section -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
