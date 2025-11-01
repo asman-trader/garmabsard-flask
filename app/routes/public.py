@@ -64,7 +64,8 @@ def _compute_price_per_meter(land: Dict[str, Any]) -> Optional[int]:
     return None
 
 def _get_approved_ads() -> List[Dict[str, Any]]:
-    return [ad for ad in load_ads_cached() if ad.get("status") == "approved" and not ad.get("is_express", False)]
+    # همهٔ آگهی‌های تأییدشده (شامل اکسپرس)
+    return [ad for ad in load_ads_cached() if ad.get("status") == "approved"]
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return sorted(
