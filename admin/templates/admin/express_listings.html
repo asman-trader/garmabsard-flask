@@ -16,28 +16,6 @@
     </a>
   </div>
 
-  <!-- پیام‌های سیستم -->
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-      <div class="space-y-3 mb-5" role="status" aria-live="polite">
-        {% for category, msg in messages %}
-          <div class="text-sm rounded-xl px-3 py-2 border
-                      {% if category in ['success', 'ok'] %}
-                        bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
-                      {% elif category in ['warning'] %}
-                        bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
-                      {% elif category in ['info'] %}
-                        bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
-                      {% else %}
-                        bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
-                      {% endif %}">
-            {{ msg }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
   {% if lands and lands|length > 0 %}
     <!-- کارت‌های آگهی اکسپرس -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -64,8 +42,16 @@
           <!-- تصویر کاور -->
           {% if cover %}
             <div class="mb-3">
-              <img src="{{ cover if ('://' in cover) else (('/uploads/' + cover) if not cover.startswith('/uploads/') else cover) }}"
-                   class="w-full h-40 object-cover rounded-xl" alt="عکس آگهی اکسپرس">
+              {% if '://' in cover %}
+                <img src="{{ cover }}" class="w-full h-40 object-cover rounded-xl" alt="عکس آگهی اکسپرس">
+              {% else %}
+                {% set path = cover.lstrip('/') %}
+                {% if path.startswith('uploads/') %}
+                  <img src="/{{ path }}" class="w-full h-40 object-cover rounded-xl" alt="عکس آگهی اکسپرس">
+                {% else %}
+                  <img src="/uploads/{{ path }}" class="w-full h-40 object-cover rounded-xl" alt="عکس آگهی اکسپرس">
+                {% endif %}
+              {% endif %}
             </div>
           {% else %}
             <div class="mb-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-xl h-40 flex items-center justify-center">
@@ -139,16 +125,22 @@
           </div>
 
           <!-- دکمه‌های عملیات -->
-          <div class="mt-4 flex gap-2">
+          <div class="mt-4 grid grid-cols-3 gap-2">
             <a href="{{ url_for('admin.edit_express_listing', code=land.code) }}"
-               class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+               class="bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
               <i class="fa-regular fa-pen-to-square mr-1"></i>ویرایش
             </a>
             
             <a href="{{ url_for('main.express_detail', code=land.code) }}" target="_blank"
-               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+               class="bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
               <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>مشاهده
             </a>
+            
+            <form method="post" action="{{ url_for('admin.delete_express_listing', code=land.code) }}" onsubmit="return confirm('آیا مطمئن هستید که می‌خواهید این آگهی را حذف کنید؟');" class="inline">
+              <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-trash mr-1"></i>حذف
+              </button>
+            </form>
           </div>
 
           <!-- اطلاعات اضافی -->

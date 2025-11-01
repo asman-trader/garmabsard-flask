@@ -1,61 +1,65 @@
-<section class="max-w-6xl mx-auto px-2 sm:px-4 pt-4">
-  <div id="quickSearchBox" class="hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 sm:p-6 shadow relative">
+<section class="max-w-6xl mx-auto px-2 sm:px-4 pt-2 sm:pt-3">
+  <div id="quickSearchBox" class="hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm p-3 sm:p-4 relative">
+    <!-- دکمه بستن -->
     <button id="qsHideBtn" type="button" title="بستن" aria-label="بستن"
-            class="absolute top-2 left-2 w-8 h-8 grid place-items-center rounded-full bg-white/15 hover:bg-white/25">
-      <i class="fas fa-times"></i>
+            class="absolute top-2 left-2 w-7 h-7 grid place-items-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+      <i class="fas fa-times text-sm"></i>
     </button>
-    <div class="flex items-center gap-3">
-      <span class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur grid place-items-center shadow-inner">
-        <i class="fas fa-seedling text-2xl"></i>
-      </span>
-      <div>
-        <div class="text-lg sm:text-2xl font-black">وینور – بازار آنلاین ملک</div>
-        <div class="text-white/80 text-xs sm:text-sm">جستجو و ثبت آسان آگهی؛ تجربه‌ای سریع و روان</div>
-      </div>
-    </div>
 
-    <!-- Search & Quick Actions -->
-    <div class="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
-      <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="sm:col-span-3">
-        <label class="sr-only" for="q">جستجو</label>
-        <!-- Mobile city chip (separate row) -->
-        <a href="{{ url_for('main.city_select') }}"
-           class="sm:hidden mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 text-white hover:bg-white/25 text-sm">
-          <i class="fas fa-map-marker-alt"></i>
-          <span data-city-label>کل ایران</span>
-        </a>
-        <div class="flex items-stretch rounded-xl overflow-hidden bg-white/10">
-          <!-- City selector trigger (inline on ≥sm) -->
-          <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
-             class="hidden sm:flex items-center gap-2 px-3 bg-white/20 text-white hover:bg-white/25 text-sm sm:text-base">
-            <i class="fas fa-map-marker-alt"></i>
-            <span data-city-label>کل ایران</span>
-          </a>
-          <input id="q" name="q" type="search" placeholder="جستجوی سریع: موقعیت، عنوان، توضیحات..."
-                 class="flex-1 px-3 py-2 text-sm sm:text-base bg-transparent placeholder-white/70 focus:outline-none">
-          <button id="qClear" type="button" title="بستن" aria-label="بستن"
-                  class="px-3 text-white hover:bg-white/20 transition hidden">*</button>
-          <button class="px-4 bg-white/20 hover:bg-white/25 transition text-white">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-        <input type="hidden" id="cityHidden" name="city" value="">
-      </form>
-      <div class="sm:col-span-2 grid grid-cols-3 gap-2">
-        {% if SHOW_SUBMIT_BUTTON %}
-        <a href="{{ url_for('main.submit_ad') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
-          <i class="fas fa-plus-circle"></i> ثبت آگهی
-        </a>
-        {% endif %}
-        <a href="{{ url_for('main.favorites') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
-          <i class="fas fa-bookmark"></i> علاقه‌مندی
-        </a>
-        <a href="{{ url_for('main.notifications') }}" class="rounded-xl px-3 py-2 bg-white/15 hover:bg-white/25 text-center text-sm">
-          <i class="fas fa-bell"></i> اعلان‌ها
-        </a>
+    <!-- فرم جستجو -->
+    <form id="quickSearchForm" action="{{ url_for('main.search_page') }}" method="get" class="flex items-stretch gap-2">
+      <!-- انتخاب شهر (موبایل: جدا، دسکتاپ: داخل فرم) -->
+      <a href="{{ url_for('main.city_select') }}" id="cityTrigger"
+         class="hidden sm:flex items-center gap-1.5 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm transition">
+        <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
+        <span data-city-label class="whitespace-nowrap">کل ایران</span>
+      </a>
+      
+      <!-- موبایل: انتخاب شهر به صورت جدا -->
+      <a href="{{ url_for('main.city_select') }}"
+         class="sm:hidden flex items-center gap-1.5 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm">
+        <i class="fas fa-map-marker-alt text-emerald-600 text-xs"></i>
+        <span data-city-label class="whitespace-nowrap text-xs">کل ایران</span>
+      </a>
+
+      <!-- فیلد جستجو -->
+      <div class="flex-1 relative flex items-stretch rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition">
+        <input id="q" name="q" type="search" placeholder="جستجو: موقعیت، عنوان..." autocomplete="off"
+               class="flex-1 px-3 py-2 text-sm bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none">
+        <button id="qClear" type="button" title="پاک کردن" aria-label="پاک کردن"
+                class="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hidden">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+        <button type="submit" class="px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-r-lg transition" title="جستجو" aria-label="جستجو">
+          <i class="fas fa-search text-sm"></i>
+        </button>
       </div>
+      <input type="hidden" id="cityHidden" name="city" value="">
+    </form>
+
+    <!-- دکمه‌های سریع (فشرده) -->
+    <div class="mt-2 flex items-center gap-2 justify-end">
+      {% if SHOW_SUBMIT_BUTTON %}
+      <a href="{{ url_for('main.submit_ad') }}" 
+         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-xs transition">
+        <i class="fas fa-plus text-[10px]"></i>
+        <span>ثبت آگهی</span>
+      </a>
+      {% endif %}
+      <a href="{{ url_for('main.favorites') }}" 
+         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition"
+         title="علاقه‌مندی">
+        <i class="fas fa-bookmark text-[10px]"></i>
+      </a>
+      <a href="{{ url_for('main.notifications') }}" 
+         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 text-xs transition relative"
+         title="اعلان‌ها">
+        <i class="fas fa-bell text-[10px]"></i>
+        <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center">0</span>
+      </a>
     </div>
   </div>
+
   <script>
     (function(){
       try {
@@ -70,10 +74,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // City label logic: supports province-only or multiple cities
+  // City label logic
   (function(){
-    const CITY_KEY = 'vinor_city';            // label (what to display)
-    const CITY_OBJ_KEY = 'vinor_city_obj';    // {province, city}
+    const CITY_KEY = 'vinor_city';
+    const CITY_OBJ_KEY = 'vinor_city_obj';
     const EVT_NAME = 'vinor:city-changed';
 
     function applyCityLabelFromStorage(){
@@ -107,17 +111,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }catch(_){ }
 
       labelEls.forEach(el => { try { el.textContent = display || 'کل ایران'; } catch(_){ } });
+      if (display.length > 12) {
+        labelEls.forEach(el => { try { el.textContent = display.substring(0, 10) + '...'; } catch(_){ } });
+      }
       hiddenEl.value = hiddenVal;
     }
 
     applyCityLabelFromStorage();
     document.addEventListener(EVT_NAME, applyCityLabelFromStorage);
     window.addEventListener('storage', (e)=>{
-      if (e.key === 'vinor_city' || e.key === 'vinor_city_obj') applyCityLabelFromStorage();
+      if (e.key === CITY_KEY || e.key === CITY_OBJ_KEY) applyCityLabelFromStorage();
     });
   })();
 
-  // Quick search clear button (*)
+  // Quick search clear button
   (function(){
     const q = document.getElementById('q');
     const clr = document.getElementById('qClear');
@@ -127,11 +134,17 @@ document.addEventListener("DOMContentLoaded", () => {
       clr.classList.toggle('hidden', !has);
     }
     q.addEventListener('input', sync);
-    clr.addEventListener('click', (e)=>{ e.preventDefault(); q.value=''; q.focus(); sync(); });
+    q.addEventListener('focus', sync);
+    clr.addEventListener('click', (e)=>{ 
+      e.preventDefault(); 
+      q.value=''; 
+      q.focus(); 
+      sync(); 
+    });
     sync();
   })();
 
-  // کنترل نمایش جستجوی سریع با تنظیمات کاربر
+  // کنترل نمایش جستجوی سریع
   (function(){
     const box = document.getElementById('quickSearchBox');
     if (!box) return;
@@ -145,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener('vinor:qs-toggle', apply);
   })();
 
-  // دکمه بستن نوار جستجو سریع (بالا-چپ)
+  // دکمه بستن
   (function(){
     const btn = document.getElementById('qsHideBtn');
     const box = document.getElementById('quickSearchBox');
@@ -156,7 +169,30 @@ document.addEventListener("DOMContentLoaded", () => {
       try{ window.dispatchEvent(new CustomEvent('vinor:qs-toggle', { detail: false })); }catch{}
     });
   })();
+
+  // Badge اعلان‌ها (اگر کاربر لاگین باشد)
+  (function(){
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
+    if (!loggedIn) return;
+    
+    async function refreshNotifBadge(){
+      try{
+        const r = await fetch("{{ url_for('main.api_notifications_unread_count') }}", { credentials: 'same-origin' });
+        const j = await r.json();
+        const c = parseInt(j.count || 0, 10);
+        if(c > 0){
+          badge.textContent = c > 99 ? '99+' : String(c);
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      } catch(_){}
+    }
+    window.addEventListener('load', refreshNotifBadge);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshNotifBadge(); });
+    setInterval(refreshNotifBadge, 60000);
+  })();
 });
 </script>
-
-

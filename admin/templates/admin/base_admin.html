@@ -169,6 +169,32 @@
       </div>
     </header>
 
+    <!-- اعلان‌های سیستم (یکپارچه) -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div class="px-4 sm:px-6 lg:px-8 pt-4">
+          <div class="space-y-3" role="status" aria-live="polite">
+            {% for category, msg in messages %}
+              <div class="text-sm rounded-xl px-4 py-3 border flex items-start gap-3
+                          {% if category in ['success', 'ok'] %}
+                            bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
+                          {% elif category in ['warning'] %}
+                            bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
+                          {% elif category in ['info'] %}
+                            bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
+                          {% else %}
+                            bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
+                          {% endif %}">
+                <i class="fas mt-0.5 flex-shrink-0
+                          {% if category in ['success', 'ok'] %}fa-check-circle{% elif category in ['warning'] %}fa-exclamation-triangle{% elif category in ['info'] %}fa-info-circle{% else %}fa-times-circle{% endif %}"></i>
+                <span class="flex-1">{{ msg }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- ظرف محتوا -->
     <section class="py-6">
       {% block content %}

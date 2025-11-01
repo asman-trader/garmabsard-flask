@@ -1407,6 +1407,28 @@ def edit_express_listing(code):
                           land=land,
                           pending_count=p, approved_count=a, rejected_count=r)
 
+@admin_bp.post('/express/<string:code>/delete')
+@login_required
+def delete_express_listing(code):
+    """حذف آگهی اکسپرس"""
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    
+    land = find_by_code(lands_list, code)
+    if not land or not land.get('is_express', False):
+        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        return redirect(url_for('admin.express_listings'))
+    
+    # حذف تصاویر آگهی
+    _delete_ad_images(land)
+    
+    # حذف از لیست
+    lands_list = [l for l in lands_list if str(l.get('code')) != str(code)]
+    save_json(_lands_path(), lands_list)
+    
+    flash(f'آگهی اکسپرس با کد {code} با موفقیت حذف شد.', 'success')
+    return redirect(url_for('admin.express_listings'))
+
 def _send_express_notification(express_land):
     """ارسال نوتیفیکیشن برای آگهی اکسپرس جدید"""
     try:

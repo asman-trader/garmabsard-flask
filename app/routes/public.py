@@ -298,7 +298,7 @@ def uploaded_file(filename):
     except Exception:
         pass
 
-    # سپس مسیر instance/data/uploads
+    # سپس مسیر instance/data/uploads و legacy data/uploads
     upload_roots = (
         os.path.join(data_dir(), "uploads"),
         os.path.join(legacy_dir(), "uploads"),
@@ -312,6 +312,28 @@ def uploaded_file(filename):
             except Exception:
                 pass
             return resp
+    # در نهایت: static/uploads (تصاویر ذخیره‌شده در static)
+    try:
+        static_root = current_app.static_folder
+        # پشتیبانی از هر دو ورودی: 'uploads/...' یا فقط '...'
+        candidates = []
+        if filename.startswith('uploads/'):
+            candidates.append(os.path.join(static_root, filename))
+            candidates.append(os.path.join(static_root, filename.lstrip('/')))
+        else:
+            candidates.append(os.path.join(static_root, 'uploads', filename))
+        for cand in candidates:
+            if os.path.isfile(cand):
+                rel_dir = os.path.dirname(os.path.relpath(cand, static_root))
+                fn = os.path.basename(cand)
+                resp = send_from_directory(os.path.join(static_root, rel_dir), fn)
+                try:
+                    resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+                except Exception:
+                    pass
+                return resp
+    except Exception:
+        pass
     abort(404, description="File not found")
 
 @main_bp.route("/search", endpoint="search_page")

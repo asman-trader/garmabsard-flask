@@ -27,11 +27,7 @@
       <div class="relative">
         <a href="{{ url_for('main.land_detail', code=land.code) }}">
           {% if img %}
-            {% if img.startswith('uploads/') %}
-              <img src="{{ '/static/' ~ img }}" alt="زمین {{ land.title }}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
-            {% else %}
-              <img src="{{ url_for('main.uploaded_file', filename=img) }}" alt="زمین {{ land.title }}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
-            {% endif %}
+            <img src="{{ url_for('main.uploaded_file', filename=img) }}" alt="زمین {{ land.title }}" class="w-full h-72 sm:h-60 object-cover transition duration-300 group-hover:scale-105" />
           {% else %}
           <div class="w-full h-72 sm:h-60 bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-base">
             <i class="fas fa-seedling text-2xl text-green-600/70"></i>

@@ -17,28 +17,6 @@
     <p class="text-gray-600 dark:text-gray-300 mt-2">آگهی‌های اکسپرس توسط وینور تأیید شده و با اعتبار ویژه نمایش داده می‌شوند</p>
   </div>
 
-  <!-- پیام‌های سیستم -->
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-      <div class="space-y-3 mb-5" role="status" aria-live="polite">
-        {% for category, msg in messages %}
-          <div class="text-sm rounded-xl px-3 py-2 border
-                      {% if category in ['success', 'ok'] %}
-                        bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
-                      {% elif category in ['warning'] %}
-                        bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
-                      {% elif category in ['info'] %}
-                        bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
-                      {% else %}
-                        bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
-                      {% endif %}">
-            {{ msg }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
   <!-- Stepper (1 → 2 → 3 → 4) -->
   <div class="px-4 sm:px-6 py-3 border-b dark:border-gray-700 bg-white/70 dark:bg-gray-900/70 mb-6">
     <div class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
