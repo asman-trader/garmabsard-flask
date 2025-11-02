@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>همکاری با وینور | VINOR</title>
+  <meta name="description" content="فرصت‌های همکاری با وینور - پیوستن به تیم ما و رشد کسب و کار خود را تجربه کنید" />
+  <meta name="theme-color" content="#16a34a">
+
+  <!-- Favicon / Manifest -->
+  <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+  <link rel="canonical" href="{{ request.url_root.rstrip('/') }}/partners">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="همکاری با وینور | VINOR">
+  <meta property="og:description" content="فرصت‌های همکاری با وینور - پیوستن به تیم ما و رشد کسب و کار خود را تجربه کنید">
+  <meta property="og:url" content="{{ request.url }}">
+
+  <!-- Tailwind & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" onerror="this.parentNode.removeChild(this)">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{--brand:#16a34a;--brand-700:#15803d}
+    html,body{font-family:'Vazirmatn',system-ui,Segoe UI,Roboto,sans-serif}
+    .focusable:focus{outline:2px solid var(--brand);outline-offset:2px}
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
+
+  <!-- Header - Minimal -->
+  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 focusable" title="VINOR">
+        <span class="bg-emerald-600 text-white w-9 h-9 flex items-center justify-center rounded-lg text-sm">
+          <i class="fa-solid fa-seedling"></i>
+        </span>
+        <span dir="ltr" class="font-black text-lg">VINOR</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#benefits" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">مزایا</a>
+        <a href="#types" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">انواع همکاری</a>
+        <a href="#contact" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">تماس</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('main.app_home') }}" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium focusable">بازگشت</a>
+        <button id="darkToggle" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable" aria-label="تغییر تم">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO - Minimal Design -->
+  <section class="py-16 sm:py-20 lg:py-28">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8">
+      <div class="space-y-4">
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <div class="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-sm">
+            <i class="fa-solid fa-handshake"></i>
+          </div>
+        </div>
+        
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-gray-900 dark:text-white">
+          همکاری با وینور
+        </h1>
+      </div>
+
+      <div class="max-w-2xl mx-auto space-y-3">
+        <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+          فرصت‌های همکاری برای رشد کسب و کار شما
+        </p>
+        <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">
+          پیوستن به خانواده بزرگ وینور • رشد مشترک • فرصت‌های بی‌نهایت
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- مزایای همکاری -->
+  <section id="benefits" class="py-16 sm:py-20 border-t border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12 space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+          چرا با وینور همکاری کنیم؟
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+          مزایای همکاری با بزرگ‌ترین بازار خرید و فروش
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-users text-xl text-emerald-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">جامعه بزرگ</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            دسترسی به هزاران کاربر فعال و بازدیدکننده روزانه
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-chart-line text-xl text-blue-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">رشد کسب و کار</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            افزایش فروش و شناخت برند شما در بازار
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-shield-halved text-xl text-purple-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">پشتیبانی کامل</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            تیم پشتیبانی حرفه‌ای برای راهنمایی و کمک
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-tools text-xl text-green-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">ابزارهای پیشرفته</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            دسترسی به پنل مدیریت و ابزارهای تحلیلی
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-handshake-simple text-xl text-orange-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">شرایط منصفانه</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            قراردادهای شفاف و شرایط همکاری عادلانه
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-teal-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-rocket text-xl text-teal-600"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">پیشرفت سریع</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            فرصت رشد و توسعه سریع کسب و کار شما
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- انواع همکاری -->
+  <section id="types" class="py-16 sm:py-20 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12 space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+          انواع همکاری
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+          انتخاب نوع همکاری مناسب برای شما
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="p-8 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10">
+          <div class="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار فروش</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+            اگر فروشنده یا کسب و کار دارید، با وینور همکاری کنید و فروش خود را افزایش دهید.
+          </p>
+          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-600"></i>
+              <span>دسترسی به هزاران خریدار</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-600"></i>
+              <span>پنل مدیریت فروش</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-600"></i>
+              <span>پشتیبانی تخصصی</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="p-8 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10">
+          <div class="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار بازاریابی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+            اگر در بازاریابی و تبلیغات تخصص دارید، با ما همکاری کنید.
+          </p>
+          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600"></i>
+              <span>کمسیون جذاب</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600"></i>
+              <span>ابزارهای تبلیغاتی</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600"></i>
+              <span>پشتیبانی بازاریابی</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="p-8 rounded-xl border-2 border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/10">
+          <div class="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
+            <i class="fa-solid fa-code"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار فنی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+            اگر توسعه‌دهنده یا تیم فنی هستید، در توسعه پلتفرم با ما همکاری کنید.
+          </p>
+          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-purple-600"></i>
+              <span>پروژه‌های جذاب</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-purple-600"></i>
+              <span>همکاری بلندمدت</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-purple-600"></i>
+              <span>محیط کار حرفه‌ای</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- فرم تماس -->
+  <section id="contact" class="py-16 sm:py-20 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12 space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+          درخواست همکاری
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+          فرم زیر را پر کنید تا با شما تماس بگیریم
+        </p>
+      </div>
+
+      <form id="contactForm" class="space-y-6 bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div>
+            <label for="name" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نام و نام خانوادگی</label>
+            <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="نام شما">
+          </div>
+          <div>
+            <label for="phone" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">شماره تماس</label>
+            <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="09123456789">
+          </div>
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">ایمیل (اختیاری)</label>
+          <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="example@email.com">
+        </div>
+
+        <div>
+          <label for="type" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نوع همکاری</label>
+          <select id="type" name="type" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable">
+            <option value="">انتخاب کنید</option>
+            <option value="seller">همکار فروش</option>
+            <option value="marketing">همکار بازاریابی</option>
+            <option value="tech">همکار فنی</option>
+            <option value="other">سایر</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="message" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">پیام</label>
+          <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable resize-none" placeholder="درباره خود و نوع همکاری مورد نظرتان بنویسید..."></textarea>
+        </div>
+
+        <button type="submit" class="w-full px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focusable">
+          ارسال درخواست
+        </button>
+
+        <div id="formMessage" class="hidden p-4 rounded-lg text-sm"></div>
+      </form>
+
+      <!-- اطلاعات تماس -->
+      <div class="mt-12 text-center space-y-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">راه‌های دیگر تماس</h3>
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
+          <a href="mailto:partners@vinor.ir" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 focusable">
+            <i class="fa-solid fa-envelope"></i>
+            <span>partners@vinor.ir</span>
+          </a>
+          <a href="tel:+989123456789" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 focusable">
+            <i class="fa-solid fa-phone"></i>
+            <span>021-12345678</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      <p>&copy; ۱۴۰۳ VINOR. تمامی حقوق محفوظ است.</p>
+      <div class="mt-4 flex items-center justify-center gap-4">
+        <a href="{{ url_for('main.index') }}" class="hover:text-emerald-600 focusable">خانه</a>
+        <a href="{{ url_for('main.app_home') }}" class="hover:text-emerald-600 focusable">اپ</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // --- Dark Mode ---
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') root.classList.remove('dark');
+    document.getElementById('darkToggle')?.addEventListener('click', () => {
+      root.classList.toggle('dark');
+      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+      const icon = document.querySelector('#darkToggle i');
+      if (icon) {
+        icon.className = root.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      }
+    });
+    // Update icon on load
+    if (savedTheme === 'light') {
+      const icon = document.querySelector('#darkToggle i');
+      if (icon) icon.className = 'fa-solid fa-sun';
+    }
+
+    // --- Form Submission ---
+    document.getElementById('contactForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const messageDiv = document.getElementById('formMessage');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'در حال ارسال...';
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+
+      try {
+        // در اینجا می‌توانید API endpoint خود را فراخوانی کنید
+        // برای نمونه، فقط یک پیام موفقیت نمایش می‌دهیم
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        messageDiv.className = 'p-4 rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800';
+        messageDiv.textContent = '✅ درخواست شما با موفقیت ارسال شد. به زودی با شما تماس خواهیم گرفت.';
+        messageDiv.classList.remove('hidden');
+        
+        form.reset();
+        
+        // Scroll to message
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+      } catch (error) {
+        messageDiv.className = 'p-4 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
+        messageDiv.textContent = '❌ خطا در ارسال درخواست. لطفاً دوباره تلاش کنید یا از طریق ایمیل یا تماس با ما ارتباط برقرار کنید.';
+        messageDiv.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // --- Smooth Scroll ---
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

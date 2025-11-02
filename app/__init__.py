@@ -390,6 +390,8 @@ def create_app() -> Flask:
             "/about", "/درباره-ما",
             "/faq", "/سوالات-پرتکرار",
             "/guide/safe-buy", "/راهنمای-خرید-امن",
+            # Public landing pages
+            "/partners",
             # Express Partner auth paths (public)
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
         }

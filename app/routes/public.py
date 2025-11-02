@@ -152,6 +152,13 @@ def index():
     """
     return render_template("home/landing.html", brand="وینور", domain="vinor.ir")
 
+@main_bp.route("/partners", endpoint="partners")
+def partners():
+    """
+    لندینگ همکاران وینور – معرفی فرصت‌های همکاری
+    """
+    return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
+
 ## مسیرهای مشاورین (careers/apply) حذف شدند
 
 ## Express Partner routes moved to app/express_partner/routes.py
