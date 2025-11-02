@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'express_partner/base.html' %}
 {% block title %}ورود همکار اکسپرس{% endblock %}
 {% block content %}
 <div class="max-w-md mx-auto py-8 px-3">
@@ -42,8 +42,24 @@
       </div>
       <button type="submit" class="w-full py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-sm font-semibold">📩 دریافت کد تأیید</button>
     </form>
+
+    <!-- PWA Install Button -->
+    <div id="expressPartnerInstall" class="hidden mt-4">
+      <button id="expressPartnerInstallBtn" class="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg transition-all">
+        <i class="fa-solid fa-download"></i>
+        <span>نصب اپلیکیشن وینور اکسپرس</span>
+      </button>
+    </div>
   </section>
   <p class="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400">وینور اکسپرس – سریع و حرفه‌ای.</p>
+
+  <!-- Mobile Install Button (Fixed Bottom) -->
+  <div id="expressPartnerInstallMobile" class="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-violet-200 dark:border-violet-800 bg-white dark:bg-gray-900 p-4 hidden">
+    <button id="expressPartnerInstallMobileBtn" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i class="fa-solid fa-download"></i>
+      <span>نصب اپلیکیشن</span>
+    </button>
+  </div>
 </div>
 {% endblock %}
 

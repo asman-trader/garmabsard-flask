@@ -56,6 +56,51 @@ def inject_role_flags():
     }
 
 
+# -------------------------
+# PWA Routes (Separate from main VINOR PWA)
+# -------------------------
+@express_partner_bp.route('/manifest.webmanifest', methods=['GET'], endpoint='manifest')
+def serve_manifest():
+    """Serve Express Partner manifest separately"""
+    from flask import Response, send_from_directory
+    import os
+    static_dir = os.path.join(current_app.root_path, "static")
+    file_path = os.path.join(static_dir, "express-partner.webmanifest")
+    mimetype = "application/manifest+json"
+    
+    if os.path.exists(file_path):
+        return send_from_directory(static_dir, "express-partner.webmanifest", mimetype=mimetype)
+    
+    # Fallback JSON
+    fallback_json = '''{
+      "id": "/express/partner/dashboard",
+      "name": "وینور اکسپرس | پنل همکاران",
+      "short_name": "وینور اکسپرس",
+      "description": "پنل مدیریت همکاران اکسپرس وینور",
+      "dir": "rtl",
+      "lang": "fa",
+      "start_url": "/express/partner/dashboard?source=pwa",
+      "scope": "/express/partner/",
+      "display": "standalone",
+      "theme_color": "#7c3aed",
+      "background_color": "#7c3aed",
+      "icons": [
+        { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+      ]
+    }'''
+    return Response(fallback_json, status=200, mimetype=mimetype)
+
+
+@express_partner_bp.route('/sw.js', methods=['GET'], endpoint='service_worker')
+def serve_service_worker():
+    """Serve Express Partner service worker separately"""
+    from flask import send_from_directory
+    import os
+    static_dir = os.path.join(current_app.root_path, "static")
+    return send_from_directory(static_dir, "express-partner-sw.js", mimetype="application/javascript")
+
+
 @express_partner_bp.route('/apply', methods=['GET', 'POST'], endpoint='apply')
 def apply():
     if not session.get("user_phone"):

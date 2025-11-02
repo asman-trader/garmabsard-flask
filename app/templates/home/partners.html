@@ -44,7 +44,7 @@
       <nav class="hidden md:flex items-center gap-6 text-sm">
         <a href="#benefits" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">مزایا</a>
         <a href="#types" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">انواع همکاری</a>
-        <a href="#contact" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">تماس</a>
+        <a href="#contact" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">پنل اکسپرس</a>
       </nav>
       <div class="flex items-center gap-3">
         <a href="{{ url_for('main.app_home') }}" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium focusable">بازگشت</a>
@@ -245,57 +245,69 @@
     </div>
   </section>
 
-  <!-- فرم تماس -->
+  <!-- ورود به پنل همکار اکسپرس -->
   <section id="contact" class="py-16 sm:py-20 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
       <div class="text-center mb-12 space-y-2">
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <div class="w-14 h-14 bg-violet-600 rounded-xl flex items-center justify-center text-white text-xl">
+            <i class="fa-solid fa-rocket"></i>
+          </div>
+        </div>
         <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-          درخواست همکاری
+          پنل همکار اکسپرس
         </h2>
         <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-          فرم زیر را پر کنید تا با شما تماس بگیریم
+          اگر همکار اکسپرس وینور هستید، وارد پنل خود شوید
         </p>
       </div>
 
-      <form id="contactForm" class="space-y-6 bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200 dark:border-gray-700">
-        <div class="grid sm:grid-cols-2 gap-6">
-          <div>
-            <label for="name" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نام و نام خانوادگی</label>
-            <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="نام شما">
-          </div>
-          <div>
-            <label for="phone" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">شماره تماس</label>
-            <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="09123456789">
-          </div>
+      <div class="bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="text-center space-y-4">
+          <p class="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+            در پنل همکار اکسپرس می‌توانید:
+          </p>
+          <ul class="grid sm:grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400 text-right">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-violet-600"></i>
+              <span>درخواست همکاری را ثبت کنید</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-violet-600"></i>
+              <span>وضعیت درخواست را پیگیری کنید</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-violet-600"></i>
+              <span>آگهی‌های تخصیص یافته را ببینید</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-violet-600"></i>
+              <span>کمیسیون‌های خود را بررسی کنید</span>
+            </li>
+          </ul>
         </div>
 
-        <div>
-          <label for="email" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">ایمیل (اختیاری)</label>
-          <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable" placeholder="example@email.com">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <a href="{{ url_for('express_partner.login') }}" class="w-full sm:w-auto px-8 py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors focusable inline-flex items-center gap-2 justify-center">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>ورود به پنل همکار اکسپرس</span>
+          </a>
+          <a href="{{ url_for('express_partner.dashboard') }}" class="w-full sm:w-auto px-8 py-3.5 border-2 border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-violet-600 dark:text-violet-400 font-semibold rounded-xl transition-colors focusable inline-flex items-center gap-2 justify-center">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>داشبورد</span>
+          </a>
         </div>
 
-        <div>
-          <label for="type" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نوع همکاری</label>
-          <select id="type" name="type" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable">
-            <option value="">انتخاب کنید</option>
-            <option value="seller">همکار فروش</option>
-            <option value="marketing">همکار بازاریابی</option>
-            <option value="tech">همکار فنی</option>
-            <option value="other">سایر</option>
-          </select>
+        <div class="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            هنوز همکار اکسپرس نیستید؟
+          </p>
+          <a href="{{ url_for('express_partner.apply') }}" class="inline-flex items-center gap-2 text-violet-600 hover:text-violet-700 font-medium focusable text-sm">
+            <span>درخواست همکاری اکسپرس</span>
+            <i class="fa-solid fa-arrow-left"></i>
+          </a>
         </div>
-
-        <div>
-          <label for="message" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">پیام</label>
-          <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent focusable resize-none" placeholder="درباره خود و نوع همکاری مورد نظرتان بنویسید..."></textarea>
-        </div>
-
-        <button type="submit" class="w-full px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focusable">
-          ارسال درخواست
-        </button>
-
-        <div id="formMessage" class="hidden p-4 rounded-lg text-sm"></div>
-      </form>
+      </div>
 
       <!-- اطلاعات تماس -->
       <div class="mt-12 text-center space-y-4">
@@ -344,43 +356,6 @@
       if (icon) icon.className = 'fa-solid fa-sun';
     }
 
-    // --- Form Submission ---
-    document.getElementById('contactForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const messageDiv = document.getElementById('formMessage');
-      const submitBtn = form.querySelector('button[type="submit"]');
-      
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'در حال ارسال...';
-
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData);
-
-      try {
-        // در اینجا می‌توانید API endpoint خود را فراخوانی کنید
-        // برای نمونه، فقط یک پیام موفقیت نمایش می‌دهیم
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        messageDiv.className = 'p-4 rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800';
-        messageDiv.textContent = '✅ درخواست شما با موفقیت ارسال شد. به زودی با شما تماس خواهیم گرفت.';
-        messageDiv.classList.remove('hidden');
-        
-        form.reset();
-        
-        // Scroll to message
-        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-      } catch (error) {
-        messageDiv.className = 'p-4 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
-        messageDiv.textContent = '❌ خطا در ارسال درخواست. لطفاً دوباره تلاش کنید یا از طریق ایمیل یا تماس با ما ارتباط برقرار کنید.';
-        messageDiv.classList.remove('hidden');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    });
 
     // --- Smooth Scroll ---
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
