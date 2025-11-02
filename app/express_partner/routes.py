@@ -74,9 +74,9 @@ def serve_manifest():
     # Fallback JSON
     fallback_json = '''{
       "id": "/express/partner/dashboard",
-      "name": "وینور اکسپرس | پنل همکاران",
-      "short_name": "وینور اکسپرس",
-      "description": "پنل مدیریت همکاران اکسپرس وینور",
+      "name": "پنل همکاران وینور",
+      "short_name": "پنل همکاران وینور",
+      "description": "پنل مدیریت همکاران وینور",
       "dir": "rtl",
       "lang": "fa",
       "start_url": "/express/partner/dashboard?source=pwa",

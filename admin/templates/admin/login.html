@@ -1,127 +1,145 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" x-data="{ darkMode: true }" :class="{ 'dark': darkMode }"
-      x-init="darkMode = JSON.parse(localStorage.getItem('darkMode')) ?? true">
+<html lang="fa" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ورود ادمین | وینور (Vinor) – vinor.ir</title>
-  <meta name="description" content="ورود به پنل مدیریت وینور (Vinor) | بازار آنلاین خرید و فروش ملک با تمرکز بر سرعت، امنیت و شفافیت." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>ورود ادمین | وینور</title>
+  <meta name="description" content="ورود به پنل مدیریت وینور" />
 
-  <!-- Tailwind (CDN) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['iranyekan', 'ui-sans-serif', 'system-ui'] },
-          colors: { vinor: { 600: '#0ea5e9', 700: '#0284c7' } }
-        }
-      }
-    }
+    tailwind.config = { darkMode: 'class' };
   </script>
-  <!-- Alpine.js -->
-  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-  <!-- Font: IranYekan -->
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-        href="{{ url_for('static', filename='fonts/iranyekan.woff2') }}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" onerror="this.parentNode.removeChild(this)">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
+
   <style>
-    @font-face {
-      font-family: 'iranyekan';
-      src: url('{{ url_for('static', filename='fonts/iranyekan.woff2') }}') format('woff2');
-      font-weight: 100 900; font-style: normal; font-display: swap;
+    html, body {
+      font-family: 'Vazirmatn', sans-serif;
     }
-    body { font-family: 'iranyekan', ui-sans-serif, system-ui; }
+    .focusable:focus {
+      outline: 2px solid #0ea5e9;
+      outline-offset: 2px;
+    }
   </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 dark:bg-gray-950 min-h-screen flex items-center justify-center p-4">
 
-  <form method="POST" action="{{ url_for('admin.login') }}"
-        class="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 sm:p-6 relative">
+  <div class="w-full max-w-md">
+    <!-- Login Form -->
+    <form method="POST" action="{{ url_for('admin.login') }}" 
+          class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8 space-y-6 shadow-sm">
+      
+      <!-- CSRF Token -->
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <!-- CSRF (ضروری) -->
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-    <!-- سوییچ دارک‌مود -->
-    <button type="button" aria-label="تغییر حالت رنگ"
-            @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-            class="absolute top-3 left-3 text-gray-500 dark:text-yellow-300 hover:opacity-80 transition">
-      <!-- آیکون‌ها با SVG، بدون وابستگی خارجی -->
-      <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-           viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-           d="M12 3v2m0 14v2m7-9h2M3 12H1m15.364-6.364l1.414 1.414M4.222 19.778l1.414-1.414m0-12.728L4.222 4.222M18.778 19.778l-1.414-1.414M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
-      <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24"
-           fill="currentColor"><path d="M21.64 13.01A9 9 0 1111 2.36a7 7 0 0010.64 10.65z"/></svg>
-    </button>
-
-    <!-- برندینگ وینور -->
-    <div class="mb-6 text-center">
-      <div class="mx-auto mb-2 h-10 w-10 rounded-2xl bg-vinor-600/10 dark:bg-vinor-600/20 flex items-center justify-center">
-        <span class="text-vinor-700 dark:text-vinor-600 font-extrabold text-lg">V</span>
-      </div>
-      <h1 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100">ورود به پنل مدیریت وینور</h1>
-      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">سریع • امن • شفاف</p>
-    </div>
-
-    <!-- اعلان‌ها -->
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        <div class="mb-4 space-y-3" role="status" aria-live="polite">
-          {% for category, msg in messages %}
-            <div class="text-sm rounded-xl px-4 py-3 border flex items-start gap-3
-                        {% if category in ['success', 'ok'] %}
-                          bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
-                        {% elif category in ['warning'] %}
-                          bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
-                        {% elif category in ['info'] %}
-                          bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
-                        {% else %}
-                          bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
-                        {% endif %}">
-              <i class="fas mt-0.5 flex-shrink-0
-                        {% if category in ['success', 'ok'] %}fa-check-circle{% elif category in ['warning'] %}fa-exclamation-triangle{% elif category in ['info'] %}fa-info-circle{% else %}fa-times-circle{% endif %}"></i>
-              <span class="flex-1">{{ msg }}</span>
-            </div>
-          {% endfor %}
+      <!-- Header -->
+      <div class="text-center space-y-3">
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl font-black">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <span dir="ltr" class="font-black text-2xl text-gray-900 dark:text-white">VINOR</span>
         </div>
-      {% endif %}
-    {% endwith %}
+        <h1 class="text-xl font-black text-gray-900 dark:text-white">پنل مدیریت</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">ورود به سیستم مدیریتی</p>
+      </div>
 
-    <!-- ایمیل -->
-    <label class="block mb-4">
-      <input name="username" type="email" inputmode="email" autocomplete="username" dir="ltr"
-             placeholder="ایمیل مدیر (مثال: admin@vinor.ir)"
-             class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/60
-                    border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100
-                    placeholder:text-gray-400 dark:placeholder:text-gray-300
-                    focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent"
-             required>
-    </label>
+      <!-- Messages -->
+      {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+          <div class="space-y-2">
+            {% for category, msg in messages %}
+              <div class="text-sm rounded-lg px-4 py-3 border flex items-start gap-2
+                          {% if category in ['success', 'ok'] %}
+                            bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800
+                          {% elif category in ['warning'] %}
+                            bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800
+                          {% elif category in ['info'] %}
+                            bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800
+                          {% else %}
+                            bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800
+                          {% endif %}">
+                <i class="fa-solid mt-0.5 flex-shrink-0
+                          {% if category in ['success', 'ok'] %}fa-check-circle
+                          {% elif category in ['warning'] %}fa-exclamation-triangle
+                          {% elif category in ['info'] %}fa-info-circle
+                          {% else %}fa-times-circle{% endif %}"></i>
+                <span class="flex-1">{{ msg }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
 
-    <!-- رمز عبور -->
-    <label class="block mb-5">
-      <input name="password" type="password" autocomplete="current-password"
-             placeholder="رمز عبور"
-             class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/60
-                    border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100
-                    placeholder:text-gray-400 dark:placeholder:text-gray-300
-                    focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent"
-             required>
-    </label>
+      <!-- Username -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نام کاربری</label>
+        <input name="username" type="text" autocomplete="username" dir="ltr"
+               placeholder="نام کاربری"
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                      placeholder:text-gray-400 dark:placeholder:text-gray-400
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable"
+               required>
+      </div>
 
-    <!-- دکمه ورود -->
-    <button type="submit"
-            class="w-full py-2.5 rounded-xl font-semibold
-                   bg-vinor-600 hover:bg-vinor-700 text-white transition">
-      ورود به سیستم
-    </button>
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">رمز عبور</label>
+        <input name="password" type="password" autocomplete="current-password"
+               placeholder="رمز عبور"
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                      placeholder:text-gray-400 dark:placeholder:text-gray-400
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable"
+               required>
+      </div>
 
-    <!-- یادداشت امنیتی کوچک -->
-    <p class="mt-3 text-[11px] text-gray-400 dark:text-gray-500 text-center leading-relaxed">
-      با ورود، شرایط استفاده و سیاست‌های امنیتی وینور را می‌پذیرید.
-    </p>
-  </form>
+      <!-- Submit Button -->
+      <button type="submit"
+              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors focusable">
+        ورود
+      </button>
 
+      <!-- Dark Mode Toggle -->
+      <div class="text-center pt-4 border-t border-gray-200 dark:border-gray-800">
+        <button type="button" id="darkToggle" 
+                class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focusable"
+                aria-label="تغییر تم">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Dark Mode
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') root.classList.remove('dark');
+
+    document.getElementById('darkToggle')?.addEventListener('click', () => {
+      root.classList.toggle('dark');
+      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+      
+      const icon = document.querySelector('#darkToggle i');
+      if (icon) {
+        icon.className = root.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      }
+    });
+
+    // Update icon on load
+    if (savedTheme === 'light') {
+      const icon = document.querySelector('#darkToggle i');
+      if (icon) icon.className = 'fa-solid fa-sun';
+    }
+  </script>
 </body>
 </html>

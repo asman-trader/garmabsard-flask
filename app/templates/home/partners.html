@@ -36,7 +36,7 @@
   <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
       <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 focusable" title="VINOR">
-        <span class="bg-emerald-600 text-white w-9 h-9 flex items-center justify-center rounded-lg text-sm">
+        <span class="bg-violet-600 text-white w-9 h-9 flex items-center justify-center rounded-lg text-sm">
           <i class="fa-solid fa-seedling"></i>
         </span>
         <span dir="ltr" class="font-black text-lg">VINOR</span>
@@ -250,7 +250,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6">
       <div class="text-center mb-12 space-y-2">
         <div class="flex items-center justify-center gap-3 mb-4">
-          <div class="w-14 h-14 bg-violet-600 rounded-xl flex items-center justify-center text-white text-xl">
+          <div class="w-14 h-14 bg-violet-600 rounded-xl flex items-center justify-center text-white text-xl shadow-sm">
             <i class="fa-solid fa-rocket"></i>
           </div>
         </div>
@@ -296,6 +296,14 @@
             <i class="fa-solid fa-gauge-high"></i>
             <span>داشبورد</span>
           </a>
+        </div>
+
+        <!-- PWA Install Button -->
+        <div id="expressPartnerInstallLanding" class="hidden mt-6">
+          <button id="expressPartnerInstallLandingBtn" class="w-full px-8 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-colors focusable inline-flex items-center gap-2 justify-center shadow-lg">
+            <i class="fa-solid fa-download"></i>
+            <span>نصب پنل همکاران اکسپرس</span>
+          </button>
         </div>
 
         <div class="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -356,6 +364,69 @@
       if (icon) icon.className = 'fa-solid fa-sun';
     }
 
+    // --- Express Partner PWA Install Hooks ---
+    let expressPartnerDeferredPrompt;
+
+    // Handle PWA install prompt for Express Partner
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Check if it's for Express Partner scope
+      const url = new URL(window.location.href);
+      if (url.pathname === '/partners' || url.pathname.startsWith('/express/partner/')) {
+        e.preventDefault();
+        expressPartnerDeferredPrompt = e;
+
+        // Show install button when PWA is available
+        const installBtnContainer = document.getElementById('expressPartnerInstallLanding');
+        if (installBtnContainer) {
+          installBtnContainer.classList.remove('hidden');
+        }
+      }
+    });
+
+    // Handle successful installation
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('Express Partner PWA was installed successfully');
+      expressPartnerDeferredPrompt = null;
+
+      // Update install button after successful install
+      const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
+      if (installBtn) {
+        installBtn.textContent = 'نصب شد';
+        installBtn.disabled = true;
+        installBtn.classList.add('opacity-50');
+      }
+    });
+
+    // PWA Install Button Handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
+      
+      if (installBtn) {
+        installBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          
+          if (expressPartnerDeferredPrompt) {
+            try {
+              expressPartnerDeferredPrompt.prompt();
+              const { outcome } = await expressPartnerDeferredPrompt.userChoice;
+              
+              if (outcome === 'accepted') {
+                console.log('User accepted Express Partner PWA install');
+              } else {
+                console.log('User dismissed Express Partner PWA install');
+              }
+              
+              expressPartnerDeferredPrompt = null;
+            } catch (error) {
+              console.error('Error during Express Partner PWA install:', error);
+            }
+          } else {
+            // Fallback: redirect to login page where install button is available
+            window.location.href = "{{ url_for('express_partner.login') }}";
+          }
+        });
+      }
+    });
 
     // --- Smooth Scroll ---
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
