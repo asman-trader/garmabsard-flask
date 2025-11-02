@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>VINOR PWA | نصب اپلیکیشن پیشرفته خرید و فروش ملک</title>
-  <meta name="description" content="اپلیکیشن PWA VINOR - سریع، آفلاین و بدون نیاز به گوگل پلی! تجربه خرید و فروش زمین، باغ و ویلا با سرعت اپلیکیشن‌های بومی." />
+  <title>VINOR | بازار همه‌جانبه خرید و فروش</title>
+  <meta name="description" content="وینور - بازار جامع خرید و فروش: املاک، خودرو، کالای دیجیتال، خدمات، استخدام و بیشتر. اپلیکیشن PWA سریع و آفلاین." />
   <meta name="theme-color" content="#16a34a">
 
   <!-- Favicon / Manifest -->
@@ -14,8 +14,8 @@
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="VINOR PWA | اپلیکیشن پیشرفته خرید و فروش ملک">
-  <meta property="og:description" content="نصب آسان، سرعت بالا، کار آفلاین و اعلان‌های لحظه‌ای. تجربه اپلیکیشن بومی بدون دانلود از استور!">
+  <meta property="og:title" content="VINOR | بازار همه‌جانبه خرید و فروش">
+  <meta property="og:description" content="بازار جامع خرید و فروش: املاک، خودرو، کالای دیجیتال، خانه و آشپزخانه، خدمات، استخدام و بیشتر. نصب آسان، سرعت بالا و کار آفلاین.">
   <meta property="og:image" content="{{ url_for('static', filename='og-cover.jpg', _external=true) }}">
   <meta property="og:url" content="{{ request.url }}">
   <meta name="twitter:card" content="summary_large_image">
@@ -64,8 +64,8 @@
       </a>
       <nav class="hidden md:flex items-center gap-6" aria-label="ناوبری">
         <a href="#app" class="hover:text-emerald-600 focusable">اپلیکیشن</a>
-        <a href="#about" class="hover:text-emerald-600 focusable">معرفی وینور</a>
-        <a href="#how" class="hover:text-emerald-600 focusable">مراحل</a>
+        <a href="#categories" class="hover:text-emerald-600 focusable">دسته‌بندی‌ها</a>
+        <a href="#about" class="hover:text-emerald-600 focusable">درباره وینور</a>
         <a href="#faq" class="hover:text-emerald-600 focusable">سوالات</a>
       </nav>
       <div class="flex items-center gap-2">
@@ -89,12 +89,16 @@
             <h2 class="text-lg sm:text-xl font-bold text-emerald-700 dark:text-emerald-300">نصب آسان PWA</h2>
           </div>
 
-          <h1 class="text-3xl sm:text-5xl font-black leading-[1.15] mb-4">
-            <span dir="ltr">VINOR</span> را به عنوان <span class="text-emerald-600">اپلیکیشن</span> نصب کنید!
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black leading-[1.15] mb-4">
+            بازار <span class="text-emerald-600 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">همه‌جانبه</span> خرید و فروش
           </h1>
 
-          <p class="mx-auto max-w-2xl text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-7 mb-6">
-            بدون نیاز به گوگل پلی یا اپ استور! VINOR را مستقیماً روی گوشی‌تان نصب کنید و از سرعت اپلیکیشن‌های بومی، کار آفلاین و اعلان‌های لحظه‌ای بهره‌مند شوید.
+          <p class="mx-auto max-w-3xl text-gray-600 dark:text-gray-300 text-base sm:text-lg leading-8 mb-4 font-medium">
+            <span dir="ltr" class="font-bold text-emerald-600">VINOR</span> یک بازار جامع و کامل است که همه نیازهای خرید و فروش شما را پوشش می‌دهد. از <span class="font-semibold">املاک و خودرو</span> گرفته تا <span class="font-semibold">کالای دیجیتال و وسایل خانگی</span>، از <span class="font-semibold">خدمات و استخدام</span> تا <span class="font-semibold">سرگرمی و تجهیزات صنعتی</span> - <span class="text-emerald-600 font-bold">همه در یک پلتفرم</span>.
+          </p>
+          
+          <p class="mx-auto max-w-2xl text-gray-500 dark:text-gray-400 text-sm sm:text-base mb-6">
+            با نصب <span dir="ltr" class="font-semibold">VINOR</span> به عنوان اپلیکیشن، از سرعت بالا، کار آفلاین و اعلان‌های لحظه‌ای بهره‌مند شوید. <span class="text-emerald-600 font-semibold">۱۰ دسته‌بندی اصلی</span> با صدها زیردسته در دسترس شماست.
           </p>
 
           <!-- Main PWA Install Button -->
@@ -159,11 +163,131 @@
         </div>
 
         <div class="flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-          <span class="chip"><i class="fa-solid fa-shield-halved text-emerald-600"></i> پرونده‌های تأییدشده</span>
-          <span class="chip"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> فیلترهای هوشمند</span>
-          <span class="chip"><i class="fa-solid fa-headset text-purple-600"></i> پشتیبانی تا عقد قرارداد</span>
-          <span class="chip"><i class="fa-solid fa-mobile-screen-button text-green-600"></i> بدون نیاز به استور</span>
+          <span class="chip bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700"><i class="fa-solid fa-shield-halved text-emerald-600"></i> آگهی‌های تأییدشده</span>
+          <span class="chip bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> جستجوی هوشمند</span>
+          <span class="chip bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700"><i class="fa-solid fa-tags text-purple-600"></i> ۱۰ دسته‌بندی جامع</span>
+          <span class="chip bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"><i class="fa-solid fa-store text-green-600"></i> بازار همه‌جانبه</span>
+          <span class="chip bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700"><i class="fa-solid fa-mobile-screen-button text-amber-600"></i> نصب رایگان PWA</span>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- دسته‌بندی‌ها -->
+  <section id="categories" class="py-12 bg-gradient-to-b from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/10">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-black mb-4 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+          همه چیزی که نیاز دارید در یک جا
+        </h2>
+        <p class="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-lg font-medium">
+          بازار جامع و همه‌جانبه خرید و فروش با <span class="text-emerald-600 font-bold">۱۰ دسته‌بندی اصلی</span> و <span class="text-emerald-600 font-bold">صدها زیردسته</span> برای پوشش همه نیازهای شما
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+        <!-- املاک -->
+        <a href="{{ url_for('main.search_page', category='real_estate') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-emerald-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-home text-3xl text-emerald-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">املاک</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">آپارتمان، ویلا، زمین، مغازه، دفتر کار</p>
+        </a>
+
+        <!-- وسایل نقلیه -->
+        <a href="{{ url_for('main.search_page', category='vehicles') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-car text-3xl text-blue-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">وسایل نقلیه</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">خودرو، موتورسیکلت، قطعات</p>
+        </a>
+
+        <!-- کالای دیجیتال -->
+        <a href="{{ url_for('main.search_page', category='digital') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-laptop text-3xl text-purple-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">کالای دیجیتال</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">موبایل، لپ‌تاپ، کنسول، تلویزیون</p>
+        </a>
+
+        <!-- خانه و آشپزخانه -->
+        <a href="{{ url_for('main.search_page', category='home_kitchen') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-orange-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-couch text-3xl text-orange-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">خانه و آشپزخانه</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">لوازم خانگی، مبلمان، دکوری</p>
+        </a>
+
+        <!-- خدمات -->
+        <a href="{{ url_for('main.search_page', category='services') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-indigo-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-tools text-3xl text-indigo-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">خدمات</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">تعمیرات، آموزش، پذیرایی، مالی</p>
+        </a>
+
+        <!-- وسایل شخصی -->
+        <a href="{{ url_for('main.search_page', category='personal') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-pink-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/40 dark:to-rose-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-user text-3xl text-pink-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">وسایل شخصی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">پوشاک، زیورآلات، آرایشی</p>
+        </a>
+
+        <!-- سرگرمی -->
+        <a href="{{ url_for('main.search_page', category='entertainment') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-yellow-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-gamepad text-3xl text-yellow-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">سرگرمی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">بلیت، کتاب، موسیقی، حیوانات</p>
+        </a>
+
+        <!-- اجتماعی -->
+        <a href="{{ url_for('main.search_page', category='social') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-teal-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/40 dark:to-cyan-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-users text-3xl text-teal-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">اجتماعی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">رویداد، داوطلبانه، گم‌شده</p>
+        </a>
+
+        <!-- تجهیزات صنعتی -->
+        <a href="{{ url_for('main.search_page', category='industrial') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-gray-600 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-industry text-3xl text-gray-700 dark:text-gray-200"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">تجهیزات صنعتی</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">ماشین‌آلات، ابزار، مصالح</p>
+        </a>
+
+        <!-- استخدام -->
+        <a href="{{ url_for('main.search_page', category='jobs') }}" class="group bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border-2 border-gray-200 dark:border-gray-800 hover:border-green-500 hover:shadow-2xl hover:-translate-y-1 transition-all focusable">
+          <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform">
+            <i class="fa-solid fa-briefcase text-3xl text-green-600"></i>
+          </div>
+          <h3 class="font-bold text-xl mb-2 text-center">استخدام</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 text-center leading-relaxed">کاریابی و آگهی شغلی</p>
+        </a>
+      </div>
+
+      <div class="text-center mt-10">
+        <div class="mb-4">
+          <p class="text-gray-600 dark:text-gray-300 text-sm sm:text-base mb-3">
+            <span class="font-bold text-emerald-600">۱۰ دسته‌بندی اصلی</span> با <span class="font-bold text-emerald-600">صدها زیردسته</span> در دسترس شماست
+          </p>
+        </div>
+        <a href="{{ url_for('main.search_page') }}" class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700 font-bold shadow-lg ring-brand focusable text-lg transition-all hover:scale-105">
+          <i class="fa-solid fa-search text-xl"></i>
+          <span>جستجوی همه دسته‌بندی‌ها</span>
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
       </div>
     </div>
   </section>
@@ -173,15 +297,37 @@
     <div class="max-w-6xl mx-auto px-3 sm:px-4">
       <div class="grid lg:grid-cols-2 gap-8 items-center">
         <div>
-          <h2 class="text-2xl sm:text-3xl font-black mb-4">معرفی وینور (VINOR)</h2>
-          <p class="text-gray-600 dark:text-gray-300 leading-8 mb-4">
-            وینور پلتفرم هوشمند خرید و فروش زمین، باغ و ویلاست که با تمرکز بر سرعت، سادگی و امنیت ساخته شده. با پرونده‌های تأیید‌شده، فیلترهای دقیق و پشتیبانی تا عقد قرارداد، تجربه‌ای مطمئن و سریع خواهید داشت.
+          <h2 class="text-3xl sm:text-4xl font-black mb-6 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+            معرفی وینور (VINOR)
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300 leading-8 mb-6 text-lg font-medium">
+            <span class="font-bold text-emerald-600">وینور</span> یک بازار <span class="font-bold">همه‌جانبه و جامع</span> خرید و فروش است که با <span class="font-bold text-emerald-600">۱۰ دسته‌بندی اصلی</span> و <span class="font-bold text-emerald-600">صدها زیردسته</span>، همه نیازهای شما را پوشش می‌دهد. از <span class="font-semibold">املاک و خودرو</span> تا <span class="font-semibold">کالای دیجیتال و وسایل خانگی</span>، از <span class="font-semibold">خدمات و استخدام</span> تا <span class="font-semibold">سرگرمی و تجهیزات صنعتی</span> - <span class="text-emerald-600 font-bold">همه در یک پلتفرم سریع، امن و هوشمند</span>.
           </p>
-          <ul class="space-y-3 text-gray-700 dark:text-gray-300 text-sm">
-            <li class="flex items-start gap-3"><i class="fa-solid fa-shield-halved text-emerald-600 mt-1"></i><span>تأیید اصالت آگهی‌ها و کاهش ریسک معاملات</span></li>
-            <li class="flex items-start gap-3"><i class="fa-solid fa-wand-magic-sparkles text-blue-600 mt-1"></i><span>جستجوی سریع با فیلترهای هوشمند و شخصی‌سازی‌شده</span></li>
-            <li class="flex items-start gap-3"><i class="fa-solid fa-headset text-purple-600 mt-1"></i><span>همراهی مشاور تا زمان عقد قرارداد</span></li>
-            <li class="flex items-start gap-3"><i class="fa-solid fa-bell text-amber-500 mt-1"></i><span>اعلان فوری برای آگهی‌های جدید مرتبط</span></li>
+          <ul class="space-y-4 text-gray-700 dark:text-gray-300 text-base">
+            <li class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fa-solid fa-store text-emerald-600"></i>
+              </div>
+              <span class="font-medium"><span class="font-bold text-emerald-600">۱۰ دسته‌بندی جامع:</span> املاک، وسایل نقلیه، کالای دیجیتال، خانه و آشپزخانه، خدمات، وسایل شخصی، سرگرمی، اجتماعی، تجهیزات صنعتی و استخدام</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i>
+              </div>
+              <span class="font-medium"><span class="font-bold text-blue-600">جستجوی هوشمند:</span> فیلترهای پیشرفته و شخصی‌سازی‌شده برای یافتن دقیق‌ترین نتایج</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fa-solid fa-shield-halved text-purple-600"></i>
+              </div>
+              <span class="font-medium"><span class="font-bold text-purple-600">امنیت و اعتماد:</span> آگهی‌های تأییدشده و معاملات امن با سیستم بررسی دستی</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fa-solid fa-bell text-amber-600"></i>
+              </div>
+              <span class="font-medium"><span class="font-bold text-amber-600">اعلان‌های فوری:</span> اطلاع‌رسانی لحظه‌ای از آگهی‌های جدید در دسته‌بندی‌ها و مناطق مورد علاقه</span>
+            </li>
           </ul>
         </div>
         <div class="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-800">
@@ -190,8 +336,8 @@
               <i class="fa-solid fa-seedling"></i>
             </div>
             <div>
-              <div class="font-bold text-emerald-700 dark:text-emerald-300">چرا وینور؟</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">تجربه سریع، آفلاین و امن</div>
+            <div class="font-bold text-emerald-700 dark:text-emerald-300 text-lg">چرا وینور؟</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">بازار همه‌جانبه با ۱۰ دسته‌بندی جامع</div>
             </div>
           </div>
           <div class="grid sm:grid-cols-2 gap-3 text-sm">
