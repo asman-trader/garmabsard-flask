@@ -1,0 +1,60 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}درخواست همکاری - مرحله ۳{% endblock %}
+
+{% block content %}
+<header class="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+  <div class="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
+    <a href="{{ url_for('express_partner.apply_step2') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </a>
+    <div class="text-sm font-bold text-gray-900 dark:text-white">درخواست همکاری - مرحله ۳</div>
+    <span class="w-8"></span>
+  </div>
+</header>
+
+<div class="min-h-[calc(100vh-56px)] flex items-start justify-center px-4 pt-4 pb-6">
+  <div class="w-full max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-700 dark:text-violet-300">3</div>
+      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۳: بازبینی و تأیید</h1>
+    </div>
+
+    <div class="space-y-4 text-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-500">نام</span>
+        <span class="font-semibold">{{ data.name }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-500">شهر</span>
+        <span class="font-semibold">{{ data.city }}</span>
+      </div>
+      {% if data.experience %}
+      <div>
+        <div class="text-gray-500 mb-1">سابقه</div>
+        <div class="font-semibold">{{ data.experience }}</div>
+      </div>
+      {% endif %}
+      {% if data.note %}
+      <div>
+        <div class="text-gray-500 mb-1">توضیحات</div>
+        <div class="font-semibold whitespace-pre-line">{{ data.note }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <form method="post" class="mt-6 flex items-center justify-between">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <a href="{{ url_for('express_partner.apply_step2') }}" class="text-sm text-gray-500">بازگشت</a>
+      <button type="submit" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">ثبت درخواست</button>
+    </form>
+
+    <div class="mt-6 flex items-center gap-2 text-xs text-gray-500" aria-label="پیشرفت">
+      <span class="w-6 h-1 rounded bg-violet-600"></span>
+      <span class="w-6 h-1 rounded bg-violet-600"></span>
+      <span class="w-6 h-1 rounded bg-violet-600"></span>
+    </div>
+  </div>
+  </div>
+{% endblock %}
+
+

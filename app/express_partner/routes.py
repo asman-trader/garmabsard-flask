@@ -35,6 +35,22 @@ def _normalize_phone(phone: str) -> str:
     return p[:11]
 
 
+def _get_my_last_application(phone: str) -> Dict[str, Any] | None:
+    """Return latest Express Partner application for a phone, if any."""
+    try:
+        apps = load_express_partner_apps() or []
+        mine = [a for a in apps if isinstance(a, dict) and str(a.get('phone')) == str(phone)]
+        if not mine:
+            return None
+        try:
+            mine.sort(key=lambda x: x.get('created_at',''), reverse=True)
+        except Exception:
+            pass
+        return mine[0]
+    except Exception:
+        return None
+
+
 @express_partner_bp.app_context_processor
 def inject_role_flags():
     try:
@@ -107,38 +123,110 @@ def offline_page():
     return render_template('express_partner/offline.html')
 
 
-@express_partner_bp.route('/apply', methods=['GET', 'POST'], endpoint='apply')
+@express_partner_bp.route('/apply', methods=['GET'], endpoint='apply')
 def apply():
+    """Backward-compatible: redirect to step1 of multi-step flow"""
     if not session.get("user_phone"):
         return redirect(url_for("express_partner.login", next=url_for("express_partner.apply")))
-
     me_phone = (session.get("user_phone") or "").strip()
-    if request.method == "POST":
-        name = (request.form.get("name") or "").strip()
-        city = (request.form.get("city") or "").strip()
-        experience = (request.form.get("experience") or "").strip()
-        note = (request.form.get("note") or "").strip()
+    # اگر قبلاً درخواست ثبت شده، کاربر را به صفحه تشکر ببر
+    last_app = _get_my_last_application(me_phone)
+    if last_app:
+        return render_template('express_partner/thanks.html', name=(last_app.get('name') or ''))
+    return redirect(url_for('express_partner.apply_step1'))
 
+
+@express_partner_bp.route('/apply/step1', methods=['GET', 'POST'], endpoint='apply_step1')
+def apply_step1():
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.apply_step1")))
+    me_phone = (session.get("user_phone") or "").strip()
+    # اگر قبلاً درخواست ثبت شده، کاربر را به صفحه تشکر ببر
+    last_app = _get_my_last_application(me_phone)
+    if last_app:
+        return render_template('express_partner/thanks.html', name=(last_app.get('name') or ''))
+    # اگر قبلاً همکار است، به داشبورد برود
+    try:
+        partners = load_express_partners() or []
+        if any(str(p.get('phone')) == me_phone for p in partners if isinstance(p, dict)):
+            return redirect(url_for('express_partner.dashboard'))
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        city = (request.form.get('city') or '').strip()
+        if not name or not city:
+            flash('نام و شهر الزامی است.', 'error')
+            return render_template('express_partner/apply_step1.html', name=name, city=city)
+        session['apply_data'] = {**(session.get('apply_data') or {}), 'name': name, 'city': city}
+        return redirect(url_for('express_partner.apply_step2'))
+
+    data = session.get('apply_data') or {}
+    return render_template('express_partner/apply_step1.html', name=data.get('name',''), city=data.get('city',''))
+
+
+@express_partner_bp.route('/apply/step2', methods=['GET', 'POST'], endpoint='apply_step2')
+def apply_step2():
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.apply_step2")))
+    me_phone = (session.get("user_phone") or "").strip()
+    # اگر قبلاً درخواست ثبت شده، کاربر را به صفحه تشکر ببر
+    last_app = _get_my_last_application(me_phone)
+    if last_app:
+        return render_template('express_partner/thanks.html', name=(last_app.get('name') or ''))
+    # اطمینان از تکمیل step1
+    if not (session.get('apply_data') and session['apply_data'].get('name') and session['apply_data'].get('city')):
+        return redirect(url_for('express_partner.apply_step1'))
+
+    if request.method == 'POST':
+        experience = (request.form.get('experience') or '').strip()
+        note = (request.form.get('note') or '').strip()
+        session['apply_data'] = {**(session.get('apply_data') or {}), 'experience': experience, 'note': note}
+        return redirect(url_for('express_partner.apply_step3'))
+
+    data = session.get('apply_data') or {}
+    return render_template('express_partner/apply_step2.html', experience=data.get('experience',''), note=data.get('note',''))
+
+
+@express_partner_bp.route('/apply/step3', methods=['GET', 'POST'], endpoint='apply_step3')
+def apply_step3():
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.apply_step3")))
+    me_phone = (session.get("user_phone") or "").strip()
+    data = session.get('apply_data') or {}
+    # اگر قبلاً درخواست ثبت شده، کاربر را به صفحه تشکر ببر
+    last_app = _get_my_last_application(me_phone)
+    if last_app and request.method == 'GET':
+        return render_template('express_partner/thanks.html', name=(last_app.get('name') or ''))
+    if not (data.get('name') and data.get('city')):
+        return redirect(url_for('express_partner.apply_step1'))
+
+    if request.method == 'POST':
+        # ذخیره نهایی
         apps = load_express_partner_apps() or []
         partners = load_express_partners() or []
         if any(str(p.get("phone")) == me_phone for p in partners if isinstance(p, dict)):
+            session.pop('apply_data', None)
             return redirect(url_for("express_partner.dashboard"))
 
         new_id = (max([int(x.get("id", 0) or 0) for x in apps if isinstance(x, dict)], default=0) or 0) + 1
-        apps.append({
+        record = {
             "id": new_id,
-            "name": name,
+            "name": data.get('name',''),
             "phone": me_phone,
-            "city": city,
-            "experience": experience,
-            "note": note,
+            "city": data.get('city',''),
+            "experience": data.get('experience',''),
+            "note": data.get('note',''),
             "status": "new",
             "created_at": datetime.utcnow().isoformat()+"Z",
-        })
+        }
+        apps.append(record)
         save_express_partner_apps(apps)
-        return render_template("express_partner/thanks.html", name=name, brand="وینور", domain="vinor.ir")
+        session.pop('apply_data', None)
+        return render_template("express_partner/thanks.html", name=record.get('name',''), brand="وینور", domain="vinor.ir")
 
-    return render_template("express_partner/apply.html", brand="وینور", domain="vinor.ir")
+    return render_template('express_partner/apply_step3.html', data=data)
 
 
 @express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')

@@ -590,6 +590,8 @@ def help_page():
         brand="وینور",
         domain="vinor.ir",
         current_year=datetime.now().year,
+        hide_header=True,
+        SHOW_SUBMIT_BUTTON=False,
     )
 
 # --- Buying Guides ---

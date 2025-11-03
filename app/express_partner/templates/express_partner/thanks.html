@@ -1,7 +1,32 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}درخواست ثبت شد | وینور اکسپرس{% endblock %}
 {% block content %}
-{% include '../../../templates/main/express_partner_thanks.html' %}
+<header class="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+  <div class="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
+    <a href="{{ url_for('express_partner.apply_step1') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </a>
+    <div class="text-sm font-bold text-gray-900 dark:text-white">ثبت درخواست همکاری</div>
+    <span class="w-8"></span>
+  </div>
+</header>
+
+<div class="min-h-[calc(100vh-56px)] flex items-start justify-center px-4 pt-8 pb-10">
+  <div class="w-full max-w-xl text-center">
+    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+      <i class="fa-solid fa-check text-3xl text-violet-700 dark:text-violet-300"></i>
+    </div>
+    <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">درخواست شما ثبت شد</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">
+      {{ name or 'کاربر عزیز' }}، درخواست همکاری شما دریافت شد و پس از بررسی نتیجه اطلاع‌رسانی می‌شود.
+    </p>
+    <div class="flex items-center justify-center gap-3">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">مشاهده وضعیت</a>
+      <a href="{{ url_for('main.app_home') }}" class="px-5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">بازگشت به خانه</a>
+    </div>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mt-6">در صورت نیاز، می‌توانید با پشتیبانی وینور در ارتباط باشید.</p>
+  </div>
+</div>
 {% endblock %}
 
 
