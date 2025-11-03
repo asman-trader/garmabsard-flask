@@ -87,10 +87,9 @@
     <div class="space-y-2">
       {{ MenuItem(url_for('main.my_lands'),   'fa-list',      'آگهی‌های من', True) }}
       {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
-      {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
-
       {# Express Partner item در بالا در بخش Primary قرار گرفت #}
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
+      {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
     </div>
 
     <!-- Auth: فقط دکمه ورود برای مهمان؛ خروج از منو حذف شد (در پروفایل موجود است) -->
