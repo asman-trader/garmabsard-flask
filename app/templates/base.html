@@ -444,9 +444,36 @@
               }
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP_EXT' });
+              
+              // Check for waiting SW and notify sidebar menu
+              const checkWaiting = () => {
+                if (reg.waiting) {
+                  try { window.dispatchEvent(new CustomEvent('vinor:sw-update-available')); } catch(_) {}
+                }
+              };
+              checkWaiting();
+              
+              // Listen for SW updates
+              reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      checkWaiting();
+                    }
+                  });
+                }
+              });
             } catch {}
           })
           .catch(()=>{});
+        
+        // Listen for controller change (SW activated)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          try { window.dispatchEvent(new CustomEvent('vinor:sw-updated')); } catch(_) {}
+          // Optionally reload page to use new SW
+          setTimeout(() => { try { location.reload(); } catch(_) {} }, 100);
+        });
       }
 
       // PWA First-run Welcome (mobile, standalone, once)

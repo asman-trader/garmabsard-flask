@@ -3,7 +3,7 @@
   Scope: '/'
 */
 
-const VERSION = 'v1.1.0-2025-11-03';
+const VERSION = 'v1.2.0-2025-11-03';
 const PRECACHE = `vinor-precache-${VERSION}`;
 const RUNTIME = `vinor-runtime-${VERSION}`;
 const API_CACHE = `vinor-api-${VERSION}`;
@@ -96,7 +96,8 @@ self.addEventListener('install', (event) => {
         } catch(_) {}
       }));
     } catch(_) {}
-    await self.skipWaiting();
+    // Don't auto-skipWaiting; wait for user action via SKIP_WAITING message
+    // This allows showing update badge in UI before activating new SW
   })());
 });
 
@@ -358,6 +359,10 @@ self.addEventListener('message', (event) => {
         }
       } catch(_) {}
     })());
+  }
+  // Handle SKIP_WAITING message from client to activate waiting SW immediately
+  if (data && data.type === 'SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting());
   }
 });
 
