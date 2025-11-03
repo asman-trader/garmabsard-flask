@@ -128,9 +128,13 @@
         <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800" aria-label="جستجو">
           <i class="fas fa-search"></i>
         </a>
+        <div class="relative">
         <button id="menuToggle" class="text-2xl text-green-600 dark:text-green-400" aria-label="باز کردن منو">
           <i class="fas fa-bars"></i>
         </button>
+        <span id="menuInstalledBadge" title="نصب شد" aria-hidden="true"
+              class="hidden absolute -top-1 -left-1 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
+        </div>
       </div>
     </div>
   </header>
@@ -238,6 +242,29 @@
       })();
 
       document.getElementById("menuToggle")?.addEventListener("click", openMenu);
+
+      // Show installed badge on mobile menu if PWA installed
+      (function(){
+        const badge = document.getElementById('menuInstalledBadge');
+        if (!badge) return;
+        function isMobile(){
+          try { return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth && window.innerWidth < 768); } catch(_) { return false; }
+        }
+        function showIfInstalled(){
+          let installed = false;
+          try { installed = localStorage.getItem('vinor_pwa_installed') === '1'; } catch(_) {}
+          if (installed && isMobile()) {
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+        showIfInstalled();
+        // React immediately if install happens in this or another tab
+        window.addEventListener('vinor:pwa-installed', showIfInstalled);
+        window.addEventListener('appinstalled', () => { try { localStorage.setItem('vinor_pwa_installed','1'); } catch(_) {} showIfInstalled(); });
+        window.addEventListener('storage', (e) => { if (e.key === 'vinor_pwa_installed') showIfInstalled(); });
+      })();
 
       // کنترل نمایش دکمه + ثبت آگهی (هدر و FAB) بر اساس تنظیم کاربر
       (function(){

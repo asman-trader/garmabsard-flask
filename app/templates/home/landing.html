@@ -411,6 +411,27 @@
         btn.disabled = true;
         btn.classList.add('opacity-50');
       });
+
+      // Persist installed flag so other pages (mobile) can react immediately
+      try { localStorage.setItem('vinor_pwa_installed', '1'); } catch (_) {}
+      // Notify any open tabs of install to update their UI instantly
+      try { window.dispatchEvent(new CustomEvent('vinor:pwa-installed')); } catch (_) {}
+
+      // Best-effort: close the browser tab so the user sees the new icon
+      (function tryCloseAfterInstall(){
+        const attempt = () => {
+          let closed = false;
+          try { window.close(); closed = true; } catch(_) {}
+          if (!closed) {
+            try { window.open('', '_self'); window.close(); closed = true; } catch(_) {}
+          }
+          if (!closed) {
+            try { location.replace('about:blank'); } catch(_) {}
+          }
+        };
+        // slight delay to let the system create the icon before closing
+        setTimeout(attempt, 300);
+      })();
     });
 
     // PWA Install Button Handlers
