@@ -81,7 +81,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               متراژ (متر) <span class="text-red-500">*</span>
             </label>
-            <input type="number" name="size" required 
+            <input type="text" name="size" required data-format-int
                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                    placeholder="1000">
           </div>
@@ -105,7 +105,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               قیمت کل (تومان) <span class="text-red-500">*</span>
             </label>
-            <input type="number" name="price_total" required 
+            <input type="text" name="price_total" required data-format-int
                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                    placeholder="2000000000">
           </div>
@@ -114,7 +114,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               قیمت در متر (تومان)
             </label>
-            <input type="number" name="price_per_meter" 
+            <input type="text" name="price_per_meter" data-format-int
                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                    placeholder="2000000">
           </div>
@@ -483,6 +483,11 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
       return;
     }
   }
+  // پاکسازی جداکننده‌ها از اعداد قبل از ارسال
+  ['price_total','price_per_meter','size'].forEach((name)=>{
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) el.value = (el.value||'').replace(/[^\d]/g,'');
+  });
 });
 
 // مقداردهی اولیه
@@ -491,5 +496,28 @@ showStep(1);
 document.getElementById('express_commission_pct')?.addEventListener('input', updateSummary);
 document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
 document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
+
+// فرمت زنده ۳ رقمی برای اعداد
+(function(){
+  function formatInt(v){
+    const digits = String(v||'').replace(/[^\d]/g,'');
+    if (!digits) return '';
+    const n = parseInt(digits,10);
+    return isNaN(n) ? '' : n.toLocaleString('fa-IR');
+  }
+  function hook(el){
+    const onInput = ()=>{
+      const posEnd = document.activeElement === el;
+      el.value = formatInt(el.value);
+      if (posEnd) try{ el.setSelectionRange(el.value.length, el.value.length); }catch(_){ }
+      updateSummary();
+    };
+    el.addEventListener('input', onInput);
+    el.addEventListener('blur', onInput);
+    // init
+    onInput();
+  }
+  document.querySelectorAll('[data-format-int]').forEach(hook);
+})();
 </script>
 {% endblock %}
