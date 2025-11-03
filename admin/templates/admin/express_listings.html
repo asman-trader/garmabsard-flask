@@ -147,7 +147,7 @@
           <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
               <span>کد: {{ land.code }}</span>
-              <span>{{ land.created_at[:10] if land.created_at else 'نامشخص' }}</span>
+              <span class="jalali-dt" data-dt="{{ land.created_at or '' }}"></span>
             </div>
           </div>
         </article>
@@ -196,4 +196,20 @@
   {% endif %}
 
 </div>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
 {% endblock %}

@@ -82,11 +82,11 @@
               </td>
 
               {% if mode=='pending' %}
-                <td class="p-2 border">{{ land.created_at }}</td>
+                <td class="p-2 border"><span class="jalali-dt" data-dt="{{ land.created_at or '' }}"></span></td>
               {% elif mode=='approved' %}
-                <td class="p-2 border">{{ land.approved_at or land.created_at }}</td>
+                <td class="p-2 border"><span class="jalali-dt" data-dt="{{ land.approved_at or land.created_at or '' }}"></span></td>
               {% elif mode=='rejected' %}
-                <td class="p-2 border">{{ land.rejected_at or land.updated_at or land.created_at }}</td>
+                <td class="p-2 border"><span class="jalali-dt" data-dt="{{ land.rejected_at or land.updated_at or land.created_at or '' }}"></span></td>
                 <td class="p-2 border text-right">
                   <div class="max-w-80 mx-auto text-justify leading-relaxed">
                     {{ land.reject_reason or '—' }}
@@ -156,6 +156,22 @@
           {% endfor %}
         </tbody>
       </table>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
     </div>
   {% else %}
     {# پیام خالی بر اساس mode #}

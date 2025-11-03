@@ -92,5 +92,20 @@
   </main>
 
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script>
+    (function(){
+      function fmt(dt){
+        try{
+          const d = new Date(String(dt||'').replace(' ','T'));
+          if (isNaN(d)) return '';
+          return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+        }catch(_){ return ''; }
+      }
+      document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+        const raw = el.getAttribute('data-dt')||'';
+        el.textContent = fmt(raw) || '—';
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -29,7 +29,7 @@
         <td class="p-3">{{ a.city or '—' }}</td>
         <td class="p-3">{{ a.experience or '—' }}</td>
         <td class="p-3" data-status>{{ a.status or 'new' }}</td>
-        <td class="p-3">{{ a.created_at or '—' }}</td>
+        <td class="p-3"><span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></td>
         <td class="p-3">
           <div class="flex items-center gap-2">
             <form method="post" action="{{ url_for('admin.consultant_application_approve', aid=a.id) }}" class="contents" x-data data-ajax="1">
@@ -49,7 +49,23 @@
       <tr><td class="p-3 text-center text-gray-500" colspan="8">موردی یافت نشد.</td></tr>
       {% endfor %}
     </tbody>
-  </table>
+ </table>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
 }</div>
 {% endblock %}
 

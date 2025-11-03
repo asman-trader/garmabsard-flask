@@ -26,13 +26,29 @@
         <td class="p-3">{{ c.phone or '—' }}</td>
         <td class="p-3">{{ c.city or '—' }}</td>
         <td class="p-3">{{ c.status or 'approved' }}</td>
-        <td class="p-3">{{ c.created_at or '—' }}</td>
+        <td class="p-3"><span class="jalali-dt" data-dt="{{ c.created_at or '' }}"></span></td>
       </tr>
       {% else %}
       <tr><td class="p-3 text-center text-gray-500" colspan="6">موردی ثبت نشده است.</td></tr>
       {% endfor %}
     </tbody>
-  </table>
+ </table>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
 </div>
 {% endblock %}
 
