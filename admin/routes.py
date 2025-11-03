@@ -1180,6 +1180,10 @@ def approve_land(code):
         flash('آگهی یافت نشد.', 'warning')
         return redirect(request.referrer or url_for('admin.pending_lands'))
     land['status'] = 'approved'
+    try:
+        land['approved_at'] = iso_z(utcnow())
+    except Exception:
+        pass
     save_ads(lands)
 
     # ✅ اعلان: تأیید شد

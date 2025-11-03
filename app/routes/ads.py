@@ -503,6 +503,12 @@ def finalize_land():
         'category_path': ad_cat.get('category_path', []),  # Full path array
         'extras': lt.get('extras', {})
     }
+    # اگر بلافاصله تایید می‌شود، زمان انتشار را تنظیم کن
+    if status == 'approved':
+        try:
+            new_land['approved_at'] = new_land['created_at']
+        except Exception:
+            pass
     # Express flags removed
     
     # تنظیم تاریخ انقضا در صورت وجود مدت اعتبار
@@ -675,13 +681,13 @@ def my_lands():
         user_lands = [ad for ad in user_lands if _hit(ad)]
 
     if sort == 'old':
-        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at','1970-01-01')))
+        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('approved_at') or x.get('created_at','1970-01-01')))
     elif sort == 'size_desc':
         user_lands.sort(key=lambda x: int(x.get('size') or 0), reverse=True)
     elif sort == 'size_asc':
         user_lands.sort(key=lambda x: int(x.get('size') or 0))
     else:
-        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('created_at','1970-01-01')), reverse=True)
+        user_lands.sort(key=lambda x: parse_datetime_safe(x.get('approved_at') or x.get('created_at','1970-01-01')), reverse=True)
 
     total = len(user_lands)
     pages = max((total - 1) // per_page + 1, 1)

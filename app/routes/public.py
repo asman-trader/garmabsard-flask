@@ -69,9 +69,10 @@ def _get_approved_ads() -> List[Dict[str, Any]]:
             if ad.get("status") == "approved" and not is_ad_expired(ad)]
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """مرتب‌سازی نزولی بر اساس تاریخ انتشار موثر: approved_at (در صورت وجود) سپس created_at."""
     return sorted(
         items,
-        key=lambda x: parse_datetime_safe(x.get("created_at", "1970-01-01")),
+        key=lambda x: parse_datetime_safe(x.get("approved_at") or x.get("created_at", "1970-01-01")),
         reverse=True,
     )
 
