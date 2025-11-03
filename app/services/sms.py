@@ -2,12 +2,14 @@
 import os, requests
 from flask import current_app
 SMS_API_KEY = os.environ.get("SMS_API_KEY") or "cwDc9dmxkF4c1avGDTBFnlRPyJQkxk2TVhpZCj6ShGrVx9y4"
-TEMPLATE_ID = 335146
+# Updated template to the new requested one (WebOTP-friendly template configured in panel)
+TEMPLATE_ID = 878451
 
 def send_sms_code(phone: str, code: str):
     url = "https://api.sms.ir/v1/send/verify"
     headers = {"Content-Type":"application/json","Accept":"application/json","x-api-key":SMS_API_KEY}
-    data = {"mobile": phone, "templateId": TEMPLATE_ID, "parameters":[{"name":"code","value":code}]}
+    # Note: parameter name must match the template variable in sms.ir panel
+    data = {"mobile": phone, "templateId": TEMPLATE_ID, "parameters":[{"name":"CODE","value":str(code)}]}
     try:
         requests.post(url, headers=headers, json=data, timeout=10)
     except Exception as e:
