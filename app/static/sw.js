@@ -3,7 +3,7 @@
   Scope: '/'
 */
 
-const VERSION = 'v1.0.0-2025-10-01';
+const VERSION = 'v1.1.0-2025-11-03';
 const PRECACHE = `vinor-precache-${VERSION}`;
 const RUNTIME = `vinor-runtime-${VERSION}`;
 const API_CACHE = `vinor-api-${VERSION}`;
@@ -82,6 +82,18 @@ self.addEventListener('install', (event) => {
       const icache = await caches.open(ICONS_CACHE);
       await Promise.all(EXTERNAL_WARM.map(async (url) => {
         try { const resp = await fetch(url, { mode: 'no-cors' }); await icache.put(url, resp.clone()); } catch(_) {}
+      }));
+    } catch(_) {}
+    // Seed critical API data so core UI works fully offline right after install
+    try {
+      const api = await caches.open(API_CACHE);
+      const apiWarm = ['/api/lands/approved', '/api/express-listings'];
+      await Promise.all(apiWarm.map(async (u) => {
+        try {
+          const req = new Request(u, { credentials: 'same-origin' });
+          const resp = await fetch(req);
+          if (resp && resp.ok) await api.put(req, resp);
+        } catch(_) {}
       }));
     } catch(_) {}
     await self.skipWaiting();
