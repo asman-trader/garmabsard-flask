@@ -1336,6 +1336,18 @@ def add_express_listing():
                     file.save(os.path.join(upload_folder, filename))
                     images.append(f'uploads/{filename}')
         
+        # کمیسیون همکاران (اختیاری)
+        pct_raw = (form.get('express_commission_pct') or '').strip()
+        try:
+            express_commission_pct = float(pct_raw) if pct_raw else None
+        except Exception:
+            express_commission_pct = None
+        try:
+            price_int = int(price_total)
+        except Exception:
+            price_int = 0
+        express_commission_amount = int(round(price_int * ((express_commission_pct or 0)/100.0))) if price_int and (express_commission_pct is not None) else None
+
         # ایجاد آگهی اکسپرس
         new_express_land = {
             'code': new_code,
@@ -1355,7 +1367,10 @@ def add_express_listing():
             'express_status': 'approved',
             'express_documents': documents,
             'vinor_contact': form.get('vinor_contact', '09121234567'),
-            'extras': {}
+            'extras': {
+                'express_commission_pct': express_commission_pct,
+                'express_commission_amount': express_commission_amount,
+            }
         }
         
         # ذخیره در فایل
@@ -1365,6 +1380,43 @@ def add_express_listing():
         
         # ارسال نوتیفیکیشن به کاربران منطقه
         _send_express_notification(new_express_land)
+
+        # در صورت انتخاب «ارسال خودکار برای تمامی همکاران» → ساخت انتساب برای همه + اعلان
+        if (form.get('auto_send_all_partners') or '').strip():
+            try:
+                partners = load_express_partners() or []
+                items = load_express_assignments() or []
+                existing = {(str(a.get('partner_phone')), str(a.get('land_code'))) for a in items if isinstance(a, dict)}
+                for p in partners:
+                    phone = str((p or {}).get('phone') or '').strip()
+                    if not phone:
+                        continue
+                    key = (phone, new_code)
+                    if key not in existing:
+                        new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+                        items.append({
+                            'id': new_id,
+                            'partner_phone': phone,
+                            'land_code': new_code,
+                            'commission_pct': express_commission_pct or 0,
+                            'status': 'active',
+                            'created_at': iso_z(utcnow())
+                        })
+                        existing.add(key)
+                    try:
+                        add_notification(
+                            user_id=phone,
+                            title='فایل جدید اکسپرس',
+                            body=f"کد فایل: {new_code} - {title}",
+                            ntype='info',
+                            ad_id=new_code,
+                            action_url=url_for('main.land_detail', code=new_code)
+                        )
+                    except Exception:
+                        continue
+                save_express_assignments(items)
+            except Exception:
+                pass
         
         flash(f'آگهی اکسپرس با کد {new_code} با موفقیت ثبت شد.', 'success')
         return redirect(url_for('admin.express_listings'))

@@ -348,6 +348,7 @@ def add_land_details():
         amenities = request.form.getlist('amenities') or []
         conditions = request.form.getlist('conditions') or []
         
+        
         # Get category info from session
         ad_cat = session.get('ad_category', {})
         cat_id = ad_cat.get('category_id', '')
@@ -431,9 +432,7 @@ def add_land_details():
                 'condition': request.form.get('home_condition') or None,
                 'warranty': request.form.get('home_warranty') or None,
             } if cat_id == 'home_kitchen' else {},
-            # Express Partner fields
-            'is_express': bool(request.form.get('is_express')),
-            'express_commission_pct': (request.form.get('express_commission_pct') or '').strip(),
+            # Express Partner fields (removed)
         }
 
         lt = session.get('land_temp') or {}
@@ -490,20 +489,7 @@ def finalize_land():
         'category_path': ad_cat.get('category_path', []),  # Full path array
         'extras': lt.get('extras', {})
     }
-    # Promote express flags to top-level for easy filtering/rendering
-    try:
-        ex = lt.get('extras') or {}
-        is_express = bool(ex.get('is_express'))
-        pct_raw = str(ex.get('express_commission_pct') or '').strip()
-        try:
-            pct_val = float(pct_raw) if pct_raw else None
-        except Exception:
-            pct_val = None
-        new_land['is_express'] = is_express
-        if pct_val is not None:
-            new_land['express_commission_pct'] = pct_val
-    except Exception:
-        pass
+    # Express flags removed
     
     # تنظیم تاریخ انقضا در صورت وجود مدت اعتبار
     if expiry_days > 0:
@@ -541,28 +527,7 @@ def finalize_land():
         # سکوت در صورت نبود سرویس اعلان یا خطای غیرمنتظره
         pass
 
-    # اگر آگهی اکسپرس است: اطلاع‌رسانی به تمام همکاران اکسپرس
-    try:
-        if new_land.get('is_express'):
-            from ..utils.storage import load_express_partners
-            partners = load_express_partners() or []
-            for p in partners:
-                phone = str((p or {}).get('phone') or '').strip()
-                if not phone:
-                    continue
-                try:
-                    add_notification(
-                        user_id=phone,
-                        title='فایل جدید اکسپرس',
-                        body=f"کد فایل: {new_land.get('code')} - {new_land.get('title')}",
-                        ntype='info',
-                        ad_id=new_land.get('code'),
-                        action_url=url_for('main.land_detail', code=new_land.get('code'))
-                    )
-                except Exception:
-                    continue
-    except Exception:
-        pass
+    # Express auto-assign and notifications removed
 
     # پاکسازی سشن مراحل
     for k in keys:

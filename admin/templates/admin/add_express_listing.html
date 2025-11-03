@@ -118,6 +118,25 @@
                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                    placeholder="2000000">
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              درصد پورسانت همکاران (٪)
+            </label>
+            <input type="number" step="0.1" min="0" max="100" name="express_commission_pct" id="express_commission_pct"
+                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                   placeholder="مثال: 1.5">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">برای محاسبه پورسانت همکاران استفاده می‌شود.</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              مبلغ پورسانت (تومان - برآوردی)
+            </label>
+            <input type="text" id="express_commission_amount" readonly
+                   class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                   placeholder="--">
+          </div>
         </div>
 
         <div class="mt-6">
@@ -131,6 +150,10 @@
 
         <!-- دکمه ادامه -->
         <div class="mt-6 flex justify-end">
+          <label class="flex items-center gap-2 me-auto">
+            <input type="checkbox" name="auto_send_all_partners" value="1" class="w-4 h-4 text-green-600">
+            <span class="text-sm text-gray-700 dark:text-gray-300">ارسال خودکار برای تمامی همکاران اکسپرس</span>
+          </label>
           <button type="button" onclick="nextStep()" 
                   class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
             <span>ادامه</span>
@@ -397,8 +420,24 @@ function updateSummary() {
   document.getElementById('summarySize').textContent = formData.get('size') || '-';
   document.getElementById('summaryCategory').textContent = formData.get('category') || '-';
   document.getElementById('summaryPrice').textContent = formData.get('price_total') ? `${parseInt(formData.get('price_total')).toLocaleString()} تومان` : '-';
-  document.getElementById('summaryPricePerMeter').textContent = formData.get('price_per_meter') ? `${parseInt(formData.get('price_per_meter')).toLocaleString()} تومان` : '-';
+  // محاسبه خودکار قیمت هر متر
+  const sz = parseInt(formData.get('size')||'0', 10) || 0;
+  const pTotal = parseInt(formData.get('price_total')||'0', 10) || 0;
+  let ppm = 0;
+  if (sz > 0 && pTotal > 0) {
+    ppm = Math.round(pTotal / sz);
+    const ppmInput = document.querySelector('input[name="price_per_meter"]');
+    if (ppmInput) ppmInput.value = ppm;
+  }
+  document.getElementById('summaryPricePerMeter').textContent = (ppm > 0) ? `${ppm.toLocaleString()} تومان` : (formData.get('price_per_meter') ? `${parseInt(formData.get('price_per_meter')).toLocaleString()} تومان` : '-');
   document.getElementById('summaryContact').textContent = formData.get('vinor_contact') || '-';
+  // محاسبه مبلغ پورسانت (برآوردی)
+  const price = parseInt(formData.get('price_total')||'0', 10) || 0;
+  const pct = parseFloat(formData.get('express_commission_pct')||'0') || 0;
+  const amount = Math.round(price * (pct/100.0));
+  const out = isNaN(amount) ? '-' : amount.toLocaleString('fa-IR');
+  const amtInput = document.getElementById('express_commission_amount');
+  if (amtInput) amtInput.value = out;
   
   document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر انتخاب شده` : 'تصویری انتخاب نشده';
   
@@ -434,9 +473,23 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
     alert('خطا در اعتبارسنجی فرم. لطفاً صفحه را رفرش کنید.');
     return;
   }
+  // اعتبارسنجی درصد پورسانت در صورت تکمیل
+  const pctStr = document.getElementById('express_commission_pct')?.value?.trim();
+  if (pctStr) {
+    const pct = parseFloat(pctStr);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      e.preventDefault();
+      alert('درصد پورسانت باید بین ۰ تا ۱۰۰ باشد');
+      return;
+    }
+  }
 });
 
 // مقداردهی اولیه
 showStep(1);
+// محاسبه لحظه‌ای مبلغ پورسانت
+document.getElementById('express_commission_pct')?.addEventListener('input', updateSummary);
+document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
+document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
 </script>
 {% endblock %}

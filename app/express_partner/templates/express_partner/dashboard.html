@@ -1,36 +1,21 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 font-iranyekan">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
 
-  <!-- Simple fixed header (like Help) -->
-  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
+  <!-- Minimal sticky header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
       <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
         <i class="fas fa-arrow-right"></i>
       </button>
-      <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">پنل همکار اکسپرس</h1>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">پنل همکار اکسپرس</h1>
       <a href="{{ url_for('main.help') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
         <i class="fas fa-life-ring"></i>
       </a>
     </div>
   </header>
-  <div class="h-20"></div>
-
-  <style>
-    /* کارت‌های جدید همکاران اکسپرس: مینیمال و خوانا */
-    .express-card { transition: box-shadow .2s ease, transform .2s ease; }
-    .express-card:hover { transform: translateY(-2px); }
-  </style>
-
-  <!-- Pull-to-Refresh (purple themed) -->
-  <div id="ptrMsg" class="max-w-6xl mx-auto px-2" style="display:none">
-    <div id="ptrWrap" class="sticky top-0 z-30">
-      <div id="ptrBox" class="mx-auto w-9 h-9 flex items-center justify-center rounded-full border shadow bg-white/90 backdrop-blur-md text-gray-700 ring-1 ring-gray-300 border-gray-200 opacity-0 -translate-y-2 transition duration-200">
-        <i id="ptrIcon" class="fas fa-arrow-down text-gray-500"></i>
-      </div>
-    </div>
-  </div>
+  <style>.express-card{transition:box-shadow .2s ease,transform .2s ease}.express-card:hover{transform:translateY(-2px)}</style>
 
   <!-- اعلان‌های سیستم -->
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -56,44 +41,10 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Approval Notice -->
   {% if not is_approved %}
-    <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-4 rounded-xl mb-6 flex items-start gap-3">
-      <i class="fas fa-exclamation-triangle mt-0.5 flex-shrink-0"></i>
-      <span>درخواست شما در صف بررسی است. پس از تأیید توسط ادمین، دسترسی کامل به پنل فعال می‌شود.</span>
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-3 rounded-xl mb-4 text-sm">
+      در حال بررسی توسط ادمین؛ پس از تأیید دسترسی کامل فعال می‌شود.
     </div>
-  {% endif %}
-
-  {% if is_approved %}
-    <!-- One-time Express partner approval modal (shown once per user) -->
-    <div id="expressApprovedModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
-      <div class="bg-white rounded-2xl p-5 mx-4 max-w-sm w-full text-center shadow-lg">
-        <div class="text-emerald-600 text-2xl font-extrabold mb-1">تبریک!</div>
-        <div class="text-gray-700 text-sm">شما به‌عنوان همکار اکسپرس تأیید شده‌اید. می‌توانید از خدمات ویژه استفاده کنید.</div>
-        <button id="expressApprovedClose" class="mt-3 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">باشه</button>
-      </div>
-    </div>
-    <script>
-      (function(){
-        try {
-          var userKey = "{{ session.get('user_id') or session.get('user_phone') or 'anon' }}";
-          var KEY = "vinor_express_approved_shown_v1_" + userKey;
-          var modal = document.getElementById('expressApprovedModal');
-          var btn = document.getElementById('expressApprovedClose');
-          if (!localStorage.getItem(KEY)) {
-            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-            try { localStorage.setItem(KEY, '1'); } catch(_){ }
-          }
-          function close(){
-            if (!modal) return;
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-          }
-          if (btn) btn.addEventListener('click', close, { passive: true });
-          if (modal) modal.addEventListener('click', function(e){ if (e.target === modal) close(); }, { passive: true });
-        } catch(_){ }
-      })();
-    </script>
   {% endif %}
 
   <!-- Loading skeleton -->
@@ -113,10 +64,17 @@
     <div class="mt-2 bg-white border rounded-2xl p-6 text-center text-gray-600">هنوز ملکی برای شما ارسال نشده است.</div>
   {% endif %}
 
-  <div class="mt-2 -mx-3">
-    <div class="px-3 flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+  <div class="mt-2 -mx-3 relative">
+    <button type="button" id="cardsPrev" class="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <button type="button" id="cardsNext" class="hidden sm:flex absolute left-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div id="cardsTrack" class="px-3 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article class="snap-start shrink-0 w-[280px] sm:w-[340px] group express-card relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg">
+      <article class="snap-start shrink-0 w-[88vw] sm:w-[360px] group express-card relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
           {% if img %}
@@ -134,7 +92,7 @@
           {% endif %}
         </div>
 
-        <div class="p-4">
+        <div class="p-3 sm:p-4">
           <div class="flex items-start justify-between gap-2">
             <h3 class="text-[16px] font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{{ land.title or '—' }}</h3>
             {% if land.code %}
@@ -213,67 +171,12 @@
 
 </div>
 
-<!-- PTR + small script for accessibility enhancements + share/copy -->
+<!-- Small script for accessibility enhancements + share/copy -->
 <script>
   // add focus outline for keyboard users
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
-  // Pull-to-refresh (purple)
-  (function(){
-    const msg = document.getElementById('ptrMsg');
-    const box = document.getElementById('ptrBox');
-    const icon = document.getElementById('ptrIcon');
-    const THRESH = 60; // px
-    let startY = 0, eligible = false, active = false, isRefreshing = false;
-    function atTop(){ return (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0) <= 0; }
-    function setState(state){
-      if (!box || !icon) return;
-      icon.style.transform = '';
-      icon.className = '';
-      box.classList.remove('ring-purple-300','border-purple-200','ring-red-300','border-red-200','ring-gray-300','border-gray-200');
-      box.classList.add('ring-gray-300','border-gray-200');
-      if (state === 'pull'){
-        icon.className = 'fas fa-arrow-down ' + (active ? 'text-purple-600' : 'text-gray-500');
-      } else if (state === 'loading'){
-        icon.className = 'fas fa-rotate-right fa-spin text-purple-600';
-        box.classList.remove('ring-gray-300','border-gray-200');
-        box.classList.add('ring-purple-300','border-purple-200');
-      } else if (state === 'success'){
-        icon.className = 'fas fa-check text-purple-600';
-        box.classList.remove('ring-gray-300','border-gray-200');
-        box.classList.add('ring-purple-300','border-purple-200');
-      } else if (state === 'error'){
-        icon.className = 'fas fa-exclamation text-red-600';
-        box.classList.remove('ring-gray-300','border-gray-200');
-        box.classList.add('ring-red-300','border-red-200');
-      }
-    }
-    function show(){ if (msg) msg.style.display = ''; try { box.classList.remove('opacity-0','-translate-y-2'); box.classList.add('opacity-100','translate-y-0'); } catch(_){ } }
-    function hide(){ try { box.classList.add('opacity-0','-translate-y-2'); box.classList.remove('opacity-100','translate-y-0'); } catch(_){ } if (msg) msg.style.display = 'none'; }
-
-    document.addEventListener('touchstart', (e)=>{
-      if (!atTop()) { eligible = false; return; }
-      const t = e.touches && e.touches[0];
-      if (!t) { eligible = false; return; }
-      startY = t.clientY; eligible = true; active = false;
-    }, { passive: true });
-    document.addEventListener('touchmove', (e)=>{
-      if (!eligible) return;
-      const t = e.touches && e.touches[0]; if (!t) return;
-      const dy = t.clientY - startY; if (dy > 0){
-        try { e.preventDefault(); } catch(_){ }
-        active = dy >= THRESH; icon.style.transform = 'rotate(' + Math.min(180, Math.round((dy / THRESH) * 180)) + 'deg)';
-        show(); setState('pull');
-      }
-    }, { passive: false });
-    document.addEventListener('touchend', async ()=>{
-      if (!eligible) return; eligible = false; if (!active) return; if (isRefreshing) return;
-      isRefreshing = true; show(); setState('loading');
-      try { location.reload(); setState('success'); } catch(_) { setState('error'); }
-      finally { setTimeout(()=>{ isRefreshing = false; hide(); }, 900); }
-    }, { passive: true });
-  })();
 
   // Share and copy buttons
   (function(){
@@ -303,6 +206,22 @@
         try{ await navigator.clipboard.writeText(url); toast('کپی شد'); }catch(_){ }
       }, { passive: true });
     });
+  })();
+
+  // Horizontal scroll controls for cards
+  (function(){
+    const track = document.getElementById('cardsTrack');
+    const prev = document.getElementById('cardsPrev');
+    const next = document.getElementById('cardsNext');
+    if (!track || !prev || !next) return;
+    function scrollByAmount(dir){
+      const delta = Math.round((track.clientWidth || 300) * 0.9);
+      const rtl = document.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+      const sign = (dir === 'next') ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+      track.scrollBy({ left: sign * delta, behavior: 'smooth' });
+    }
+    prev.addEventListener('click', ()=>scrollByAmount('prev'));
+    next.addEventListener('click', ()=>scrollByAmount('next'));
   })();
 </script>
 {% endblock %}
