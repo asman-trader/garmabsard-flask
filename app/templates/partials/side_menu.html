@@ -246,11 +246,27 @@
         const reg = await navigator.serviceWorker.getRegistration('/');
         if (!reg) return;
         await reg.update();
+        // If a waiting worker exists, show badge
         if (reg.waiting) {
           updateAvailable = true;
           updateWaitingSW = reg.waiting;
           if (updateBadge) updateBadge.classList.remove('hidden');
-        } else {
+          return;
+        }
+        // If an installing worker is present, wait for it to reach installed
+        if (reg.installing){
+          const w = reg.installing;
+          w.addEventListener('statechange', () => {
+            if (w.state === 'installed' && reg.waiting){
+              updateAvailable = true;
+              updateWaitingSW = reg.waiting;
+              if (updateBadge) updateBadge.classList.remove('hidden');
+            }
+          });
+          return;
+        }
+        // Otherwise hide badge
+        {
           updateAvailable = false;
           updateWaitingSW = null;
           if (updateBadge) updateBadge.classList.add('hidden');
@@ -259,24 +275,60 @@
     }
 
     async function applyUpdate(){
-      if (!updateWaitingSW) {
-        await checkForUpdate();
-        if (!updateWaitingSW) return;
-      }
       try {
         updateAppBtn.disabled = true;
         const span = updateAppBtn.querySelector('span');
-        if (span) span.textContent = 'در حال بروزرسانی...';
-        // Tell the waiting SW to skip waiting and activate
-        updateWaitingSW.postMessage({ type: 'SKIP_WAITING' });
-        // Reload page after a short delay to let SW activate
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        if (span) span.textContent = 'در حال بررسی بروزرسانی...';
+
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) throw new Error('no-registration');
+        await reg.update();
+
+        // If we already have a waiting worker, activate it
+        if (reg.waiting) {
+          updateWaitingSW = reg.waiting;
+        } else if (reg.installing) {
+          // Wait briefly for installing to become installed
+          await new Promise((resolve) => {
+            const w = reg.installing;
+            const onState = () => {
+              if (w.state === 'installed') resolve(undefined);
+            };
+            w.addEventListener('statechange', onState);
+            setTimeout(resolve, 2500);
+          });
+          if (reg.waiting) updateWaitingSW = reg.waiting;
+        }
+
+        if (updateWaitingSW) {
+          if (span) span.textContent = 'در حال بروزرسانی...';
+          updateWaitingSW.postMessage({ type: 'SKIP_WAITING' });
+          setTimeout(() => { window.location.reload(); }, 600);
+          return;
+        }
+
+        // No update available – show a small toast
+        if (span) span.textContent = 'بروزرسانی';
+        updateAppBtn.disabled = false;
+        try {
+          const t = document.createElement('div');
+          t.textContent = 'اپ شما بهروز است';
+          t.dir = 'rtl';
+          t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-gray-800 text-white shadow z-[60]';
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 1700);
+        } catch(_) {}
       } catch(e) {
         console.error('Update failed:', e);
         updateAppBtn.disabled = false;
-        alert('خطا در بروزرسانی. لطفاً صفحه را رفرش کنید.');
+        try {
+          const t = document.createElement('div');
+          t.textContent = 'خطا در بروزرسانی. صفحه را رفرش کنید';
+          t.dir = 'rtl';
+          t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-rose-600 text-white shadow z-[60]';
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 2000);
+        } catch(_) { alert('خطا در بروزرسانی. لطفاً صفحه را رفرش کنید.'); }
       }
     }
 
