@@ -9,6 +9,7 @@ from ..utils.storage import data_dir, load_ads, save_ads, load_settings
 from ..utils.dates import parse_datetime_safe, utcnow, iso_z
 from ..constants import CATEGORY_KEYS, CATEGORY_MAP
 from ..categories import CATEGORIES
+from ..utils.storage import load_settings
 
 # ✅ سرویس اعلان‌ها
 try:
@@ -456,6 +457,19 @@ def finalize_land():
         flash("اطلاعات ناقص است.")
         return redirect(url_for('main.add_land'))
 
+    # پرداخت قبل از نهایی‌سازی (زیرین‌پال)
+    try:
+        settings = load_settings()
+    except Exception:
+        settings = {}
+    try:
+        post_price_toman = int(settings.get('ad_post_price_toman', 10000))
+    except Exception:
+        post_price_toman = 10000
+    if post_price_toman > 0 and not session.get('ad_payment_ok'):
+        # هدایت به شروع پرداخت
+        return redirect(url_for('main.ad_payment_start'))
+
     settings = load_settings()
     status = 'approved' if settings.get('approval_method','manual') == 'auto' else 'pending'
 
@@ -532,9 +546,104 @@ def finalize_land():
     # پاکسازی سشن مراحل
     for k in keys:
         session.pop(k, None)
+    session.pop('ad_payment_ok', None)
+    session.pop('ad_payment_ref', None)
 
     flash("✅ آگهی شما ثبت شد." + (" منتشر شد." if status=='approved' else " و منتظر تأیید است."))
     return redirect(url_for('main.my_lands'))
+
+
+# -------------------------
+# ZarinPal payment (start & verify)
+# -------------------------
+@main_bp.get('/lands/pay', endpoint='ad_payment_start')
+def ad_payment_start():
+    # Check draft presence
+    if not all(k in session for k in ['land_temp','land_ad_type','land_code']):
+        flash('اطلاعات ثبت‌ آگهی ناقص است.', 'warning')
+        return redirect(url_for('main.add_land'))
+
+    try:
+        settings = load_settings()
+    except Exception:
+        settings = {}
+    try:
+        price_toman = int(settings.get('ad_post_price_toman', 10000))
+    except Exception:
+        price_toman = 10000
+    if price_toman <= 0:
+        session['ad_payment_ok'] = True
+        return redirect(url_for('main.finalize_land'))
+
+    merchant_id = 'd38153db-0752-4a5b-9723-ad4e10c830a9'
+    amount_rial = price_toman * 10
+    callback = url_for('main.ad_payment_verify', _external=True)
+    desc = 'پرداخت هزینه ثبت آگهی در وینور'
+
+    import requests
+    try:
+        req_payload = {
+            'merchant_id': merchant_id,
+            'amount': amount_rial,
+            'callback_url': callback,
+            'description': desc,
+        }
+        r = requests.post('https://api.zarinpal.com/pg/v4/payment/request.json', json=req_payload, timeout=15)
+        j = r.json() if r and r.content else {}
+        data = ((j or {}).get('data') or {})
+        authority = data.get('authority') or data.get('Authority')
+        if authority:
+            session['ad_payment_ref'] = authority
+            return redirect(f'https://www.zarinpal.com/pg/StartPay/{authority}')
+        else:
+            flash('خطا در آغاز پرداخت. لطفاً بعداً تلاش کنید.', 'warning')
+            return redirect(url_for('main.add_land'))
+    except Exception:
+        flash('اتصال به درگاه پرداخت ممکن نشد.', 'warning')
+        return redirect(url_for('main.add_land'))
+
+
+@main_bp.get('/lands/pay/verify', endpoint='ad_payment_verify')
+def ad_payment_verify():
+    authority = request.args.get('Authority') or request.args.get('authority') or session.get('ad_payment_ref')
+    status = (request.args.get('Status') or '').lower()
+    try:
+        settings = load_settings()
+    except Exception:
+        settings = {}
+    try:
+        price_toman = int(settings.get('ad_post_price_toman', 10000))
+    except Exception:
+        price_toman = 10000
+    amount_rial = price_toman * 10
+
+    if not authority or status != 'ok':
+        flash('پرداخت لغو شد یا نامعتبر است.', 'warning')
+        return redirect(url_for('main.add_land'))
+
+    merchant_id = 'd38153db-0752-4a5b-9723-ad4e10c830a9'
+    import requests
+    try:
+        verify_payload = {
+            'merchant_id': merchant_id,
+            'amount': amount_rial,
+            'authority': authority,
+        }
+        r = requests.post('https://api.zarinpal.com/pg/v4/payment/verify.json', json=verify_payload, timeout=15)
+        j = r.json() if r and r.content else {}
+        data = ((j or {}).get('data') or {})
+        # code 100 is success
+        if int(data.get('code', 0)) == 100:
+            session['ad_payment_ok'] = True
+            session['ad_payment_ref'] = authority
+            flash('پرداخت با موفقیت انجام شد.', 'success')
+            return redirect(url_for('main.finalize_land'))
+        else:
+            flash('تأیید پرداخت ناموفق بود.', 'warning')
+            return redirect(url_for('main.add_land'))
+    except Exception:
+        flash('خطا در تأیید پرداخت.', 'warning')
+        return redirect(url_for('main.add_land'))
 
 
 @main_bp.route('/my-lands', methods=['GET'], endpoint='my_lands')

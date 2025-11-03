@@ -774,10 +774,18 @@ def settings():
         if ad_expiry_days not in (0, 30, 60, 90):
             ad_expiry_days = 30
 
+        try:
+            post_price_toman = int(request.form.get('ad_post_price_toman', '10000') or '10000')
+        except Exception:
+            post_price_toman = 10000
+        if post_price_toman < 0:
+            post_price_toman = 0
+
         save_settings({
             'approval_method': approval_method,
             'ad_expiry_days': ad_expiry_days,
-            'show_submit_button': (request.form.get('show_submit_button') == 'on')
+            'show_submit_button': (request.form.get('show_submit_button') == 'on'),
+            'ad_post_price_toman': post_price_toman,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
