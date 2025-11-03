@@ -401,6 +401,11 @@ def create_app() -> Flask:
             current_app.logger.debug("PASS (public-prefix): %s", request.path)
             return
         if request.path in safe_paths:
+            # اگر کاربر وارد شده و مسیر لندینگ است، به اپ هدایت شود
+            user_logged_in = bool(session.get("user_id") or session.get("user_phone"))
+            if user_logged_in and request.path in {"/", "/start"}:
+                current_app.logger.debug("REDIRECT logged-in → /app: %s", request.path)
+                return redirect(url_for("main.app_home"))
             current_app.logger.debug("PASS (path): %s", request.path)
             return
 
