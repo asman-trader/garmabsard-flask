@@ -51,6 +51,26 @@ def _get_my_last_application(phone: str) -> Dict[str, Any] | None:
         return None
 
 
+def _has_active_application(phone: str) -> bool:
+    """Return True if the user already has an in-progress application (not approved/rejected/cancelled)."""
+    try:
+        apps = load_express_partner_apps() or []
+        active_statuses = {None, '', 'new', 'pending', 'under_review'}
+        for a in apps:
+            if not isinstance(a, dict):
+                continue
+            if str(a.get('phone')) != str(phone):
+                continue
+            status = str(a.get('status') or '').strip().lower()
+            if status in ('approved', 'rejected', 'cancelled'):
+                continue
+            # anything else counts as active/in-progress
+            return True
+    except Exception:
+        pass
+    return False
+
+
 @express_partner_bp.app_context_processor
 def inject_role_flags():
     try:
@@ -154,6 +174,10 @@ def apply_step1():
         pass
 
     if request.method == 'POST':
+        # جلوگیری از ایجاد درخواست موازی
+        if _has_active_application(me_phone):
+            last_app = _get_my_last_application(me_phone)
+            return render_template('express_partner/thanks.html', name=(last_app.get('name') if last_app else ''))
         name = (request.form.get('name') or '').strip()
         city = (request.form.get('city') or '').strip()
         if not name or not city:
@@ -180,6 +204,11 @@ def apply_step2():
         return redirect(url_for('express_partner.apply_step1'))
 
     if request.method == 'POST':
+        # جلوگیری از ایجاد درخواست موازی
+        me_phone = (session.get('user_phone') or '').strip()
+        if _has_active_application(me_phone):
+            last_app = _get_my_last_application(me_phone)
+            return render_template('express_partner/thanks.html', name=(last_app.get('name') if last_app else ''))
         experience = (request.form.get('experience') or '').strip()
         note = (request.form.get('note') or '').strip()
         session['apply_data'] = {**(session.get('apply_data') or {}), 'experience': experience, 'note': note}
@@ -203,6 +232,11 @@ def apply_step3():
         return redirect(url_for('express_partner.apply_step1'))
 
     if request.method == 'POST':
+        # اگر قبلاً درخواست فعال دارد، به صفحه تشکر هدایت شود
+        if _has_active_application(me_phone):
+            last_app = _get_my_last_application(me_phone)
+            session.pop('apply_data', None)
+            return render_template('express_partner/thanks.html', name=(last_app.get('name') if last_app else ''))
         # ذخیره نهایی
         apps = load_express_partner_apps() or []
         partners = load_express_partners() or []

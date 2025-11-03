@@ -15,6 +15,8 @@
         <th class="p-3">شماره</th>
         <th class="p-3">شهر</th>
         <th class="p-3">سابقه</th>
+        <th class="p-3">توضیحات</th>
+        <th class="p-3">تاریخ</th>
         <th class="p-3">وضعیت</th>
         <th class="p-3">اقدامات</th>
       </tr>
@@ -27,9 +29,14 @@
         <td class="p-3">{{ a.phone or '—' }}</td>
         <td class="p-3">{{ a.city or '—' }}</td>
         <td class="p-3">{{ a.experience or '—' }}</td>
+        <td class="p-3 truncate max-w-[18ch]" title="{{ a.note }}">{{ a.note or '—' }}</td>
+        <td class="p-3"><span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></td>
         <td class="p-3" data-status>{{ a.status or 'new' }}</td>
         <td class="p-3">
           <div class="flex items-center gap-2">
+            <button type="button"
+              class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+              onclick="openAppModal({{ a.id }})">جزئیات</button>
             <form method="post" action="{{ url_for('admin.express_partner_application_approve', aid=a.id) }}" class="contents" x-data data-ajax="1">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
@@ -43,12 +50,90 @@
           </div>
         </td>
       </tr>
+
+      <!-- Modal: Details for application {{ a.id }} -->
+      <div id="appModal-{{ a.id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-black/40" onclick="closeAppModal({{ a.id }})"></div>
+        <div class="absolute inset-x-0 top-12 mx-auto max-w-xl w-[92vw] bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div class="flex items-center justify-between px-4 h-12 border-b border-gray-200 dark:border-gray-800">
+            <div class="text-sm font-bold">جزئیات درخواست #{{ a.id }}</div>
+            <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" onclick="closeAppModal({{ a.id }})" aria-label="بستن">
+              <i class="fas fa-xmark"></i>
+            </button>
+          </div>
+          <div class="p-4 text-sm space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-gray-500">نام</div>
+                <div class="font-semibold">{{ a.name or '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">شماره</div>
+                <div class="font-semibold ltr">{{ a.phone or '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">شهر</div>
+                <div class="font-semibold">{{ a.city or '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500">وضعیت</div>
+                <div class="font-semibold">{{ a.status or 'new' }}</div>
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-500">سابقه</div>
+              <div class="font-semibold">{{ a.experience or '—' }}</div>
+            </div>
+            <div>
+              <div class="text-gray-500">توضیحات</div>
+              <div class="font-semibold whitespace-pre-wrap">{{ a.note or '—' }}</div>
+            </div>
+            <div class="text-xs text-gray-500">تاریخ ثبت: <span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></div>
+          </div>
+          <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-2">
+            <button class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeAppModal({{ a.id }})">بستن</button>
+          </div>
+        </div>
+      </div>
       {% else %}
       <tr><td class="p-3 text-center text-gray-500" colspan="7">درخواستی وجود ندارد.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+<script>
+  function openAppModal(id){
+    const el = document.getElementById('appModal-'+id);
+    if(!el) return; el.classList.remove('hidden');
+  }
+  function closeAppModal(id){
+    const el = document.getElementById('appModal-'+id);
+    if(!el) return; el.classList.add('hidden');
+  }
+  // Render Jalali date-time (Iran timezone)
+  (function(){
+    function fmt(dt){
+      try{
+        const d = new Date(String(dt||'').replace(' ','T'));
+        if (isNaN(d)) return '';
+        try{
+          return d.toLocaleString('fa-IR', {
+            timeZone: 'Asia/Tehran',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+          });
+        }catch(_){
+          return d.toLocaleString('fa-IR');
+        }
+      }catch(_){ return ''; }
+    }
+    document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+      const raw = el.getAttribute('data-dt')||'';
+      const out = fmt(raw);
+      el.textContent = out || '—';
+    });
+  })();
+</script>
 {% endblock %}
 
 
