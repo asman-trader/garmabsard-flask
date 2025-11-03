@@ -1,24 +1,20 @@
-{% extends 'base.html' %}
-{% block title %}پورسانت‌ها | همکار اکسپرس{% endblock %}
-{% block content %}
-<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 font-iranyekan">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
 
-  <!-- Simple fixed header -->
-  <header class="fixed top-0 inset-x-0 z-30 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
-      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+  <!-- Minimal sticky header for Express Partner -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
         <i class="fas fa-arrow-right"></i>
       </button>
-      <h1 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
-      <a href="{{ url_for('main.help') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="راهنما">
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
+      <a href="{{ url_for('main.help') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="راهنما">
         <i class="fas fa-life-ring"></i>
       </a>
     </div>
   </header>
-  <div class="h-20"></div>
 
-  <!-- Stats moved from dashboard -->
-  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+  <!-- Stats -->
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 mb-4">
     <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
       <div class="text-[12px] text-gray-500 dark:text-gray-400">کل درآمد</div>
       <div class="text-lg font-extrabold mt-1">{{ total_commission or '—' }}</div>
@@ -88,6 +84,5 @@
     </div>
   </nav>
 
-</div>
-{% endblock %}
+  </div>
 
