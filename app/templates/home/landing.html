@@ -468,7 +468,7 @@
     (function(){
       if (!('serviceWorker' in navigator)) return;
       // Use the same SW route as the main app
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(async (reg)=>{
+      navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(async (reg)=>{
         try{
           await navigator.serviceWorker.ready;
           const sw = navigator.serviceWorker.controller;

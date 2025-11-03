@@ -415,7 +415,7 @@
 
       // ثبت Service Worker (PWA) از روت سراسری + Warmup شل
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' })
+        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
           .then(async (reg) => {
             try {
               await navigator.serviceWorker.ready;
