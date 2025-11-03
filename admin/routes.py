@@ -52,7 +52,7 @@ def _save_express_document(file, land_code):
     return filename
 from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
-from app.utils.storage import load_users, load_reports, save_reports, load_consultant_apps, save_consultant_apps, load_consultants, save_consultants
+from app.utils.storage import load_users, load_reports, save_reports, load_consultant_apps, save_consultant_apps, load_consultants, save_consultants, save_ads
 from app.utils.storage import (
     load_express_partner_apps,
     save_express_partner_apps,
@@ -1161,7 +1161,8 @@ def delete_land(land_id: Optional[int] = None):
     # حذف فایل‌های تصویر روی دیسک
     _delete_ad_images(land)
 
-    save_json(_lands_path(), lands)
+    # استفاده از save_ads برای همگام‌سازی کش سمت کاربر
+    save_ads(lands)
     flash('آگهی با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.lands'))
 
@@ -1179,7 +1180,7 @@ def approve_land(code):
         flash('آگهی یافت نشد.', 'warning')
         return redirect(request.referrer or url_for('admin.pending_lands'))
     land['status'] = 'approved'
-    save_json(_lands_path(), lands)
+    save_ads(lands)
 
     # ✅ اعلان: تأیید شد
     notify_status_change(land, 'approved')
@@ -1203,7 +1204,7 @@ def reject_land(code):
     if reason:
         land["reject_reason"] = reason
 
-    save_json(_lands_path(), lands)
+    save_ads(lands)
 
     # ✅ اعلان: رد شد + دلیل
     notify_status_change(land, 'rejected', reason=reason or None)
@@ -1273,7 +1274,7 @@ def express_transfer():
                 ad['express_status'] = str(ad.get('status') or 'approved')
                 changed_lands = True
         if changed_lands:
-            save_json(_lands_path(), lands)
+            save_ads(lands)
 
         # چون داده‌های partner_* در فایل‌های مستقل هستند، تنها normalize ساده انجام می‌دهیم
         def _unique(items, key):
@@ -1384,7 +1385,7 @@ def add_express_listing():
         # ذخیره در فایل
         lands = load_json(_lands_path())
         lands.append(new_express_land)
-        save_json(_lands_path(), lands)
+        save_ads(lands)
         
         # ارسال نوتیفیکیشن به کاربران منطقه
         _send_express_notification(new_express_land)
@@ -1508,7 +1509,8 @@ def delete_express_listing(code):
     
     # حذف از لیست
     lands_list = [l for l in lands_list if str(l.get('code')) != str(code)]
-    save_json(_lands_path(), lands_list)
+    save_ads(lands_list)
+    save_ads(lands_list)
     
     flash(f'آگهی اکسپرس با کد {code} با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.express_listings'))
