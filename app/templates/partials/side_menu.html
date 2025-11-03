@@ -77,26 +77,21 @@
       {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
       {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
 
-      {# اگر مشاور تأیید شده است: لینک داشبورد؛ در غیر این صورت لینک ثبت درخواست #}
-      {# فقط درخواست همکاری اکسپرس نمایش داده شود #}
+      {# آیتم یکپارچه همکار اکسپرس (۳ حالت) #}
+      {% set __logged_in = session.get('user_phone') %}
       {% if VINOR_IS_EXPRESS_PARTNER %}
-        {# پنل همکاری به پروفایل منتقل شد #}
-      {% else %}
+        <a href="{{ url_for('express_partner.dashboard') }}"
+           class="group flex items-center gap-3 p-3 rounded-xl transition
+                  hover:bg-violet-100 dark:hover:bg-violet-900/40 active:scale-[0.98]
+                  require-login"
+           data-require-login="1">
+          <i class="fas fa-rocket text-lg text-violet-600 dark:text-violet-400"></i>
+          <span class="text-[15px] font-semibold text-violet-700 dark:text-violet-300">ورود به پنل همکار اکسپرس</span>
+        </a>
+      {% elif __logged_in %}
         {{ MenuItem(url_for('express_partner.apply'), 'fa-star', 'درخواست همکاری وینور اکسپرس', True) }}
+      {% else %}
         {{ MenuItem(url_for('express_partner.login'), 'fa-right-to-bracket', 'ورود همکار اکسپرس', False) }}
-      {% endif %}
-
-      {# ورود به پنل همکار اکسپرس (تم بنفش مانند داشبورد همکار) #}
-      <a href="{{ url_for('express_partner.dashboard') }}"
-         class="group flex items-center gap-3 p-3 rounded-xl transition
-                hover:bg-violet-100 dark:hover:bg-violet-900/40 active:scale-[0.98]
-                require-login"
-         data-require-login="1">
-        <i class="fas fa-rocket text-lg text-violet-600 dark:text-violet-400"></i>
-        <span class="text-[15px] font-semibold text-violet-700 dark:text-violet-300">ورود به پنل همکار اکسپرس</span>
-      </a>
-
-      {% if VINOR_IS_EXPRESS_PARTNER %}
       {% endif %}
       {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
       {{ MenuItem(url_for('main.index'),   'fa-home',    'معرفی وینور', False) }}
