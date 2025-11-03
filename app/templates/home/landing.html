@@ -416,22 +416,6 @@
       try { localStorage.setItem('vinor_pwa_installed', '1'); } catch (_) {}
       // Notify any open tabs of install to update their UI instantly
       try { window.dispatchEvent(new CustomEvent('vinor:pwa-installed')); } catch (_) {}
-
-      // Best-effort: close the browser tab so the user sees the new icon
-      (function tryCloseAfterInstall(){
-        const attempt = () => {
-          let closed = false;
-          try { window.close(); closed = true; } catch(_) {}
-          if (!closed) {
-            try { window.open('', '_self'); window.close(); closed = true; } catch(_) {}
-          }
-          if (!closed) {
-            try { location.replace('about:blank'); } catch(_) {}
-          }
-        };
-        // slight delay to let the system create the icon before closing
-        setTimeout(attempt, 300);
-      })();
     });
 
     // PWA Install Button Handlers
@@ -450,6 +434,9 @@
 
               if (outcome === 'accepted') {
                 console.log('User accepted the PWA install prompt');
+                // Set installed flag immediately (before appinstalled fires)
+                try { localStorage.setItem('vinor_pwa_installed', '1'); } catch(_) {}
+                try { window.dispatchEvent(new CustomEvent('vinor:pwa-installed')); } catch(_) {}
               } else {
                 console.log('User dismissed the PWA install prompt');
               }
@@ -493,6 +480,18 @@
           }
         }catch(_){ }
       }).catch(()=>{});
+    })();
+
+    // iOS/Safari or alternative install paths: if app enters standalone, mark installed
+    (function(){
+      try {
+        const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+        const isIOSStandalone = window.navigator.standalone === true;
+        if (isStandalone || isIOSStandalone) {
+          try { localStorage.setItem('vinor_pwa_installed','1'); } catch(_) {}
+          try { window.dispatchEvent(new CustomEvent('vinor:pwa-installed')); } catch(_) {}
+        }
+      } catch(_) {}
     })();
   </script>
 </body>
