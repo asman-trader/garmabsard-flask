@@ -73,7 +73,7 @@ def serve_manifest():
     
     # Fallback JSON
     fallback_json = '''{
-      "id": "/express/partner/dashboard",
+      "id": "/express/partner/",
       "name": "پنل همکاران وینور",
       "short_name": "پنل همکاران وینور",
       "description": "پنل مدیریت همکاران وینور",
@@ -99,6 +99,12 @@ def serve_service_worker():
     import os
     static_dir = os.path.join(current_app.root_path, "static")
     return send_from_directory(static_dir, "express-partner-sw.js", mimetype="application/javascript")
+
+
+@express_partner_bp.route('/offline', methods=['GET'], endpoint='offline')
+def offline_page():
+    """Express Partner offline page"""
+    return render_template('express_partner/offline.html')
 
 
 @express_partner_bp.route('/apply', methods=['GET', 'POST'], endpoint='apply')

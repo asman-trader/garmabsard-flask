@@ -346,8 +346,8 @@ def create_app() -> Flask:
 
         fallback_json = r'''{
           "id": "/app",
-          "name": "وینور | بازار آنلاین ملک",
-          "short_name": "وینور",
+          "name": "وینور بازار",
+          "short_name": "وینور بازار",
           "description": "وینور؛ تجربه سریع، امن و شفاف برای خرید و فروش زمین، باغ، ویلا و آپارتمان.",
           "dir": "rtl",
           "lang": "fa",

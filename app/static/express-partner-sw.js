@@ -1,6 +1,7 @@
 /*
-  Vinor Express Partner Service Worker – offline-first shell with runtime caching
+  وینور اکسپرس - Service Worker جداگانه برای پنل همکاران اکسپرس
   Scope: '/express/partner/'
+  این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
 const VERSION = 'v1.0.0-2025-01-15';
@@ -9,6 +10,7 @@ const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
 const ICONS_CACHE = `express-partner-icons-${VERSION}`;
 
+// تابع برای محدود کردن اندازه cache
 async function trimCache(name, maxEntries) {
   try {
     const cache = await caches.open(name);
@@ -20,8 +22,8 @@ async function trimCache(name, maxEntries) {
   } catch (_) {}
 }
 
-// URLs to precache at install (Express Partner specific)
-const OFFLINE_URL = '/static/offline.html';
+// URLs برای precache در نصب (مختص Express Partner)
+const OFFLINE_URL = '/express/partner/offline';
 const PRECACHE_URLS = [
   '/express/partner/login',
   '/express/partner/dashboard',
@@ -29,16 +31,17 @@ const PRECACHE_URLS = [
   '/express/partner/commissions',
   '/express/partner/notes',
   '/express/partner/apply',
-  // Manifest and offline fallback
+  '/express/partner/thanks',
+  '/express/partner/offline',
+  // Manifest
   '/express/partner/manifest.webmanifest',
-  OFFLINE_URL,
-  // Icons/sounds (best-effort if exist)
+  // Icons (استفاده از آیکون‌های مشترک)
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png'
 ];
 
-// Precache local icon/font assets for full offline
-const LOCAL_ICON_FONT_ASSETS = [
+// Assets محلی برای offline
+const LOCAL_ASSETS = [
   '/static/vendor/fontawesome/css/all.min.css',
   '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
   '/static/vendor/fontawesome/webfonts/fa-regular-400.woff2',
@@ -46,103 +49,98 @@ const LOCAL_ICON_FONT_ASSETS = [
   '/static/fonts/vazirmatn.css'
 ];
 
+// نصب Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(PRECACHE);
-    try { 
-      await cache.addAll(PRECACHE_URLS.concat(LOCAL_ICON_FONT_ASSETS).map((u) => new Request(u, { credentials: 'same-origin' }))); 
-    } catch(_) {}
-    // Best-effort: prewarm external CSS/fonts/icons into dedicated ICONS cache
     try {
-      const icache = await caches.open(ICONS_CACHE);
-      await Promise.all(EXTERNAL_WARM.map(async (url) => {
-        try { const resp = await fetch(url, { mode: 'no-cors' }); await icache.put(url, resp.clone()); } catch(_) {}
-      }));
-    } catch(_) {}
+      await cache.addAll(PRECACHE_URLS.concat(LOCAL_ASSETS).map((u) => new Request(u, { credentials: 'same-origin' })));
+    } catch (err) {
+      console.error('Express Partner SW: Cache install error', err);
+    }
     await self.skipWaiting();
   })());
 });
 
+// فعال‌سازی Service Worker
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
+    // فقط cache های مربوط به Express Partner را نگه دار
     await Promise.all(
       keys.filter((k) => !k.startsWith('express-partner-')).map((k) => caches.delete(k))
     );
-    // Enable Navigation Preload for faster nav when online
-    try { if (self.registration.navigationPreload) await self.registration.navigationPreload.enable(); } catch(_) {}
+    // فعال‌سازی Navigation Preload برای سرعت بیشتر
+    try {
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable();
+      }
+    } catch (_) {}
     await self.clients.claim();
   })());
 });
 
+// بررسی same-origin
 function isSameOrigin(url) {
-  try { return new URL(url, self.location.origin).origin === self.location.origin; } catch { return false; }
+  try {
+    return new URL(url, self.location.origin).origin === self.location.origin;
+  } catch {
+    return false;
+  }
 }
 
-// Whitelisted external origins to cache (CDN scripts/fonts)
-const EXTERNAL_ORIGINS = [
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com',
-  'https://unpkg.com',
-  'https://cdn.jsdelivr.net',
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com'
-];
+// بررسی Express Partner route
+function isExpressPartnerRoute(url) {
+  return url.pathname.startsWith('/express/partner/');
+}
 
-// External assets to prewarm/cache for offline icons/fonts (best-effort)
-const EXTERNAL_WARM = [
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-solid-900.woff2',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-regular-400.woff2',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-brands-400.woff2',
-  'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap'
-];
-
-function isAPI(request) {
+// بررسی API های Express Partner
+function isExpressPartnerAPI(request) {
   const url = new URL(request.url);
   if (!isSameOrigin(url.href)) return false;
-  return url.pathname.startsWith('/api/express/');
+  return url.pathname.startsWith('/api/express/') || url.pathname.startsWith('/express/partner/api/');
 }
 
+// بررسی static assets
 function isStaticAsset(request) {
   const url = new URL(request.url);
   if (!isSameOrigin(url.href)) return false;
   return url.pathname.startsWith('/static/');
 }
 
-function isExpressPartnerRoute(url) {
-  return url.pathname.startsWith('/express/partner/');
-}
-
+// Handle fetch events
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-
-  // Only handle Express Partner routes
   const url = new URL(request.url);
-  if (!isExpressPartnerRoute(url) && !isStaticAsset(request) && !isAPI(request)) {
-    return; // Let browser handle non-Express Partner routes
+
+  // فقط Express Partner routes را handle کن
+  if (!isExpressPartnerRoute(url) && !isExpressPartnerAPI(request) && !isStaticAsset(request)) {
+    return; // بگذار browser آن را handle کند
   }
 
-  // Queue POST requests for offline (API JSON and non-multipart form posts)
+  // POST requests (API و form submissions)
   if (request.method === 'POST') {
     try {
       if (isSameOrigin(url.href)) {
         const ct = request.headers.get('content-type') || '';
-        // API JSON posts (Express Partner APIs)
-        if (isAPI(request)) {
+        // API JSON posts
+        if (isExpressPartnerAPI(request)) {
           event.respondWith((async () => {
             try {
               return await fetch(request);
             } catch (_) {
-              // Fallback: queue and show offline page
+              // Fallback: offline response
               const pc = await caches.open(PRECACHE);
               const off = await pc.match(OFFLINE_URL);
-              return off || new Response('queued', { status: 202 });
+              return off || new Response(JSON.stringify({ error: 'Offline', message: 'شما آفلاین هستید' }), { 
+                status: 503, 
+                headers: { 'Content-Type': 'application/json' } 
+              });
             }
           })());
           return;
         }
-        // Form posts (exclude multipart uploads)
+        // Form posts (بدون multipart uploads)
         if (isExpressPartnerRoute(url) && !ct.includes('multipart/form-data')) {
           event.respondWith((async () => {
             try {
@@ -150,46 +148,50 @@ self.addEventListener('fetch', (event) => {
             } catch (_) {
               const pc = await caches.open(PRECACHE);
               const off = await pc.match(OFFLINE_URL);
-              return off || new Response('queued', { status: 202 });
+              return off || new Response('Offline', { status: 503 });
             }
           })());
           return;
         }
       }
-    } catch(_) {}
+    } catch (_) {}
   }
 
-  // Navigation requests: Express Partner Shell network-first → offline fallback
+  // Navigation requests: Network-first با offline fallback
   if (request.mode === 'navigate' && isExpressPartnerRoute(url)) {
     event.respondWith((async () => {
       try {
-        // Use preloaded response if available
+        // استفاده از preloaded response اگر موجود باشد
         const preload = await event.preloadResponse;
         const resp = preload || await fetch(request);
-        // Optionally update precache copy of shell routes
+        // به‌روزرسانی cache
         const cache = await caches.open(PRECACHE);
-        try { cache.put(request, resp.clone()); } catch(_) {}
+        try {
+          cache.put(request, resp.clone());
+        } catch (_) {}
         return resp;
       } catch (_) {
         const cache = await caches.open(PRECACHE);
-        // Prefer exact cached page; else try cached dashboard shell; else offline
+        // جستجوی cached page
         const cached = await cache.match(request);
         if (cached) return cached;
+        // Fallback به dashboard shell
         const dashboardShell = await cache.match('/express/partner/dashboard');
         if (dashboardShell) return dashboardShell;
-        return await cache.match(OFFLINE_URL);
+        // آخرین fallback: offline page
+        return await cache.match(OFFLINE_URL) || new Response('Offline', { status: 503 });
       }
     })());
     return;
   }
 
-  // Static assets: Cache-first with runtime update
+  // Static assets: Cache-first با background update
   if (isStaticAsset(request)) {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
       const cached = await cache.match(request);
       if (cached) {
-        // Update in background
+        // به‌روزرسانی در پس‌زمینه
         fetch(request).then((resp) => {
           if (resp.ok) cache.put(request, resp);
         }).catch(() => {});
@@ -206,8 +208,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Express Partner API: Network-first with cache fallback
-  if (isAPI(request)) {
+  // Express Partner API: Network-first با cache fallback
+  if (isExpressPartnerAPI(request)) {
     event.respondWith((async () => {
       const cache = await caches.open(API_CACHE);
       try {
@@ -220,7 +222,7 @@ self.addEventListener('fetch', (event) => {
       } catch (_) {
         const cached = await cache.match(request);
         if (cached) return cached;
-        return new Response(JSON.stringify({ error: 'Offline' }), { 
+        return new Response(JSON.stringify({ error: 'Offline', message: 'شما آفلاین هستید' }), { 
           status: 503, 
           headers: { 'Content-Type': 'application/json' } 
         });
@@ -230,50 +232,61 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Background Sync for queued requests (Express Partner specific)
+// Background Sync برای درخواست‌های queued
 self.addEventListener('sync', (event) => {
   if (event.tag.startsWith('express-partner-')) {
     event.waitUntil((async () => {
-      // Handle background sync for Express Partner
-      // Implementation can be added based on specific needs
+      // Handle background sync برای Express Partner
+      // می‌تواند برای sync کردن داده‌ها در پس‌زمینه استفاده شود
+      console.log('Express Partner: Background sync', event.tag);
     })());
   }
 });
 
-// Push notifications for Express Partner (if needed)
+// Push notifications برای Express Partner
 self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
-      const title = data.title || 'وینور اکسپرس';
+      const title = data.title || 'پنل همکاران وینور';
       const options = {
         body: data.body || 'پیام جدید',
         icon: '/static/icons/icon-192.png',
         badge: '/static/icons/icon-48.png',
         tag: 'express-partner-notification',
-        data: data.url || '/express/partner/dashboard'
+        data: data.url || '/express/partner/dashboard',
+        dir: 'rtl',
+        lang: 'fa'
       };
       event.waitUntil(self.registration.showNotification(title, options));
     } catch (_) {
-      event.waitUntil(self.registration.showNotification('وینور اکسپرس', {
+      event.waitUntil(self.registration.showNotification('پنل همکاران وینور', {
         body: 'پیام جدید',
-        icon: '/static/icons/icon-192.png'
+        icon: '/static/icons/icon-192.png',
+        dir: 'rtl',
+        lang: 'fa'
       }));
     }
   }
 });
 
-// Notification click handler
+// Handle notification click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data || '/express/partner/dashboard';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // جستجوی window باز Express Partner
       for (const client of clientList) {
         if (client.url.includes('/express/partner/') && 'focus' in client) {
-          return client.focus().then(() => client.navigate(url));
+          return client.focus().then(() => {
+            if ('navigate' in client) {
+              return client.navigate(url);
+            }
+          });
         }
       }
+      // باز کردن window جدید
       if (clients.openWindow) {
         return clients.openWindow(url);
       }
@@ -281,3 +294,29 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
+// Handle notification close
+self.addEventListener('notificationclose', (event) => {
+  // برای tracking می‌توان استفاده کرد
+  console.log('Express Partner: Notification closed', event.notification.tag);
+});
+
+// پیام‌های custom از client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type) {
+    switch (event.data.type) {
+      case 'VINOR_WARMUP':
+        // Warmup کردن routes
+        if (event.data.urls && Array.isArray(event.data.urls)) {
+          event.data.urls.forEach((url) => {
+            fetch(url, { cache: 'no-cache' }).catch(() => {});
+          });
+        }
+        break;
+      case 'SKIP_WAITING':
+        self.skipWaiting();
+        break;
+      default:
+        console.log('Express Partner SW: Unknown message type', event.data.type);
+    }
+  }
+});

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>همکاری با وینور | VINOR</title>
-  <meta name="description" content="فرصت‌های همکاری با وینور - پیوستن به تیم ما و رشد کسب و کار خود را تجربه کنید" />
+  <meta name="description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک و فعالان حوزه املاک" />
   <meta name="theme-color" content="#16a34a">
 
   <!-- Favicon / Manifest -->
@@ -15,7 +15,7 @@
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="همکاری با وینور | VINOR">
-  <meta property="og:description" content="فرصت‌های همکاری با وینور - پیوستن به تیم ما و رشد کسب و کار خود را تجربه کنید">
+  <meta property="og:description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک و فعالان حوزه املاک">
   <meta property="og:url" content="{{ request.url }}">
 
   <!-- Tailwind & Icons -->
@@ -42,13 +42,13 @@
         <span dir="ltr" class="font-black text-lg">VINOR</span>
       </a>
       <nav class="hidden md:flex items-center gap-6 text-sm">
-        <a href="#benefits" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">مزایا</a>
-        <a href="#types" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">انواع همکاری</a>
-        <a href="#contact" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable">پنل اکسپرس</a>
+        <a href="#benefits" class="text-gray-600 dark:text-gray-400 hover:text-violet-600 focusable">مزایا</a>
+        <a href="#about" class="text-gray-600 dark:text-gray-400 hover:text-violet-600 focusable">درباره</a>
+        <a href="#contact" class="text-gray-600 dark:text-gray-400 hover:text-violet-600 focusable">پنل اکسپرس</a>
       </nav>
       <div class="flex items-center gap-3">
-        <a href="{{ url_for('main.app_home') }}" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium focusable">بازگشت</a>
-        <button id="darkToggle" class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 focusable" aria-label="تغییر تم">
+        <a href="{{ url_for('main.app_home') }}" class="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 text-sm font-medium focusable">بازگشت</a>
+        <button id="darkToggle" class="text-gray-600 dark:text-gray-400 hover:text-violet-600 focusable" aria-label="تغییر تم">
           <i class="fa-solid fa-moon"></i>
         </button>
       </div>
@@ -60,8 +60,8 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8">
       <div class="space-y-4">
         <div class="flex items-center justify-center gap-3 mb-6">
-          <div class="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-sm">
-            <i class="fa-solid fa-handshake"></i>
+          <div class="w-14 h-14 bg-violet-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-sm">
+            <i class="fa-solid fa-home"></i>
           </div>
         </div>
         
@@ -72,11 +72,25 @@
 
       <div class="max-w-2xl mx-auto space-y-3">
         <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-          فرصت‌های همکاری برای رشد کسب و کار شما
+          همکاری در زمینه <span class="text-violet-600 font-bold">ملک و املاک</span>
         </p>
         <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-          پیوستن به خانواده بزرگ وینور • رشد مشترک • فرصت‌های بی‌نهایت
+          فرصت همکاری برای مشاوران املاک و فعالان حوزه املاک
         </p>
+        <div class="pt-2">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 text-xs font-medium">
+            <i class="fa-solid fa-info-circle"></i>
+            <span>فعلاً همکاری فقط در زمینه ملک فعال است</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- PWA Install Button in Hero -->
+      <div id="expressPartnerInstallHero" class="hidden mt-8">
+        <button id="expressPartnerInstallHeroBtn" class="px-8 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-colors focusable inline-flex items-center gap-2 shadow-lg">
+          <i class="fa-solid fa-download"></i>
+          <span>نصب پنل همکاران اکسپرس</span>
+        </button>
       </div>
     </div>
   </section>
@@ -89,18 +103,18 @@
           چرا با وینور همکاری کنیم؟
         </h2>
         <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-          مزایای همکاری با بزرگ‌ترین بازار خرید و فروش
+          مزایای همکاری در حوزه املاک با وینور
         </p>
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
-          <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center mb-4">
-            <i class="fa-solid fa-users text-xl text-emerald-600"></i>
+        <div class="p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-violet-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          <div class="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa-solid fa-users text-xl text-violet-600"></i>
           </div>
-          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">جامعه بزرگ</h3>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">جامعه بزرگ املاک</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            دسترسی به هزاران کاربر فعال و بازدیدکننده روزانه
+            دسترسی به هزاران متقاضی خرید و فروش ملک
           </p>
         </div>
 
@@ -108,9 +122,9 @@
           <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-4">
             <i class="fa-solid fa-chart-line text-xl text-blue-600"></i>
           </div>
-          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">رشد کسب و کار</h3>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">افزایش فروش</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            افزایش فروش و شناخت برند شما در بازار
+            افزایش تعداد معاملات و فروش ملک شما
           </p>
         </div>
 
@@ -120,7 +134,7 @@
           </div>
           <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">پشتیبانی کامل</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            تیم پشتیبانی حرفه‌ای برای راهنمایی و کمک
+            تیم پشتیبانی حرفه‌ای برای مشاوران املاک
           </p>
         </div>
 
@@ -128,9 +142,9 @@
           <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-4">
             <i class="fa-solid fa-tools text-xl text-green-600"></i>
           </div>
-          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">ابزارهای پیشرفته</h3>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">ابزارهای مدیریت</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            دسترسی به پنل مدیریت و ابزارهای تحلیلی
+            پنل مدیریت فروش و پیگیری آگهی‌های املاک
           </p>
         </div>
 
@@ -138,9 +152,9 @@
           <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mb-4">
             <i class="fa-solid fa-handshake-simple text-xl text-orange-600"></i>
           </div>
-          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">شرایط منصفانه</h3>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">کمیسیون منصفانه</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            قراردادهای شفاف و شرایط همکاری عادلانه
+            شرایط همکاری شفاف و کمیسیون جذاب
           </p>
         </div>
 
@@ -148,98 +162,77 @@
           <div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 rounded-lg flex items-center justify-center mb-4">
             <i class="fa-solid fa-rocket text-xl text-teal-600"></i>
           </div>
-          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">پیشرفت سریع</h3>
+          <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">رشد سریع</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            فرصت رشد و توسعه سریع کسب و کار شما
+            فرصت توسعه سریع فعالیت شما در حوزه املاک
           </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- انواع همکاری -->
-  <section id="types" class="py-16 sm:py-20 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+  <!-- درباره همکاری -->
+  <section id="about" class="py-16 sm:py-20 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
       <div class="text-center mb-12 space-y-2">
         <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-          انواع همکاری
+          درباره همکاری با وینور
         </h2>
         <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-          انتخاب نوع همکاری مناسب برای شما
+          اطلاعات مهم درباره همکاری در زمینه ملک
         </p>
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="p-8 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10">
-          <div class="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
-            <i class="fa-solid fa-store"></i>
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
+        <div class="space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-home text-violet-600 text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">همکاری در زمینه ملک</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                وینور در حال حاضر فقط در زمینه <strong class="text-violet-600">ملک و املاک</strong> همکار می‌پذیرد. 
+                اگر مشاور املاک، بنگاه‌دار، یا فعال در حوزه خرید و فروش ملک هستید، می‌توانید با ما همکاری کنید.
+              </p>
+            </div>
           </div>
-          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار فروش</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            اگر فروشنده یا کسب و کار دارید، با وینور همکاری کنید و فروش خود را افزایش دهید.
-          </p>
-          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-emerald-600"></i>
-              <span>دسترسی به هزاران خریدار</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-emerald-600"></i>
-              <span>پنل مدیریت فروش</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-emerald-600"></i>
-              <span>پشتیبانی تخصصی</span>
-            </li>
-          </ul>
-        </div>
 
-        <div class="p-8 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10">
-          <div class="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
-            <i class="fa-solid fa-user-tie"></i>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-briefcase text-blue-600 text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">چه کسانی می‌توانند همکاری کنند؟</h3>
+              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                  <span>مشاوران املاک و بنگاه‌داران</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                  <span>فعالان حوزه خرید و فروش ملک</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                  <span>کسانی که تجربه در زمینه املاک دارند</span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار بازاریابی</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            اگر در بازاریابی و تبلیغات تخصص دارید، با ما همکاری کنید.
-          </p>
-          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600"></i>
-              <span>کمسیون جذاب</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600"></i>
-              <span>ابزارهای تبلیغاتی</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600"></i>
-              <span>پشتیبانی بازاریابی</span>
-            </li>
-          </ul>
-        </div>
 
-        <div class="p-8 rounded-xl border-2 border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/10">
-          <div class="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center text-white text-xl mb-4">
-            <i class="fa-solid fa-code"></i>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-handshake text-green-600 text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">نوع همکاری</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                همکاری به صورت <strong>مشاور املاک اکسپرس</strong> که در آن شما آگهی‌های ملک را دریافت می‌کنید و 
+                در صورت فروش موفق، کمیسیون دریافت می‌کنید.
+              </p>
+            </div>
           </div>
-          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">همکار فنی</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            اگر توسعه‌دهنده یا تیم فنی هستید، در توسعه پلتفرم با ما همکاری کنید.
-          </p>
-          <ul class="space-y-2 text-xs text-gray-500 dark:text-gray-400">
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-purple-600"></i>
-              <span>پروژه‌های جذاب</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-purple-600"></i>
-              <span>همکاری بلندمدت</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-purple-600"></i>
-              <span>محیط کار حرفه‌ای</span>
-            </li>
-          </ul>
         </div>
       </div>
     </div>
@@ -278,7 +271,7 @@
             </li>
             <li class="flex items-center gap-2">
               <i class="fa-solid fa-check text-violet-600"></i>
-              <span>آگهی‌های تخصیص یافته را ببینید</span>
+              <span>آگهی‌های ملک تخصیص یافته را ببینید</span>
             </li>
             <li class="flex items-center gap-2">
               <i class="fa-solid fa-check text-violet-600"></i>
@@ -321,11 +314,11 @@
       <div class="mt-12 text-center space-y-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">راه‌های دیگر تماس</h3>
         <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
-          <a href="mailto:partners@vinor.ir" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 focusable">
+          <a href="mailto:partners@vinor.ir" class="flex items-center gap-2 text-violet-600 hover:text-violet-700 focusable">
             <i class="fa-solid fa-envelope"></i>
             <span>partners@vinor.ir</span>
           </a>
-          <a href="tel:+989123456789" class="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 focusable">
+          <a href="tel:+989123456789" class="flex items-center gap-2 text-violet-600 hover:text-violet-700 focusable">
             <i class="fa-solid fa-phone"></i>
             <span>021-12345678</span>
           </a>
@@ -339,8 +332,8 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center text-sm text-gray-500 dark:text-gray-400">
       <p>&copy; ۱۴۰۳ VINOR. تمامی حقوق محفوظ است.</p>
       <div class="mt-4 flex items-center justify-center gap-4">
-        <a href="{{ url_for('main.index') }}" class="hover:text-emerald-600 focusable">خانه</a>
-        <a href="{{ url_for('main.app_home') }}" class="hover:text-emerald-600 focusable">اپ</a>
+        <a href="{{ url_for('main.index') }}" class="hover:text-violet-600 focusable">خانه</a>
+        <a href="{{ url_for('main.app_home') }}" class="hover:text-violet-600 focusable">اپ</a>
       </div>
     </div>
   </footer>
@@ -375,10 +368,14 @@
         e.preventDefault();
         expressPartnerDeferredPrompt = e;
 
-        // Show install button when PWA is available
+        // Show install buttons when PWA is available
         const installBtnContainer = document.getElementById('expressPartnerInstallLanding');
+        const installHeroContainer = document.getElementById('expressPartnerInstallHero');
         if (installBtnContainer) {
           installBtnContainer.classList.remove('hidden');
+        }
+        if (installHeroContainer) {
+          installHeroContainer.classList.remove('hidden');
         }
       }
     });
@@ -388,42 +385,56 @@
       console.log('Express Partner PWA was installed successfully');
       expressPartnerDeferredPrompt = null;
 
-      // Update install button after successful install
+      // Update install buttons after successful install
       const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
+      const installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
       if (installBtn) {
         installBtn.textContent = 'نصب شد';
         installBtn.disabled = true;
         installBtn.classList.add('opacity-50');
       }
+      if (installHeroBtn) {
+        installHeroBtn.textContent = 'نصب شد';
+        installHeroBtn.disabled = true;
+        installHeroBtn.classList.add('opacity-50');
+      }
     });
 
     // PWA Install Button Handler
+    function handleInstall() {
+      if (expressPartnerDeferredPrompt) {
+        expressPartnerDeferredPrompt.prompt();
+        expressPartnerDeferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted Express Partner PWA install');
+          } else {
+            console.log('User dismissed Express Partner PWA install');
+          }
+          expressPartnerDeferredPrompt = null;
+        }).catch((error) => {
+          console.error('Error during Express Partner PWA install:', error);
+        });
+      } else {
+        // Fallback: redirect to login page where install button is available
+        window.location.href = "{{ url_for('express_partner.login') }}";
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
+      const installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
       
       if (installBtn) {
         installBtn.addEventListener('click', async function(e) {
           e.preventDefault();
-          
-          if (expressPartnerDeferredPrompt) {
-            try {
-              expressPartnerDeferredPrompt.prompt();
-              const { outcome } = await expressPartnerDeferredPrompt.userChoice;
-              
-              if (outcome === 'accepted') {
-                console.log('User accepted Express Partner PWA install');
-              } else {
-                console.log('User dismissed Express Partner PWA install');
-              }
-              
-              expressPartnerDeferredPrompt = null;
-            } catch (error) {
-              console.error('Error during Express Partner PWA install:', error);
-            }
-          } else {
-            // Fallback: redirect to login page where install button is available
-            window.location.href = "{{ url_for('express_partner.login') }}";
-          }
+          handleInstall();
+        });
+      }
+      
+      if (installHeroBtn) {
+        installHeroBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          handleInstall();
         });
       }
     });
@@ -441,4 +452,3 @@
   </script>
 </body>
 </html>
-
