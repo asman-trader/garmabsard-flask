@@ -85,7 +85,12 @@
           <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent"></div>
 
           {% set _st = (land._assignment_status|default('active')) %}
-          <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/95 text-gray-800 shadow">{% if _st == 'closed' %}بسته{% elif _st == 'pending' %}در انتظار{% else %}فعال{% endif %}</div>
+          <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/95 text-gray-800 shadow">
+            {% if _st == 'closed' %}بسته
+            {% elif _st == 'in_transaction' %}<span class="text-orange-600 font-semibold">در حال معامله</span>
+            {% elif _st == 'pending' %}در انتظار
+            {% else %}فعال{% endif %}
+          </div>
 
           {% if land._commission_pct %}
             <div class="absolute top-3 right-3 text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
@@ -133,10 +138,13 @@
               <i class="fas fa-share-nodes"></i>
               اشتراک
             </button>
-            <button type="button" class="copy-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition" data-url="{{ _link }}">
-              <i class="fas fa-link"></i>
-              کپی لینک
-            </button>
+            <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="inline-block">
+              {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+              <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-orange-500 dark:border-orange-400 text-[13px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition">
+                <i class="fas fa-handshake"></i>
+                در حال معامله
+              </button>
+            </form>
           </div>
         </div>
       </article>
@@ -198,12 +206,6 @@
           if (navigator.share) { await navigator.share({ title, url }); }
           else { await navigator.clipboard.writeText(url); toast('لینک کپی شد'); }
         }catch(_){ }
-      }, { passive: true });
-    });
-    document.querySelectorAll('.copy-btn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const url = btn.getAttribute('data-url')||location.href;
-        try{ await navigator.clipboard.writeText(url); toast('کپی شد'); }catch(_){ }
       }, { passive: true });
     });
   })();

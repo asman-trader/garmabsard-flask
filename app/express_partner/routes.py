@@ -16,7 +16,7 @@ from ..utils.storage import (
     load_express_partners, load_partner_notes, save_partner_notes,
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
-    load_express_assignments, load_express_commissions,
+    load_express_assignments, save_express_assignments, load_express_commissions,
     load_ads_cached,
 )
 
@@ -288,7 +288,7 @@ def dashboard():
         assignments = load_express_assignments() or []
     except Exception:
         assignments = []
-    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved')]
+    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved','in_transaction')]
     lands_all = load_ads_cached() or []
     code_to_land = {str(l.get('code')): l for l in lands_all}
     assigned_lands = []
@@ -553,6 +553,38 @@ def support():
         return redirect(url_for("express_partner.login", next=url_for("express_partner.support")))
     
     return render_template('express_partner/support.html', hide_header=True)
+
+
+@express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
+def mark_in_transaction(code: str):
+    """علامت‌گذاری ملک به عنوان در حال معامله"""
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
+    
+    me_phone = (session.get("user_phone") or "").strip()
+    
+    try:
+        assignments = load_express_assignments() or []
+        updated = False
+        
+        for a in assignments:
+            if (str(a.get('land_code')) == str(code) and 
+                str(a.get('partner_phone')) == me_phone):
+                a['status'] = 'in_transaction'
+                a['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                updated = True
+                break
+        
+        if updated:
+            save_express_assignments(assignments)
+            flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
+        else:
+            flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
+    except Exception as e:
+        current_app.logger.error(f"Error marking land in transaction: {e}")
+        flash('❌ خطا در بروزرسانی وضعیت.', 'error')
+    
+    return redirect(url_for('express_partner.dashboard'))
 
 
 @express_partner_bp.route('/logout', methods=['GET'], endpoint='logout')
