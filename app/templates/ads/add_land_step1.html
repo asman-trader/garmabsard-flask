@@ -40,7 +40,6 @@
 
       <!-- Category grid -->
       <section class="mt-2">
-        <div class="mb-3 text-sm text-gray-600 dark:text-gray-300">ابتدا دسته اصلی را انتخاب کنید</div>
         <div id="catButtonsWrap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {% for cat_id, cat_data in categories.items() %}
           <button type="button" data-cat="{{ cat_id }}" class="flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-emerald-500 transition-all">

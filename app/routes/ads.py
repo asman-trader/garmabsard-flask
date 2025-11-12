@@ -179,7 +179,6 @@ def add_land():
         current_app.logger.info(f"GET /lands/add - ad_category in session: {ad_cat is not None}, session keys: {list(session.keys())}")
         if not ad_cat:
             current_app.logger.warning("No ad_category in session - redirecting to step1")
-            flash('لطفاً ابتدا دسته ملک را انتخاب کنید.')
             return redirect(url_for('main.add_land_step1'))
         # رندر گام ۲ جدید
         current_app.logger.info(f"Rendering step2 with ad_category: {ad_cat}")
