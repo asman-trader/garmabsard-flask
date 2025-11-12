@@ -557,7 +557,7 @@ def support():
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
 def mark_in_transaction(code: str):
-    """علامت‌گذاری ملک به عنوان در حال معامله"""
+    """Toggle وضعیت ملک بین در حال معامله و فعال"""
     if not session.get("user_phone"):
         return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     
@@ -566,22 +566,33 @@ def mark_in_transaction(code: str):
     try:
         assignments = load_express_assignments() or []
         updated = False
+        new_status = None
         
         for a in assignments:
             if (str(a.get('land_code')) == str(code) and 
                 str(a.get('partner_phone')) == me_phone):
-                a['status'] = 'in_transaction'
+                current_status = a.get('status', 'active')
+                # Toggle: اگر در حال معامله است، به active برگردان، وگرنه به in_transaction تغییر بده
+                if current_status == 'in_transaction':
+                    new_status = 'active'
+                    a['status'] = 'active'
+                else:
+                    new_status = 'in_transaction'
+                    a['status'] = 'in_transaction'
                 a['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 updated = True
                 break
         
         if updated:
             save_express_assignments(assignments)
-            flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
+            if new_status == 'in_transaction':
+                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
+            else:
+                flash('✅ وضعیت ملک به "فعال" تغییر یافت.', 'success')
         else:
             flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
     except Exception as e:
-        current_app.logger.error(f"Error marking land in transaction: {e}")
+        current_app.logger.error(f"Error toggling land transaction status: {e}")
         flash('❌ خطا در بروزرسانی وضعیت.', 'error')
     
     return redirect(url_for('express_partner.dashboard'))
