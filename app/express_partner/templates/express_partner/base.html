@@ -81,7 +81,10 @@
     (function(){
       // ثبت Service Worker جداگانه برای Express Partner
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ url_for("express_partner.service_worker") }}', { scope: '/express/partner/' })
+        navigator.serviceWorker.register('{{ url_for("express_partner.service_worker") }}', { 
+          scope: '/express/partner/',
+          updateViaCache: 'none' 
+        })
           .then(async (reg) => {
             try {
               await navigator.serviceWorker.ready;

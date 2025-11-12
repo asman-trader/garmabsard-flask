@@ -110,19 +110,24 @@ def serve_manifest():
     # Fallback JSON
     fallback_json = '''{
       "id": "/express/partner/",
-      "name": "پنل همکاران وینور",
-      "short_name": "پنل همکاران وینور",
-      "description": "پنل مدیریت همکاران وینور",
+      "name": "وینور اکسپرس - پنل همکاران",
+      "short_name": "وینور اکسپرس",
+      "description": "پنل مدیریت همکاران وینور - دسترسی به آگهی‌های تخصیص یافته، کمیسیون‌ها و ابزارهای مدیریت",
       "dir": "rtl",
       "lang": "fa",
       "start_url": "/express/partner/dashboard?source=pwa",
       "scope": "/express/partner/",
       "display": "standalone",
-      "theme_color": "#7c3aed",
+      "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+      "orientation": "portrait",
       "background_color": "#7c3aed",
+      "theme_color": "#7c3aed",
+      "categories": ["business", "productivity"],
+      "capture_links": "existing-client-navigate",
+      "launch_handler": { "client_mode": "auto" },
       "icons": [
-        { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+        { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+        { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
       ]
     }'''
     return Response(fallback_json, status=200, mimetype=mimetype)
