@@ -1,0 +1,109 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}پشتیبانی - وینور اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-4 px-3 sm:px-4 min-h-screen">
+  
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 mb-6">
+    <div class="max-w-4xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">پشتیبانی</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="space-y-6">
+    
+    <!-- Support Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
+      <div class="text-center space-y-6">
+        
+        <!-- Icon -->
+        <div class="flex justify-center">
+          <div class="w-20 h-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+            <i class="fas fa-headset text-3xl text-violet-600 dark:text-violet-400"></i>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">پشتیبانی وینور اکسپرس</h2>
+          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+            تیم پشتیبانی ما آماده پاسخگویی به سوالات و مشکلات شماست
+          </p>
+        </div>
+
+        <!-- Contact Button -->
+        <div class="pt-4">
+          <a href="tel:09121471301" 
+             class="inline-flex items-center gap-3 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold text-lg transition-colors shadow-lg">
+            <i class="fas fa-phone text-xl"></i>
+            <span>تماس با پشتیبانی</span>
+            <span class="text-violet-200">09121471301</span>
+          </a>
+        </div>
+
+        <!-- Phone Number Display -->
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">شماره تماس:</p>
+          <a href="tel:09121471301" class="text-2xl font-bold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
+            09121471301
+          </a>
+        </div>
+
+        <!-- Info -->
+        <div class="pt-4 space-y-3 text-sm text-gray-600 dark:text-gray-400">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-clock text-violet-600 dark:text-violet-400 mt-1"></i>
+            <div class="text-right">
+              <p class="font-semibold text-gray-900 dark:text-white">ساعات پاسخگویی:</p>
+              <p>شنبه تا پنجشنبه: ۹ صبح تا ۶ عصر</p>
+              <p>جمعه: ۱۰ صبح تا ۲ بعدازظهر</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <i class="fas fa-info-circle text-violet-600 dark:text-violet-400 mt-1"></i>
+            <div class="text-right">
+              <p class="font-semibold text-gray-900 dark:text-white">نکته:</p>
+              <p>برای دریافت سریع‌تر پاسخ، لطفاً شماره خود را در ابتدای تماس ذکر کنید</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid sm:grid-cols-2 gap-4">
+      <a href="{{ url_for('express_partner.dashboard') }}" 
+         class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-violet-500 transition-colors">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-home text-violet-600 dark:text-violet-400 text-xl"></i>
+          <div class="text-right">
+            <p class="font-semibold text-gray-900 dark:text-white">بازگشت به داشبورد</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">مشاهده پنل اصلی</p>
+          </div>
+        </div>
+      </a>
+
+      <a href="{{ url_for('express_partner.commissions') }}" 
+         class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-violet-500 transition-colors">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-xl"></i>
+          <div class="text-right">
+            <p class="font-semibold text-gray-900 dark:text-white">کمیسیون‌ها</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">مشاهده پورسانت‌ها</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+

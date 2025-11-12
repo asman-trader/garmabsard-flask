@@ -546,6 +546,15 @@ def verify():
     return redirect(url_for('express_partner.login'))
 
 
+@express_partner_bp.route('/support', methods=['GET'], endpoint='support')
+def support():
+    """صفحه پشتیبانی مجزا برای Express Partner"""
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.support")))
+    
+    return render_template('express_partner/support.html', hide_header=True)
+
+
 @express_partner_bp.route('/logout', methods=['GET'], endpoint='logout')
 def logout():
     for k in ('user_id', 'user_phone', 'otp_code', 'otp_phone'):
