@@ -72,77 +72,123 @@
       <i class="fas fa-chevron-left"></i>
     </button>
 
-    <div id="cardsTrack" class="px-3 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar">
+    <div id="cardsTrack" class="px-3 flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article class="snap-start shrink-0 w-[88vw] sm:w-[360px] group express-card relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg">
+      <article class="snap-start shrink-0 w-[90vw] sm:w-[380px] group express-card relative bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-        <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
+        
+        <!-- Image Section with Modern Overlay -->
+        <div class="relative aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
           {% if img %}
-            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200">
+            <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
           {% else %}
-            <div class="w-full h-full grid place-items-center text-gray-400">تصویر ندارد</div>
+            <div class="w-full h-full grid place-items-center text-gray-400 dark:text-gray-500">
+              <i class="fas fa-image text-4xl opacity-50"></i>
+            </div>
           {% endif %}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent"></div>
-
+          
+          <!-- Gradient Overlay -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          
+          <!-- Status Badge -->
           {% set _st = (land._assignment_status|default('active')) %}
-          <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/95 text-gray-800 shadow">
-            {% if _st == 'closed' %}بسته
-            {% elif _st == 'in_transaction' %}<span class="text-orange-600 font-semibold">در حال معامله</span>
-            {% elif _st == 'pending' %}در انتظار
-            {% else %}فعال{% endif %}
+          <div class="absolute top-4 left-4">
+            {% if _st == 'closed' %}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-800/90 text-white backdrop-blur-sm shadow-lg">
+                <i class="fas fa-lock text-[10px]"></i>بسته
+              </span>
+            {% elif _st == 'in_transaction' %}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-500/95 text-white backdrop-blur-sm shadow-lg animate-pulse">
+                <i class="fas fa-handshake text-[10px]"></i>در حال معامله
+              </span>
+            {% elif _st == 'pending' %}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/95 text-white backdrop-blur-sm shadow-lg">
+                <i class="fas fa-clock text-[10px]"></i>در انتظار
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/95 text-white backdrop-blur-sm shadow-lg">
+                <i class="fas fa-check-circle text-[10px]"></i>فعال
+              </span>
+            {% endif %}
           </div>
 
+          <!-- Commission Badge -->
           {% if land._commission_pct %}
-            <div class="absolute top-3 right-3 text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
+            <div class="absolute top-4 right-4">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white shadow-lg backdrop-blur-sm">
+                <i class="fas fa-percent text-[10px]"></i>٪{{ land._commission_pct }}
+              </div>
+            </div>
           {% endif %}
         </div>
 
-        <div class="p-3 sm:p-4">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="text-[16px] font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{{ land.title or '—' }}</h3>
-            {% if land.code %}
-              <span class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-hashtag"></i>{{ land.code }}</span>
-            {% endif %}
+        <!-- Content Section -->
+        <div class="p-5">
+          <!-- Title and Code -->
+          <div class="mb-3">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white line-clamp-2 leading-snug flex-1">{{ land.title or '—' }}</h3>
+              {% if land.code %}
+                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                  <i class="fas fa-hashtag text-[9px]"></i>{{ land.code }}
+                </span>
+              {% endif %}
+            </div>
           </div>
 
-          <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">
+          <!-- Meta Tags -->
+          <div class="flex flex-wrap items-center gap-2 mb-4">
             {% if land.size %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-ruler-combined"></i>{{ land.size }} متر</span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-ruler-combined text-[10px] text-gray-500"></i>{{ land.size }} متر
+              </span>
             {% endif %}
             {% if land.category %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-tag"></i>{{ land.category }}</span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-tag text-[10px] text-gray-500"></i>{{ land.category }}
+              </span>
             {% endif %}
             {% if land.location or land.city %}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"><i class="fas fa-location-dot"></i>{{ land.location or (land.city or '') }}</span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                <i class="fas fa-location-dot text-[10px] text-gray-500"></i>{{ land.location or (land.city or '') }}
+              </span>
             {% endif %}
           </div>
 
-          <div class="mt-3 grid grid-cols-2 gap-2 text-[13px]">
-            <div class="rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-1.5">
-              <div class="text-[11px] text-gray-500 dark:text-gray-400">قیمت کل</div>
-              <div class="font-extrabold text-emerald-700 dark:text-emerald-400 leading-tight">{{ (land.price_total or 0)|toman }}</div>
+          <!-- Price Cards -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 border border-emerald-200 dark:border-emerald-800 p-3">
+              <div class="flex items-center gap-2 mb-1">
+                <i class="fas fa-money-bill-wave text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                <span class="text-[10px] font-medium text-emerald-700 dark:text-emerald-300">قیمت کل</span>
+              </div>
+              <div class="font-black text-base text-emerald-700 dark:text-emerald-400 leading-tight">{{ (land.price_total or 0)|toman }}</div>
             </div>
-            <div class="rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-1.5">
-              <div class="text-[11px] text-gray-500 dark:text-gray-400">پورسانت همکار</div>
-              <div class="font-extrabold text-violet-700 dark:text-violet-300 leading-tight">{{ (land._commission_amount or 0)|toman }}</div>
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/30 dark:to-violet-800/20 border border-violet-200 dark:border-violet-800 p-3">
+              <div class="flex items-center gap-2 mb-1">
+                <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-xs"></i>
+                <span class="text-[10px] font-medium text-violet-700 dark:text-violet-300">پورسانت</span>
+              </div>
+              <div class="font-black text-base text-violet-700 dark:text-violet-400 leading-tight">{{ (land._commission_amount or 0)|toman }}</div>
             </div>
           </div>
 
-          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-              <i class="far fa-eye"></i>
-              مشاهده
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-3 gap-2">
+            <a href="{{ url_for('main.express_detail', code=land.code) }}" class="inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95">
+              <i class="far fa-eye text-sm"></i>
+              <span>مشاهده</span>
             </a>
             {% set _link = url_for('main.express_detail', code=land.code, _external=True) %}
-            <button type="button" class="share-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[13px] transition" data-url="{{ _link }}">
-              <i class="fas fa-share-nodes"></i>
-              اشتراک
+            <button type="button" class="share-btn inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] hover:from-[#6D28D9] hover:to-[#5B21B6] text-white text-xs font-medium transition-all shadow-md hover:shadow-lg active:scale-95" data-url="{{ _link }}">
+              <i class="fas fa-share-nodes text-sm"></i>
+              <span>اشتراک</span>
             </button>
             <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="inline-block">
               {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-              <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-orange-500 dark:border-orange-400 text-[13px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition">
-                <i class="fas fa-handshake"></i>
-                در حال معامله
+              <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-all active:scale-95">
+                <i class="fas fa-handshake text-sm"></i>
+                <span class="text-[10px]">معامله</span>
               </button>
             </form>
           </div>
