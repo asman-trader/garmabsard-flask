@@ -1,0 +1,146 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}جزئیات فایل اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto py-5 px-3 sm:px-4 pb-24">
+
+  <header class="sticky top-0 z-40 -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+    <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
+    <span class="w-9 h-9"></span>
+  </header>
+
+  <article class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+    {% set images = land.images or [] %}
+    {% set primary_image = images[0] if images else None %}
+    <div class="relative">
+      {% if primary_image %}
+        {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+        <div class="aspect-[4/3]">
+          <img src="{{ image_src }}" alt="{{ land.title }}" class="w-full h-full object-cover">
+        </div>
+      {% else %}
+        <div class="aspect-[4/3] grid place-items-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 text-gray-400">
+          <i class="fas fa-image text-5xl opacity-40"></i>
+        </div>
+      {% endif %}
+      {% if land._assignment_status == 'in_transaction' %}
+        <span class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-500/95 text-white shadow-lg backdrop-blur">
+          <i class="fas fa-handshake text-[10px]"></i>در حال معامله
+        </span>
+      {% endif %}
+    </div>
+
+    <div class="p-5 sm:p-6 space-y-6">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white leading-tight">{{ land.title or '—' }}</h2>
+          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-2">
+            {% if land.location or land.city %}
+              <span class="inline-flex items-center gap-1"><i class="fas fa-location-dot"></i>{{ land.location or land.city }}</span>
+            {% endif %}
+            {% if land.size %}
+              <span class="inline-flex items-center gap-1"><i class="fas fa-ruler-combined"></i>{{ land.size }} متر</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if land.code %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-semibold bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
+            <i class="fas fa-hashtag"></i>{{ land.code }}
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4">
+          <div class="text-xs text-gray-500 dark:text-gray-400">قیمت کل</div>
+          <div class="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{{ (land.price_total or 0)|toman }}</div>
+        </div>
+        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4">
+          <div class="text-xs text-gray-500 dark:text-gray-400">پورسانت</div>
+          <div class="mt-1 text-lg font-black text-violet-600 dark:text-violet-400">{{ (land._commission_amount or 0)|toman }}</div>
+        </div>
+      </div>
+
+      {% if land.description %}
+        <section class="space-y-2">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-white">توضیحات</h3>
+          <p class="text-sm leading-7 text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ land.description }}</p>
+        </section>
+      {% endif %}
+
+      <section class="space-y-2">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h3>
+        <dl class="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+          {% if land.rooms %}<div><dt class="font-semibold text-gray-900 dark:text-white">اتاق</dt><dd>{{ land.rooms }}</dd></div>{% endif %}
+          {% if land.floor %}<div><dt class="font-semibold text-gray-900 dark:text-white">طبقه</dt><dd>{{ land.floor }}</dd></div>{% endif %}
+          {% if land.year_built %}<div><dt class="font-semibold text-gray-900 dark:text-white">سال ساخت</dt><dd>{{ land.year_built }}</dd></div>{% endif %}
+          {% if land.docs_status %}<div><dt class="font-semibold text-gray-900 dark:text-white">وضعیت سند</dt><dd>{{ land.docs_status }}</dd></div>{% endif %}
+          {% if land.features %}<div class="sm:col-span-2"><dt class="font-semibold text-gray-900 dark:text-white">امکانات</dt><dd>{{ land.features }}</dd></div>{% endif %}
+        </dl>
+      </section>
+
+      <section class="space-y-3">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white">اقدام سریع</h3>
+        <div class="grid sm:grid-cols-4 gap-2">
+          {% set public_link = url_for('main.express_detail', code=land.code, _external=True) %}
+          <a href="{{ public_link }}" target="_blank" rel="noopener"
+             class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <i class="far fa-eye"></i>
+            مشاهده عمومی
+          </a>
+          <button type="button" class="share-btn inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] hover:from-[#6D28D9] hover:to-[#5B21B6] text-white text-xs font-medium transition shadow-md" data-url="{{ public_link }}">
+            <i class="fas fa-share-nodes"></i>
+            اشتراک
+          </button>
+          <button type="button" class="copy-btn inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition" data-url="{{ public_link }}">
+            <i class="fas fa-link"></i>
+            کپی لینک
+          </button>
+          {% if land.owner_phone %}
+          <a href="tel:{{ land.owner_phone }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-emerald-300 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition">
+            <i class="fas fa-phone"></i>
+            تماس سریع
+          </a>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </article>
+
+  {% set bottom_nav_active = '' %}
+  {% include 'express_partner/partials/bottom_nav.html' %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.copy-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const url = btn.dataset.url || window.location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          alert('لینک کپی شد');
+        } catch (err) {
+          console.error(err);
+        }
+      }, { passive: true });
+    });
+    document.querySelectorAll('.share-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const url = btn.dataset.url || window.location.href;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: document.title, url });
+          } else {
+            await navigator.clipboard.writeText(url);
+            alert('لینک کپی شد');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }, { passive: true });
+    });
+  });
+</script>
+{% endblock %}

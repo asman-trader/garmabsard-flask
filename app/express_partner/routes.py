@@ -760,3 +760,24 @@ def mark_all_notifications_read():
     })
 
 
+@express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
+def land_detail(code: str):
+    """Express land detail page within partner panel."""
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.land_detail", code=code)))
+
+    lands = load_ads_cached() or []
+    land = next((l for l in lands if l.get('code') == code and l.get('is_express')), None)
+
+    if not land:
+        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        return redirect(url_for('express_partner.dashboard'))
+
+    return render_template(
+        'express_partner/land_detail.html',
+        land=land,
+        brand="وینور",
+        domain="vinor.ir"
+    )
+
+
