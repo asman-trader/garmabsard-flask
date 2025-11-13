@@ -198,6 +198,14 @@ def create_app() -> Flask:
     # ---------- رجیستر بلوپرینت‌ها ----------
     from .routes import main_bp
 
+    # Webhook blueprint
+    webhook_bp = None
+    try:
+        from .routes.webhook import webhook_bp as _webhook_bp
+        webhook_bp = _webhook_bp
+    except Exception as e:
+        app.logger.warning(f"Webhook blueprint not available: {e}")
+
     # Express API (برای پنل همکاران)
     express_api_bp = None
     try:
@@ -208,6 +216,8 @@ def create_app() -> Flask:
 
     # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
+    if webhook_bp is not None:
+        app.register_blueprint(webhook_bp)
     if express_api_bp is not None:
         app.register_blueprint(express_api_bp)
 
@@ -223,39 +233,22 @@ def create_app() -> Flask:
         csrf = CSRFProtect()
         csrf.init_app(app)
 
-        try:
-            from .routes.webhook import git_webhook
-            csrf.exempt(git_webhook)
-        except Exception:
-            csrf.exempt(webhook_bp)
+        # Webhook از CSRF مستثنا است
+        if webhook_bp is not None:
+            try:
+                from .routes.webhook import git_webhook
+                csrf.exempt(git_webhook)
+            except Exception:
+                pass
 
-        # APIهایی که از طریق AJAX فراخوانی می‌شوند را از CSRF مستثنا می‌کنیم (آپلود تصاویر)
-        try:
-            if uploads_bp is not None:
-                csrf.exempt(uploads_bp)
-        except Exception:
-            pass
-
-        # Exempt express API (AJAX JSON)
-        try:
-            if express_api_bp is not None:
+        # Express API از CSRF مستثنا است
+        if express_api_bp is not None:
+            try:
                 csrf.exempt(express_api_bp)
-        except Exception:
-            pass
+            except Exception:
+                pass
 
-        # Exempt push API (JSON POST from client without CSRF token)
-        try:
-            if push_bp is not None:
-                csrf.exempt(push_bp)
-        except Exception:
-            pass
 
-        # اطمینان مضاعف: معافیت تابع ویو آپلود (در صورت نیاز برخی تنظیمات)
-        try:
-            from .api.uploads import upload_image as _upload_image_view
-            csrf.exempt(_upload_image_view)
-        except Exception:
-            pass
 
         @app.after_request
         def set_csrf_cookie(resp):
