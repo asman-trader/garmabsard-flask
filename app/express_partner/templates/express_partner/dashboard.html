@@ -1,7 +1,7 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 pb-20">
 
   <!-- Minimal sticky header -->
   <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
@@ -209,8 +209,8 @@
   
   {% endif %} <!-- end loading check -->
 
-  <!-- Mobile bottom nav -->
-  <nav class="fixed bottom-2 left-2 right-2 z-50 sm:hidden">
+  <!-- Bottom nav (همه اندازه‌ها) -->
+  <nav class="fixed bottom-2 left-2 right-2 z-50">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
       <a href="{{ url_for('express_partner.dashboard') }}" class="flex flex-col items-center text-xs text-[#7C3AED]">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#7C3AED" stroke-width="1.5"/></svg>

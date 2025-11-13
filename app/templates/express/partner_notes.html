@@ -1,65 +1,81 @@
-{% extends 'base.html' %}
-{% block title %}یادداشت‌های خصوصی | وینور اکسپرس{% endblock %}
-{% block content %}
-<div class="max-w-3xl mx-auto py-4 px-3 sm:px-4 font-iranyekan">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 pb-20">
 
-  <header class="sticky top-0 z-30 rounded-2xl bg-gradient-to-l from-[#7C3AED] to-[#A78BFA] text-white p-3 mb-4 shadow-md">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-white/10 grid place-items-center">
-          <i class="fas fa-notes-medical"></i>
-        </div>
-        <div class="leading-tight">
-          <div class="text-base font-extrabold">یادداشت‌های خصوصی</div>
-          <div class="text-[12px] opacity-90">مخصوص شما؛ فقط خودتان می‌بینید</div>
-        </div>
-      </div>
-      <a href="{{ url_for('express_partner.dashboard') }}" class="px-3 py-1.5 rounded-lg bg-white text-[#7C3AED] text-sm font-semibold shadow-sm">بازگشت</a>
+  <!-- Minimal sticky header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">یادداشت‌های خصوصی</h1>
+      <a href="{{ url_for('express_partner.support') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="پشتیبانی">
+        <i class="fas fa-headset"></i>
+      </a>
     </div>
   </header>
 
-  <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-    <form method="post" action="{{ url_for('express_partner.add_note') }}" class="mb-4">
+  <div class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-4 sm:p-6">
+    <form method="post" action="{{ url_for('express_partner.add_note') }}" class="mb-4 sm:mb-6">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
-      <div class="flex gap-2">
-        <input type="text" name="content" class="flex-1 border rounded-md px-3 py-2" placeholder="متن یادداشت..." required>
-        <button class="px-3 py-2 rounded-md bg-[#7C3AED] text-white">افزودن</button>
+      <div class="flex gap-2 sm:gap-3">
+        <input type="text" name="content" class="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm sm:text-base" placeholder="متن یادداشت..." required>
+        <button class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm sm:text-base font-medium transition-colors">افزودن</button>
       </div>
     </form>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-sm sm:text-base">
         <thead>
-          <tr class="text-right text-gray-600">
-            <th class="p-2">#</th>
-            <th class="p-2">یادداشت</th>
-            <th class="p-2">تاریخ</th>
-            <th class="p-2">عملیات</th>
+          <tr class="text-right text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <th class="p-2 sm:p-3 font-semibold">#</th>
+            <th class="p-2 sm:p-3 font-semibold">یادداشت</th>
+            <th class="p-2 sm:p-3 font-semibold hidden sm:table-cell">تاریخ</th>
+            <th class="p-2 sm:p-3 font-semibold">عملیات</th>
           </tr>
         </thead>
         <tbody>
           {% for n in notes %}
-            <tr class="border-t hover:bg-gray-50 transition">
-              <td class="p-2">{{ n.id }}</td>
-              <td class="p-2">{{ n.content }}</td>
-              <td class="p-2">{{ n.created_at }}</td>
-              <td class="p-2">
-                <form method="post" action="{{ url_for('express_partner.delete_note', nid=n.id) }}" onsubmit="return confirm('حذف شود؟');">
+            <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+              <td class="p-2 sm:p-3 text-gray-700 dark:text-gray-300">{{ n.id }}</td>
+              <td class="p-2 sm:p-3 text-gray-900 dark:text-white">{{ n.content }}</td>
+              <td class="p-2 sm:p-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell text-xs">{{ n.created_at }}</td>
+              <td class="p-2 sm:p-3">
+                <form method="post" action="{{ url_for('express_partner.delete_note', nid=n.id) }}" onsubmit="return confirm('حذف شود؟');" class="inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
-                  <button class="text-rose-600 hover:underline">حذف</button>
+                  <button class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:underline text-xs sm:text-sm">حذف</button>
                 </form>
               </td>
             </tr>
           {% else %}
-            <tr><td class="p-2 text-gray-500" colspan="4">یادداشتی ثبت نشده است.</td></tr>
+            <tr><td class="p-4 sm:p-6 text-center text-gray-500 dark:text-gray-400" colspan="4">یادداشتی ثبت نشده است.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 
+  <!-- Bottom nav (همه اندازه‌ها) -->
+  <nav class="fixed bottom-2 left-2 right-2 z-50">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#6B7280" stroke-width="1.5"/></svg>
+        فایل‌ها
+      </a>
+      <a href="{{ url_for('express_partner.commissions') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#6B7280" stroke-width="1.5"/></svg>
+        پورسانت
+      </a>
+      <a href="{{ url_for('express_partner.support') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke="#6B7280" stroke-width="1.2"/></svg>
+        پشتیبانی
+      </a>
+      <a href="{{ url_for('express_partner.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
+        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#6B7280" stroke-width="1.5"/><path d="M6 20c1.5-4 9-4 12 0" stroke="#6B7280" stroke-width="1.5"/></svg>
+        من
+      </a>
+    </div>
+  </nav>
+
 </div>
-{% endblock %}
 

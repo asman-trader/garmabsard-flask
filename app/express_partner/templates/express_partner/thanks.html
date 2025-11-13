@@ -1,18 +1,21 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}درخواست ثبت شد | وینور اکسپرس{% endblock %}
 {% block content %}
-<header class="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
-    <a href="{{ url_for('express_partner.apply_step1') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
-      <i class="fas fa-arrow-right"></i>
-    </a>
-    <div class="text-sm font-bold text-gray-900 dark:text-white">ثبت درخواست همکاری</div>
-    <span class="w-8"></span>
-  </div>
-</header>
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
 
-<div class="min-h-[calc(100vh-56px)] flex items-start justify-center px-4 pt-8 pb-10">
-  <div class="w-full max-w-xl text-center">
+  <!-- Minimal sticky header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">ثبت درخواست همکاری</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+  <div class="mt-4 flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-2xl text-center">
     <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
       <i class="fa-solid fa-check text-3xl text-violet-700 dark:text-violet-300"></i>
     </div>
@@ -25,7 +28,9 @@
       <a href="{{ url_for('main.index') }}" class="px-5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">بازگشت به خانه</a>
     </div>
     <p class="text-xs text-gray-500 dark:text-gray-500 mt-6">در صورت نیاز، می‌توانید با پشتیبانی وینور در ارتباط باشید.</p>
+    </div>
   </div>
+
 </div>
 {% endblock %}
 

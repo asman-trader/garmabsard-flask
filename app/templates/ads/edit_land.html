@@ -1,139 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}✏️ ویرایش آگهی | املاک آسمان گرمابسرد{% endblock %}
-
-{% block content %}
-<div class="max-w-3xl mx-auto px-4 py-8 pb-28">  {# فضای پایین برای دکمه‌های ثابت #}
-  <h2 class="text-2xl font-bold text-green-700 mb-6">✏️ ویرایش آگهی</h2>
-
-  <form method="POST" enctype="multipart/form-data" id="editAdForm"
-        class="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow" novalidate>
-
-    {# اگر از Flask-WTF/CSRF استفاده می‌کنید، این ورودی را نگه دارید #}
-    {% if csrf_token %}
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    {% endif %}
-
-    <!-- عنوان -->
-    <div>
-      <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی*</label>
-      <input type="text" name="title" id="title" value="{{ land.title }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
-                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
-             required maxlength="120" autocomplete="off" inputmode="text">
-    </div>
-
-    <!-- موقعیت -->
-    <div>
-      <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📍 موقعیت*</label>
-      <input type="text" name="location" id="location" value="{{ land.location }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
-                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
-             required autocomplete="off">
-    </div>
-
-    <!-- متراژ -->
-    <div>
-      <label for="size" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📏 متراژ (متر)*</label>
-      <input type="number" name="size" id="size" value="{{ land.size }}"
-             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
-                    dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
-             required inputmode="numeric" min="1">
-    </div>
-
-    <!-- توضیحات -->
-    <div>
-      <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📝 توضیحات</label>
-      <textarea name="description" id="description" rows="4"
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
-                       dark:bg-gray-700 dark:text-white focus:ring focus:ring-green-200"
-                placeholder="توضیحات تکمیلی درباره زمین، امکانات، دسترسی‌ها و ...">{{ land.description }}</textarea>
-    </div>
-
-    <!-- آپلود تصویر -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">📷 تصاویر جدید (در صورت نیاز)</label>
-      <input type="file" name="images" multiple accept="image/*"
-             class="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2
-                    dark:bg-gray-700 dark:text-white">
-      <p class="text-sm text-gray-500 mt-1">در صورت آپلود، تصاویر قبلی جایگزین می‌شوند.</p>
-    </div>
-
-    <!-- تصاویر قبلی -->
-    {% if land.images %}
-      <div class="mt-4">
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">📁 تصاویر فعلی:</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {% for img in land.images %}
-            <img src="{{ url_for('static', filename=img) }}"
-                 alt="تصویر زمین"
-                 class="w-full h-32 object-cover rounded-lg border dark:border-gray-600">
-          {% endfor %}
-        </div>
-      </div>
-    {% endif %}
-  </form>
-</div>
-
-<!-- دکمه‌های ثابت پایین صفحه (هماهنگ با ثبت آگهی) -->
-<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex gap-3 z-50">
-  {# back_url را از ویو پاس بده. اگر نبود -> /my-lands و در نهایت / #}
-  {% set _fallback_back = back_url or '/my-lands' %}
-  <a href="{{ _fallback_back if _fallback_back else '/' }}"
-     class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white text-center py-2 rounded-lg font-semibold">
-    🔙 بازگشت
-  </a>
-
-  <button type="submit" form="editAdForm"
-          class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold">
-    💾 ذخیره تغییرات
-  </button>
-
-  <button type="button" id="btnHide"
-          class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold">
-    🚫 عدم نمایش
-  </button>
-</div>
-
-<script>
-(() => {
-  // back URL امن برای استفاده در JS (بدون url_for تا BuildError رخ ندهد)
-  const BACK_URL = {{ (_fallback_back if _fallback_back else '/') | tojson }};
-
-  // CSRF را از meta یا input hidden بخوان
-  function getCsrf(){
-    const m = document.querySelector('meta[name="csrf-token"]');
-    if (m && m.content) return m.content;
-    const h = document.querySelector('input[name="csrf_token"]');
-    return h ? h.value : null;
-  }
-
-  // عدم نمایش آگهی (POST) با CSRF
-  const hideBtn = document.getElementById('btnHide');
-  if (hideBtn) {
-    hideBtn.addEventListener('click', async () => {
-      if (!confirm('آیا مطمئن هستید می‌خواهید این آگهی را غیرفعال کنید؟')) return;
-      try {
-        const csrf = getCsrf();
-        const headers = {};
-        if (csrf) {
-          headers['X-CSRF-Token'] = csrf;
-          headers['X-CSRFToken']  = csrf;
-          headers['X-XSRF-TOKEN'] = csrf;
-        }
-        const resp = await fetch(`/hide-ad/{{ land.code }}`, { method: 'POST', headers, credentials: 'same-origin' });
-        if (resp.ok) {
-          // بعد از عدم نمایش، به صفحهٔ قبلی/لیست آگهی‌ها برگرد
-          window.location.href = BACK_URL || '/';
-          return;
-        }
-        alert('عدم نمایش آگهی ناموفق بود.');
-      } catch (e) {
-        console.error(e);
-        alert('خطا در برقراری ارتباط با سرور.');
-      }
-    });
-  }
-})();
-</script>
-{% endblock %}

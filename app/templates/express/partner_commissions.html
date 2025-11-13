@@ -1,4 +1,4 @@
-<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4 pb-20">
 
   <!-- Minimal sticky header for Express Partner -->
   <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
@@ -7,7 +7,7 @@
         <i class="fas fa-arrow-right"></i>
       </button>
       <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
-      <a href="{{ url_for('main.help') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="راهنما">
+      <a href="{{ url_for('express_partner.support') }}" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="راهنما">
         <i class="fas fa-life-ring"></i>
       </a>
     </div>
@@ -62,8 +62,8 @@
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 text-center text-gray-600">هنوز پورسانتی ثبت نشده است.</div>
   {% endif %}
 
-  <!-- Bottom nav (keep consistent) -->
-  <nav class="fixed bottom-2 left-2 right-2 z-50 sm:hidden">
+  <!-- Bottom nav (همه اندازه‌ها) -->
+  <nav class="fixed bottom-2 left-2 right-2 z-50">
     <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
       <a href="{{ url_for('express_partner.dashboard') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#6B7280" stroke-width="1.5"/></svg>
@@ -73,11 +73,11 @@
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#7C3AED" stroke-width="1.5"/></svg>
         پورسانت
       </a>
-      <a href="{{ url_for('main.help') }}" class="flex flex-col items-center text-xs text-gray-600">
+      <a href="{{ url_for('express_partner.support') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke="#6B7280" stroke-width="1.2"/></svg>
         پشتیبانی
       </a>
-      <a href="{{ url_for('main.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
+      <a href="{{ url_for('express_partner.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#6B7280" stroke-width="1.5"/><path d="M6 20c1.5-4 9-4 12 0" stroke="#6B7280" stroke-width="1.5"/></svg>
         من
       </a>

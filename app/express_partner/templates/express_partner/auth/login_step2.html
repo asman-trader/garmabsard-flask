@@ -1,8 +1,9 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}تأیید کد | همکار اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto py-8 px-3">
-  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+  <div class="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+    <section class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
     <header class="text-center">
       <div class="mx-auto mb-3 flex justify-center">
         <span class="w-12 h-12 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-2xl font-extrabold">V</span>
@@ -54,8 +55,9 @@
       <p id="timer" class="text-xs text-gray-600 dark:text-gray-400">ارسال مجدد کد تا <span id="countdown">60</span> ثانیه دیگر</p>
       <button type="button" id="resendBtn" disabled class="inline-block mt-2 text-[#7C3AED] dark:text-violet-300 font-semibold disabled:text-gray-400 disabled:cursor-not-allowed">🔄 ارسال مجدد کد</button>
     </footer>
-  </section>
-  <p class="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400">وینور اکسپرس – سریع و حرفه‌ای.</p>
+    </section>
+  </div>
+  <p class="text-center text-[11px] text-gray-500 dark:text-gray-400">وینور اکسپرس – سریع و حرفه‌ای.</p>
 </div>
 
 <script>

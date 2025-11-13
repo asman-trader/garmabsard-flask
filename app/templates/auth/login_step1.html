@@ -1,182 +1,0 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ورود با شماره موبایل | وینور (Vinor)</title>
-  <meta name="theme-color" content="#059669" />
-  <meta name="color-scheme" content="dark light" />
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <style>
-    body{font-family:'Vazirmatn',system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-    /* جلوگیری از فلش‌های عددی در برخی مرورگرها */
-    input[type=tel]::-webkit-outer-spin-button,
-    input[type=tel]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
-  </style>
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex items-center justify-center px-4 sm:px-6 transition-colors">
-
-  <main class="w-full max-w-md">
-    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
-
-      <!-- برند و تیتر -->
-      <header class="text-center">
-        <div class="flex justify-center mb-3">
-          <span class="bg-emerald-600 text-white w-12 h-12 flex items-center justify-center rounded-full text-2xl font-extrabold shadow-lg select-none" aria-hidden="true">V</span>
-        </div>
-        <h1 class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">ورود به وینور</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-          شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.
-        </p>
-      </header>
-
-      <!-- پیام‌های سیستم (Flask flash) -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="space-y-2" role="status" aria-live="polite">
-            {% for category, msg in messages %}
-              <div class="text-sm rounded-lg px-3 py-2
-                          {% if category == 'error' %} bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200
-                          {% elif category == 'success' %} bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200
-                          {% else %} bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-200 {% endif %}">
-                {{ msg|safe }}
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-
-      <!-- فرم ورود -->
-      <form id="loginForm" method="POST" action="{{ url_for('main.login') }}" class="space-y-5" novalidate>
-        {% if csrf_token %}
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% endif %}
-
-        <div>
-          <label for="phone" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">شماره موبایل</label>
-          <input
-            id="phone"
-            type="tel"
-            name="phone"
-            required
-            inputmode="numeric"
-            autocomplete="tel"
-            autocapitalize="off"
-            autocorrect="off"
-            dir="ltr"
-            placeholder="09123456789"
-            aria-describedby="phoneHelp phoneError"
-            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 tracking-wider"
-          />
-          <div class="mt-1 space-y-1">
-            <p id="phoneHelp" class="text-xs text-gray-500 dark:text-gray-400">
-              فرمت‌های پشتیبانی‌شده: <span class="font-medium">09xxxxxxxxx</span>، <span dir="ltr">+989xxxxxxxxx</span>، <span dir="ltr">00989xxxxxxxxx</span>، <span dir="ltr">98xxxxxxxxx</span>
-            </p>
-            <p id="phoneError" class="text-xs text-red-600 dark:text-red-400 hidden">شماره واردشده نامعتبر است. لطفاً یک شماره ایران وارد کنید.</p>
-          </div>
-        </div>
-
-        <button
-          id="submitBtn"
-          type="submit"
-          disabled
-          class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
-          <span class="inline-flex h-4 w-4 rounded-full border-2 border-white border-b-transparent animate-spin hidden" id="btnSpinner"></span>
-          <span>📩 دریافت کد تأیید</span>
-        </button>
-      </form>
-
-      <p class="text-center text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
-        ورود شما به منزلهٔ پذیرش
-        <a href="https://vinor.ir/terms" class="text-emerald-600 dark:text-emerald-400 underline hover:no-underline">قوانین</a>
-        و
-        <a href="https://vinor.ir/privacy" class="text-emerald-600 dark:text-emerald-400 underline hover:no-underline">حریم خصوصی</a>
-        وینور است.
-      </p>
-    </section>
-
-    <p class="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400">
-      وینور – تجربه سریع، امن و شفاف برای خرید و فروش ملک.
-    </p>
-  </main>
-
-  <noscript>
-    <div class="fixed inset-x-0 bottom-0 mx-4 mb-4 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-100 rounded-xl px-4 py-3 text-sm shadow-lg">
-      برای ادامه، جاوااسکریپت مرورگر را فعال کنید.
-    </div>
-  </noscript>
-
-  <script>
-    // عناصر
-    const form = document.getElementById('loginForm');
-    const phoneInput = document.getElementById('phone');
-    const submitBtn = document.getElementById('submitBtn');
-    const spinner = document.getElementById('btnSpinner');
-    const errEl = document.getElementById('phoneError');
-
-    // فوکوس اولیه
-    requestAnimationFrame(() => phoneInput && phoneInput.focus({ preventScroll: true }));
-
-    // تبدیل ارقام فارسی/عربی به لاتین
-    const toLatinDigits = (val) => {
-      const mapFa = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
-      const mapAr = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-      return String(val).replace(/[۰-۹]/g, d => mapFa[d]).replace(/[٠-٩]/g, d => mapAr[d]);
-    };
-
-    // نرمال‌سازی شماره ایران: +98 / 0098 / 98 / 09 → 09xxxxxxxxx (حداکثر 11 رقم)
-    const normalizeIranPhone = (val) => {
-      let p = toLatinDigits(val).replace(/\D+/g, '');
-      if (p.startsWith('0098')) p = p.slice(4);
-      else if (p.startsWith('098')) p = p.slice(3);
-      else if (p.startsWith('98')) p = p.slice(2);
-      // اگر با 9 شروع شد، صفر را اضافه کن
-      if (p.startsWith('9')) p = '0' + p;
-      // اگر با 0 شروع نشد (موارد خاص)، صفر اضافه شود
-      if (!p.startsWith('0') && p.length >= 10) p = '0' + p;
-      return p.slice(0, 11);
-    };
-
-    // اعتبارسنجی: دقیقا 11 رقم و شروع با 09
-    const isValidIranMobile = (val) => /^09\d{9}$/.test(val);
-
-    // رویداد ورودی/چسباندن
-    const onInput = () => {
-      const norm = normalizeIranPhone(phoneInput.value);
-      phoneInput.value = norm;
-      const ok = isValidIranMobile(norm);
-      submitBtn.disabled = !ok;
-      errEl.classList.toggle('hidden', ok || norm.length === 0);
-      phoneInput.setAttribute('aria-invalid', ok ? 'false' : 'true');
-    };
-
-    phoneInput.addEventListener('input', onInput);
-    phoneInput.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const txt = (e.clipboardData || window.clipboardData).getData('text') || '';
-      phoneInput.value = normalizeIranPhone(txt);
-      onInput();
-    });
-
-    // جلوگیری از ارسال دوباره + اسپینر
-    form.addEventListener('submit', (e) => {
-      const norm = normalizeIranPhone(phoneInput.value);
-      if (!isValidIranMobile(norm)) {
-        e.preventDefault();
-        errEl.classList.remove('hidden');
-        phoneInput.focus();
-        return;
-      }
-      // مقدار نهایی ورودی را به نسخه نرمال‌شده تنظیم کن (ایمن‌تر برای سمت سرور)
-      phoneInput.value = norm;
-      submitBtn.disabled = true;
-      spinner.classList.remove('hidden');
-    });
-  </script>
-</body>
-</html>

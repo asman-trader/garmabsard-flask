@@ -2,18 +2,21 @@
 {% block title %}درخواست همکاری - مرحله ۱{% endblock %}
 
 {% block content %}
-<header class="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
-    <button onclick="history.back()" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
-      <i class="fas fa-arrow-right"></i>
-    </button>
-    <div class="text-sm font-bold text-gray-900 dark:text-white">درخواست همکاری - مرحله ۱</div>
-    <span class="w-8"></span>
-  </div>
-</header>
+<div class="max-w-6xl mx-auto py-4 px-3 sm:px-4">
 
-<div class="min-h-[calc(100vh-56px)] flex items-start justify-center px-4 pt-4 pb-6">
-  <div class="w-full max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+  <!-- Minimal sticky header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">درخواست همکاری - مرحله ۱</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+  <div class="mt-4 flex items-start justify-center">
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
     <div class="flex items-center gap-3 mb-6">
       <div class="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-700 dark:text-violet-300">1</div>
       <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۱: اطلاعات پایه</h1>
