@@ -149,7 +149,7 @@
 
     <div id="cardsTrack" class="px-3 flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article class="snap-start shrink-0 w-[90vw] sm:w-[380px] group express-card relative bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800">
+      <article class="snap-start shrink-0 w-[90vw] sm:w-[380px] group express-card relative bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 cursor-pointer" data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         
         <!-- Image Section with Modern Overlay -->
@@ -251,16 +251,16 @@
           </div>
 
           <div class="mt-4">
-            <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="inline-block w-full">
+            <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="inline-block w-full" onclick="event.stopPropagation();">
               {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
               {% set _st = (land._assignment_status|default('active')) %}
               {% if _st == 'in_transaction' %}
-                <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all active:scale-95">
+                <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
                   <i class="fas fa-check-circle text-sm"></i>
                   <span class="text-[10px]">رفع معامله</span>
                 </button>
               {% else %}
-                <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-all active:scale-95">
+                <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
                   <i class="fas fa-handshake text-sm"></i>
                   <span class="text-[10px]">معامله</span>
                 </button>
@@ -288,7 +288,20 @@
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
-
+  // Make entire cards clickable with keyboard support
+  document.querySelectorAll('.express-card[data-href]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const href = card.getAttribute('data-href');
+      if (href) window.location.assign(href);
+    });
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        const href = card.getAttribute('data-href');
+        if (href) window.location.assign(href);
+      }
+    });
+  });
   // Share and copy buttons
   (function(){
     function toast(msg){
