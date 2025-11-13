@@ -9,6 +9,7 @@ from flask import (
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads_cached
 from ..utils.storage import load_express_partners
+from ..utils.share_tokens import decode_partner_ref
 
 # ثابت‌ها
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
@@ -80,16 +81,23 @@ def express_detail(code):
     """
     lands = load_ads_cached()
     land = next((l for l in lands if l.get('code') == code and l.get('is_express', False)), None)
-    
+
     if not land:
         flash('آگهی اکسپرس یافت نشد.', 'warning')
         return redirect(url_for('main.index'))
-    
+
+    ref_token = request.args.get('ref', '').strip()
+    ref_phone = decode_partner_ref(ref_token)
+    ref_partner = None
+    if ref_phone:
+        partners = load_express_partners() or []
+        ref_partner = next((p for p in partners if str(p.get('phone')) == ref_phone), None)
+
     return render_template(
-        "lands/express_detail.html",
+        "public/express_public_detail.html",
         land=land,
-        brand="وینور",
-        domain="vinor.ir",
+        ref_partner=ref_partner,
+        ref_token=ref_token,
     )
 
 @main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")

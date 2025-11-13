@@ -254,7 +254,7 @@
               <i class="far fa-eye text-sm"></i>
               <span>مشاهده</span>
             </a>
-            {% set _link = url_for('main.express_detail', code=land.code, _external=True) %}
+            {% set _link = land._share_url or url_for('main.express_detail', code=land.code, _external=True) %}
             <button type="button" class="share-btn inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] hover:from-[#6D28D9] hover:to-[#5B21B6] text-white text-xs font-medium transition-all shadow-md hover:shadow-lg active:scale-95" data-url="{{ _link }}">
               <i class="fas fa-share-nodes text-sm"></i>
               <span>اشتراک</span>

@@ -83,8 +83,20 @@
 
       <section class="space-y-3">
         <h3 class="text-sm font-bold text-gray-900 dark:text-white">اقدام سریع</h3>
+        {% if share_url %}
+        <div class="rounded-2xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-violet-700 dark:text-violet-300">لینک اختصاصی شما</p>
+            <p class="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-200 break-all">{{ share_url }}</p>
+          </div>
+          <button type="button" class="copy-btn-secondary inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white text-xs font-medium shadow-md hover:shadow-lg transition" data-url="{{ share_url }}">
+            <i class="fas fa-copy"></i>
+            کپی لینک
+          </button>
+        </div>
+        {% endif %}
         <div class="grid sm:grid-cols-4 gap-2">
-          {% set public_link = url_for('main.express_detail', code=land.code, _external=True) %}
+          {% set public_link = share_url %}
           <a href="{{ public_link }}" target="_blank" rel="noopener"
              class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
             <i class="far fa-eye"></i>
@@ -115,9 +127,9 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.copy-btn').forEach(function(btn) {
+    document.querySelectorAll('.copy-btn, .copy-btn-secondary').forEach(function(btn) {
       btn.addEventListener('click', async function () {
-        const url = btn.dataset.url || window.location.href;
+        const url = btn.getAttribute('data-url') || btn.dataset.url || window.location.href;
         try {
           await navigator.clipboard.writeText(url);
           alert('لینک کپی شد');

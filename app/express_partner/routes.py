@@ -19,6 +19,7 @@ from ..utils.storage import (
     load_express_assignments, save_express_assignments, load_express_commissions,
     load_ads_cached,
 )
+from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
 from flask import jsonify
 
@@ -313,6 +314,12 @@ def dashboard():
         except Exception:
             pct = 0.0
         item['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
+        share_token = encode_partner_ref(me_phone)
+        try:
+            item['_share_url'] = url_for('main.express_detail', code=item.get('code'), ref=share_token, _external=True)
+        except Exception:
+            item['_share_url'] = ''
+        item['_share_token'] = share_token
         assigned_lands.append(item)
 
     try:
@@ -773,9 +780,19 @@ def land_detail(code: str):
         flash('آگهی اکسپرس یافت نشد.', 'warning')
         return redirect(url_for('express_partner.dashboard'))
 
+    partners = load_express_partners() or []
+    me_phone = (session.get("user_phone") or "").strip()
+    partner_profile = next((p for p in partners if str(p.get("phone")) == me_phone), None)
+
+    share_token = encode_partner_ref(me_phone)
+    share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True)
+
     return render_template(
         'express_partner/land_detail.html',
         land=land,
+        share_url=share_url,
+        share_token=share_token,
+        partner_profile=partner_profile,
         brand="وینور",
         domain="vinor.ir"
     )
