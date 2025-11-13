@@ -19,6 +19,8 @@ from ..utils.storage import (
     load_express_assignments, save_express_assignments, load_express_commissions,
     load_ads_cached,
 )
+from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
+from flask import jsonify
 
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -700,5 +702,61 @@ def delete_sale(sid: int):
     items = [s for s in items if not (int(s.get('id',0) or 0) == int(sid) and str(s.get('phone')) == me_phone)]
     save_partner_sales(items)
     return redirect(url_for("express_partner.dashboard"))
+
+
+# -------------------------
+# Notifications API
+# -------------------------
+@express_partner_bp.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """Get user notifications"""
+    if not session.get("user_phone"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    me_phone = (session.get("user_phone") or "").strip()
+    notifications = get_user_notifications(me_phone, limit=50)
+    return jsonify({
+        "success": True,
+        "notifications": notifications,
+        "unread_count": unread_count(me_phone)
+    })
+
+
+@express_partner_bp.route('/api/notifications/unread-count', methods=['GET'])
+def get_unread_count():
+    """Get unread notifications count"""
+    if not session.get("user_phone"):
+        return jsonify({"success": False, "unread_count": 0})
+    me_phone = (session.get("user_phone") or "").strip()
+    return jsonify({
+        "success": True,
+        "unread_count": unread_count(me_phone)
+    })
+
+
+@express_partner_bp.route('/api/notifications/<string:notif_id>/read', methods=['POST'])
+def mark_notification_read(notif_id: str):
+    """Mark a notification as read"""
+    if not session.get("user_phone"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    me_phone = (session.get("user_phone") or "").strip()
+    success = mark_read(me_phone, notif_id)
+    return jsonify({
+        "success": success,
+        "unread_count": unread_count(me_phone)
+    })
+
+
+@express_partner_bp.route('/api/notifications/read-all', methods=['POST'])
+def mark_all_notifications_read():
+    """Mark all notifications as read"""
+    if not session.get("user_phone"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    me_phone = (session.get("user_phone") or "").strip()
+    count = mark_all_read(me_phone)
+    return jsonify({
+        "success": True,
+        "marked_count": count,
+        "unread_count": 0
+    })
 
 

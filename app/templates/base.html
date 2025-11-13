@@ -57,6 +57,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/vazirmatn.css') }}" onerror="this.parentNode.removeChild(this)">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet" />
 
@@ -103,6 +104,8 @@
     #offlineBar{position:fixed;bottom:12px;right:12px;left:12px;z-index:60;display:none}
     .offline-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-radius:14px;border:1px solid #374151;background:#111827;color:#e5e7eb;box-shadow:0 8px 22px rgba(0,0,0,.35)}
     .offline-btn{background:#16a34a;color:#fff;border:0;border-radius:10px;padding:8px 12px;cursor:pointer}
+    /* Alpine.js x-cloak */
+    [x-cloak] { display: none !important; }
   </style>
 
   {% block head %}{% endblock %}

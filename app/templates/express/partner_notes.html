@@ -7,9 +7,84 @@
         <i class="fas fa-arrow-right"></i>
       </button>
       <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">یادداشت‌های خصوصی</h1>
-      <a href="{{ url_for('express_partner.support') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="پشتیبانی">
-        <i class="fas fa-headset"></i>
-      </a>
+      <div class="flex items-center gap-2">
+        <!-- Notifications -->
+        <div class="relative" x-data="{ open: false, unreadCount: 0, notifications: [], loading: false }" 
+             x-init="
+               async function loadNotifications() {
+                 loading = true;
+                 try {
+                   const res = await fetch('{{ url_for('express_partner.get_notifications') }}');
+                   const data = await res.json();
+                   if (data.success) {
+                     notifications = data.notifications || [];
+                     unreadCount = data.unread_count || 0;
+                   }
+                 } catch(e) {
+                   console.error('Error loading notifications:', e);
+                 }
+                 loading = false;
+               }
+               loadNotifications();
+               setInterval(loadNotifications, 30000);
+             ">
+          <button @click="open = !open" class="relative w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="اعلان‌ها">
+            <i class="fas fa-bell text-gray-700 dark:text-gray-300"></i>
+            <span x-show="unreadCount > 0" class="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
+          </button>
+          <!-- Dropdown -->
+          <div x-show="open" @click.away="open = false" x-cloak
+               class="absolute left-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-96 overflow-hidden flex flex-col">
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white">اعلان‌ها</h3>
+              <button @click="
+                fetch('{{ url_for('express_partner.mark_all_notifications_read') }}', {method: 'POST'})
+                  .then(r => r.json())
+                  .then(d => { if(d.success) { unreadCount = 0; notifications.forEach(n => n.is_read = true); } });
+              " class="text-xs text-violet-600 dark:text-violet-400 hover:underline">همه را خوانده‌شده</button>
+            </div>
+            <div class="overflow-y-auto flex-1">
+              <template x-if="loading">
+                <div class="p-4 text-center text-sm text-gray-500">در حال بارگذاری...</div>
+              </template>
+              <template x-if="!loading && notifications.length === 0">
+                <div class="p-4 text-center text-sm text-gray-500">اعلانی وجود ندارد</div>
+              </template>
+              <template x-for="notif in notifications" :key="notif.id">
+                <div @click="
+                  if(!notif.is_read) {
+                    fetch('{{ url_for('express_partner.mark_notification_read', notif_id='') }}' + notif.id, {method: 'POST'})
+                      .then(r => r.json())
+                      .then(d => { if(d.success) { notif.is_read = true; unreadCount = d.unread_count || 0; } });
+                  }
+                  if(notif.action_url) window.location.href = notif.action_url;
+                " 
+                :class="notif.is_read ? 'bg-white dark:bg-gray-800' : 'bg-violet-50 dark:bg-violet-900/20'"
+                class="p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div class="flex items-start gap-2">
+                    <i :class="{
+                      'fa-info-circle text-blue-500': notif.type === 'info',
+                      'fa-check-circle text-green-500': notif.type === 'success',
+                      'fa-exclamation-triangle text-amber-500': notif.type === 'warning',
+                      'fa-times-circle text-red-500': notif.type === 'error'
+                    }" class="fas mt-0.5 flex-shrink-0"></i>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-semibold text-gray-900 dark:text-white" x-text="notif.title"></div>
+                      <div class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="notif.body"></div>
+                      <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-1" x-text="new Date(notif.created_at * 1000).toLocaleDateString('fa-IR')"></div>
+                    </div>
+                    <span x-show="!notif.is_read" class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-1"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <!-- Support -->
+        <a href="{{ url_for('express_partner.support') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="پشتیبانی">
+          <i class="fas fa-headset"></i>
+        </a>
+      </div>
     </div>
   </header>
 
@@ -57,7 +132,7 @@
 
   <!-- Bottom nav (همه اندازه‌ها) -->
   <nav class="fixed bottom-2 left-2 right-2 z-50">
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-between items-center px-3 py-2">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-lg flex justify-around items-center px-3 py-2">
       <a href="{{ url_for('express_partner.dashboard') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="#6B7280" stroke-width="1.5"/></svg>
         فایل‌ها
@@ -65,10 +140,6 @@
       <a href="{{ url_for('express_partner.commissions') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#6B7280" stroke-width="1.5"/></svg>
         پورسانت
-      </a>
-      <a href="{{ url_for('express_partner.support') }}" class="flex flex-col items-center text-xs text-gray-600">
-        <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke="#6B7280" stroke-width="1.2"/></svg>
-        پشتیبانی
       </a>
       <a href="{{ url_for('express_partner.profile') }}" class="flex flex-col items-center text-xs text-gray-600">
         <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="#6B7280" stroke-width="1.5"/><path d="M6 20c1.5-4 9-4 12 0" stroke="#6B7280" stroke-width="1.5"/></svg>
