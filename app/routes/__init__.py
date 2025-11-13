@@ -11,13 +11,6 @@ main_bp = Blueprint(
 
 # ⬇️ بسیار مهم: این ایمپورت‌ها باید بعد از تعریف main_bp باشند
 # با این کار، تمام روت‌های ماژول‌ها رجیستر می‌شوند
-from . import public       # صفحه /app و صفحات عمومی
-from . import ads          # آگهی‌ها
-from . import auth         # ورود/تأیید/خروج  -> endpoints: main.login, main.verify, main.logout
-from . import profile      # پروفایل/تنظیمات/علاقه‌مندی‌ها -> endpoints: main.profile, main.settings, main.favorites
-# پنل ادمین به پکیج ریشه‌ای admin منتقل شده است و جداگانه رجیستر می‌شود
-from . import notifications  # اعلان‌ها (لیست + API)
-from . import diagnostics  # ابزارهای تست/سلامت
-from . import webhook      # وب‌هوک‌ها
+from . import public       # صفحات عمومی (لندینگ همکاران و جزئیات اکسپرس)
 
 __all__ = ["main_bp"]

@@ -120,14 +120,6 @@
         <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
       </a>
       <div class="flex items-center gap-4">
-        {% if SHOW_SUBMIT_BUTTON %}
-        <a id="headerSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="hidden sm:flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow">
-          <i class="fas fa-plus-circle"></i> ثبت آگهی رایگان
-        </a>
-        {% endif %}
-        <a href="{{ url_for('main.search_page') }}" class="text-green-600 dark:text-green-400 text-xl sm:text-2xl hover:text-green-800" aria-label="جستجو">
-          <i class="fas fa-search"></i>
-        </a>
         <div class="relative">
         <button id="menuToggle" class="text-2xl text-green-600 dark:text-green-400" aria-label="باز کردن منو">
           <i class="fas fa-bars"></i>
@@ -158,8 +150,8 @@
 
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
-    {% if not hide_header and request.endpoint != 'main.my_lands' and SHOW_SUBMIT_BUTTON %}
-      <a id="fabSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
+    {% if False %}
+      <a id="fabSubmitBtn" href="#" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>
     {% endif %}
@@ -432,15 +424,11 @@
                 urls.push('/express/partner/dashboard');
                 urls.push('/api/express-listings'); // warm API cache
                 // شل کامل ثبت آگهی (۴ مرحله)
-                urls.push('/lands/add/step1');
-                urls.push('/lands/add');
-                urls.push('/lands/add/details');
-                urls.push('/lands/add/step3');
                 // صفحات اصلی کاربر
-                urls.push('/notifications','/favorites','/profile','/my-lands','/settings','/search','/consultant/dashboard');
+                urls.push('/notifications','/profile','/settings');
               } else {
                 // صفحات مهم مهمان
-                urls.push('/','/start','/login','/verify','/search','/about','/help','/faq','/guide/safe-buy');
+                urls.push('/','/start','/login','/verify','/about','/help','/faq','/guide/safe-buy');
               }
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP_EXT' });

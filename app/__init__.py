@@ -198,33 +198,8 @@ def create_app() -> Flask:
 
     # ---------- رجیستر بلوپرینت‌ها ----------
     from .routes import main_bp
-    # Prefer root-level admin package (migrated)
-    from admin import admin_bp  # type: ignore
-    from .routes.webhook import webhook_bp
 
-    lands_bp = None
-    try:
-        from .routes.lands import lands_bp as _lands_bp
-        lands_bp = _lands_bp
-    except Exception as e:
-        app.logger.warning(f"Lands routes not available: {e}")
-
-    uploads_bp = None
-    try:
-        from .api.uploads import uploads_bp as _uploads_bp
-        uploads_bp = _uploads_bp
-    except Exception as e:
-        app.logger.warning(f"Uploads API blueprint not available: {e}")
-
-    push_bp = None
-    try:
-        # سازگاری با alias
-        from .api.push import push_bp as _push_bp
-        push_bp = _push_bp
-    except Exception as e:
-        app.logger.warning(f"Push API disabled: {e}")
-
-    # Express API
+    # Express API (برای پنل همکاران)
     express_api_bp = None
     try:
         from .api.express import express_api_bp as _express_api_bp
@@ -234,14 +209,6 @@ def create_app() -> Flask:
 
     # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(webhook_bp)
-    if lands_bp is not None:
-        app.register_blueprint(lands_bp)
-    if uploads_bp is not None:
-        app.register_blueprint(uploads_bp)
-    if push_bp is not None:
-        app.register_blueprint(push_bp)
     if express_api_bp is not None:
         app.register_blueprint(express_api_bp)
 
@@ -373,13 +340,13 @@ def create_app() -> Flask:
     # ---------- Gate ----------
     @app.before_request
     def landing_gate():
-        safe_prefixes = ("/static", "/api", "/admin", "/diagnostics", "/uploads")
+        safe_prefixes = ("/static", "/api", "/uploads")
         if request.path.startswith(safe_prefixes):
             current_app.logger.debug("PASS (prefix): %s", request.path)
             return
 
         safe_paths = {
-            "/", "/start", "/login", "/verify", "/logout", "/app",
+            "/", "/start", "/login", "/verify", "/logout",
             "/favicon.ico", "/robots.txt", "/sitemap.xml",
             "/site.webmanifest", "/manifest.webmanifest", "/sw.js",
             "/git-webhook", "/git-webhook/",
@@ -393,9 +360,11 @@ def create_app() -> Flask:
             "/partners",
             # Express Partner auth paths (public)
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
+            # Express listings (public)
+            "/express",
         }
         # Public dynamic paths (prefix-based)
-        public_prefixes = ("/land/", "/report/", "/search")
+        public_prefixes = ("/express/", "/uploads/")
         if request.path.startswith(public_prefixes):
             current_app.logger.debug("PASS (public-prefix): %s", request.path)
             return
@@ -406,28 +375,13 @@ def create_app() -> Flask:
             return
 
         user_logged_in = bool(session.get("user_id") or session.get("user_phone"))
-        has_seen_landing = (request.cookies.get(FIRST_VISIT_COOKIE) == "1")
 
         if user_logged_in:
             current_app.logger.debug("PASS (logged-in): %s", request.path)
             return
 
-        # New policy: First-time users go directly to app, not landing page
-        if not has_seen_landing:
-            current_app.logger.debug("REDIRECT → /app (first-visit): %s", request.path)
-            return redirect(url_for("main.app_home"))
-        else:
-            current_app.logger.debug("REDIRECT → /login (guest): %s", request.path)
-            return redirect(url_for("main.login"))
-
-    # ---------- جلوگیری از کش فرم افزودن آگهی ----------
-    @app.after_request
-    def _vinor_no_store_for_forms(resp):
-        try:
-            if request.method == "GET" and request.path.rstrip("/") in ("/lands/add",):
-                resp.headers["Cache-Control"] = "no-store"
-        except Exception:
-            pass
-        return resp
+        # New policy: All users can access landing page
+        current_app.logger.debug("REDIRECT → / (guest): %s", request.path)
+        return redirect(url_for("main.index"))
 
     return app
