@@ -163,8 +163,9 @@
 
   <section class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for land in assigned_lands %}
+      {% set display_code = loop.index %}
       <article class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-md hover:shadow-xl transition duration-200 overflow-hidden relative group cursor-pointer" data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
-        {% set img = (land.images[0] if land.images and land.images[0] else None) %}
+        {% set img = land.images[0] if land.images and land.images[0] else None %}
         <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
           {% if img %}
             <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200">
@@ -177,7 +178,16 @@
           <div class="absolute top-3 left-3 text-[11px] px-2 py-1 rounded-md bg-white/95 text-gray-800 shadow">{% if _st == 'closed' %}بسته{% elif _st == 'pending' %}در انتظار{% else %}فعال{% endif %}</div>
 
           {% if land._commission_pct %}
-            <div class="absolute top-3 right-3 text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
+            <div class="absolute top-3 right-3 flex flex-col items-end gap-2">
+              <div class="text-[11px] px-2 py-1 rounded-md bg-[#7C3AED] text-white shadow">٪{{ land._commission_pct }}</div>
+              <div class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/90 text-violet-600 text-[11px] font-semibold shadow">
+                <i class="fas fa-hashtag text-[10px]"></i>{{ display_code }}
+              </div>
+            </div>
+          {% else %}
+            <div class="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/90 text-violet-600 text-[11px] font-semibold shadow">
+              <i class="fas fa-hashtag text-[10px]"></i>{{ display_code }}
+            </div>
           {% endif %}
         </div>
 
