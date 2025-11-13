@@ -519,7 +519,7 @@ def login():
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
             flash('خوش آمدید؛ ورود موفق.', 'success')
-            return redirect(url_for('admin.select_portal'))
+            return redirect(url_for('admin.express_hub'))
         flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
     return render_template('admin/login.html')
 

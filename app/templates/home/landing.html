@@ -103,8 +103,8 @@
           <button id="pwaInstallMain" class="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focusable">
             نصب اپلیکیشن
           </button>
-          <a href="{{ url_for('main.app_home') }}" class="w-full sm:w-auto px-8 py-3.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl transition-colors focusable">
-            شروع استفاده
+          <a href="{{ url_for('main.partners') }}" class="w-full sm:w-auto px-8 py-3.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl transition-colors focusable">
+            همکاری با وینور
           </a>
         </div>
       </div>
@@ -474,7 +474,7 @@
           const sw = navigator.serviceWorker.controller;
           if (sw){
             const urls = [
-              '/', '/app', '/search', '/api/lands/approved'
+              '/', '/partners', '/api/express-listings'
             ];
             sw.postMessage({ type: 'VINOR_WARMUP', urls });
           }

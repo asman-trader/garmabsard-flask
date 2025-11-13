@@ -148,10 +148,9 @@ def inject_vinor_globals():
 @main_bp.route("/", endpoint="index")
 def index():
     """
-    لندینگ وینور (Vinor) – معرفی وینور و نصب PWA.
-    همیشه محتوای لندینگ را نشان می‌دهد.
+    لندینگ همکاران وینور – معرفی فرصت‌های همکاری
     """
-    return render_template("home/landing.html", brand="وینور", domain="vinor.ir")
+    return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/partners", endpoint="partners")
 def partners():
@@ -181,26 +180,15 @@ def start():
 @main_bp.route("/app", endpoint="app_home")
 def app_home():
     """
-    خانه اپ وینور – برای مهمان و کاربر وارد شده.
-    فهرست آگهی‌های تأییدشده به ترتیب نزولی تاریخ.
-    عملیات نیازمند ورود (ثبت/علاقه‌مندی و ...) همچنان با گارد کلاینت/سرور حفاظت می‌شود.
+    صفحه اصلی اپلیکیشن - لیست آگهی‌ها
     """
-    lands = _sort_by_created_at_desc(_get_approved_ads())
-    
-    # Set first visit cookie if not already set
-    resp = make_response(render_template(
+    lands = _get_approved_ads()
+    return render_template(
         "home/index.html",
         lands=lands,
-        CATEGORY_MAP=CATEGORY_MAP,
         brand="وینور",
         domain="vinor.ir",
-    ))
-    
-    if not request.cookies.get(FIRST_VISIT_COOKIE):
-        resp.set_cookie(FIRST_VISIT_COOKIE, "1", max_age=60 * 60 * 24 * 365, samesite="Lax")
-        session.permanent = True
-    
-    return resp
+    )
 
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):

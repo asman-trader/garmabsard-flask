@@ -159,7 +159,7 @@
   {# --- FAB: با شرط مخفی‌سازی در صفحه‌های خاص + بلوک قابل‌اورراید --- #}
   {% block floating_action %}
     {% if not hide_header and request.endpoint != 'main.my_lands' and SHOW_SUBMIT_BUTTON %}
-      <a id="fabSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index','main.app_home'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
+      <a id="fabSubmitBtn" href="{{ url_for('main.submit_ad') }}" class="fab {{ 'sm:hidden' if request.endpoint in ['main.index'] else '' }}" title="ثبت آگهی" aria-label="ثبت آگهی">
         <i class="fas fa-plus text-xl"></i>
       </a>
     {% endif %}
@@ -184,7 +184,7 @@
   <script>
     (function(){
       const IS_LOGGED_IN = {{ 'true' if __is_logged_in else 'false' }};
-      const IS_HOME = {{ 'true' if request.endpoint in ['main.index','main.app_home'] else 'false' }};
+      const IS_HOME = {{ 'true' if request.endpoint in ['main.index'] else 'false' }};
       const LOGIN_URL    = "{{ __login_url }}";
 
       // گارد لاگین برای لینک‌هایی که ورود لازم دارند
@@ -426,11 +426,11 @@
               })());
               const urls = [];
               // شل مهمان
-              urls.push('/','/start','/login','/verify','/search','/about','/help','/faq','/guide/safe-buy','/connection','/city','/city/multi','/careers/consultant','/careers/consultant/apply');
-              // شل اپ در صورت ورود
+              urls.push('/','/start','/login','/verify','/partners','/about','/help','/faq','/guide/safe-buy','/connection','/city','/city/multi','/careers/consultant','/careers/consultant/apply');
+              // شل Express Partner در صورت ورود
               if (IS_LOGGED_IN) {
-                urls.push('/app');
-                urls.push('/api/lands/approved'); // warm API cache
+                urls.push('/express/partner/dashboard');
+                urls.push('/api/express-listings'); // warm API cache
                 // شل کامل ثبت آگهی (۴ مرحله)
                 urls.push('/lands/add/step1');
                 urls.push('/lands/add');

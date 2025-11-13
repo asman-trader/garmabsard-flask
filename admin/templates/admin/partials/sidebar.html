@@ -31,17 +31,17 @@
     ] %}
 
   <nav class="space-y-2" x-data="{ openAds: {{ 'true' if is_ads_section else 'false' }} }">
-    <!-- داشبورد -->
-    <a href="{{ url_for('admin.dashboard') }}"
+    <!-- داشبورد وینور اکسپرس -->
+    <a href="{{ url_for('admin.express_hub') }}"
        class="flex items-center gap-2 px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.dashboard' %}
+              {% if _endpoint == 'admin.express_hub' %}
                 bg-vinor-600 text-white shadow
               {% else %}
                 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
               {% endif %}"
-       {% if _endpoint == 'admin.dashboard' %} aria-current="page" {% endif %}>
-      <i class="fas fa-chart-line"></i>
-      <span>داشبورد</span>
+       {% if _endpoint == 'admin.express_hub' %} aria-current="page" {% endif %}>
+      <i class="fas fa-rocket"></i>
+      <span>داشبورد وینور اکسپرس</span>
     </a>
 
     <!-- گروه آگهی‌ها -->
@@ -189,13 +189,6 @@
     </a>
 
     {# لینک‌های مشاورین حذف شدند #}
-
-    <!-- ورود به پنل وینور اکسپرس -->
-    <a href="{{ url_for('admin.express_hub') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition bg-green-600 text-white hover:bg-green-700">
-      <i class="fa-solid fa-rocket"></i>
-      <span>ورود به پنل وینور اکسپرس</span>
-    </a>
 
     <!-- تنظیمات سایت -->
     <a href="{{ url_for('admin.settings') }}"

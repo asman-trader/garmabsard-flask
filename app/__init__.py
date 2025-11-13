@@ -345,13 +345,13 @@ def create_app() -> Flask:
             return send_from_directory(static_dir, "manifest.webmanifest", mimetype=mimetype)
 
         fallback_json = r'''{
-          "id": "/app",
-          "name": "وینور بازار",
-          "short_name": "وینور بازار",
+          "id": "/",
+          "name": "وینور",
+          "short_name": "وینور",
           "description": "وینور؛ تجربه سریع، امن و شفاف برای خرید و فروش زمین، باغ، ویلا و آپارتمان.",
           "dir": "rtl",
           "lang": "fa",
-          "start_url": "/app?source=pwa",
+          "start_url": "/?source=pwa",
           "scope": "/",
           "display": "standalone",
           "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
@@ -363,8 +363,7 @@ def create_app() -> Flask:
             { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
           ],
           "shortcuts": [
-            { "name": "ثبت آگهی رایگان", "short_name": "ثبت آگهی", "url": "/submit-ad" },
-            { "name": "آگهی‌های من", "short_name": "آگهی‌ها", "url": "/my-lands" }
+            { "name": "همکاری", "short_name": "همکاری", "url": "/partners" }
           ],
           "capture_links": "existing-client-navigate",
           "launch_handler": { "client_mode": "auto" }
@@ -401,11 +400,8 @@ def create_app() -> Flask:
             current_app.logger.debug("PASS (public-prefix): %s", request.path)
             return
         if request.path in safe_paths:
-            # اگر کاربر وارد شده و مسیر لندینگ است، به اپ هدایت شود
-            user_logged_in = bool(session.get("user_id") or session.get("user_phone"))
-            if user_logged_in and request.path in {"/", "/start"}:
-                current_app.logger.debug("REDIRECT logged-in → /app: %s", request.path)
-                return redirect(url_for("main.app_home"))
+            # صفحه اصلی (/) حالا لندینگ همکاران است و باید عمومی باشد
+            # دیگر کاربران لاگین شده را از / به /app redirect نمی‌کنیم
             current_app.logger.debug("PASS (path): %s", request.path)
             return
 
