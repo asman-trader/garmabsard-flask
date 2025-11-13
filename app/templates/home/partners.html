@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>همکاری با وینور | VINOR</title>
-  <meta name="description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک و فعالان حوزه املاک" />
+  <meta name="description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک" />
   <meta name="theme-color" content="#16a34a">
 
   <!-- Favicon / Manifest -->
@@ -15,7 +15,7 @@
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="همکاری با وینور | VINOR">
-  <meta property="og:description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک و فعالان حوزه املاک">
+  <meta property="og:description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک">
   <meta property="og:url" content="{{ request.url }}">
 
   <!-- Tailwind & Icons -->
@@ -97,7 +97,10 @@
                 <span>نصب سریع پنل همکاران</span>
               </button>
               <p class="mt-2 text-xs text-white/80 sm:text-right">
-                اگر مرورگر شما نصب مستقیم را پشتیبانی نکند، به صفحه ورود هدایت می‌شوید.
+                اگر مرورگر شما نصب مستقیم را پشتیبانی نکند، پیام راهنمای نصب نمایش داده می‌شود.
+              </p>
+              <p id="expressPartnerInstallHint" class="hidden mt-3 text-xs text-white bg-white/10 border border-white/30 rounded-lg px-3 py-2">
+                مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر گزینه «Add to Home Screen» را انتخاب کنید یا اپ را از صفحه ورود نصب نمایید.
               </p>
             </div>
           </div>
@@ -379,9 +382,9 @@
 
     // Handle PWA install prompt for Express Partner
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Check if it's for Express Partner scope
+      // Check if it's within Express Partner entry pages
       const url = new URL(window.location.href);
-      if (url.pathname === '/partners' || url.pathname.startsWith('/express/partner/')) {
+      if (['/', '/partners'].includes(url.pathname) || url.pathname.startsWith('/express/partner/')) {
         e.preventDefault();
         expressPartnerDeferredPrompt = e;
 
@@ -432,19 +435,24 @@
           console.error('Error during Express Partner PWA install:', error);
         });
       } else {
-        // Fallback: redirect to login page where install button is available
-        window.location.href = "{{ url_for('express_partner.login') }}";
+        // Fallback: show a hint instead of redirecting
+        const heroHint = document.getElementById('expressPartnerInstallHint');
+        if (heroHint) {
+          heroHint.classList.remove('hidden');
+        }
       }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
       const installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
+      const installHint = document.getElementById('expressPartnerInstallHint');
       
       if (installBtn) {
         installBtn.addEventListener('click', async function(e) {
           e.preventDefault();
           handleInstall();
+          if (installHint) installHint.classList.remove('hidden');
         });
       }
       
@@ -452,6 +460,7 @@
         installHeroBtn.addEventListener('click', async function(e) {
           e.preventDefault();
           handleInstall();
+          if (installHint) installHint.classList.remove('hidden');
         });
       }
     });
