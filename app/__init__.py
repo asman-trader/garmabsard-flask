@@ -190,7 +190,6 @@ def create_app() -> Flask:
         return {
             "VAPID_PUBLIC_KEY": app.config.get("VAPID_PUBLIC_KEY", ""),
             "VINOR_IS_LOGGED_IN": is_logged,
-            "VINOR_LOGIN_URL": url_for("main.login"),
             "APP_BRAND_NAME": app.config.get("APP_BRAND_NAME", "Vinor"),
             "csrf_token": generate_csrf,
             "SHOW_SUBMIT_BUTTON": bool(settings.get("show_submit_button", True)),

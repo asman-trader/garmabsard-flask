@@ -28,28 +28,14 @@
                  border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between">
       <!-- فقط آیکن پروفایل (لینک‌دار) -->
-      <a href="{{ url_for('main.profile') if session.get('user_phone') else url_for('main.login') }}"
+      <a href="{{ url_for('express_partner.profile') if session.get('user_phone') else url_for('express_partner.login') }}"
          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-         title="{{ 'پروفایل من' if session.get('user_phone') else 'ورود / ثبت‌نام' }}"
-         aria-label="{{ 'پروفایل من' if session.get('user_phone') else 'ورود / ثبت‌نام' }}">
+         title="{{ 'پروفایل من' if session.get('user_phone') else 'ورود همکار اکسپرس' }}"
+         aria-label="{{ 'پروفایل من' if session.get('user_phone') else 'ورود همکار اکسپرس' }}">
         <i class="fas fa-user-circle text-green-600 dark:text-green-400 text-2xl"></i>
       </a>
 
       <div class="flex items-center gap-2">
-        <!-- Notifications icon with badge (زنده) -->
-        <a id="notifLink"
-           href="{{ url_for('main.notifications') if session.get('user_phone') else url_for('main.login') }}"
-           class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition
-                  {{ '' if session.get('user_phone') else 'require-login' }}"
-           title="اعلان‌ها" aria-label="اعلان‌ها"
-           data-require-login="{{ '0' if session.get('user_phone') else '1' }}">
-          <i class="fas fa-bell text-[18px] text-gray-700 dark:text-gray-200"></i>
-          <!-- Badge همیشه رندر می‌شود، با JS مقدار می‌گیرد -->
-          <span id="notif-badge"
-                class="hidden absolute -top-1 -left-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-            0
-          </span>
-        </a>
 
         {% if VINOR_IS_EXPRESS_PARTNER %}
         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-700 text-[11px]">
@@ -85,11 +71,10 @@
 
     <!-- User bundle -->
     <div class="space-y-2">
-      {{ MenuItem(url_for('main.my_lands'),   'fa-list',      'آگهی‌های من', True) }}
-      {{ MenuItem(url_for('main.favorites'),  'fa-bookmark',  'آگهی‌های ذخیره‌شده', True) }}
-      {# Express Partner item در بالا در بخش Primary قرار گرفت #}
-      {{ MenuItem(url_for('main.help'),   'fa-life-ring',    'راهنما', False) }}
-      {{ MenuItem(url_for('main.settings'),   'fa-cog',    'تنظیمات', True) }}
+      {% if VINOR_IS_EXPRESS_PARTNER %}
+        {{ MenuItem(url_for('express_partner.commissions'),  'fa-wallet',  'پورسانت‌ها', True) }}
+        {{ MenuItem(url_for('express_partner.support'),  'fa-headset',  'پشتیبانی', True) }}
+      {% endif %}
       <button id="updateAppBtn" 
               class="group flex items-center gap-3 p-3 rounded-xl transition
                      hover:bg-blue-100 dark:hover:bg-blue-800 active:scale-[0.98]
@@ -101,13 +86,13 @@
       </button>
     </div>
 
-    <!-- Auth: فقط دکمه ورود برای مهمان؛ خروج از منو حذف شد (در پروفایل موجود است) -->
+    <!-- Auth: فقط دکمه ورود برای مهمان -->
     <div class="pt-2">
       {% if not session.get('user_phone') %}
-        <a href="{{ url_for('main.login') }}"
+        <a href="{{ url_for('express_partner.login') }}"
            class="flex items-center gap-3 p-3 rounded-xl text-green-700 hover:bg-green-100 dark:hover:bg-green-800">
           <i class="fas fa-sign-in-alt"></i>
-          <span class="text-[15px] font-medium">ورود / ثبت‌نام</span>
+          <span class="text-[15px] font-medium">ورود همکار اکسپرس</span>
         </a>
       {% endif %}
     </div>
@@ -147,13 +132,13 @@
       a.addEventListener('click', () => setTimeout(closeMenu, 0));
     });
 
-    // Require-login guard (برای لینک‌های حساس از جمله اعلان‌ها)
+    // Require-login guard (برای لینک‌های حساس)
     document.querySelectorAll('#sideMenu a.require-login, #sideMenu a[data-require-login="1"]').forEach(a => {
       a.addEventListener('click', (e) => {
         const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
         if (!loggedIn) {
           e.preventDefault();
-          window.location.href = "{{ url_for('main.login') }}";
+          window.location.href = "{{ url_for('express_partner.login') }}";
         }
       });
     });
@@ -209,30 +194,6 @@
       setHelpOpen(true);
     });
 
-    // ===== Notifications Badge (زنده) =====
-    async function refreshNotifBadge(){
-      try{
-        const r = await fetch("{{ url_for('main.api_notifications_unread_count') }}", { credentials: 'same-origin' });
-        const j = await r.json();
-        if(!notifBadge) return;
-        const c = parseInt(j.count || 0, 10);
-        if(c > 0){
-          notifBadge.textContent = c > 99 ? '99+' : String(c);
-          notifBadge.classList.remove('hidden');
-        } else {
-          notifBadge.classList.add('hidden');
-        }
-      } catch(e){
-        // سکوت: خطای شبکه‌ای نادیده گرفته می‌شود
-      }
-    }
-    const loggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
-    if (loggedIn) {
-      window.addEventListener('load', refreshNotifBadge);
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshNotifBadge(); });
-      setInterval(refreshNotifBadge, 60000); // هر ۶۰ ثانیه
-    }
-    // ================================
 
     // ===== Service Worker Update Check =====
     const updateAppBtn = document.getElementById('updateAppBtn');

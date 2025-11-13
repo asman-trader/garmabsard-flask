@@ -171,7 +171,7 @@
 
   {# === آماده‌سازی امن متغیرها برای اسکریپت‌ها (بدون استفاده از globals()) === #}
   {% set __is_logged_in = (VINOR_IS_LOGGED_IN if VINOR_IS_LOGGED_IN is defined else (session.get('user_id') and True)) %}
-  {% set __login_url    = (VINOR_LOGIN_URL    if VINOR_LOGIN_URL    is defined else url_for('main.login')) %}
+  {% set __login_url    = url_for('express_partner.login') %}
 
   <script>
     (function(){
