@@ -418,35 +418,42 @@ function updateSummary() {
 document.getElementById('expressForm').addEventListener('submit', (e) => {
   const title = document.querySelector('input[name="title"]').value.trim();
   const location = document.querySelector('input[name="location"]').value.trim();
-  const size = document.querySelector('input[name="size"]').value.trim();
-  const priceTotal = document.querySelector('input[name="price_total"]').value.trim();
+  const sizeEl = document.querySelector('input[name="size"]');
+  const priceEl = document.querySelector('input[name="price_total"]');
   
-  if (!title || !location || !size || !priceTotal) {
+  // استخراج اعداد خام (از data attribute یا value)
+  let sizeRaw = sizeEl.dataset.rawValue || (sizeEl.value || '').replace(/[^\d]/g, '');
+  let priceRaw = priceEl.dataset.rawValue || (priceEl.value || '').replace(/[^\d]/g, '');
+  
+  // اگر data attribute وجود نداشت، از value استخراج کن
+  if (!sizeRaw) sizeRaw = (sizeEl.value || '').replace(/[^\d]/g, '');
+  if (!priceRaw) priceRaw = (priceEl.value || '').replace(/[^\d]/g, '');
+  
+  // اعتبارسنجی
+  if (!title || !location || !sizeRaw || !priceRaw) {
     e.preventDefault();
     alert('لطفاً فیلدهای اجباری را پر کنید');
     return;
   }
   
-  // Clean numbers before submit
-  ['price_total','size'].forEach((name)=>{
-    const el = document.querySelector(`[name="${name}"]`);
-    if (el) el.value = (el.value||'').replace(/[^\d]/g,'');
-  });
+  const sizeNum = parseInt(sizeRaw, 10) || 0;
+  const priceNum = parseInt(priceRaw, 10) || 0;
   
-  // محاسبه نهایی قیمت در متر قبل از ارسال (عدد خام بدون فرمت)
-  const sizeEl = document.querySelector('input[name="size"]');
-  const priceEl = document.querySelector('input[name="price_total"]');
+  if (sizeNum <= 0 || priceNum <= 0) {
+    e.preventDefault();
+    alert('متراژ و قیمت باید بیشتر از صفر باشند');
+    return;
+  }
+  
+  // قرار دادن اعداد خام قبل از ارسال (بدون فرمت)
+  sizeEl.value = sizeNum.toString();
+  priceEl.value = priceNum.toString();
+  
+  // محاسبه نهایی قیمت در متر
   const pricePerMeterEl = document.getElementById('price_per_meter');
-  if (sizeEl && priceEl && pricePerMeterEl) {
-    const size = parseInt((sizeEl.value || '').replace(/[^\d]/g, ''), 10) || 0;
-    const price = parseInt((priceEl.value || '').replace(/[^\d]/g, ''), 10) || 0;
-    if (size > 0 && price > 0) {
-      const ppm = Math.round(price / size);
-      // ارسال عدد خام (بدون فرمت)
-      pricePerMeterEl.value = ppm.toString();
-    } else {
-      pricePerMeterEl.value = '';
-    }
+  if (pricePerMeterEl) {
+    const ppm = Math.round(priceNum / sizeNum);
+    pricePerMeterEl.value = ppm > 0 ? ppm.toString() : '';
   }
 });
 
@@ -458,7 +465,7 @@ document.getElementById('express_commission_pct')?.addEventListener('input', upd
 document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
 document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
 
-// Number formatting
+// Number formatting - فقط برای نمایش، مقدار خام در data attribute
 (function(){
   function formatInt(v){
     const digits = String(v||'').replace(/[^\d]/g,'');
@@ -468,7 +475,17 @@ document.querySelector('input[name="size"]')?.addEventListener('input', updateSu
   }
   function hook(el){
     const onInput = ()=>{
-      el.value = formatInt(el.value);
+      const digits = String(el.value||'').replace(/[^\d]/g,'');
+      const num = parseInt(digits,10) || 0;
+      // ذخیره مقدار خام در data attribute
+      el.dataset.rawValue = num.toString();
+      // نمایش فرمت شده به کاربر
+      if (num > 0) {
+        el.value = formatInt(num.toString());
+      } else {
+        el.value = '';
+        el.dataset.rawValue = '';
+      }
       updateSummary();
     };
     el.addEventListener('input', onInput);
