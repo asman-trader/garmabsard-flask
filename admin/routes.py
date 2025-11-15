@@ -521,7 +521,7 @@ def login():
             session['logged_in'] = True
             session.permanent = True  # ماندگاری session برای PWA
             flash('خوش آمدید؛ ورود موفق.', 'success')
-            return redirect(url_for('admin.express_hub'))
+            return redirect(url_for('admin.dashboard'))
         flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
     return render_template('admin/login.html')
 
@@ -547,11 +547,31 @@ def select_portal():
     return render_template('admin/select_portal.html')
 
 @admin_bp.route('', endpoint='admin_root', strict_slashes=False)
-@admin_bp.route('/', endpoint='admin_root_redirect', strict_slashes=False)
+@admin_bp.route('/', endpoint='dashboard', strict_slashes=False)
 @login_required
-def admin_root_redirect():
-    """Redirect به express_hub"""
-    return redirect(url_for('admin.express_hub'))
+def dashboard():
+    """داشبورد همکاران - فقط اطلاعات مربوط به همکاران"""
+    try:
+        partners = load_express_partners() or []
+        applications = load_express_partner_apps() or []
+        assignments = load_express_assignments() or []
+        commissions = load_express_commissions() or []
+    except Exception:
+        partners = []
+        applications = []
+        assignments = []
+        commissions = []
+    
+    # شمارش درخواست‌های در انتظار
+    pending_apps = [a for a in applications if isinstance(a, dict) and a.get('status') not in ('approved', 'rejected')]
+    
+    return render_template(
+        'admin/dashboard.html',
+        partners_count=len(partners) if isinstance(partners, list) else 0,
+        applications_count=len(pending_apps),
+        assignments_count=len(assignments) if isinstance(assignments, list) else 0,
+        commissions_count=len(commissions) if isinstance(commissions, list) else 0
+    )
 
 @admin_bp.route('/users')
 @login_required
@@ -1188,11 +1208,6 @@ def express_listings():
         pending_count=p, approved_count=a, rejected_count=r
     )
 
-@admin_bp.route('/express/hub', endpoint='express_hub')
-@login_required
-def express_hub():
-    """مرکز مدیریت اکسپرس: لینک‌های سریع + اکشن انتقال داده."""
-    return render_template('admin/express_hub.html')
 
 @admin_bp.post('/express/transfer')
 @login_required
@@ -1247,7 +1262,7 @@ def express_transfer():
     except Exception as e:
         current_app.logger.error(f"Express transfer error: {e}")
         flash('خطا در اجرای انتقال.', 'danger')
-    return redirect(url_for('admin.express_hub'))
+    return redirect(url_for('admin.dashboard'))
 
 @admin_bp.route('/express/add', methods=['GET', 'POST'])
 @login_required
