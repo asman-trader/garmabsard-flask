@@ -505,6 +505,13 @@ def login_required(view):
 # -----------------------------------------------------------------------------
 # احراز هویت
 # -----------------------------------------------------------------------------
+@admin_bp.route('', methods=['GET'], endpoint='admin_root')
+def admin_root():
+    """هدایت ریشه /admin به لاگین یا داشبورد"""
+    if session.get('logged_in'):
+        return redirect(url_for('admin.select_portal'))
+    return redirect(url_for('admin.login'))
+
 @admin_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     """
