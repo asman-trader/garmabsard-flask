@@ -1622,11 +1622,11 @@ def express_assignments():
         items.sort(key=lambda x: x.get('created_at',''), reverse=True)
     except Exception:
         items = []
-    # partners list for quick assignment
+    # partners list for quick assignment - همه همکاران
     partners = load_express_partners() or []
-    # lands pool
+    # lands pool - همه فایل‌های اکسپرس (بدون فیلتر وضعیت)
     lands = load_json(_lands_path()) or []
-    express_pool = [l for l in lands if l.get('is_express', False) and str(l.get('status')) == 'approved']
+    express_pool = [l for l in lands if l.get('is_express', False)]
     return render_template('admin/express_assignments.html', items=items, partners=partners, lands=express_pool)
 
 @admin_bp.post('/express/assignments/new')
