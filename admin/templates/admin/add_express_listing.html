@@ -421,13 +421,21 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   const sizeEl = document.querySelector('input[name="size"]');
   const priceEl = document.querySelector('input[name="price_total"]');
   
-  // استخراج اعداد خام (از data attribute یا value)
-  let sizeRaw = sizeEl.dataset.rawValue || (sizeEl.value || '').replace(/[^\d]/g, '');
-  let priceRaw = priceEl.dataset.rawValue || (priceEl.value || '').replace(/[^\d]/g, '');
+  // استخراج اعداد خام (اولویت با data-raw-value)
+  let sizeRaw = sizeEl.dataset.rawValue;
+  let priceRaw = priceEl.dataset.rawValue;
   
   // اگر data attribute وجود نداشت، از value استخراج کن
-  if (!sizeRaw) sizeRaw = (sizeEl.value || '').replace(/[^\d]/g, '');
-  if (!priceRaw) priceRaw = (priceEl.value || '').replace(/[^\d]/g, '');
+  if (!sizeRaw || sizeRaw === '') {
+    const sizeValue = sizeEl.value || '';
+    // تبدیل اعداد فارسی به انگلیسی
+    sizeRaw = sizeValue.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d]/g, '');
+  }
+  if (!priceRaw || priceRaw === '') {
+    const priceValue = priceEl.value || '';
+    // تبدیل اعداد فارسی به انگلیسی
+    priceRaw = priceValue.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d]/g, '');
+  }
   
   // اعتبارسنجی
   if (!title || !location || !sizeRaw || !priceRaw) {
@@ -488,13 +496,59 @@ document.querySelector('input[name="size"]')?.addEventListener('input', updateSu
     const n = parseInt(digits,10);
     return isNaN(n) ? '' : n.toLocaleString('fa-IR');
   }
+  
+  function parseNumber(str) {
+    if (!str) return 0;
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+    const englishDigits = '0123456789';
+    let cleaned = String(str);
+    for (let i = 0; i < persianDigits.length; i++) {
+      cleaned = cleaned.replace(new RegExp(persianDigits[i], 'g'), englishDigits[i]);
+    }
+    // حذف همه کاراکترهای غیر عددی
+    cleaned = cleaned.replace(/[^\d]/g, '');
+    return parseInt(cleaned, 10) || 0;
+  }
+  
   function hook(el){
-    const onInput = ()=>{
-      const digits = String(el.value||'').replace(/[^\d]/g,'');
-      const num = parseInt(digits,10) || 0;
-      // ذخیره مقدار خام در data attribute
+    // فقط اجازه ورود اعداد (انگلیسی و فارسی) و کلیدهای کنترل
+    el.addEventListener('keydown', (e) => {
+      const key = e.key;
+      const isDigit = /[0-9۰-۹]/.test(key);
+      const isControl = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(key);
+      const isModifier = e.ctrlKey || e.metaKey || e.altKey;
+      
+      if (!isDigit && !isControl && !isModifier) {
+        e.preventDefault();
+      }
+    });
+    
+    // در هنگام تایپ: فقط اعداد را نگه دار، فرمت نکن
+    el.addEventListener('input', (e) => {
+      const raw = el.value || '';
+      const digits = raw.replace(/[^\d۰-۹]/g, '');
+      // تبدیل اعداد فارسی به انگلیسی برای ذخیره
+      const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+      const englishDigits = '0123456789';
+      let cleaned = digits;
+      for (let i = 0; i < persianDigits.length; i++) {
+        cleaned = cleaned.replace(new RegExp(persianDigits[i], 'g'), englishDigits[i]);
+      }
+      
+      // ذخیره مقدار خام
+      el.dataset.rawValue = cleaned;
+      
+      // نمایش همان چیزی که کاربر تایپ کرده (بدون فرمت در حین تایپ)
+      el.value = digits;
+      
+      updateSummary();
+    });
+    
+    // فقط هنگام blur فرمت کن
+    el.addEventListener('blur', () => {
+      const num = parseNumber(el.value);
       el.dataset.rawValue = num.toString();
-      // نمایش فرمت شده به کاربر
       if (num > 0) {
         el.value = formatInt(num.toString());
       } else {
@@ -502,9 +556,7 @@ document.querySelector('input[name="size"]')?.addEventListener('input', updateSu
         el.dataset.rawValue = '';
       }
       updateSummary();
-    };
-    el.addEventListener('input', onInput);
-    el.addEventListener('blur', onInput);
+    });
   }
   document.querySelectorAll('[data-format-int]').forEach(hook);
 })();
