@@ -1,239 +1,133 @@
-<!-- admin/partials/sidebar.html - منوی کناری پنل مدیریت وینور (با گروه آگهی‌ها) -->
-<aside
-  id="admin-sidebar"
-  class="w-64 fixed top-0 right-0 h-full bg-white dark:bg-gray-900 shadow-lg p-4 transform transition-transform duration-300 z-50
-         border-l border-gray-200 dark:border-gray-700 translate-x-full lg:translate-x-0"
-  :class="{ 'translate-x-0': sidebarOpen }"
-  x-cloak
-  role="navigation"
-  aria-label="منوی کناری مدیریت وینور">
-
-  <!-- هدر -->
-  <div class="flex justify-between items-center mb-6">
-    <div class="flex flex-col">
-      <h2 class="text-xl font-bold text-vinor-700 dark:text-vinor-400 flex items-center gap-2">
-        <i class="fas fa-comments"></i> مدیریت وینور
-      </h2>
-      <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">وینور – بازار آنلاین ملک</span>
+<!-- Sidebar - Minimal & Mobile-first -->
+<aside class="h-full flex flex-col p-4">
+  
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white">
+        <i class="fa-solid fa-seedling text-sm"></i>
+      </div>
+      <span class="font-bold text-sm">وینور</span>
     </div>
-    <button
-      @click="sidebarOpen = false"
-      class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-vinor-600"
-      aria-label="بستن منو">
-      <i class="fas fa-xmark"></i>
+    <button @click="menuOpen = false" class="lg:hidden focusable p-1 rounded">
+      <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
 
-  <!-- لینک‌ها -->
-  {% set _endpoint = request.endpoint or '' %}
-  {% set is_ads_section = _endpoint in [
-      'admin.lands','admin.pending_lands','admin.approved_lands','admin.rejected_lands'
-    ] %}
-
-  <nav class="space-y-2" x-data="{ openAds: {{ 'true' if is_ads_section else 'false' }} }">
-    <!-- داشبورد وینور اکسپرس -->
-    <a href="{{ url_for('admin.express_hub') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.express_hub' %}
-                bg-vinor-600 text-white shadow
+  <!-- Navigation -->
+  <nav class="flex-1 space-y-1">
+    {% set _endpoint = request.endpoint or '' %}
+    
+    <!-- داشبورد -->
+    <a href="{{ url_for('admin.dashboard') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.dashboard' %}
+                bg-violet-600 text-white
               {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-              {% endif %}"
-       {% if _endpoint == 'admin.express_hub' %} aria-current="page" {% endif %}>
-      <i class="fas fa-rocket"></i>
-      <span>داشبورد وینور اکسپرس</span>
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-gauge-high w-5"></i>
+      <span class="text-sm font-medium">داشبورد</span>
     </a>
 
-    <!-- گروه آگهی‌ها -->
-    <button type="button"
-            @click="openAds = !openAds"
-            class="w-full flex items-center justify-between px-2 py-2 rounded-md transition
-                   text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-            :class="openAds ? 'bg-gray-50 dark:bg-gray-800' : ''"
-            aria-controls="ads-submenu"
-            :aria-expanded="openAds">
-      <span class="flex items-center gap-2">
-        <i class="fas fa-layer-group"></i>
-        آگهی‌ها
-      </span>
-      <span class="flex items-center gap-2">
-        {% set total_pending = pending_count if pending_count is defined else 0 %}
-        {% set total_approved = approved_count if approved_count is defined else 0 %}
-        {% set total_rejected = rejected_count if rejected_count is defined else 0 %}
-        {% set total_ads_badge = (total_pending or 0) + (total_approved or 0) + (total_rejected or 0) %}
-        {% if total_ads_badge %}
-          <span class="inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-full text-xs bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
-            {{ total_ads_badge }}
-          </span>
-        {% endif %}
-        <i class="fas fa-chevron-down transition"
-           :class="openAds ? 'rotate-180' : ''"></i>
-      </span>
-    </button>
+    <!-- وینور اکسپرس -->
+    <a href="{{ url_for('admin.express_hub') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_hub' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-rocket w-5"></i>
+      <span class="text-sm font-medium">وینور اکسپرس</span>
+    </a>
 
-    <!-- زیرمنو آگهی‌ها -->
-    <div id="ads-submenu"
-         class="pl-2 pr-1"
-         x-show="openAds"
-         x-transition.opacity
-         x-transition.duration.200ms
-         style="display:none">
-      <div class="space-y-1 border-r pr-3 dark:border-gray-800">
-        <!-- همه آگهی‌ها / مدیریت زمین‌ها -->
-        <a href="{{ url_for('admin.lands') }}"
-           class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition
+    <!-- آگهی‌ها -->
+    <div x-data="{ open: {{ 'true' if _endpoint in ['admin.lands', 'admin.pending_lands', 'admin.approved_lands', 'admin.rejected_lands'] else 'false' }} }">
+      <button @click="open = !open" 
+              class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition focusable
+                     text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-layer-group w-5"></i>
+          <span class="text-sm font-medium">آگهی‌ها</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-xs transition" :class="open ? 'rotate-180' : ''"></i>
+      </button>
+      <div x-show="open" x-collapse class="pr-4 mt-1 space-y-1">
+        <a href="{{ url_for('admin.lands') }}" 
+           class="block px-3 py-2 rounded-lg text-sm transition focusable
                   {% if _endpoint == 'admin.lands' %}
-                    bg-vinor-600 text-white shadow
+                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
-                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-                  {% endif %}"
-           {% if _endpoint == 'admin.lands' %} aria-current="page" {% endif %}>
-          <span class="flex items-center gap-2">
-            <i class="far fa-folder-open"></i>
-            مدیریت آگهی‌ها
-          </span>
+                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
+                  {% endif %}">
+          همه آگهی‌ها
         </a>
-
-        <!-- در انتظار تأیید -->
-        <a href="{{ url_for('admin.pending_lands') }}"
-           class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition
+        <a href="{{ url_for('admin.pending_lands') }}" 
+           class="block px-3 py-2 rounded-lg text-sm transition focusable
                   {% if _endpoint == 'admin.pending_lands' %}
-                    bg-vinor-600 text-white shadow
+                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
-                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-                  {% endif %}"
-           {% if _endpoint == 'admin.pending_lands' %} aria-current="page" {% endif %}>
-          <span class="flex items-center gap-2">
-            <i class="fas fa-clock"></i>
-            در انتظار تأیید
-          </span>
+                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
+                  {% endif %}">
+          در انتظار تأیید
           {% if pending_count is defined and pending_count %}
-            <span class="inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-full text-xs
-                         {% if _endpoint == 'admin.pending_lands' %} bg-white/20 text-white {% else %} bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200 {% endif %}">
-              {{ pending_count }}
-            </span>
+            <span class="mr-2 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs">{{ pending_count }}</span>
           {% endif %}
         </a>
-
-        
-
-        <!-- تأیید شده -->
-        <a href="{{ url_for('admin.approved_lands') }}"
-           class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition
+        <a href="{{ url_for('admin.approved_lands') }}" 
+           class="block px-3 py-2 rounded-lg text-sm transition focusable
                   {% if _endpoint == 'admin.approved_lands' %}
-                    bg-vinor-600 text-white shadow
+                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
-                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-                  {% endif %}"
-           {% if _endpoint == 'admin.approved_lands' %} aria-current="page" {% endif %}>
-          <span class="flex items-center gap-2">
-            <i class="fas fa-check-circle"></i>
-            تأیید شده
-          </span>
-          {% if approved_count is defined and approved_count %}
-            <span class="inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-full text-xs
-                         {% if _endpoint == 'admin.approved_lands' %} bg-white/20 text-white {% else %} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200 {% endif %}">
-              {{ approved_count }}
-            </span>
-          {% endif %}
+                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
+                  {% endif %}">
+          تأیید شده
         </a>
-
-        <!-- رد شده / نیاز به اصلاح -->
-        <a href="{{ url_for('admin.rejected_lands') }}"
-           class="flex items-center justify-between px-2 py-2 rounded-md text-sm transition
+        <a href="{{ url_for('admin.rejected_lands') }}" 
+           class="block px-3 py-2 rounded-lg text-sm transition focusable
                   {% if _endpoint == 'admin.rejected_lands' %}
-                    bg-vinor-600 text-white shadow
+                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
-                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-                  {% endif %}"
-           {% if _endpoint == 'admin.rejected_lands' %} aria-current="page" {% endif %}>
-          <span class="flex items-center gap-2">
-            <i class="fas fa-times-circle"></i>
-            رد شده / نیاز به اصلاح
-          </span>
-          {% if rejected_count is defined and rejected_count %}
-            <span class="inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-full text-xs
-                         {% if _endpoint == 'admin.rejected_lands' %} bg-white/20 text-white {% else %} bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200 {% endif %}">
-              {{ rejected_count }}
-            </span>
-          {% endif %}
+                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
+                  {% endif %}">
+          رد شده
         </a>
       </div>
     </div>
 
-    <!-- ثبت ملک جدید (خارج از گروه برای دسترسی سریع) -->
-    <a href="{{ url_for('admin.add_land') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
+    <!-- ثبت ملک جدید -->
+    <a href="{{ url_for('admin.add_land') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
               {% if _endpoint == 'admin.add_land' %}
-                bg-vinor-600 text-white shadow
+                bg-violet-600 text-white
               {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-              {% endif %}"
-       {% if _endpoint == 'admin.add_land' %} aria-current="page" {% endif %}>
-      <i class="fas fa-plus-circle"></i>
-      <span>ثبت ملک جدید</span>
-    </a>
-
-    <!-- گزارش‌های کاربران -->
-    <a href="{{ url_for('admin.reports_list') }}"
-       class="flex items-center justify-between px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.reports_list' %}
-                bg-vinor-600 text-white shadow
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
               {% endif %}">
-      <span class="flex items-center gap-2">
-        <i class="fas fa-flag"></i>
-        گزارش‌های کاربران
-      </span>
+      <i class="fa-solid fa-plus w-5"></i>
+      <span class="text-sm font-medium">ثبت ملک جدید</span>
     </a>
 
-    {# لینک‌های مشاورین حذف شدند #}
-
-    <!-- تنظیمات سایت -->
-    <a href="{{ url_for('admin.settings') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
+    <!-- تنظیمات -->
+    <a href="{{ url_for('admin.settings') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
               {% if _endpoint == 'admin.settings' %}
-                bg-vinor-600 text-white shadow
+                bg-violet-600 text-white
               {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-              {% endif %}"
-       {% if _endpoint == 'admin.settings' %} aria-current="page" {% endif %}>
-      <i class="fas fa-sliders"></i>
-      <span>تنظیمات سایت</span>
-    </a>
-
-    <!-- کمپین پیامکی -->
-    <a href="{{ url_for('admin.sms_campaign') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.sms_campaign' %}
-                bg-vinor-600 text-white shadow
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
-              {% endif %}"
-       {% if _endpoint == 'admin.sms_campaign' %} aria-current="page" {% endif %}>
-      <i class="fas fa-message"></i>
-      <span>تبلیغات پیامکی</span>
-    </a>
-
-    <!-- اعلان همگانی -->
-    <a href="{{ url_for('admin.notifications_broadcast') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md transition
-              {% if _endpoint == 'admin.notifications_broadcast' %}
-                bg-vinor-600 text-white shadow
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-vinor-600 dark:hover:text-vinor-400
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
               {% endif %}">
-      <i class="fas fa-bullhorn"></i>
-      <span>ارسال اعلان همگانی</span>
+      <i class="fa-solid fa-sliders w-5"></i>
+      <span class="text-sm font-medium">تنظیمات</span>
     </a>
 
     <!-- خروج -->
-    <a href="{{ url_for('admin.logout') }}"
-       class="flex items-center gap-2 px-2 py-2 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 mt-6 transition"
-       title="خروج از حساب">
-      <i class="fas fa-sign-out-alt"></i>
-      <span>خروج</span>
+    <a href="{{ url_for('admin.logout') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mt-4">
+      <i class="fa-solid fa-sign-out-alt w-5"></i>
+      <span class="text-sm font-medium">خروج</span>
     </a>
+
   </nav>
+
 </aside>
