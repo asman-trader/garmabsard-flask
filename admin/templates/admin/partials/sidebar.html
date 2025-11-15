@@ -1,13 +1,13 @@
-<!-- Sidebar - Minimal & Mobile-first -->
+<!-- Sidebar - فقط همکاران -->
 <aside class="h-full flex flex-col p-4">
   
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white">
-        <i class="fa-solid fa-seedling text-sm"></i>
+        <i class="fa-solid fa-rocket text-sm"></i>
       </div>
-      <span class="font-bold text-sm">وینور</span>
+      <span class="font-bold text-sm">وینور همکاران</span>
     </div>
     <button @click="menuOpen = false" class="lg:hidden focusable p-1 rounded">
       <i class="fa-solid fa-xmark"></i>
@@ -19,9 +19,9 @@
     {% set _endpoint = request.endpoint or '' %}
     
     <!-- داشبورد -->
-    <a href="{{ url_for('admin.dashboard') }}" 
+    <a href="{{ url_for('admin.express_hub') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.dashboard' %}
+              {% if _endpoint == 'admin.express_hub' %}
                 bg-violet-600 text-white
               {% else %}
                 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
@@ -30,95 +30,98 @@
       <span class="text-sm font-medium">داشبورد</span>
     </a>
 
-    <!-- وینور اکسپرس -->
-    <a href="{{ url_for('admin.express_hub') }}" 
+    <!-- همکاران -->
+    <a href="{{ url_for('admin.express_partners') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.express_hub' %}
+              {% if _endpoint == 'admin.express_partners' %}
                 bg-violet-600 text-white
               {% else %}
                 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
               {% endif %}">
-      <i class="fa-solid fa-rocket w-5"></i>
-      <span class="text-sm font-medium">وینور اکسپرس</span>
+      <i class="fa-solid fa-users w-5"></i>
+      <span class="text-sm font-medium">همکاران</span>
     </a>
 
-    <!-- آگهی‌ها -->
-    <div x-data="{ open: {{ 'true' if _endpoint in ['admin.lands', 'admin.pending_lands', 'admin.approved_lands', 'admin.rejected_lands'] else 'false' }} }">
+    <!-- درخواست‌های همکاری -->
+    <a href="{{ url_for('admin.express_partner_applications') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_partner_applications' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-file-circle-check w-5"></i>
+      <span class="text-sm font-medium">درخواست‌ها</span>
+    </a>
+
+    <!-- انتساب‌ها -->
+    <a href="{{ url_for('admin.express_assignments') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_assignments' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-link w-5"></i>
+      <span class="text-sm font-medium">انتساب‌ها</span>
+    </a>
+
+    <!-- پورسانت‌ها -->
+    <a href="{{ url_for('admin.express_commissions') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_commissions' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-wallet w-5"></i>
+      <span class="text-sm font-medium">پورسانت‌ها</span>
+    </a>
+
+    <!-- فایل‌های همکار -->
+    <a href="{{ url_for('admin.express_partner_files') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_partner_files' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-folder w-5"></i>
+      <span class="text-sm font-medium">فایل‌های همکار</span>
+    </a>
+
+    <!-- آگهی‌های اکسپرس -->
+    <div x-data="{ open: {{ 'true' if _endpoint in ['admin.express_listings', 'admin.add_express_listing', 'admin.edit_express_listing'] else 'false' }} }">
       <button @click="open = !open" 
               class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition focusable
                      text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
         <div class="flex items-center gap-3">
           <i class="fa-solid fa-layer-group w-5"></i>
-          <span class="text-sm font-medium">آگهی‌ها</span>
+          <span class="text-sm font-medium">آگهی‌های اکسپرس</span>
         </div>
         <i class="fa-solid fa-chevron-down text-xs transition" :class="open ? 'rotate-180' : ''"></i>
       </button>
       <div x-show="open" x-collapse class="pr-4 mt-1 space-y-1">
-        <a href="{{ url_for('admin.lands') }}" 
+        <a href="{{ url_for('admin.express_listings') }}" 
            class="block px-3 py-2 rounded-lg text-sm transition focusable
-                  {% if _endpoint == 'admin.lands' %}
+                  {% if _endpoint == 'admin.express_listings' %}
                     bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
                     text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
                   {% endif %}">
-          همه آگهی‌ها
+          لیست آگهی‌ها
         </a>
-        <a href="{{ url_for('admin.pending_lands') }}" 
+        <a href="{{ url_for('admin.add_express_listing') }}" 
            class="block px-3 py-2 rounded-lg text-sm transition focusable
-                  {% if _endpoint == 'admin.pending_lands' %}
+                  {% if _endpoint == 'admin.add_express_listing' %}
                     bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
                   {% else %}
                     text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
                   {% endif %}">
-          در انتظار تأیید
-          {% if pending_count is defined and pending_count %}
-            <span class="mr-2 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs">{{ pending_count }}</span>
-          {% endif %}
-        </a>
-        <a href="{{ url_for('admin.approved_lands') }}" 
-           class="block px-3 py-2 rounded-lg text-sm transition focusable
-                  {% if _endpoint == 'admin.approved_lands' %}
-                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
-                  {% else %}
-                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
-                  {% endif %}">
-          تأیید شده
-        </a>
-        <a href="{{ url_for('admin.rejected_lands') }}" 
-           class="block px-3 py-2 rounded-lg text-sm transition focusable
-                  {% if _endpoint == 'admin.rejected_lands' %}
-                    bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400
-                  {% else %}
-                    text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
-                  {% endif %}">
-          رد شده
+          ثبت آگهی جدید
         </a>
       </div>
     </div>
-
-    <!-- ثبت ملک جدید -->
-    <a href="{{ url_for('admin.add_land') }}" 
-       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.add_land' %}
-                bg-violet-600 text-white
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-              {% endif %}">
-      <i class="fa-solid fa-plus w-5"></i>
-      <span class="text-sm font-medium">ثبت ملک جدید</span>
-    </a>
-
-    <!-- تنظیمات -->
-    <a href="{{ url_for('admin.settings') }}" 
-       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.settings' %}
-                bg-violet-600 text-white
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-              {% endif %}">
-      <i class="fa-solid fa-sliders w-5"></i>
-      <span class="text-sm font-medium">تنظیمات</span>
-    </a>
 
     <!-- خروج -->
     <a href="{{ url_for('admin.logout') }}" 

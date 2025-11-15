@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional
 
 from flask import (
     render_template, request, redirect, url_for,
-    session, current_app, flash, abort, jsonify
+    session, current_app, flash, abort, jsonify, send_from_directory
 )
 from werkzeug.utils import secure_filename
 
@@ -505,12 +505,6 @@ def login_required(view):
 # -----------------------------------------------------------------------------
 # احراز هویت
 # -----------------------------------------------------------------------------
-@admin_bp.route('', methods=['GET'], endpoint='admin_root')
-def admin_root():
-    """هدایت ریشه /admin به لاگین یا داشبورد"""
-    if session.get('logged_in'):
-        return redirect(url_for('admin.select_portal'))
-    return redirect(url_for('admin.login'))
 
 @admin_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
@@ -549,69 +543,31 @@ def select_portal():
     """صفحه انتخاب پنل بعد از لاگین: وینور اصلی یا وینور اکسپرس."""
     return render_template('admin/select_portal.html')
 
-@admin_bp.route('/', endpoint='dashboard')
+@admin_bp.route('', endpoint='admin_root', strict_slashes=False)
+@admin_bp.route('/', endpoint='dashboard', strict_slashes=False)
 @login_required
 def dashboard():
-    cleanup_expired_ads()
-    lands = load_json(_lands_path())
-    consults = []
-    # محاسبه کاربران فعال
+    """داشبورد همکاران - فقط اطلاعات مربوط به همکاران"""
     try:
-        users = load_users()
+        partners = load_express_partners() or []
+        applications = load_express_partner_apps() or []
+        assignments = load_express_assignments() or []
+        commissions = load_express_commissions() or []
     except Exception:
-        users = []
-    total_users = len(users) if isinstance(users, list) else 0
-    # جزئیات کاربران: فعال، جدید ۷ روز اخیر، تایید شده
-    active_users = 0
-    new_users_7d = 0
-    verified_users = 0
-    try:
-        now_ts = int(datetime.utcnow().timestamp())
-        for u in users if isinstance(users, list) else []:
-            if u.get('is_active'):
-                active_users += 1
-            else:
-                last = u.get('last_login_ts') or u.get('last_login')
-                try:
-                    ts = int(last)
-                    if now_ts - ts <= 30*24*3600:
-                        active_users += 1
-                except Exception:
-                    pass
-            # جدید ۷ روز اخیر
-            created = u.get('created_at_ts') or u.get('created_at')
-            try:
-                cts = int(created)
-                if now_ts - cts <= 7*24*3600:
-                    new_users_7d += 1
-            except Exception:
-                pass
-            # تایید شده
-            if any(bool(u.get(k)) for k in ('is_verified','verified','phone_verified')):
-                verified_users += 1
-    except Exception:
-        active_users = active_users or 0
-        new_users_7d = new_users_7d or 0
-        verified_users = verified_users or 0
-        active_users = 0
-    pending_count, approved_count, rejected_count = counts_by_status(lands if isinstance(lands, list) else [])
-    open_reports = [r for r in (load_reports() or []) if isinstance(r, dict) and r.get('status') in (None, '', 'open')]
-    # شمارش کلی گزارش‌های باز برای نمایش در لبه‌های مختلف پنل
-    all_reports = load_reports() or []
-    open_reports = [r for r in all_reports if isinstance(r, dict) and r.get('status') in (None, '', 'open')]
-
+        partners = []
+        applications = []
+        assignments = []
+        commissions = []
+    
+    # شمارش درخواست‌های در انتظار
+    pending_apps = [a for a in applications if isinstance(a, dict) and a.get('status') not in ('approved', 'rejected')]
+    
     return render_template(
         'admin/dashboard.html',
-        lands_count=len(lands) if isinstance(lands, list) else 0,
-        consults_count=0,
-        total_users=total_users,
-        active_users=active_users,
-        new_users_7d=new_users_7d,
-        verified_users=verified_users,
-        pending_count=pending_count,
-        approved_count=approved_count,
-        rejected_count=rejected_count,
-        reports_open_count=len(open_reports or [])
+        partners_count=len(partners) if isinstance(partners, list) else 0,
+        applications_count=len(pending_apps),
+        assignments_count=len(assignments) if isinstance(assignments, list) else 0,
+        commissions_count=len(commissions) if isinstance(commissions, list) else 0
     )
 
 @admin_bp.route('/users')

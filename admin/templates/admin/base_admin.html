@@ -1,388 +1,152 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl"
-      x-data="{ darkMode: false, sidebarOpen: false }"
-      :class="{ 'dark': darkMode }"
-      x-init="
-        darkMode = localStorage.getItem('darkMode') === 'true';
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (localStorage.getItem('darkMode') === null) { darkMode = prefersDark; }
-        // بستن سایدبار با ESC در موبایل
-        window.addEventListener('keydown', e => { if (e.key === 'Escape') sidebarOpen = false })
-      ">
+<html lang="fa" dir="rtl" class="dark" x-data="{ darkMode: localStorage.getItem('theme') === 'dark', menuOpen: false }" :class="{ 'dark': darkMode }">
 <head>
   <meta charset="UTF-8" />
-  <title>{% block title %}وینور | پنل مدیریت{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#14532d" />
-
-  <!-- SEO / Branding -->
-  <meta name="description" content="پنل مدیریت وینور؛ بازار موبایل‌محور خرید و فروش زمین، باغ و ویلا. سریع، امن و شفاف.">
-  <link rel="canonical" href="https://vinor.ir/admin" />
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="وینور | پنل مدیریت">
-  <meta property="og:description" content="جستجوی هوشمند، ثبت آسان آگهی، مدارک معتبر و امنیت در معاملات.">
-  <meta property="og:url" content="https://vinor.ir/admin">
-  <meta property="og:image" content="{{ url_for('static', filename='brand/vinor/og-image.png') }}">
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="وینور | پنل مدیریت">
-  <meta name="twitter:description" content="وینور، زمین‌های آینده‌دار.">
-  <meta name="twitter:image" content="{{ url_for('static', filename='brand/vinor/og-image.png') }}">
-
-  <!-- PWA / Icons -->
-  <link rel="icon" href="{{ url_for('static', filename='brand/vinor/favicon-32x32.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/vinor/apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>{% block title %}پنل مدیریت | وینور{% endblock %}</title>
+  <meta name="theme-color" content="#7C3AED" />
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            vinor: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              600: '#16a34a',
-              700: '#15803d'
-            }
-          },
-          fontFamily: {
-            vazirmatn: ["Vazirmatn", "system-ui", "Segoe UI", "Arial", "sans-serif"]
-          },
-          boxShadow: {
-            'vinor': '0 8px 24px rgba(16, 185, 129, 0.15)'
-          }
-        }
-      }
-    };
+    tailwind.config = { darkMode: 'class' };
   </script>
 
-  <!-- فونت فارسی (سبک و بهینه برای موبایل) -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome: local-first with CDN fallback -->
-  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.tailwindcss.com">
-  <link rel="preload" as="font" href="{{ url_for('static', filename='vendor/fontawesome/webfonts/fa-solid-900.woff2') }}" type="font/woff2" crossorigin>
-  <link rel="preload" as="font" href="{{ url_for('static', filename='vendor/fontawesome/webfonts/fa-regular-400.woff2') }}" type="font/woff2" crossorigin>
-  <link rel="preload" as="font" href="{{ url_for('static', filename='vendor/fontawesome/webfonts/fa-brands-400.woff2') }}" type="font/woff2" crossorigin>
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" onerror="this.parentNode.removeChild(this)">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
 
-  <!-- Base Styles -->
   <style>
-    :root { color-scheme: light dark; }
-    html, body { height: 100%; }
-    body { font-family: 'Vazirmatn', sans-serif; }
-    /* اسکرول نرم‌تر برای موبایل */
-    * { -webkit-tap-highlight-color: transparent; }
+    html, body { font-family: 'Vazirmatn', sans-serif; }
+    .focusable:focus { outline: 2px solid #7C3AED; outline-offset: 2px; }
+    [x-cloak] { display: none !important; }
   </style>
 
   {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex relative transition-colors duration-300">
+<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
 
-  <!-- سایدبار (Partial) -->
-  <!-- در دسکتاپ: ثابت و قابل مشاهده. در موبایل: کشویی با پس‌زمینه محو -->
-  <div class="lg:block hidden">
-    {% include 'admin/partials/sidebar.html' %}
-  </div>
-
-  <!-- نسخه موبایل/تبلت: سایدبار کشویی -->
-  <div class="lg:hidden">
-    <!-- پس‌زمینه محو هنگام باز بودن -->
-    <div
-      x-show="sidebarOpen"
-      x-transition.opacity
-      @click="sidebarOpen = false"
-      class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"></div>
-
-    <aside
-      x-show="sidebarOpen"
-      x-transition:enter="transition ease-out duration-200"
-      x-transition:enter-start="opacity-0 translate-x-10"
-      x-transition:enter-end="opacity-100 translate-x-0"
-      x-transition:leave="transition ease-in duration-150"
-      x-transition:leave-start="opacity-100 translate-x-0"
-      x-transition:leave-end="opacity-0 translate-x-10"
-      class="fixed z-50 top-0 right-0 h-full w-72 bg-white dark:bg-gray-800 shadow-xl shadow-black/10 dark:shadow-black/30">
-      {% include 'admin/partials/sidebar.html' %}
-    </aside>
-  </div>
-
-  <!-- محتوای اصلی -->
-  <main class="flex-1 w-full relative
-                px-4 sm:px-6 lg:px-8
-                pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
-                lg:pr-72">  <!-- فضای ثابت برای سایدبار دسکتاپ -->
-
-    <!-- نوار بالا (Sticky) -->
-    <header class="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3
-                    bg-gray-50/80 dark:bg-gray-900/70 backdrop-blur
-                    border-b border-gray-200/70 dark:border-gray-700/60">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          {% block page_title %}
-          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-vinor-700 dark:text-green-400 flex items-center gap-2">
-            <i class="fas fa-tachometer-alt"></i>
-            پنل مدیریت وینور
-          </h1>
-          {% endblock %}
-        </div>
-
-        <div class="flex items-center gap-3">
-          <!-- دکمه سایدبار در موبایل -->
-          <button
-            @click="sidebarOpen = !sidebarOpen"
-            class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl
-                   bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800
-                   border border-gray-200 dark:border-gray-700"
-            aria-label="باز و بسته کردن منوی کناری">
-            <i class="fas fa-bars text-gray-600 dark:text-gray-300"></i>
-          </button>
-
-          <!-- سوییچ دارک/لایت -->
-          <button
-            @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-            class="inline-flex items-center justify-center w-10 h-10 rounded-xl
-                   bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800
-                   border border-gray-200 dark:border-gray-700"
-            aria-label="تغییر حالت نمایش (روشن/تاریک)">
-            <i class="fas" :class="darkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-gray-600 dark:text-gray-300'"></i>
-          </button>
-
-          <!-- پروفایل / منوی کاربر -->
-          <div class="hidden sm:flex items-center gap-3">
-            <span class="text-sm text-gray-600 dark:text-gray-300">مدیر سیستم</span>
-            <img src="{{ url_for('static', filename='brand/vinor/avatar-admin.png') }}"
-                 alt="Admin"
-                 class="w-9 h-9 rounded-full ring-2 ring-white/60 dark:ring-gray-800/60 object-cover">
-          </div>
-        </div>
+  <!-- Header - Minimal & Mobile-first -->
+  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button @click="menuOpen = !menuOpen" class="lg:hidden focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <h1 class="text-lg font-bold text-gray-900 dark:text-white">
+          {% block page_title %}پنل همکاران{% endblock %}
+        </h1>
       </div>
-    </header>
+      <div class="flex items-center gap-2">
+        <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" 
+                class="focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          <i class="fa-solid" :class="darkMode ? 'fa-sun text-yellow-400' : 'fa-moon'"></i>
+        </button>
+      </div>
+    </div>
+  </header>
 
-    <!-- اعلان‌های سیستم (یکپارچه) -->
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        <div class="px-4 sm:px-6 lg:px-8 pt-4">
-          <div class="space-y-3" role="status" aria-live="polite">
+  <!-- Mobile Menu Overlay -->
+  <div x-show="menuOpen" @click="menuOpen = false" 
+       x-transition:enter="transition-opacity duration-200"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       x-transition:leave="transition-opacity duration-150"
+       x-transition:leave-start="opacity-100"
+       x-transition:leave-end="opacity-0"
+       class="fixed inset-0 z-40 bg-black/40 lg:hidden" x-cloak></div>
+
+  <!-- Sidebar - Mobile Drawer -->
+  <aside x-show="menuOpen"
+         @click.away="menuOpen = false"
+         x-transition:enter="transition-transform duration-200"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition-transform duration-150"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-50 lg:hidden overflow-y-auto" x-cloak>
+    {% include 'admin/partials/sidebar.html' %}
+  </aside>
+
+  <!-- Desktop Sidebar -->
+  <aside class="hidden lg:block fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-30 overflow-y-auto">
+    {% include 'admin/partials/sidebar.html' %}
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 lg:pr-64">
+    <div class="px-4 py-6 max-w-7xl mx-auto">
+      
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+          <div class="mb-6 space-y-2">
             {% for category, msg in messages %}
-              <div class="text-sm rounded-xl px-4 py-3 border flex items-start gap-3
+              <div class="text-sm rounded-lg px-4 py-3 border flex items-start gap-2
                           {% if category in ['success', 'ok'] %}
-                            bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:border-emerald-800/50
+                            bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800
                           {% elif category in ['warning'] %}
-                            bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50
+                            bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800
                           {% elif category in ['info'] %}
-                            bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800/50
+                            bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800
                           {% else %}
-                            bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800/50
+                            bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800
                           {% endif %}">
-                <i class="fas mt-0.5 flex-shrink-0
-                          {% if category in ['success', 'ok'] %}fa-check-circle{% elif category in ['warning'] %}fa-exclamation-triangle{% elif category in ['info'] %}fa-info-circle{% else %}fa-times-circle{% endif %}"></i>
+                <i class="fa-solid mt-0.5 flex-shrink-0
+                          {% if category in ['success', 'ok'] %}fa-check-circle
+                          {% elif category in ['warning'] %}fa-exclamation-triangle
+                          {% elif category in ['info'] %}fa-info-circle
+                          {% else %}fa-times-circle{% endif %}"></i>
                 <span class="flex-1">{{ msg }}</span>
               </div>
             {% endfor %}
           </div>
-        </div>
-      {% endif %}
-    {% endwith %}
+        {% endif %}
+      {% endwith %}
 
-    <!-- ظرف محتوا -->
-    <section class="py-6">
-      {% block content %}
-      <!-- محتوای صفحات در این بلاک رندر می‌شود -->
-      {% endblock %}
-    </section>
-
-    <!-- فوتر برند -->
-    <footer class="mt-8 py-6 text-center text-xs text-gray-500 dark:text-gray-400">
-      <p>© {{ now().year if now else '' }} vinor.ir — وینور، زمین‌های آینده‌دار.</p>
-    </footer>
-
+      {% block content %}{% endblock %}
+    </div>
   </main>
+
+  <!-- Bottom Navigation - Mobile Only (فقط همکاران) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+    <div class="grid grid-cols-4 gap-1 px-2 py-2">
+      <a href="{{ url_for('admin.express_hub') }}" 
+         class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
+                {% if request.endpoint == 'admin.express_hub' or request.endpoint == 'admin.dashboard' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+        <i class="fa-solid fa-gauge-high text-lg"></i>
+        <span class="text-xs">داشبورد</span>
+      </a>
+      <a href="{{ url_for('admin.express_partners') }}" 
+         class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
+                {% if request.endpoint == 'admin.express_partners' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+        <i class="fa-solid fa-users text-lg"></i>
+        <span class="text-xs">همکاران</span>
+      </a>
+      <a href="{{ url_for('admin.express_partner_applications') }}" 
+         class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
+                {% if request.endpoint == 'admin.express_partner_applications' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+        <i class="fa-solid fa-file-circle-check text-lg"></i>
+        <span class="text-xs">درخواست‌ها</span>
+      </a>
+      <button @click="menuOpen = !menuOpen" 
+              class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-500 dark:text-gray-400">
+        <i class="fa-solid fa-bars text-lg"></i>
+        <span class="text-xs">منو</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Spacer for bottom nav -->
+  <div class="lg:hidden h-16"></div>
 
   <!-- Alpine.js -->
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-  <!-- نوار فعال‌سازی اعلان (Admin) -->
-  <div id="adminPushEnableBar" class="fixed bottom-4 right-4 z-40 hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow">
-    <i class="fa-solid fa-bell text-amber-500"></i>
-    <span class="text-sm">اعلان‌ها را فعال کنید</span>
-    <div class="flex items-center gap-2 ms-2">
-      <button id="adminPushEnableBtn" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">فعال‌سازی</button>
-      <button id="adminPushLaterBtn" class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm">بعداً</button>
-      <button id="adminPushNeverBtn" class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm">عدم نمایش</button>
-    </div>
-  </div>
-
-  <script>
-    (function(){
-      // VAPID Public Key از کانفیگ سراسری
-      const VAPID_PUBLIC_KEY = "{{ VAPID_PUBLIC_KEY|default('', true) }}";
-
-      function urlBase64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-        return outputArray;
-      }
-
-      async function requestPermission() {
-        if (!("Notification" in window)) throw new Error("مرورگر شما از اعلان پشتیبانی نمی‌کند.");
-        const perm = await Notification.requestPermission();
-        if (perm !== "granted") throw new Error("اجازه اعلان داده نشد.");
-        return perm;
-      }
-
-      async function getRegistration() {
-        if (!('serviceWorker' in navigator)) throw new Error("Service Worker پشتیبانی نمی‌شود.");
-        const existing = await navigator.serviceWorker.getRegistration('/');
-        if (existing) return existing;
-        // رجیستر Service Worker با اسکوپ ریشه
-        return await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      }
-
-      async function subscribePush() {
-        await requestPermission();
-        const reg = await getRegistration();
-        const existing = await reg.pushManager.getSubscription();
-        if (existing) return existing;
-        if (!VAPID_PUBLIC_KEY) throw new Error("VAPID_PUBLIC_KEY تنظیم نشده است.");
-        const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        return await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey });
-      }
-
-      async function saveSubscription(sub) {
-        const res = await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify(sub),
-        });
-        if (!res.ok) throw new Error("ذخیره اشتراک ناموفق بود.");
-        return await res.json();
-      }
-
-      function isSecure(){
-        try {
-          if (window.isSecureContext) return true;
-          const h = location.hostname;
-          return location.protocol === 'https:' || h === 'localhost' || h === '127.0.0.1';
-        } catch(_) { return false; }
-      }
-
-      function isIOSLike(){
-        try { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; } catch(_) { return false; }
-      }
-
-      function isStandalone(){
-        try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch(_) { return false; }
-      }
-
-      async function shouldShowBar(){
-        try{
-          if (!('serviceWorker' in navigator) || !('Notification' in window)) return false;
-          if (Notification.permission === 'denied') return false;
-          if (!VAPID_PUBLIC_KEY) return false;
-          if (!isSecure()) return false;
-          // iOS Safari تنها در حالت standalone از Push پشتیبانی دارد
-          if (isIOSLike() && !isStandalone()) return false;
-          // کنترل تناوب نمایش
-          const last = Number(localStorage.getItem('admin_push_last_prompt_at')||'0')||0;
-          const now = Date.now();
-          const sevenDays = 7*24*60*60*1000;
-          if (last && (now - last) < sevenDays) return false;
-          if (localStorage.getItem('admin_push_dismissed_forever') === '1') return false;
-          // اطمینان از رجیستر بودن SW ریشه
-          const reg = await (async ()=>{ try { return await getRegistration(); } catch(_) { return null; } })();
-          if (!reg) return true;
-          const sub = await reg.pushManager.getSubscription();
-          return !sub;
-        }catch(_) { return false; }
-      }
-
-      document.addEventListener('DOMContentLoaded', async ()=>{
-        const bar = document.getElementById('adminPushEnableBar');
-        const btn = document.getElementById('adminPushEnableBtn');
-        if (!bar || !btn) return;
-        // فقط اگر هنوز مشترک نشده‌ایم، نوار را نشان بده
-        try { await getRegistration(); } catch(_){ }
-        if (await shouldShowBar()) bar.classList.remove('hidden');
-        btn.addEventListener('click', async ()=>{
-          try{
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') { bar.classList.add('hidden'); return; }
-            const sub = await subscribePush();
-            await saveSubscription(sub);
-          }catch(_){} finally {
-            try { localStorage.setItem('admin_push_last_prompt_at', String(Date.now())); } catch(_){ }
-            bar.classList.add('hidden');
-          }
-        });
-        // بعداً
-        document.getElementById('adminPushLaterBtn')?.addEventListener('click', ()=>{
-          try { localStorage.setItem('admin_push_last_prompt_at', String(Date.now())); } catch(_){ }
-          bar.classList.add('hidden');
-        });
-        // عدم نمایش دائمی
-        document.getElementById('adminPushNeverBtn')?.addEventListener('click', ()=>{
-          try { localStorage.setItem('admin_push_dismissed_forever','1'); } catch(_){ }
-          bar.classList.add('hidden');
-        });
-      });
-    })();
-  </script>
-
   {% block scripts %}{% endblock %}
-  <script>
-    // Generic AJAX handler for approve/reject forms in lists
-    document.addEventListener('DOMContentLoaded', function(){
-      document.querySelectorAll('form[data-ajax="1"]').forEach(function(form){
-        form.addEventListener('submit', async function(e){
-          e.preventDefault();
-          try {
-            const action = form.getAttribute('action');
-            const fd = new FormData(form);
-            const res = await fetch(action, {
-              method: 'POST',
-              headers: { 'Accept': 'application/json' },
-              credentials: 'same-origin',
-              body: fd
-            });
-            if(res.headers.get('content-type')?.includes('application/json')){
-              const j = await res.json();
-              if(j && j.ok && j.id){
-                const row = document.querySelector(`[data-row-id="${j.id}"]`);
-                if(row){
-                  const st = row.querySelector('[data-status]');
-                  if(st) st.textContent = j.status || st.textContent;
-                }
-                // Optional toast
-              } else {
-                // fallback
-                location.reload();
-              }
-            } else {
-              // non-JSON → fallback
-              location.reload();
-            }
-          } catch(_) {
-            // network error → fallback
-            location.reload();
-          }
-        });
-      });
-    });
-  </script>
 </body>
 </html>
