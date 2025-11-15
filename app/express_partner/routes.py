@@ -332,11 +332,14 @@ def dashboard():
     sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
 
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
+    # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
+    training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")  # مثال: "https://www.youtube.com/watch?v=VIDEO_ID"
     return render_template(
         "express_partner/dashboard.html",
         profile=profile,
         is_approved=is_approved,
         my_apps=my_apps,
+        training_video_url=training_video_url,
         notes=notes,
         sales=sales,
         files=files,
@@ -570,7 +573,15 @@ def training():
     if not session.get("user_phone"):
         return redirect(url_for("express_partner.login", next=url_for("express_partner.training")))
     
-    return render_template('express_partner/training.html', hide_header=True)
+    # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی خوانده شود
+    training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")
+    # اگر URL خالی است، از یک placeholder استفاده می‌کنیم
+    # می‌توانید URL ویدئو YouTube یا هر سرویس دیگری را اینجا قرار دهید
+    # مثال: "https://www.youtube.com/embed/VIDEO_ID" یا URL مستقیم ویدئو
+    
+    return render_template('express_partner/training.html', 
+                         hide_header=True,
+                         training_video_url=training_video_url)
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')

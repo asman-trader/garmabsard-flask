@@ -17,11 +17,69 @@
   <!-- Main Content -->
   <div class="mt-6 space-y-6">
     
+    <!-- Video Section -->
+    {% if training_video_url %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div class="aspect-video bg-black">
+        {% if 'youtube.com' in training_video_url or 'youtu.be' in training_video_url %}
+          {# YouTube Embed #}
+          {% if '/embed/' in training_video_url %}
+            {# Already an embed URL #}
+            <iframe src="{{ training_video_url }}" 
+                    class="w-full h-full" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+          {% elif 'youtu.be/' in training_video_url %}
+            {# Short URL format: youtu.be/VIDEO_ID #}
+            {% set video_id = training_video_url.split('youtu.be/')[-1].split('?')[0] %}
+            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                    class="w-full h-full" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+          {% elif 'watch?v=' in training_video_url %}
+            {# Standard URL format: youtube.com/watch?v=VIDEO_ID #}
+            {% set video_id = training_video_url.split('watch?v=')[-1].split('&')[0] %}
+            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                    class="w-full h-full" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+          {% else %}
+            {# Fallback: try to extract from URL #}
+            {% set video_id = training_video_url.split('/')[-1].split('?')[0] %}
+            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                    class="w-full h-full" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+          {% endif %}
+        {% else %}
+          {# Direct Video File #}
+          <video class="w-full h-full" controls>
+            <source src="{{ training_video_url }}" type="video/mp4">
+            مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
+          </video>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <!-- Placeholder when no video URL is set -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div class="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+        <div class="text-center space-y-3">
+          <div class="w-20 h-20 mx-auto rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
+            <i class="fas fa-video text-blue-600 dark:text-blue-400 text-3xl"></i>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">ویدئو آموزش به زودی اضافه می‌شود</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Introduction -->
     <div class="text-center space-y-2">
-      <div class="w-20 h-20 mx-auto rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-        <i class="fas fa-graduation-cap text-blue-600 dark:text-blue-400 text-3xl"></i>
-      </div>
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">راهنمای همکاری</h2>
       <p class="text-sm text-gray-600 dark:text-gray-400">آموزش‌های ضروری برای همکاران اکسپرس</p>
     </div>
