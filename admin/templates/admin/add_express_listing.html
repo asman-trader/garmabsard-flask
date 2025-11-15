@@ -5,159 +5,154 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
 {% endblock %}
 
+{% block title %}افزودن آگهی اکسپرس{% endblock %}
+{% block page_title %}افزودن آگهی اکسپرس{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto p-4 sm:p-6">
-
-  <!-- هدر صفحه -->
-  <div class="mb-6">
-    <h1 class="text-xl sm:text-2xl font-extrabold text-green-700 dark:text-green-600 flex items-center gap-2">
-      <i class="fa-solid fa-circle-plus"></i>
-      افزودن آگهی اکسپرس جدید
-    </h1>
-    <p class="text-gray-600 dark:text-gray-300 mt-2">آگهی‌های اکسپرس توسط وینور تأیید شده و با اعتبار ویژه نمایش داده می‌شوند</p>
-  </div>
-
-  <!-- Stepper (1 → 2 → 3 → 4) -->
-  <div class="px-4 sm:px-6 py-3 border-b dark:border-gray-700 bg-white/70 dark:bg-gray-900/70 mb-6">
-    <div class="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
+<div class="space-y-4">
+  
+  <!-- Stepper ساده -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+    <div class="flex items-center justify-between text-xs">
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 grid place-items-center rounded-full bg-green-600 text-white">1</span>
-        <span class="hidden sm:inline">اطلاعات اصلی</span>
+        <span id="step1-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-violet-600 text-white text-xs font-medium">1</span>
+        <span class="hidden sm:inline">اطلاعات</span>
       </div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">2</span>
+        <span id="step2-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">2</span>
         <span class="hidden sm:inline">تصاویر</span>
       </div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">3</span>
+        <span id="step3-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">3</span>
         <span class="hidden sm:inline">مدارک</span>
       </div>
-      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">4</span>
-        <span class="hidden sm:inline">بررسی و انتشار</span>
+        <span id="step4-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">4</span>
+        <span class="hidden sm:inline">بررسی</span>
       </div>
-    </div>
-    <div class="mt-3 h-1 bg-gray-200 dark:bg-gray-700 rounded">
-      <div id="progressBarStep" class="h-1 bg-green-600 rounded transition-all duration-300" style="width:25%"></div>
     </div>
   </div>
 
   <!-- فرم مرحله‌ای -->
-  <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.add_express_listing') }}" class="space-y-6" id="expressForm" novalidate>
-    <!-- CSRF Token -->
+  <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.add_express_listing') }}" class="space-y-4" id="expressForm" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
     <!-- مرحله 1: اطلاعات اصلی -->
     <div id="step1" class="step-content">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-circle-info text-green-600"></i>
-          اطلاعات اصلی ملک
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-info-circle text-violet-600"></i>
+          اطلاعات اصلی
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               عنوان آگهی <span class="text-red-500">*</span>
             </label>
             <input type="text" name="title" required 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                   placeholder="مثال: زمین باغی 1000 متری در دشت اول">
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                   placeholder="مثال: زمین باغی 1000 متری">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               موقعیت <span class="text-red-500">*</span>
             </label>
             <input type="text" name="location" required 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                    placeholder="مثال: دشت اول، گرمابسرد">
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              متراژ (متر) <span class="text-red-500">*</span>
-            </label>
-            <input type="text" name="size" required data-format-int
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                   placeholder="1000">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                متراژ (متر) <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="size" required data-format-int
+                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     placeholder="1000">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                دسته‌بندی
+              </label>
+              <select name="category" 
+                      class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                <option value="">انتخاب کنید</option>
+                <option value="زمین">زمین</option>
+                <option value="باغ">باغ</option>
+                <option value="ویلا">ویلا</option>
+                <option value="آپارتمان">آپارتمان</option>
+                <option value="تجاری">تجاری</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                قیمت کل (تومان) <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="price_total" required data-format-int
+                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     placeholder="2000000000">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                قیمت در متر (تومان)
+              </label>
+              <input type="text" name="price_per_meter" data-format-int
+                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     placeholder="2000000">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                درصد پورسانت (٪)
+              </label>
+              <input type="number" step="0.1" min="0" max="100" name="express_commission_pct" id="express_commission_pct"
+                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     placeholder="1.5">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                مبلغ پورسانت (تومان)
+              </label>
+              <input type="text" id="express_commission_amount" readonly
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                     placeholder="--">
+            </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              دسته‌بندی
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              توضیحات
             </label>
-            <select name="category" 
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-              <option value="">انتخاب کنید</option>
-              <option value="زمین">زمین</option>
-              <option value="باغ">باغ</option>
-              <option value="ویلا">ویلا</option>
-              <option value="آپارتمان">آپارتمان</option>
-              <option value="تجاری">تجاری</option>
-            </select>
+            <textarea name="description" rows="3" 
+                      class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="توضیحات کامل..."></textarea>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              قیمت کل (تومان) <span class="text-red-500">*</span>
-            </label>
-            <input type="text" name="price_total" required data-format-int
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                   placeholder="2000000000">
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              قیمت در متر (تومان)
-            </label>
-            <input type="text" name="price_per_meter" data-format-int
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                   placeholder="2000000">
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              درصد پورسانت همکاران (٪)
-            </label>
-            <input type="number" step="0.1" min="0" max="100" name="express_commission_pct" id="express_commission_pct"
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                   placeholder="مثال: 1.5">
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">برای محاسبه پورسانت همکاران استفاده می‌شود.</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              مبلغ پورسانت (تومان - برآوردی)
-            </label>
-            <input type="text" id="express_commission_amount" readonly
-                   class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                   placeholder="--">
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" name="auto_send_all_partners" value="1" id="auto_send" class="w-4 h-4">
+            <label for="auto_send" class="text-sm text-gray-700 dark:text-gray-300">ارسال خودکار برای تمامی همکاران</label>
           </div>
         </div>
 
-        <div class="mt-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            توضیحات
-          </label>
-          <textarea name="description" rows="4" 
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="توضیحات کامل درباره ملک..."></textarea>
-        </div>
-
-        <!-- دکمه ادامه -->
-        <div class="mt-6 flex justify-end">
-          <label class="flex items-center gap-2 me-auto">
-            <input type="checkbox" name="auto_send_all_partners" value="1" class="w-4 h-4 text-green-600">
-            <span class="text-sm text-gray-700 dark:text-gray-300">ارسال خودکار برای تمامی همکاران اکسپرس</span>
-          </label>
+        <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="nextStep()" 
-                  class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
             <span>ادامه</span>
-            <i class="fa-solid fa-arrow-left"></i>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
         </div>
       </div>
@@ -165,38 +160,31 @@
 
     <!-- مرحله 2: تصاویر -->
     <div id="step2" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-images text-green-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-images text-violet-600"></i>
           تصاویر ملک
         </h2>
         
-        <!-- Upload Area -->
-        <div class="mb-6">
-          <div id="dropzone" role="button" tabindex="0" aria-controls="imagesInput" aria-label="انتخاب تصاویر"
-               class="w-full h-32 border-2 border-dashed border-green-300 dark:border-green-600 rounded-xl bg-green-50 dark:bg-green-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
-            <i class="fa-solid fa-cloud-arrow-up text-3xl text-green-500 mb-2"></i>
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">تصاویر را انتخاب کنید</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">حداکثر ۱۰ تصویر</p>
-          </div>
-          <input type="file" id="imagesInput" name="images" accept="image/*" multiple class="hidden">
+        <div id="dropzone" role="button" tabindex="0"
+             class="w-full h-24 border-2 border-dashed border-violet-300 dark:border-violet-700 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900/30 transition">
+          <i class="fa-solid fa-cloud-arrow-up text-xl text-violet-600 mb-1"></i>
+          <p class="text-xs font-medium text-gray-700 dark:text-gray-300">انتخاب تصاویر</p>
         </div>
+        <input type="file" id="imagesInput" name="images" accept="image/*" multiple class="hidden">
         
-        <!-- Image Preview Grid -->
-        <div id="imagePreview" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6"></div>
+        <div id="imagePreview" class="grid grid-cols-3 gap-2"></div>
 
-        <!-- دکمه‌های ناوبری -->
-        <div class="flex justify-between">
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="prevStep()" 
-                  class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-arrow-right"></i>
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
-          
           <button type="button" onclick="nextStep()" 
-                  class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
             <span>ادامه</span>
-            <i class="fa-solid fa-arrow-left"></i>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
         </div>
       </div>
@@ -204,60 +192,49 @@
 
     <!-- مرحله 3: مدارک -->
     <div id="step3" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-regular fa-file-pdf text-green-600"></i>
-          مدارک تأییدشده
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-pdf text-violet-600"></i>
+          مدارک و تماس
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               سند ملک (PDF)
             </label>
             <input type="file" name="document_1" accept=".pdf,.jpg,.jpeg,.png" 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm">
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               مدارک اضافی (PDF)
             </label>
             <input type="file" name="document_2" accept=".pdf,.jpg,.jpeg,.png" 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm">
           </div>
-        </div>
 
-        <!-- اطلاعات تماس -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
-          <h3 class="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-phone text-blue-600"></i>
-            اطلاعات تماس
-          </h3>
-          
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              شماره تماس پشتیبانی وینور <span class="text-red-500">*</span>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              شماره تماس پشتیبانی <span class="text-red-500">*</span>
             </label>
             <input type="tel" name="vinor_contact" required 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                    value="09121234567" placeholder="09121234567">
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">این شماره برای تماس کاربران با پشتیبانی وینور استفاده می‌شود</p>
           </div>
         </div>
 
-        <!-- دکمه‌های ناوبری -->
-        <div class="flex justify-between">
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="prevStep()" 
-                  class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-arrow-right"></i>
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
-          
           <button type="button" onclick="nextStep()" 
-                  class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
             <span>ادامه</span>
-            <i class="fa-solid fa-arrow-left"></i>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
         </div>
       </div>
@@ -265,56 +242,44 @@
 
     <!-- مرحله 4: بررسی و انتشار -->
     <div id="step4" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-circle-check text-green-600"></i>
-          بررسی نهایی و انتشار
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-check-circle text-violet-600"></i>
+          بررسی نهایی
         </h2>
         
-        <!-- خلاصه اطلاعات -->
-        <div class="space-y-4 mb-6">
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">اطلاعات اصلی</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div><span class="font-medium">عنوان:</span> <span id="summaryTitle">-</span></div>
-              <div><span class="font-medium">موقعیت:</span> <span id="summaryLocation">-</span></div>
-              <div><span class="font-medium">متراژ:</span> <span id="summarySize">-</span></div>
-              <div><span class="font-medium">دسته:</span> <span id="summaryCategory">-</span></div>
-              <div><span class="font-medium">قیمت کل:</span> <span id="summaryPrice">-</span></div>
-              <div><span class="font-medium">قیمت در متر:</span> <span id="summaryPricePerMeter">-</span></div>
+        <div class="space-y-3 text-sm">
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+            <div class="font-medium mb-2">اطلاعات اصلی</div>
+            <div class="space-y-1 text-gray-600 dark:text-gray-400">
+              <div>عنوان: <span id="summaryTitle" class="font-medium text-gray-900 dark:text-white">-</span></div>
+              <div>موقعیت: <span id="summaryLocation" class="font-medium text-gray-900 dark:text-white">-</span></div>
+              <div>متراژ: <span id="summarySize" class="font-medium text-gray-900 dark:text-white">-</span> متر</div>
+              <div>قیمت کل: <span id="summaryPrice" class="font-medium text-gray-900 dark:text-white">-</span></div>
             </div>
           </div>
           
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">تصاویر</h3>
-            <div id="summaryImages" class="text-sm text-gray-600 dark:text-gray-300">-</div>
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+            <div class="font-medium mb-2">تصاویر</div>
+            <div id="summaryImages" class="text-gray-600 dark:text-gray-400">-</div>
           </div>
           
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">مدارک</h3>
-            <div id="summaryDocuments" class="text-sm text-gray-600 dark:text-gray-300">-</div>
-          </div>
-          
-          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">تماس</h3>
-            <div class="text-sm text-gray-600 dark:text-gray-300">
-              <span class="font-medium">پشتیبانی وینور:</span> <span id="summaryContact">-</span>
-            </div>
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+            <div class="font-medium mb-2">مدارک</div>
+            <div id="summaryDocuments" class="text-gray-600 dark:text-gray-400">-</div>
           </div>
         </div>
 
-        <!-- دکمه‌های ناوبری -->
-        <div class="flex justify-between">
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="prevStep()" 
-                  class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-arrow-right"></i>
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
-          
           <button type="submit" 
-                  class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>ثبت آگهی اکسپرس</span>
+                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-check text-xs"></i>
+            <span>ثبت آگهی</span>
           </button>
         </div>
       </div>
@@ -329,57 +294,42 @@ let currentStep = 1;
 const totalSteps = 4;
 let selectedImages = [];
 
-// مدیریت مراحل
 function showStep(step) {
-  // مخفی کردن همه مراحل
   document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-  
-  // نمایش مرحله فعلی
   document.getElementById(`step${step}`).classList.remove('hidden');
   
-  // به‌روزرسانی progress bar
-  const progress = (step / totalSteps) * 100;
-  document.getElementById('progressBarStep').style.width = `${progress}%`;
-  
-  // به‌روزرسانی stepper
-  document.querySelectorAll('.stepper span').forEach((span, index) => {
-    if (index + 1 <= step) {
-      span.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-700', 'dark:text-gray-300');
-      span.classList.add('bg-green-600', 'text-white');
+  // Update indicators
+  for (let i = 1; i <= 4; i++) {
+    const indicator = document.getElementById(`step${i}-indicator`);
+    if (i <= step) {
+      indicator.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-400');
+      indicator.classList.add('bg-violet-600', 'text-white');
     } else {
-      span.classList.remove('bg-green-600', 'text-white');
-      span.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-700', 'dark:text-gray-300');
+      indicator.classList.remove('bg-violet-600', 'text-white');
+      indicator.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-400');
     }
-  });
+  }
   
   currentStep = step;
-  
-  // به‌روزرسانی خلاصه در مرحله 4
-  if (step === 4) {
-    updateSummary();
-  }
+  if (step === 4) updateSummary();
 }
 
 function nextStep() {
-  if (currentStep < totalSteps) {
-    showStep(currentStep + 1);
-  }
+  if (currentStep < totalSteps) showStep(currentStep + 1);
 }
 
 function prevStep() {
-  if (currentStep > 1) {
-    showStep(currentStep - 1);
-  }
+  if (currentStep > 1) showStep(currentStep - 1);
 }
 
-// مدیریت تصاویر
+// Image handling
 document.getElementById('dropzone').addEventListener('click', () => {
   document.getElementById('imagesInput').click();
 });
 
 document.getElementById('imagesInput').addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
-  selectedImages = [...selectedImages, ...files];
+  selectedImages = [...selectedImages, ...files].slice(0, 10);
   renderImagePreviews();
 });
 
@@ -393,9 +343,9 @@ function renderImagePreviews() {
       const div = document.createElement('div');
       div.className = 'relative group';
       div.innerHTML = `
-        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg">
+        <img src="${e.target.result}" class="w-full h-20 object-cover rounded-lg">
         <button type="button" onclick="removeImage(${index})" 
-                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
+                class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
           ×
         </button>
       `;
@@ -410,44 +360,34 @@ function removeImage(index) {
   renderImagePreviews();
 }
 
-// به‌روزرسانی خلاصه
 function updateSummary() {
   const form = document.getElementById('expressForm');
   const formData = new FormData(form);
   
   document.getElementById('summaryTitle').textContent = formData.get('title') || '-';
   document.getElementById('summaryLocation').textContent = formData.get('location') || '-';
-  document.getElementById('summarySize').textContent = formData.get('size') || '-';
-  document.getElementById('summaryCategory').textContent = formData.get('category') || '-';
-  document.getElementById('summaryPrice').textContent = formData.get('price_total') ? `${parseInt(formData.get('price_total')).toLocaleString()} تومان` : '-';
-  // محاسبه خودکار قیمت هر متر
-  const sz = parseInt(formData.get('size')||'0', 10) || 0;
-  const pTotal = parseInt(formData.get('price_total')||'0', 10) || 0;
-  let ppm = 0;
-  if (sz > 0 && pTotal > 0) {
-    ppm = Math.round(pTotal / sz);
-    const ppmInput = document.querySelector('input[name="price_per_meter"]');
-    if (ppmInput) ppmInput.value = ppm;
-  }
-  document.getElementById('summaryPricePerMeter').textContent = (ppm > 0) ? `${ppm.toLocaleString()} تومان` : (formData.get('price_per_meter') ? `${parseInt(formData.get('price_per_meter')).toLocaleString()} تومان` : '-');
-  document.getElementById('summaryContact').textContent = formData.get('vinor_contact') || '-';
-  // محاسبه مبلغ پورسانت (برآوردی)
-  const price = parseInt(formData.get('price_total')||'0', 10) || 0;
-  const pct = parseFloat(formData.get('express_commission_pct')||'0') || 0;
-  const amount = Math.round(price * (pct/100.0));
-  const out = isNaN(amount) ? '-' : amount.toLocaleString('fa-IR');
-  const amtInput = document.getElementById('express_commission_amount');
-  if (amtInput) amtInput.value = out;
-  
-  document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر انتخاب شده` : 'تصویری انتخاب نشده';
+  const size = formData.get('size') || '0';
+  document.getElementById('summarySize').textContent = size.replace(/[^\d]/g, '') || '-';
+  const price = formData.get('price_total') || '0';
+  const priceNum = parseInt(price.replace(/[^\d]/g, ''), 10) || 0;
+  document.getElementById('summaryPrice').textContent = priceNum > 0 ? priceNum.toLocaleString('fa-IR') + ' تومان' : '-';
+  document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر` : 'تصویری انتخاب نشده';
   
   const doc1 = formData.get('document_1');
   const doc2 = formData.get('document_2');
-  const docs = [doc1, doc2].filter(doc => doc && doc.name).map(doc => doc.name);
+  const docs = [];
+  if (doc1 && doc1.name) docs.push(doc1.name);
+  if (doc2 && doc2.name) docs.push(doc2.name);
   document.getElementById('summaryDocuments').textContent = docs.length > 0 ? docs.join(', ') : 'مدرکی آپلود نشده';
+  
+  // Calculate commission
+  const pct = parseFloat(formData.get('express_commission_pct') || '0') || 0;
+  const amount = Math.round(priceNum * (pct / 100));
+  const amtInput = document.getElementById('express_commission_amount');
+  if (amtInput) amtInput.value = amount > 0 ? amount.toLocaleString('fa-IR') : '';
 }
 
-// اعتبارسنجی فرم
+// Form validation
 document.getElementById('expressForm').addEventListener('submit', (e) => {
   const title = document.querySelector('input[name="title"]').value.trim();
   const location = document.querySelector('input[name="location"]').value.trim();
@@ -460,44 +400,21 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
     return;
   }
   
-  if (title.length < 10) {
-    e.preventDefault();
-    alert('عنوان باید حداقل ۱۰ کاراکتر باشد');
-    return;
-  }
-  
-  // اطمینان از وجود CSRF token
-  const csrfInput = document.querySelector('input[name="csrf_token"]');
-  if (!csrfInput || !csrfInput.value) {
-    e.preventDefault();
-    alert('خطا در اعتبارسنجی فرم. لطفاً صفحه را رفرش کنید.');
-    return;
-  }
-  // اعتبارسنجی درصد پورسانت در صورت تکمیل
-  const pctStr = document.getElementById('express_commission_pct')?.value?.trim();
-  if (pctStr) {
-    const pct = parseFloat(pctStr);
-    if (isNaN(pct) || pct < 0 || pct > 100) {
-      e.preventDefault();
-      alert('درصد پورسانت باید بین ۰ تا ۱۰۰ باشد');
-      return;
-    }
-  }
-  // پاکسازی جداکننده‌ها از اعداد قبل از ارسال
+  // Clean numbers before submit
   ['price_total','price_per_meter','size'].forEach((name)=>{
     const el = document.querySelector(`[name="${name}"]`);
     if (el) el.value = (el.value||'').replace(/[^\d]/g,'');
   });
 });
 
-// مقداردهی اولیه
+// Initialize
 showStep(1);
-// محاسبه لحظه‌ای مبلغ پورسانت
+
+// Real-time commission calculation
 document.getElementById('express_commission_pct')?.addEventListener('input', updateSummary);
 document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
-document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
 
-// فرمت زنده ۳ رقمی برای اعداد
+// Number formatting
 (function(){
   function formatInt(v){
     const digits = String(v||'').replace(/[^\d]/g,'');
@@ -507,17 +424,14 @@ document.querySelector('input[name="size"]')?.addEventListener('input', updateSu
   }
   function hook(el){
     const onInput = ()=>{
-      const posEnd = document.activeElement === el;
       el.value = formatInt(el.value);
-      if (posEnd) try{ el.setSelectionRange(el.value.length, el.value.length); }catch(_){ }
       updateSummary();
     };
     el.addEventListener('input', onInput);
     el.addEventListener('blur', onInput);
-    // init
-    onInput();
   }
   document.querySelectorAll('[data-format-int]').forEach(hook);
 })();
 </script>
 {% endblock %}
+
