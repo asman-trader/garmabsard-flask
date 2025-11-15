@@ -328,9 +328,13 @@ def dashboard():
     except Exception:
         my_comms = []
     # کل درآمد: فقط پورسانت‌های تایید شده و پرداخت شده (نه pending و rejected)
-    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '') in ('approved', 'paid'))
-    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending') == 'pending')
-    sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
+    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+    
+    # در انتظار: فقط پورسانت‌هایی که status='pending' یا None/خالی است (default به pending)
+    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
+    
+    # فروش‌های تایید شده: تعداد پورسانت‌هایی که status='approved' یا 'paid' دارند
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
 
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
@@ -383,9 +387,15 @@ def commissions_page():
 
     # کل درآمد: فقط پورسانت‌های تایید شده و پرداخت شده (نه pending و rejected)
     total_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') in ('approved', 'paid'))
-    pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending') == 'pending')
-    paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') == 'paid')
-    sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
+    
+    # در انتظار: فقط پورسانت‌هایی که status='pending' یا None/خالی است (default به pending)
+    pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
+    
+    # پرداخت شده: فقط پورسانت‌هایی که status='paid'
+    paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '').strip() == 'paid')
+    
+    # فروش‌های تایید شده: تعداد پورسانت‌هایی که status='approved' یا 'paid' دارند
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     try:
         my_comms.sort(key=lambda x: x.get('created_at',''), reverse=True)
     except Exception:
