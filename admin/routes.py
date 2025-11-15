@@ -547,31 +547,11 @@ def select_portal():
     return render_template('admin/select_portal.html')
 
 @admin_bp.route('', endpoint='admin_root', strict_slashes=False)
-@admin_bp.route('/', endpoint='dashboard', strict_slashes=False)
+@admin_bp.route('/', endpoint='admin_root_redirect', strict_slashes=False)
 @login_required
-def dashboard():
-    """داشبورد همکاران - فقط اطلاعات مربوط به همکاران"""
-    try:
-        partners = load_express_partners() or []
-        applications = load_express_partner_apps() or []
-        assignments = load_express_assignments() or []
-        commissions = load_express_commissions() or []
-    except Exception:
-        partners = []
-        applications = []
-        assignments = []
-        commissions = []
-    
-    # شمارش درخواست‌های در انتظار
-    pending_apps = [a for a in applications if isinstance(a, dict) and a.get('status') not in ('approved', 'rejected')]
-    
-    return render_template(
-        'admin/dashboard.html',
-        partners_count=len(partners) if isinstance(partners, list) else 0,
-        applications_count=len(pending_apps),
-        assignments_count=len(assignments) if isinstance(assignments, list) else 0,
-        commissions_count=len(commissions) if isinstance(commissions, list) else 0
-    )
+def admin_root_redirect():
+    """Redirect به express_hub"""
+    return redirect(url_for('admin.express_hub'))
 
 @admin_bp.route('/users')
 @login_required

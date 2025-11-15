@@ -117,7 +117,7 @@
     <div class="grid grid-cols-4 gap-1 px-2 py-2">
       <a href="{{ url_for('admin.express_hub') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
-                {% if request.endpoint == 'admin.express_hub' or request.endpoint == 'admin.dashboard' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+                {% if request.endpoint == 'admin.express_hub' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
         <i class="fa-solid fa-gauge-high text-lg"></i>
         <span class="text-xs">داشبورد</span>
       </a>
