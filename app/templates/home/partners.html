@@ -83,6 +83,31 @@
               <i class="fa-solid fa-download"></i>
               <span>نصب اپلیکیشن</span>
             </button>
+            <!-- Mobile Install Instructions -->
+            <div id="mobileInstallInstructions" class="hidden space-y-3 text-xs text-white/90">
+              <div id="iosInstructions" class="hidden bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 space-y-2">
+                <div class="font-semibold flex items-center gap-2">
+                  <i class="fa-brands fa-apple"></i>
+                  <span>نصب در iOS (سافاری):</span>
+                </div>
+                <ol class="list-decimal list-inside space-y-1 pr-2 text-white/80">
+                  <li>روی دکمه <i class="fa-solid fa-share"></i> در پایین صفحه ضربه بزنید</li>
+                  <li>گزینه «به صفحه اصلی اضافه کن» را انتخاب کنید</li>
+                  <li>روی «اضافه کردن» ضربه بزنید</li>
+                </ol>
+              </div>
+              <div id="androidInstructions" class="hidden bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 space-y-2">
+                <div class="font-semibold flex items-center gap-2">
+                  <i class="fa-brands fa-android"></i>
+                  <span>نصب در اندروید:</span>
+                </div>
+                <ol class="list-decimal list-inside space-y-1 pr-2 text-white/80">
+                  <li>روی منوی سه نقطه <i class="fa-solid fa-ellipsis-vertical"></i> در مرورگر ضربه بزنید</li>
+                  <li>گزینه «نصب اپ» یا «Add to Home screen» را انتخاب کنید</li>
+                  <li>روی «نصب» یا «Install» ضربه بزنید</li>
+                </ol>
+              </div>
+            </div>
             <p id="expressPartnerInstallHint" class="hidden text-xs text-white/80 bg-white/10 border border-white/20 rounded-lg px-3 py-2">
               مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر گزینه «Add to Home Screen» را انتخاب کنید.
             </p>
@@ -117,6 +142,46 @@
             <i class="fa-solid fa-download"></i>
             <span>نصب اپلیکیشن</span>
           </button>
+        </div>
+      </div>
+
+      <!-- About Cooperation Section -->
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-handshake text-violet-600 text-lg"></i>
+          </div>
+          <h2 class="font-bold text-lg text-gray-900 dark:text-white">درباره همکاری</h2>
+        </div>
+        <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+          <p class="leading-relaxed">
+            وینور در حال حاضر فقط در زمینه <strong class="text-violet-600 dark:text-violet-400">ملک و املاک</strong> همکار می‌پذیرد. 
+            اگر مشاور املاک، بنگاه‌دار، یا فعال در حوزه خرید و فروش ملک هستید، می‌توانید با ما همکاری کنید.
+          </p>
+          <div class="space-y-2">
+            <p class="font-semibold text-gray-900 dark:text-white">نوع همکاری:</p>
+            <p class="leading-relaxed">
+              همکاری به صورت <strong>مشاور املاک اکسپرس</strong> که در آن شما آگهی‌های ملک را دریافت می‌کنید و 
+              در صورت فروش موفق، کمیسیون دریافت می‌کنید.
+            </p>
+          </div>
+          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p class="font-semibold text-gray-900 dark:text-white mb-2">چه کسانی می‌توانند همکاری کنند؟</p>
+            <ul class="space-y-1.5">
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                <span>مشاوران املاک و بنگاه‌داران</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                <span>فعالان حوزه خرید و فروش ملک</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-violet-600 text-xs"></i>
+                <span>کسانی که تجربه در زمینه املاک دارند</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -171,6 +236,35 @@
     // --- Express Partner PWA Install Hooks ---
     let expressPartnerDeferredPrompt;
 
+    // Detect mobile platform
+    function detectMobilePlatform() {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return 'ios';
+      }
+      if (/android/i.test(userAgent)) {
+        return 'android';
+      }
+      return 'other';
+    }
+
+    // Show mobile install instructions
+    function showMobileInstallInstructions() {
+      const platform = detectMobilePlatform();
+      const instructionsDiv = document.getElementById('mobileInstallInstructions');
+      const iosInstructions = document.getElementById('iosInstructions');
+      const androidInstructions = document.getElementById('androidInstructions');
+      
+      if (instructionsDiv) {
+        instructionsDiv.classList.remove('hidden');
+        if (platform === 'ios' && iosInstructions) {
+          iosInstructions.classList.remove('hidden');
+        } else if (platform === 'android' && androidInstructions) {
+          androidInstructions.classList.remove('hidden');
+        }
+      }
+    }
+
     // Handle PWA install prompt for Express Partner
     window.addEventListener('beforeinstallprompt', (e) => {
       const url = new URL(window.location.href);
@@ -187,6 +281,28 @@
         if (installHeroContainer) {
           installHeroContainer.classList.remove('hidden');
         }
+      }
+    });
+
+    // Show mobile install instructions on mobile devices if PWA install is not available
+    document.addEventListener('DOMContentLoaded', function() {
+      const platform = detectMobilePlatform();
+      const installHeroContainer = document.getElementById('expressPartnerInstallHero');
+      
+      // If on mobile and no install prompt available, show instructions after a delay
+      if ((platform === 'ios' || platform === 'android') && !expressPartnerDeferredPrompt) {
+        setTimeout(() => {
+          if (installHeroContainer && installHeroContainer.classList.contains('hidden')) {
+            // Show install card with mobile instructions
+            installHeroContainer.classList.remove('hidden');
+            showMobileInstallInstructions();
+            // Hide the install button and show instructions directly
+            const installBtn = document.getElementById('expressPartnerInstallHeroBtn');
+            if (installBtn) {
+              installBtn.style.display = 'none';
+            }
+          }
+        }, 1000);
       }
     });
 
@@ -225,10 +341,16 @@
           console.error('Error during Express Partner PWA install:', error);
         });
       } else {
-        // Fallback: show a hint instead of redirecting
-        const heroHint = document.getElementById('expressPartnerInstallHint');
-        if (heroHint) {
-          heroHint.classList.remove('hidden');
+        // Fallback: show mobile instructions for mobile devices
+        const platform = detectMobilePlatform();
+        if (platform === 'ios' || platform === 'android') {
+          showMobileInstallInstructions();
+        } else {
+          // Show generic hint for desktop
+          const heroHint = document.getElementById('expressPartnerInstallHint');
+          if (heroHint) {
+            heroHint.classList.remove('hidden');
+          }
         }
       }
     }
