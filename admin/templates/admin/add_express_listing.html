@@ -258,6 +258,8 @@
               <div>متراژ: <span id="summarySize" class="font-medium text-gray-900 dark:text-white">-</span> متر</div>
               <div>قیمت کل: <span id="summaryPrice" class="font-medium text-gray-900 dark:text-white">-</span></div>
               <div>قیمت در متر: <span id="summaryPricePerMeter" class="font-medium text-gray-900 dark:text-white">-</span></div>
+              <div>درصد پورسانت: <span id="summaryCommissionPct" class="font-medium text-gray-900 dark:text-white">-</span></div>
+              <div>مبلغ پورسانت: <span id="summaryCommissionAmount" class="font-medium text-gray-900 dark:text-white">-</span></div>
             </div>
           </div>
           
@@ -364,19 +366,31 @@ function removeImage(index) {
 
 function updateSummary() {
   const form = document.getElementById('expressForm');
-  const formData = new FormData(form);
   
-  document.getElementById('summaryTitle').textContent = formData.get('title') || '-';
-  document.getElementById('summaryLocation').textContent = formData.get('location') || '-';
+  document.getElementById('summaryTitle').textContent = document.querySelector('input[name="title"]')?.value.trim() || '-';
+  document.getElementById('summaryLocation').textContent = document.querySelector('input[name="location"]')?.value.trim() || '-';
   
-  // محاسبه و نمایش متراژ
-  const sizeRaw = formData.get('size') || '0';
-  const sizeNum = parseInt(sizeRaw.replace(/[^\d]/g, ''), 10) || 0;
+  // استخراج اعداد خام از فیلدها (از data-raw-value یا value)
+  const sizeEl = document.querySelector('input[name="size"]');
+  const priceEl = document.querySelector('input[name="price_total"]');
+  const commissionPctEl = document.getElementById('express_commission_pct');
+  
+  // استخراج متراژ
+  let sizeRaw = sizeEl?.dataset.rawValue || '';
+  if (!sizeRaw || sizeRaw === '') {
+    const sizeValue = sizeEl?.value || '';
+    sizeRaw = sizeValue.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d]/g, '');
+  }
+  const sizeNum = parseInt(sizeRaw, 10) || 0;
   document.getElementById('summarySize').textContent = sizeNum > 0 ? sizeNum.toLocaleString('fa-IR') : '-';
   
-  // محاسبه و نمایش قیمت کل
-  const priceRaw = formData.get('price_total') || '0';
-  const priceNum = parseInt(priceRaw.replace(/[^\d]/g, ''), 10) || 0;
+  // استخراج قیمت کل
+  let priceRaw = priceEl?.dataset.rawValue || '';
+  if (!priceRaw || priceRaw === '') {
+    const priceValue = priceEl?.value || '';
+    priceRaw = priceValue.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d]/g, '');
+  }
+  const priceNum = parseInt(priceRaw, 10) || 0;
   document.getElementById('summaryPrice').textContent = priceNum > 0 ? priceNum.toLocaleString('fa-IR') + ' تومان' : '-';
   
   // محاسبه خودکار قیمت در متر
@@ -400,18 +414,39 @@ function updateSummary() {
   
   document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر` : 'تصویری انتخاب نشده';
   
-  const doc1 = formData.get('document_1');
-  const doc2 = formData.get('document_2');
+  const doc1 = document.querySelector('input[name="document_1"]')?.files?.[0];
+  const doc2 = document.querySelector('input[name="document_2"]')?.files?.[0];
   const docs = [];
   if (doc1 && doc1.name) docs.push(doc1.name);
   if (doc2 && doc2.name) docs.push(doc2.name);
   document.getElementById('summaryDocuments').textContent = docs.length > 0 ? docs.join(', ') : 'مدرکی آپلود نشده';
   
-  // محاسبه پورسانت
-  const pct = parseFloat(formData.get('express_commission_pct') || '0') || 0;
-  const amount = Math.round(priceNum * (pct / 100));
+  // محاسبه و نمایش پورسانت
+  const pctValue = commissionPctEl?.value || '0';
+  const pct = parseFloat(pctValue) || 0;
+  let commissionAmount = 0;
+  if (priceNum > 0 && pct > 0) {
+    commissionAmount = Math.round(priceNum * (pct / 100));
+  }
+  
+  // نمایش درصد پورسانت در خلاصه
+  const summaryCommissionPct = document.getElementById('summaryCommissionPct');
+  if (summaryCommissionPct) {
+    summaryCommissionPct.textContent = pct > 0 ? pct + '%' : '-';
+  }
+  
+  // نمایش مبلغ پورسانت در فیلد
   const amtInput = document.getElementById('express_commission_amount');
-  if (amtInput) amtInput.value = amount > 0 ? amount.toLocaleString('fa-IR') : '';
+  if (amtInput) {
+    amtInput.dataset.rawValue = commissionAmount > 0 ? commissionAmount.toString() : '';
+    amtInput.value = commissionAmount > 0 ? commissionAmount.toLocaleString('fa-IR') : '';
+  }
+  
+  // نمایش مبلغ پورسانت در خلاصه
+  const summaryCommissionAmount = document.getElementById('summaryCommissionAmount');
+  if (summaryCommissionAmount) {
+    summaryCommissionAmount.textContent = commissionAmount > 0 ? commissionAmount.toLocaleString('fa-IR') + ' تومان' : '-';
+  }
 }
 
 // Form validation
@@ -458,24 +493,26 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   sizeEl.value = sizeNum.toString();
   priceEl.value = priceNum.toString();
   
-  // محاسبه نهایی قیمت در متر
+  // محاسبه نهایی قیمت در متر (قبل از ارسال)
   const pricePerMeterEl = document.getElementById('price_per_meter');
-  if (pricePerMeterEl) {
+  if (pricePerMeterEl && sizeNum > 0 && priceNum > 0) {
     const ppm = Math.round(priceNum / sizeNum);
-    // پاک کردن فرمت از price_per_meter اگر وجود دارد
-    pricePerMeterEl.value = ppm > 0 ? ppm.toString() : '';
+    pricePerMeterEl.value = ppm.toString();
+    pricePerMeterEl.dataset.rawValue = ppm.toString();
   }
   
-  // اطمینان از اینکه همه اعداد خام هستند (بدون فرمت)
-  // استفاده از requestSubmit برای اطمینان از ارسال مقادیر به‌روز شده
-  const form = document.getElementById('expressForm');
-  if (form) {
-    // یک بار دیگر مقادیر را تنظیم می‌کنیم
-    sizeEl.value = sizeNum.toString();
-    priceEl.value = priceNum.toString();
-    if (pricePerMeterEl) {
-      const ppm = Math.round(priceNum / sizeNum);
-      pricePerMeterEl.value = ppm > 0 ? ppm.toString() : '';
+  // محاسبه نهایی مبلغ پورسانت (قبل از ارسال)
+  const commissionPctEl = document.getElementById('express_commission_pct');
+  const commissionAmountEl = document.getElementById('express_commission_amount');
+  if (commissionPctEl && commissionAmountEl && priceNum > 0) {
+    const pct = parseFloat(commissionPctEl.value || '0') || 0;
+    if (pct > 0) {
+      const amount = Math.round(priceNum * (pct / 100));
+      commissionAmountEl.value = amount.toString();
+      commissionAmountEl.dataset.rawValue = amount.toString();
+    } else {
+      commissionAmountEl.value = '';
+      commissionAmountEl.dataset.rawValue = '';
     }
   }
 });
@@ -483,10 +520,33 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
 // Initialize
 showStep(1);
 
-// Real-time calculations
-document.getElementById('express_commission_pct')?.addEventListener('input', updateSummary);
-document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
-document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
+// Real-time calculations - محاسبه لحظه‌ای قیمت در متر و پورسانت
+function setupRealTimeCalculations() {
+  const sizeEl = document.querySelector('input[name="size"]');
+  const priceEl = document.querySelector('input[name="price_total"]');
+  const commissionPctEl = document.getElementById('express_commission_pct');
+  
+  // محاسبه قیمت در متر و پورسانت هنگام تغییر متراژ
+  sizeEl?.addEventListener('input', () => {
+    setTimeout(updateSummary, 100); // کمی تاخیر برای اطمینان از به‌روزرسانی data-raw-value
+  });
+  
+  // محاسبه قیمت در متر و پورسانت هنگام تغییر قیمت کل
+  priceEl?.addEventListener('input', () => {
+    setTimeout(updateSummary, 100);
+  });
+  
+  // محاسبه پورسانت هنگام تغییر درصد
+  commissionPctEl?.addEventListener('input', () => {
+    updateSummary();
+  });
+  
+  // محاسبه هنگام blur (خروج از فیلد)
+  sizeEl?.addEventListener('blur', updateSummary);
+  priceEl?.addEventListener('blur', updateSummary);
+}
+
+setupRealTimeCalculations();
 
 // Number formatting - فقط برای نمایش، مقدار خام در data attribute
 (function(){
