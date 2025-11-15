@@ -334,7 +334,7 @@
 
           <div class="mt-4 flex items-center justify-between text-sm font-medium text-gray-500 dark:text-gray-400">
             {% if land.created_at %}
-              <span class="inline-flex items-center gap-1"><i class="fas fa-calendar-alt text-[11px]"></i>{{ land.created_at[:10] }}</span>
+              <span class="inline-flex items-center gap-1"><i class="fas fa-calendar-alt text-[11px]"></i><span class="jalali-dt" data-dt="{{ land.created_at }}"></span></span>
             {% endif %}
             <span class="inline-flex items-center gap-1"><i class="fas fa-bolt text-[11px]"></i>Express</span>
           </div>
@@ -430,6 +430,27 @@
     }
     prev.addEventListener('click', ()=>scrollByAmount('prev'));
     next.addEventListener('click', ()=>scrollByAmount('next'));
+  })();
+
+  // Convert dates to Persian (Jalali) format
+  (function(){
+    function fmt(dt){
+      try{
+        const d = new Date(String(dt||'').replace(' ','T'));
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('fa-IR', { 
+          timeZone: 'Asia/Tehran', 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit'
+        });
+      }catch(_){ return ''; }
+    }
+    document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+      const raw = el.getAttribute('data-dt')||'';
+      const formatted = fmt(raw);
+      el.textContent = formatted || '—';
+    });
   })();
 </script>
 {% endblock %}
