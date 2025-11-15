@@ -641,6 +641,7 @@ def mark_in_transaction(code: str):
                     if land:
                         # بارگذاری کمیسیون‌های موجود
                         commissions = load_express_commissions() or []
+                        created_count = 0
                         
                         # برای هر assignment که به in_transaction تغییر کرد، رکورد پورسانت ایجاد کن
                         for a in assignments:
@@ -651,15 +652,15 @@ def mark_in_transaction(code: str):
                                 commission_pct = float(a.get('commission_pct') or 0)
                                 
                                 # بررسی اینکه آیا قبلاً برای این همکار و این فایل پورسانتی ثبت شده یا نه
+                                # بررسی همه وضعیت‌ها (pending, approved, rejected, paid) - فقط یک بار برای هر فایل
                                 existing_commission = next(
                                     (c for c in commissions 
                                      if (str(c.get('partner_phone')) == partner_phone and 
-                                         str(c.get('land_code')) == str(code) and
-                                         c.get('status') in ('pending', 'approved'))),
+                                         str(c.get('land_code')) == str(code))),
                                     None
                                 )
                                 
-                                # اگر قبلاً ثبت نشده، رکورد جدید ایجاد کن
+                                # اگر قبلاً هیچ پورسانتی برای این فایل و همکار ثبت نشده، رکورد جدید ایجاد کن
                                 if not existing_commission and commission_pct > 0:
                                     # محاسبه مبلغ پورسانت
                                     try:
@@ -686,15 +687,43 @@ def mark_in_transaction(code: str):
                                         }
                                         
                                         commissions.append(new_commission)
-                                        save_express_commissions(commissions)
+                                        created_count += 1
                                         current_app.logger.info(f"Created commission record {new_id} for partner {partner_phone} and land {code}")
+                        
+                        if created_count > 0:
+                            save_express_commissions(commissions)
+                            flash(f'✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد و {created_count} پورسانت به لیست انتظار اضافه شد.', 'success')
+                        else:
+                            flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد.', 'success')
                 except Exception as e:
                     current_app.logger.error(f"Error creating commission records: {e}")
                     # خطا را لاگ می‌کنیم اما فرآیند را متوقف نمی‌کنیم
-                
-                flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد و پورسانت‌ها به لیست انتظار اضافه شدند.', 'success')
+                    flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد.', 'success')
             else:
-                flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
+                # اگر وضعیت از "در حال معامله" به "فعال" برگشت، پورسانت‌های pending مربوط به این فایل را حذف کن
+                try:
+                    commissions = load_express_commissions() or []
+                    removed_count = 0
+                    
+                    # پیدا کردن و حذف پورسانت‌های pending مربوط به این فایل
+                    commissions_to_keep = []
+                    for c in commissions:
+                        if (str(c.get('land_code')) == str(code) and 
+                            c.get('status') == 'pending'):
+                            # این پورسانت را حذف می‌کنیم
+                            removed_count += 1
+                            current_app.logger.info(f"Removed pending commission {c.get('id')} for land {code}")
+                        else:
+                            commissions_to_keep.append(c)
+                    
+                    if removed_count > 0:
+                        save_express_commissions(commissions_to_keep)
+                        flash(f'✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت و {removed_count} پورسانت در انتظار حذف شد.', 'success')
+                    else:
+                        flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
+                except Exception as e:
+                    current_app.logger.error(f"Error removing commission records: {e}")
+                    flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
         else:
             flash('❌ خطا در بروزرسانی وضعیت.', 'error')
     except Exception as e:
