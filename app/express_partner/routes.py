@@ -586,7 +586,7 @@ def training():
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
 def mark_in_transaction(code: str):
-    """Toggle وضعیت ملک بین در حال معامله و فعال"""
+    """Toggle وضعیت ملک بین در حال معامله و فعال - برای تمامی همکاران"""
     if not session.get("user_phone"):
         return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     
@@ -597,29 +597,45 @@ def mark_in_transaction(code: str):
         updated = False
         new_status = None
         
+        # ابتدا بررسی می‌کنیم که همکار فعلی دسترسی به این فایل دارد یا نه
+        my_assignment = None
         for a in assignments:
             if (str(a.get('land_code')) == str(code) and 
                 str(a.get('partner_phone')) == me_phone):
+                my_assignment = a
                 current_status = a.get('status', 'active')
                 # Toggle: اگر در حال معامله است، به active برگردان، وگرنه به in_transaction تغییر بده
                 if current_status == 'in_transaction':
                     new_status = 'active'
-                    a['status'] = 'active'
                 else:
                     new_status = 'in_transaction'
-                    a['status'] = 'in_transaction'
-                a['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                updated = True
                 break
+        
+        if my_assignment is None:
+            flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
+            return redirect(url_for('express_partner.dashboard'))
+        
+        # حالا تمام assignment های مربوط به این فایل را برای همه همکاران تغییر می‌دهیم
+        # فقط assignment های active, pending, یا in_transaction را تغییر می‌دهیم (closed را تغییر نمی‌دهیم)
+        for a in assignments:
+            if str(a.get('land_code')) == str(code):
+                current_a_status = a.get('status', 'active')
+                # فقط assignment های active, pending, یا in_transaction را تغییر می‌دهیم
+                # assignment های closed را تغییر نمی‌دهیم چون بسته شده‌اند
+                if current_a_status in ('active', 'pending', 'in_transaction'):
+                    a['status'] = new_status
+                    a['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    updated = True
+                    current_app.logger.info(f"Updated assignment {a.get('id')} for partner {a.get('partner_phone')} to status {new_status}")
         
         if updated:
             save_express_assignments(assignments)
             if new_status == 'in_transaction':
-                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
+                flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد.', 'success')
             else:
-                flash('✅ وضعیت ملک به "فعال" تغییر یافت.', 'success')
+                flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
         else:
-            flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
+            flash('❌ خطا در بروزرسانی وضعیت.', 'error')
     except Exception as e:
         current_app.logger.error(f"Error toggling land transaction status: {e}")
         flash('❌ خطا در بروزرسانی وضعیت.', 'error')
