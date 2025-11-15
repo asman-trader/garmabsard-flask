@@ -327,7 +327,8 @@ def dashboard():
         my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
     except Exception:
         my_comms = []
-    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms)
+    # کل درآمد: فقط پورسانت‌های تایید شده و پرداخت شده (نه pending و rejected)
+    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '') in ('approved', 'paid'))
     pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending') == 'pending')
     sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
 
@@ -380,7 +381,8 @@ def commissions_page():
         except Exception:
             return 0
 
-    total_commission = sum(_i(c.get('commission_amount')) for c in my_comms)
+    # کل درآمد: فقط پورسانت‌های تایید شده و پرداخت شده (نه pending و rejected)
+    total_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') in ('approved', 'paid'))
     pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending') == 'pending')
     paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') == 'paid')
     sold_count = sum(1 for c in my_comms if (c.get('status') or '') in ('approved','paid'))
