@@ -1378,12 +1378,22 @@ def add_express_listing():
                     file.save(os.path.join(upload_folder, filename))
                     images.append(f'uploads/{filename}')
         
-        # کمیسیون همکاران (اختیاری)
+        # کمیسیون همکاران (الزامی)
         pct_raw = (form.get('express_commission_pct') or '').strip()
+        if not pct_raw:
+            flash('درصد پورسانت الزامی است.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
         try:
-            express_commission_pct = float(pct_raw) if pct_raw else None
-        except Exception:
-            express_commission_pct = None
+            express_commission_pct = float(pct_raw)
+            if express_commission_pct <= 0 or express_commission_pct > 100:
+                flash('درصد پورسانت باید بین ۰ و ۱۰۰ باشد.', 'error')
+                return render_template('admin/add_express_listing.html',
+                                      pending_count=0, approved_count=0, rejected_count=0)
+        except (ValueError, TypeError):
+            flash('درصد پورسانت باید یک عدد معتبر باشد.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
         # محاسبه قیمت در متر
         price_per_meter_raw = form.get('price_per_meter', '').strip()
         price_per_meter_clean = re.sub(r'[^\d]', '', price_per_meter_raw) if price_per_meter_raw else ''
