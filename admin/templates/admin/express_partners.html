@@ -1,38 +1,54 @@
 {% extends 'admin/base_admin.html' %}
 {% block title %}همکاران وینور اکسپرس{% endblock %}
-{% block page_title %}
-<h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-vinor-700 dark:text-green-400 flex items-center gap-2">
-  <i class="fas fa-people-group"></i>
-  همکاران وینور اکسپرس
-{% endblock %}
+{% block page_title %}همکاران{% endblock %}
+
 {% block content %}
-<div class="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
-  <table class="w-full text-sm">
-    <thead class="bg-gray-50 dark:bg-gray-900/40">
-      <tr class="text-right text-gray-700 dark:text-gray-300">
-        <th class="p-3">#</th>
-        <th class="p-3">نام</th>
-        <th class="p-3">شماره</th>
-        <th class="p-3">شهر</th>
-        <th class="p-3">وضعیت</th>
-        <th class="p-3">تاریخ</th>
-      </tr>
-    </thead>
-    <tbody>
+<div class="space-y-4">
+  
+  <!-- لیست همکاران - کارت‌محور برای موبایل -->
+  {% if items and items|length > 0 %}
+    <div class="grid grid-cols-1 gap-3">
       {% for c in items %}
-      <tr class="border-t dark:border-gray-700">
-        <td class="p-3">{{ c.id or loop.index }}</td>
-        <td class="p-3">{{ c.name or '—' }}</td>
-        <td class="p-3">{{ c.phone or '—' }}</td>
-        <td class="p-3">{{ c.city or '—' }}</td>
-        <td class="p-3">{{ c.status or 'approved' }}</td>
-        <td class="p-3"><span class="jalali-dt" data-dt="{{ c.created_at or '' }}"></span></td>
-      </tr>
-      {% else %}
-      <tr><td class="p-3 text-center text-gray-500" colspan="6">موردی ثبت نشده است.</td></tr>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 hover:shadow-md transition">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fa-solid fa-user text-violet-600 text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ c.name or 'بدون نام' }}</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ c.phone or '—' }}</p>
+                </div>
+              </div>
+              
+              <div class="flex flex-wrap gap-2 text-sm mt-3">
+                <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <i class="fa-solid fa-location-dot text-xs"></i>
+                  {{ c.city or '—' }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                  <i class="fa-solid fa-check-circle text-xs"></i>
+                  {{ c.status or 'approved' }}
+                </span>
+                <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-500 text-xs">
+                  <i class="fa-solid fa-calendar text-xs"></i>
+                  <span class="jalali-dt" data-dt="{{ c.created_at or '' }}"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       {% endfor %}
-    </tbody>
- </table>
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <i class="fa-solid fa-users text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">موردی ثبت نشده است.</p>
+    </div>
+  {% endif %}
+
+</div>
 
 <script>
 (function(){
@@ -40,7 +56,7 @@
     try{
       const d = new Date(String(dt||'').replace(' ','T'));
       if (isNaN(d)) return '';
-      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit' });
     }catch(_){ return ''; }
   }
   document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
@@ -49,7 +65,4 @@
   });
 })();
 </script>
-</div>
 {% endblock %}
-
-

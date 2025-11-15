@@ -1,89 +1,111 @@
 {% extends 'admin/base_admin.html' %}
-
-{% block title %}کاربران | پنل مدیریت{% endblock %}
-
-{% block page_title %}
-<i class="fa-solid fa-users"></i>
-کاربران
-{% endblock %}
+{% block title %}کاربران{% endblock %}
+{% block page_title %}کاربران{% endblock %}
 
 {% block content %}
-<div class="p-4 sm:p-6">
-
+<div class="space-y-4">
+  
   <!-- آمار خلاصه -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
-      <div class="text-xs text-gray-500 dark:text-gray-300">کل کاربران</div>
-      <div class="text-2xl font-extrabold">{{ total_users or 0 }}</div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">کل کاربران</div>
+      <div class="text-xl font-bold text-gray-900 dark:text-white">{{ total_users or 0 }}</div>
     </div>
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
-      <div class="text-xs text-gray-500 dark:text-gray-300">فعال (۳۰ روز اخیر)</div>
-      <div class="text-2xl font-extrabold">{{ active_users or 0 }}</div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">فعال (۳۰ روز)</div>
+      <div class="text-xl font-bold text-gray-900 dark:text-white">{{ active_users or 0 }}</div>
     </div>
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
-      <div class="text-xs text-gray-500 dark:text-gray-300">جدید (۷ روز)</div>
-      <div class="text-2xl font-extrabold">{{ new_users_7d or 0 }}</div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">جدید (۷ روز)</div>
+      <div class="text-xl font-bold text-gray-900 dark:text-white">{{ new_users_7d or 0 }}</div>
     </div>
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3">
-      <div class="text-xs text-gray-500 dark:text-gray-300">تایید شده</div>
-      <div class="text-2xl font-extrabold">{{ verified_users or 0 }}</div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+      <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">تایید شده</div>
+      <div class="text-xl font-bold text-gray-900 dark:text-white">{{ verified_users or 0 }}</div>
     </div>
   </div>
 
   <!-- فیلترها -->
-  <form method="get" class="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-    <input name="q" value="{{ q or '' }}" placeholder="جستجو (نام، موبایل، ایمیل)" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
-    <select name="sort" class="text-sm border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700">
-      <option value="created_desc" {% if sort=='created_desc' %}selected{% endif %}>جدیدترین</option>
-      <option value="created_asc" {% if sort=='created_asc' %}selected{% endif %}>قدیمی‌تر</option>
-      <option value="last_login_desc" {% if sort=='last_login_desc' %}selected{% endif %}>آخرین ورود (جدیدتر)</option>
-      <option value="last_login_asc" {% if sort=='last_login_asc' %}selected{% endif %}>آخرین ورود (قدیمی‌تر)</option>
-    </select>
-    <button class="bg-vinor-600 hover:bg-vinor-700 text-white text-sm rounded px-3 py-2">اعمال</button>
-  </form>
-
-  <!-- جدول کاربران -->
-  <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-    <table class="w-full text-sm bg-white dark:bg-gray-800">
-      <thead class="bg-gray-50 dark:bg-gray-700/60">
-        <tr class="text-gray-700 dark:text-gray-200">
-          <th class="p-2 text-right">نام</th>
-          <th class="p-2 text-right">موبایل</th>
-          <th class="p-2 text-right">ایمیل</th>
-          <th class="p-2 text-center">تایید</th>
-          <th class="p-2 text-center">آخرین ورود</th>
-          <th class="p-2 text-center">تاریخ ایجاد</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for u in users %}
-        <tr class="border-t dark:border-gray-700">
-          <td class="p-2">{{ u.name or u.fullname or '—' }}</td>
-          <td class="p-2">{{ u.phone or u.mobile or '—' }}</td>
-          <td class="p-2">{{ u.email or '—' }}</td>
-          <td class="p-2 text-center">{{ '✅' if (u.is_verified or u.verified or u.phone_verified) else '—' }}</td>
-          <td class="p-2 text-center">{{ u.last_login_ts or u.last_login or '—' }}</td>
-          <td class="p-2 text-center">{{ u.created_at_ts or u.created_at or '—' }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <form method="get" class="space-y-3">
+      <div>
+        <input name="q" value="{{ q or '' }}" 
+               placeholder="جستجو (نام، موبایل، ایمیل)" 
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <select name="sort" class="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+          <option value="created_desc" {% if sort=='created_desc' %}selected{% endif %}>جدیدترین</option>
+          <option value="created_asc" {% if sort=='created_asc' %}selected{% endif %}>قدیمی‌تر</option>
+          <option value="last_login_desc" {% if sort=='last_login_desc' %}selected{% endif %}>آخرین ورود (جدیدتر)</option>
+          <option value="last_login_asc" {% if sort=='last_login_asc' %}selected{% endif %}>آخرین ورود (قدیمی‌تر)</option>
+        </select>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium transition">
+          <i class="fa-solid fa-filter ml-1"></i>
+          اعمال
+        </button>
+      </div>
+    </form>
   </div>
 
-  <!-- صفحه‌بندی -->
-  {% if pages and pages>1 %}
-  <div class="mt-3 flex items-center justify-center gap-1 text-sm">
-    {% for p in range(1, pages+1) %}
-      <a href="{{ url_for('admin.users_page', q=q, sort=sort, page=p) }}"
-         class="px-3 py-1 rounded border
-                {% if p == page %} bg-vinor-600 text-white border-vinor-600 {% else %} bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 {% endif %}">
-        {{ p }}
-      </a>
-    {% endfor %}
-  </div>
+  <!-- لیست کاربران -->
+  {% if users and users|length > 0 %}
+    <div class="grid grid-cols-1 gap-3">
+      {% for u in users %}
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fa-solid fa-user text-violet-600 text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ u.name or u.fullname or 'بدون نام' }}</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 ltr">{{ u.phone or u.mobile or u.email or '—' }}</p>
+                </div>
+              </div>
+              
+              <div class="flex flex-wrap gap-2 text-sm">
+                {% if u.email %}
+                  <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                    <i class="fa-solid fa-envelope text-xs"></i>
+                    {{ u.email }}
+                  </span>
+                {% endif %}
+                {% if u.last_login %}
+                  <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-500 text-xs">
+                    <i class="fa-solid fa-clock text-xs"></i>
+                    <span class="jalali-dt" data-dt="{{ u.last_login }}"></span>
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <i class="fa-solid fa-users text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">کاربری یافت نشد.</p>
+    </div>
   {% endif %}
 
 </div>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
 {% endblock %}
-
-

@@ -1,106 +1,145 @@
 {% extends 'admin/base_admin.html' %}
-{% block title %}درخواست‌های همکاری وینور اکسپرس{% endblock %}
-{% block page_title %}
-<h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-vinor-700 dark:text-green-400 flex items-center gap-2">
-  <i class="fas fa-handshake"></i>
-  درخواست‌های همکاری وینور اکسپرس
-{% endblock %}
-{% block content %}
-<div class="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
-  <table class="w-full text-sm">
-    <thead class="bg-gray-50 dark:bg-gray-900/40">
-      <tr class="text-right text-gray-700 dark:text-gray-300">
-        <th class="p-3">#</th>
-        <th class="p-3">نام</th>
-        <th class="p-3">شماره</th>
-        <th class="p-3">شهر</th>
-        <th class="p-3">سابقه</th>
-        <th class="p-3">توضیحات</th>
-        <th class="p-3">تاریخ</th>
-        <th class="p-3">وضعیت</th>
-        <th class="p-3">اقدامات</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for a in items %}
-      <tr class="border-t dark:border-gray-700" data-row-id="{{ a.id }}">
-        <td class="p-3">{{ a.id }}</td>
-        <td class="p-3">{{ a.name or '—' }}</td>
-        <td class="p-3">{{ a.phone or '—' }}</td>
-        <td class="p-3">{{ a.city or '—' }}</td>
-        <td class="p-3">{{ a.experience or '—' }}</td>
-        <td class="p-3 truncate max-w-[18ch]" title="{{ a.note }}">{{ a.note or '—' }}</td>
-        <td class="p-3"><span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></td>
-        <td class="p-3" data-status>{{ a.status or 'new' }}</td>
-        <td class="p-3">
-          <div class="flex items-center gap-2">
-            <button type="button"
-              class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              onclick="openAppModal({{ a.id }})">جزئیات</button>
-            <form method="post" action="{{ url_for('admin.express_partner_application_approve', aid=a.id) }}" class="contents" x-data data-ajax="1">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
-                class="px-3 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">تأیید</button>
-            </form>
-            <form method="post" action="{{ url_for('admin.express_partner_application_reject', aid=a.id) }}" class="contents" x-data data-ajax="1">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" @click.prevent="if(confirm('رد این درخواست؟')) $el.closest('form').submit()"
-                class="px-3 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700">رد</button>
-            </form>
-          </div>
-        </td>
-      </tr>
+{% block title %}درخواست‌های همکاری{% endblock %}
+{% block page_title %}درخواست‌های همکاری{% endblock %}
 
-      <!-- Modal: Details for application {{ a.id }} -->
-      <div id="appModal-{{ a.id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-black/40" onclick="closeAppModal({{ a.id }})"></div>
-        <div class="absolute inset-x-0 top-12 mx-auto max-w-xl w-[92vw] bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
-          <div class="flex items-center justify-between px-4 h-12 border-b border-gray-200 dark:border-gray-800">
-            <div class="text-sm font-bold">جزئیات درخواست #{{ a.id }}</div>
-            <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" onclick="closeAppModal({{ a.id }})" aria-label="بستن">
-              <i class="fas fa-xmark"></i>
+{% block content %}
+<div class="space-y-4">
+  
+  {% if items and items|length > 0 %}
+    <div class="grid grid-cols-1 gap-3">
+      {% for a in items %}
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 hover:shadow-md transition">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fa-solid fa-file-circle-check text-amber-600 text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ a.name or 'بدون نام' }}</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 ltr">{{ a.phone or '—' }}</p>
+                </div>
+              </div>
+              
+              <div class="flex flex-wrap gap-2 text-sm">
+                <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <i class="fa-solid fa-location-dot text-xs"></i>
+                  {{ a.city or '—' }}
+                </span>
+                <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <i class="fa-solid fa-briefcase text-xs"></i>
+                  {{ a.experience or '—' }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                  {% if a.status == 'approved' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400
+                  {% elif a.status == 'rejected' %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400
+                  {% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400{% endif %} text-xs font-medium">
+                  {{ a.status or 'new' }}
+                </span>
+                <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-500 text-xs">
+                  <i class="fa-solid fa-calendar text-xs"></i>
+                  <span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span>
+                </span>
+              </div>
+              
+              {% if a.note %}
+                <div class="mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{{ a.note }}</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <!-- دکمه‌های اقدام -->
+          <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+            <button type="button"
+              class="flex-1 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium transition"
+              onclick="openAppModal({{ a.id }})">
+              <i class="fa-solid fa-eye ml-1"></i>
+              جزئیات
             </button>
-          </div>
-          <div class="p-4 text-sm space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <div class="text-gray-500">نام</div>
-                <div class="font-semibold">{{ a.name or '—' }}</div>
-              </div>
-              <div>
-                <div class="text-gray-500">شماره</div>
-                <div class="font-semibold ltr">{{ a.phone or '—' }}</div>
-              </div>
-              <div>
-                <div class="text-gray-500">شهر</div>
-                <div class="font-semibold">{{ a.city or '—' }}</div>
-              </div>
-              <div>
-                <div class="text-gray-500">وضعیت</div>
-                <div class="font-semibold">{{ a.status or 'new' }}</div>
-              </div>
-            </div>
-            <div>
-              <div class="text-gray-500">سابقه</div>
-              <div class="font-semibold">{{ a.experience or '—' }}</div>
-            </div>
-            <div>
-              <div class="text-gray-500">توضیحات</div>
-              <div class="font-semibold whitespace-pre-wrap">{{ a.note or '—' }}</div>
-            </div>
-            <div class="text-xs text-gray-500">تاریخ ثبت: <span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></div>
-          </div>
-          <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-2">
-            <button class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeAppModal({{ a.id }})">بستن</button>
+            
+            {% if a.status != 'approved' %}
+              <form method="post" action="{{ url_for('admin.express_partner_application_approve', aid=a.id) }}" class="flex-1" x-data>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" 
+                  @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
+                  class="w-full px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium transition">
+                  <i class="fa-solid fa-check ml-1"></i>
+                  تأیید
+                </button>
+              </form>
+            {% endif %}
+            
+            {% if a.status != 'rejected' %}
+              <form method="post" action="{{ url_for('admin.express_partner_application_reject', aid=a.id) }}" class="flex-1" x-data>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" 
+                  @click.prevent="if(confirm('رد این درخواست؟')) $el.closest('form').submit()"
+                  class="w-full px-3 py-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 text-sm font-medium transition">
+                  <i class="fa-solid fa-times ml-1"></i>
+                  رد
+                </button>
+              </form>
+            {% endif %}
           </div>
         </div>
-      </div>
-      {% else %}
-      <tr><td class="p-3 text-center text-gray-500" colspan="7">درخواستی وجود ندارد.</td></tr>
+
+        <!-- Modal: Details -->
+        <div id="appModal-{{ a.id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+          <div class="absolute inset-0 bg-black/40" onclick="closeAppModal({{ a.id }})"></div>
+          <div class="absolute inset-x-0 top-12 mx-auto max-w-xl w-[92vw] bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-4 h-14 border-b border-gray-200 dark:border-gray-800">
+              <div class="text-base font-bold">جزئیات درخواست #{{ a.id }}</div>
+              <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" onclick="closeAppModal({{ a.id }})" aria-label="بستن">
+                <i class="fas fa-xmark"></i>
+              </button>
+            </div>
+            <div class="p-4 text-sm space-y-4 overflow-y-auto">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="text-gray-500 mb-1">نام</div>
+                  <div class="font-semibold">{{ a.name or '—' }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500 mb-1">شماره</div>
+                  <div class="font-semibold ltr">{{ a.phone or '—' }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500 mb-1">شهر</div>
+                  <div class="font-semibold">{{ a.city or '—' }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500 mb-1">وضعیت</div>
+                  <div class="font-semibold">{{ a.status or 'new' }}</div>
+                </div>
+              </div>
+              <div>
+                <div class="text-gray-500 mb-1">سابقه</div>
+                <div class="font-semibold">{{ a.experience or '—' }}</div>
+              </div>
+              <div>
+                <div class="text-gray-500 mb-1">توضیحات</div>
+                <div class="font-semibold whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">{{ a.note or '—' }}</div>
+              </div>
+              <div class="text-xs text-gray-500">تاریخ ثبت: <span class="jalali-dt" data-dt="{{ a.created_at or '' }}"></span></div>
+            </div>
+            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+              <button class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700" onclick="closeAppModal({{ a.id }})">بستن</button>
+            </div>
+          </div>
+        </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <i class="fa-solid fa-file-circle-check text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">درخواستی وجود ندارد.</p>
+    </div>
+  {% endif %}
+
 </div>
+
 <script>
   function openAppModal(id){
     const el = document.getElementById('appModal-'+id);
@@ -110,30 +149,23 @@
     const el = document.getElementById('appModal-'+id);
     if(!el) return; el.classList.add('hidden');
   }
-  // Render Jalali date-time (Iran timezone)
+  
   (function(){
     function fmt(dt){
       try{
         const d = new Date(String(dt||'').replace(' ','T'));
         if (isNaN(d)) return '';
-        try{
-          return d.toLocaleString('fa-IR', {
-            timeZone: 'Asia/Tehran',
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit'
-          });
-        }catch(_){
-          return d.toLocaleString('fa-IR');
-        }
+        return d.toLocaleString('fa-IR', {
+          timeZone: 'Asia/Tehran',
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit'
+        });
       }catch(_){ return ''; }
     }
     document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
       const raw = el.getAttribute('data-dt')||'';
-      const out = fmt(raw);
-      el.textContent = out || '—';
+      el.textContent = fmt(raw) || '—';
     });
   })();
 </script>
 {% endblock %}
-
-

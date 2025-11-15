@@ -1,77 +1,135 @@
 {% extends 'admin/base_admin.html' %}
-{% block title %}مدیریت پورسانت همکاران | پنل مدیریت{% endblock %}
-{% block page_title %}
-<h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-vinor-700 dark:text-green-400 flex items-center gap-2">
-  <i class="fas fa-percent"></i>
-  مدیریت پورسانت همکاران
-{% endblock %}
+{% block title %}مدیریت پورسانت همکاران{% endblock %}
+{% block page_title %}پورسانت‌ها{% endblock %}
+
 {% block content %}
-<div class="grid lg:grid-cols-2 gap-4">
-  <div class="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
-    <h2 class="font-semibold mb-3">ثبت پورسانت جدید</h2>
-    <form method="post" action="{{ url_for('admin.express_commission_new') }}" class="grid sm:grid-cols-4 gap-2">
+<div class="space-y-6">
+  
+  <!-- فرم ثبت پورسانت جدید -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-plus-circle text-green-600"></i>
+      ثبت پورسانت جدید
+    </h2>
+    <form method="post" action="{{ url_for('admin.express_commission_new') }}" class="space-y-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="text" name="partner_phone" class="border rounded-md px-2 py-2" placeholder="شماره همکار" required>
-      <input type="text" name="land_code" class="border rounded-md px-2 py-2" placeholder="کد فایل" required>
-      <input type="text" name="sale_amount" class="border rounded-md px-2 py-2" placeholder="مبلغ فروش" required>
-      <input type="number" step="0.1" min="0" max="100" name="commission_pct" class="border rounded-md px-2 py-2" placeholder="٪ پورسانت">
-      <div class="sm:col-span-4">
-        <button class="px-3 py-2 rounded-md bg-emerald-600 text-white">ثبت</button>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">شماره همکار</label>
+        <input type="text" name="partner_phone" 
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+               placeholder="09123456789" required>
       </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">کد فایل</label>
+        <input type="text" name="land_code" 
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+               placeholder="کد فایل" required>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ فروش</label>
+          <input type="text" name="sale_amount" 
+                 class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                 placeholder="مبلغ" required>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">درصد پورسانت</label>
+          <input type="number" step="0.1" min="0" max="100" name="commission_pct" 
+                 class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                 placeholder="٪">
+        </div>
+      </div>
+      
+      <button type="submit" class="w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition">
+        <i class="fa-solid fa-check ml-1"></i>
+        ثبت
+      </button>
     </form>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
-    <h2 class="font-semibold mb-3">لیست پورسانت‌ها</h2>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-right text-gray-600 dark:text-gray-300">
-            <th class="p-2">#</th>
-            <th class="p-2">همکار</th>
-            <th class="p-2">کد فایل</th>
-            <th class="p-2">فروش</th>
-            <th class="p-2">٪</th>
-            <th class="p-2">پورسانت</th>
-            <th class="p-2">وضعیت</th>
-            <th class="p-2">اقدامات</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in items %}
-            <tr class="border-t dark:border-gray-700">
-              <td class="p-2">{{ c.id }}</td>
-              <td class="p-2">{{ c.partner_phone }}</td>
-              <td class="p-2">{{ c.land_code }}</td>
-              <td class="p-2">{{ c.sale_amount }}</td>
-              <td class="p-2">{{ c.commission_pct }}</td>
-              <td class="p-2">{{ c.commission_amount }}</td>
-              <td class="p-2">{{ c.status }}</td>
-              <td class="p-2">
-                <div class="flex items-center gap-2">
-                  {% if c.status == 'pending' %}
+  <!-- لیست پورسانت‌ها -->
+  <div>
+    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-wallet text-green-600"></i>
+      لیست پورسانت‌ها
+    </h2>
+    
+    {% if items and items|length > 0 %}
+      <div class="grid grid-cols-1 gap-3">
+        {% for c in items %}
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-wallet text-green-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ c.partner_phone }}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">کد: {{ c.land_code }}</p>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-sm mt-3">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">فروش:</span>
+                    <span class="font-semibold text-gray-900 dark:text-white mr-1">{{ c.sale_amount or '—' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400">درصد:</span>
+                    <span class="font-semibold text-gray-900 dark:text-white mr-1">{{ c.commission_pct or '—' }}%</span>
+                  </div>
+                  <div class="col-span-2">
+                    <span class="text-gray-500 dark:text-gray-400">پورسانت:</span>
+                    <span class="font-bold text-green-600 dark:text-green-400 mr-1">{{ c.commission_amount or '—' }}</span>
+                  </div>
+                </div>
+                
+                <div class="mt-3">
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                    {% if c.status == 'paid' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400
+                    {% elif c.status == 'approved' %}bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400
+                    {% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400{% endif %} text-xs font-medium">
+                    {{ c.status }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="flex flex-col gap-2 flex-shrink-0">
+                {% if c.status == 'pending' %}
                   <form method="post" action="{{ url_for('admin.express_commission_approve', cid=c.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="px-2 py-1 rounded bg-blue-600 text-white text-xs">تایید</button>
+                    <button type="submit" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                      <i class="fa-solid fa-check ml-1"></i>
+                      تایید
+                    </button>
                   </form>
-                  {% endif %}
-                  {% if c.status in ['pending','approved'] %}
+                {% endif %}
+                {% if c.status in ['pending','approved'] %}
                   <form method="post" action="{{ url_for('admin.express_commission_pay', cid=c.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="px-2 py-1 rounded bg-emerald-600 text-white text-xs">پرداخت</button>
+                    <button type="submit" class="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition">
+                      <i class="fa-solid fa-money-bill ml-1"></i>
+                      پرداخت
+                    </button>
                   </form>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% else %}
-            <tr><td class="p-2 text-gray-500" colspan="8">موردی ثبت نشده است.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+        <i class="fa-solid fa-wallet text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+        <p class="text-gray-500 dark:text-gray-400">موردی ثبت نشده است.</p>
+      </div>
+    {% endif %}
   </div>
+
 </div>
 {% endblock %}
-
-

@@ -1,80 +1,129 @@
 {% extends 'admin/base_admin.html' %}
-{% block title %}فایل‌های همکاران اکسپرس{% endblock %}
-{% block content %}
-<div class="max-w-5xl mx-auto py-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-xl font-bold">فایل‌های همکاران اکسپرس</h1>
-    <a class="px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700" href="{{ url_for('admin.dashboard') }}">بازگشت</a>
-  </div>
+{% block title %}فایل‌های همکاران{% endblock %}
+{% block page_title %}فایل‌های همکاران{% endblock %}
 
-  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-    <form method="get" class="flex flex-wrap gap-2 items-end">
+{% block content %}
+<div class="space-y-4">
+  
+  <!-- فیلتر -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <form method="get" class="space-y-3">
       <div>
-        <label class="block text-sm mb-1">فیلتر بر اساس همکار</label>
-        <select name="partner" class="border rounded-md px-3 py-2 min-w-[220px]">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">فیلتر بر اساس همکار</label>
+        <select name="partner" class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
           <option value="">همه</option>
           {% for p in partners %}
             <option value="{{ p.phone }}" {% if partner_filter == p.phone %}selected{% endif %}>{{ p.name or p.phone }} ({{ p.phone }})</option>
           {% endfor %}
         </select>
       </div>
-      <button class="px-4 py-2 rounded-md bg-emerald-600 text-white">اعمال فیلتر</button>
+      <button type="submit" class="w-full px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium transition">
+        <i class="fa-solid fa-filter ml-1"></i>
+        اعمال فیلتر
+      </button>
     </form>
-  </section>
+  </div>
 
-  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-    <form method="post" enctype="multipart/form-data" class="grid sm:grid-cols-3 gap-3 items-end">
+  <!-- بارگذاری فایل -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-upload text-violet-600"></i>
+      بارگذاری فایل جدید
+    </h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
       <div>
-        <label class="block text-sm mb-1">انتخاب همکار (جستجو یا شماره را وارد کنید)</label>
-        <input type="text" name="partner_phone" list="partner_phones" required class="border rounded-md px-3 py-2 w-full" placeholder="شماره همکار یا جستجو...">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">انتخاب همکار</label>
+        <input type="text" name="partner_phone" list="partner_phones" required 
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+               placeholder="شماره همکار یا جستجو...">
         <datalist id="partner_phones">
           {% for p in partners %}
             <option value="{{ p.phone }}">{{ p.name or p.phone }}</option>
           {% endfor %}
         </datalist>
       </div>
+      
       <div>
-        <label class="block text-sm mb-1">انتخاب فایل</label>
-        <input type="file" name="file" required class="border rounded-md px-3 py-2 w-full bg-white">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">انتخاب فایل</label>
+        <input type="file" name="file" required 
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
       </div>
-      <div>
-        <button class="px-4 py-2 rounded-md bg-indigo-600 text-white w-full">بارگذاری فایل</button>
-      </div>
+      
+      <button type="submit" class="w-full px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium transition">
+        <i class="fa-solid fa-upload ml-1"></i>
+        بارگذاری فایل
+      </button>
     </form>
-  </section>
+  </div>
 
-  <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 dark:bg-gray-800">
-        <tr class="text-right text-gray-700 dark:text-gray-300">
-          <th class="p-3">#</th>
-          <th class="p-3">همکار</th>
-          <th class="p-3">نام فایل</th>
-          <th class="p-3">تاریخ</th>
-          <th class="p-3">عملیات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for m in items %}
-        <tr class="border-t dark:border-gray-700">
-          <td class="p-3">{{ m.id }}</td>
-          <td class="p-3">{{ m.phone }}</td>
-          <td class="p-3">{{ m.filename }}</td>
-          <td class="p-3">{{ m.stored_at }}</td>
-          <td class="p-3 flex gap-2">
-            <a class="px-3 py-1.5 rounded-md border" href="{{ url_for('admin.express_partner_file_download', fid=m.id) }}">دانلود</a>
-            <form method="post" action="{{ url_for('admin.express_partner_file_delete', fid=m.id) }}" onsubmit="return confirm('حذف فایل؟');">
-              <button class="px-3 py-1.5 rounded-md border text-rose-600">حذف</button>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td class="p-3 text-center text-gray-500" colspan="5">فایلی موجود نیست.</td></tr>
+  <!-- لیست فایل‌ها -->
+  {% if files and files|length > 0 %}
+    <div>
+      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-folder text-violet-600"></i>
+        فایل‌های بارگذاری شده
+      </h2>
+      <div class="grid grid-cols-1 gap-3">
+        {% for f in files %}
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-file text-violet-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ f.filename or f.file_path or 'فایل' }}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ f.partner_phone or '—' }}</p>
+                  </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 text-sm">
+                  {% if f.uploaded_at %}
+                    <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-500 text-xs">
+                      <i class="fa-solid fa-calendar text-xs"></i>
+                      <span class="jalali-dt" data-dt="{{ f.uploaded_at }}"></span>
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+              
+              {% if f.file_path %}
+                <a href="{{ url_for('admin.express_partner_file_download', fid=f.id) }}" 
+                   class="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition flex-shrink-0">
+                  <i class="fa-solid fa-download ml-1"></i>
+                  دانلود
+                </a>
+              {% endif %}
+            </div>
+          </div>
         {% endfor %}
-      </tbody>
-    </table>
-  </section>
+      </div>
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <i class="fa-solid fa-folder text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+      <p class="text-gray-500 dark:text-gray-400">فایلی بارگذاری نشده است.</p>
+    </div>
+  {% endif %}
+
 </div>
+
+<script>
+(function(){
+  function fmt(dt){
+    try{
+      const d = new Date(String(dt||'').replace(' ','T'));
+      if (isNaN(d)) return '';
+      return d.toLocaleString('fa-IR', { timeZone: 'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit' });
+    }catch(_){ return ''; }
+  }
+  document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+    const raw = el.getAttribute('data-dt')||'';
+    el.textContent = fmt(raw) || '—';
+  });
+})();
+</script>
 {% endblock %}
-
-
