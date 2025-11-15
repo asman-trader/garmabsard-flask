@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>{% block title %}پنل مدیریت | وینور{% endblock %}</title>
   <meta name="theme-color" content="#7C3AED" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="{{ url_for('admin.admin_manifest') }}" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="وینور ادمین" />
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -146,6 +152,36 @@
 
   <!-- Alpine.js -->
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('{{ url_for("admin.admin_service_worker") }}', {
+          scope: '/admin/'
+        }).then((reg) => {
+          console.log('Admin Service Worker registered:', reg.scope);
+          
+          // Check for updates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker available, prompt user to refresh
+                  if (confirm('نسخه جدید پنل ادمین آماده است. آیا می‌خواهید صفحه را تازه کنید؟')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            }
+          });
+        }).catch((err) => {
+          console.error('Admin Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
 
   {% block scripts %}{% endblock %}
 </body>

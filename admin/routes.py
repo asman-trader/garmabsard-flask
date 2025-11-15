@@ -538,6 +538,55 @@ def logout():
     return redirect(url_for('admin.login'))
 
 # -----------------------------------------------------------------------------
+# PWA Routes
+# -----------------------------------------------------------------------------
+@admin_bp.route('/manifest.webmanifest')
+def admin_manifest():
+    """سرو manifest برای PWA ادمین"""
+    from flask import send_from_directory, Response
+    import os
+    
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    manifest_path = os.path.join(static_dir, 'admin-manifest.webmanifest')
+    
+    if os.path.exists(manifest_path):
+        return send_from_directory(static_dir, 'admin-manifest.webmanifest', mimetype='application/manifest+json')
+    
+    # Fallback
+    fallback = {
+        "id": "/admin",
+        "name": "پنل مدیریت وینور",
+        "short_name": "وینور ادمین",
+        "description": "پنل مدیریت وینور اکسپرس",
+        "dir": "rtl",
+        "lang": "fa",
+        "start_url": "/admin/?source=pwa",
+        "scope": "/admin/",
+        "display": "standalone",
+        "background_color": "#7C3AED",
+        "theme_color": "#7C3AED",
+        "icons": [
+            { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+            { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+        ]
+    }
+    return Response(json.dumps(fallback, ensure_ascii=False), mimetype='application/manifest+json')
+
+@admin_bp.route('/sw.js')
+def admin_service_worker():
+    """سرو service worker برای PWA ادمین"""
+    from flask import send_from_directory
+    import os
+    
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    sw_path = os.path.join(static_dir, 'admin-sw.js')
+    
+    if os.path.exists(sw_path):
+        return send_from_directory(static_dir, 'admin-sw.js', mimetype='application/javascript')
+    
+    return ('// Admin Service Worker not found', 404)
+
+# -----------------------------------------------------------------------------
 # داشبورد و صفحات کلی
 # -----------------------------------------------------------------------------
 @admin_bp.route('/select', endpoint='select_portal')

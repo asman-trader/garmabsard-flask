@@ -1,0 +1,27 @@
+{
+  "id": "/admin",
+  "name": "پنل مدیریت وینور",
+  "short_name": "وینور ادمین",
+  "description": "پنل مدیریت وینور اکسپرس - مدیریت همکاران، آگهی‌ها و پورسانت‌ها",
+  "dir": "rtl",
+  "lang": "fa",
+  "start_url": "/admin/?source=pwa",
+  "scope": "/admin/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#7C3AED",
+  "theme_color": "#7C3AED",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "shortcuts": [
+    { "name": "داشبورد", "short_name": "داشبورد", "url": "/admin/" },
+    { "name": "همکاران", "short_name": "همکاران", "url": "/admin/express/partners" },
+    { "name": "آگهی‌های اکسپرس", "short_name": "آگهی‌ها", "url": "/admin/express/listings" }
+  ],
+  "capture_links": "existing-client-navigate",
+  "launch_handler": { "client_mode": "auto" }
+}
+
