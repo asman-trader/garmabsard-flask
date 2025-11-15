@@ -1,0 +1,86 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}ویرایش پورسانت{% endblock %}
+{% block page_title %}ویرایش پورسانت{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+  <form method="POST" action="{{ url_for('admin.express_commission_edit', cid=commission.id) }}" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">شماره همکار</label>
+      <input type="text" value="{{ commission.partner_phone }}" disabled
+             class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">کد فایل</label>
+      <input type="text" value="{{ commission.land_code }}" disabled
+             class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+    </div>
+    
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ فروش (تومان)</label>
+        <input type="text" name="sale_amount" value="{{ commission.sale_amount or '' }}" required
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+               placeholder="مبلغ فروش">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">درصد پورسانت (٪)</label>
+        <input type="number" step="0.1" min="0" max="100" name="commission_pct" value="{{ commission.commission_pct or '' }}" required
+               class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+               placeholder="درصد">
+      </div>
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ پورسانت (تومان)</label>
+      <input type="text" value="{{ commission.commission_amount or '—' }}" disabled
+             class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">این مبلغ به صورت خودکار از مبلغ فروش و درصد پورسانت محاسبه می‌شود</p>
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">وضعیت</label>
+      <input type="text" value="{% if commission.status == 'paid' %}پرداخت شده{% elif commission.status == 'approved' %}تایید شده{% elif commission.status == 'rejected' %}رد شده{% else %}در انتظار{% endif %}" disabled
+             class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+    </div>
+    
+    <div class="flex gap-3 pt-4">
+      <button type="submit" class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition">
+        <i class="fa-solid fa-save ml-1"></i>
+        ذخیره تغییرات
+      </button>
+      <a href="{{ url_for('admin.express_commissions') }}" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium transition">
+        انصراف
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // محاسبه خودکار مبلغ پورسانت
+  document.querySelector('input[name="sale_amount"]')?.addEventListener('input', updateCommission);
+  document.querySelector('input[name="commission_pct"]')?.addEventListener('input', updateCommission);
+  
+  function updateCommission() {
+    const saleInput = document.querySelector('input[name="sale_amount"]');
+    const pctInput = document.querySelector('input[name="commission_pct"]');
+    const amountInput = document.querySelector('input[value*="{{ commission.commission_amount }}"]');
+    
+    if (saleInput && pctInput && amountInput) {
+      try {
+        const sale = parseInt(saleInput.value.replace(/,/g, '')) || 0;
+        const pct = parseFloat(pctInput.value) || 0;
+        const amount = Math.round(sale * (pct / 100));
+        amountInput.value = amount.toLocaleString('fa-IR') || '—';
+      } catch(e) {
+        amountInput.value = '—';
+      }
+    }
+  }
+</script>
+{% endblock %}
+

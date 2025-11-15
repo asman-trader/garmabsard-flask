@@ -1765,18 +1765,54 @@ def express_commission_new():
 def express_commission_approve(cid: int):
     items = load_express_commissions() or []
     changed = False
+    commission_record = None
     for c in items:
         try:
             if int(c.get('id',0) or 0) == int(cid):
-                c['status'] = 'approved'
-                c['approved_at'] = iso_z(utcnow())
-                changed = True
+                # فقط اگر در وضعیت pending باشد، تایید کن
+                if c.get('status') == 'pending':
+                    c['status'] = 'approved'
+                    c['approved_at'] = iso_z(utcnow())
+                    commission_record = c
+                    changed = True
                 break
         except Exception:
             continue
-    if changed:
+    if changed and commission_record:
         save_express_commissions(items)
-        flash('پورسانت تایید شد.', 'success')
+        
+        # به‌روزرسانی آمار همکار
+        try:
+            partner_phone = str(commission_record.get('partner_phone', '')).strip()
+            commission_amount = int(commission_record.get('commission_amount') or 0)
+            sale_amount = int(commission_record.get('sale_amount') or 0)
+            
+            if partner_phone:
+                partners = load_express_partners() or []
+                for p in partners:
+                    if str(p.get('phone')) == partner_phone:
+                        # افزودن به کل درآمد
+                        current_income = int(p.get('total_income', 0) or 0)
+                        p['total_income'] = current_income + commission_amount
+                        
+                        # افزودن به تعداد فروش‌های تایید شده
+                        current_sales = int(p.get('approved_sales_count', 0) or 0)
+                        p['approved_sales_count'] = current_sales + 1
+                        
+                        # افزودن به کل فروش‌های تایید شده
+                        current_total_sales = int(p.get('total_approved_sales', 0) or 0)
+                        p['total_approved_sales'] = current_total_sales + sale_amount
+                        
+                        p['last_updated'] = iso_z(utcnow())
+                        break
+                
+                save_express_partners(partners)
+        except Exception as e:
+            current_app.logger.error(f"Error updating partner stats: {e}")
+        
+        flash('پورسانت تایید شد و به آمار همکار اضافه شد.', 'success')
+    elif not changed:
+        flash('پورسانت قبلاً تایید شده است.', 'warning')
     return redirect(url_for('admin.express_commissions'))
 
 @admin_bp.post('/express/commissions/<int:cid>/pay')
@@ -1787,16 +1823,154 @@ def express_commission_pay(cid: int):
     for c in items:
         try:
             if int(c.get('id',0) or 0) == int(cid):
-                c['status'] = 'paid'
-                c['paid_at'] = iso_z(utcnow())
-                changed = True
+                if c.get('status') == 'approved':
+                    c['status'] = 'paid'
+                    c['paid_at'] = iso_z(utcnow())
+                    changed = True
                 break
         except Exception:
             continue
     if changed:
         save_express_commissions(items)
         flash('پورسانت پرداخت شد.', 'success')
+    elif not changed:
+        flash('پورسانت باید ابتدا تایید شود.', 'warning')
     return redirect(url_for('admin.express_commissions'))
+
+@admin_bp.post('/express/commissions/<int:cid>/reject')
+@login_required
+def express_commission_reject(cid: int):
+    items = load_express_commissions() or []
+    changed = False
+    commission_record = None
+    old_status = None
+    for c in items:
+        try:
+            if int(c.get('id',0) or 0) == int(cid):
+                old_status = c.get('status')
+                if c.get('status') in ('pending', 'approved'):
+                    c['status'] = 'rejected'
+                    c['rejected_at'] = iso_z(utcnow())
+                    commission_record = c
+                    changed = True
+                break
+        except Exception:
+            continue
+    if changed and commission_record:
+        save_express_commissions(items)
+        
+        # اگر قبلاً تایید شده بود و به آمار اضافه شده بود، از آمار کم کن
+        if old_status == 'approved':
+            try:
+                partner_phone = str(commission_record.get('partner_phone', '')).strip()
+                commission_amount = int(commission_record.get('commission_amount') or 0)
+                sale_amount = int(commission_record.get('sale_amount') or 0)
+                
+                if partner_phone:
+                    partners = load_express_partners() or []
+                    for p in partners:
+                        if str(p.get('phone')) == partner_phone:
+                            # کم کردن از کل درآمد
+                            current_income = int(p.get('total_income', 0) or 0)
+                            p['total_income'] = max(0, current_income - commission_amount)
+                            
+                            # کم کردن از تعداد فروش‌های تایید شده
+                            current_sales = int(p.get('approved_sales_count', 0) or 0)
+                            p['approved_sales_count'] = max(0, current_sales - 1)
+                            
+                            # کم کردن از کل فروش‌های تایید شده
+                            current_total_sales = int(p.get('total_approved_sales', 0) or 0)
+                            p['total_approved_sales'] = max(0, current_total_sales - sale_amount)
+                            
+                            p['last_updated'] = iso_z(utcnow())
+                            break
+                    
+                    save_express_partners(partners)
+            except Exception as e:
+                current_app.logger.error(f"Error updating partner stats after reject: {e}")
+        
+        flash('پورسانت رد شد.', 'info')
+    elif not changed:
+        flash('فقط پورسانت‌های در انتظار یا تایید شده قابل رد هستند.', 'warning')
+    return redirect(url_for('admin.express_commissions'))
+
+@admin_bp.route('/express/commissions/<int:cid>/edit', methods=['GET', 'POST'])
+@login_required
+def express_commission_edit(cid: int):
+    items = load_express_commissions() or []
+    commission = None
+    for c in items:
+        try:
+            if int(c.get('id',0) or 0) == int(cid):
+                commission = c
+                break
+        except Exception:
+            continue
+    
+    if not commission:
+        flash('پورسانت یافت نشد.', 'error')
+        return redirect(url_for('admin.express_commissions'))
+    
+    if request.method == 'POST':
+        form = request.form
+        sale_amount = (form.get('sale_amount') or '').strip()
+        commission_pct = (form.get('commission_pct') or '').strip()
+        
+        try:
+            sale = int(str(sale_amount).replace(',','').strip() or '0')
+        except Exception:
+            sale = int(commission.get('sale_amount') or 0)
+        
+        try:
+            pct = float(commission_pct or '0')
+        except Exception:
+            pct = float(commission.get('commission_pct') or 0)
+        
+        commission_amount = int(round(sale * (pct/100.0))) if sale and pct else 0
+        
+        # اگر پورسانت تایید شده است، باید آمار را به‌روز کنم
+        old_sale = int(commission.get('sale_amount') or 0)
+        old_commission = int(commission.get('commission_amount') or 0)
+        is_approved = commission.get('status') == 'approved'
+        
+        # به‌روزرسانی رکورد
+        commission['sale_amount'] = sale
+        commission['commission_pct'] = pct
+        commission['commission_amount'] = commission_amount
+        commission['updated_at'] = iso_z(utcnow())
+        
+        save_express_commissions(items)
+        
+        # اگر تایید شده بود، آمار را به‌روز کن
+        if is_approved and (sale != old_sale or commission_amount != old_commission):
+            try:
+                partner_phone = str(commission.get('partner_phone', '')).strip()
+                if partner_phone:
+                    partners = load_express_partners() or []
+                    for p in partners:
+                        if str(p.get('phone')) == partner_phone:
+                            # به‌روزرسانی کل درآمد (تفاوت مبلغ جدید و قدیم)
+                            current_income = int(p.get('total_income', 0) or 0)
+                            diff_commission = commission_amount - old_commission
+                            p['total_income'] = max(0, current_income + diff_commission)
+                            
+                            # به‌روزرسانی کل فروش‌های تایید شده (تفاوت مبلغ جدید و قدیم)
+                            current_total_sales = int(p.get('total_approved_sales', 0) or 0)
+                            diff_sale = sale - old_sale
+                            p['total_approved_sales'] = max(0, current_total_sales + diff_sale)
+                            
+                            p['last_updated'] = iso_z(utcnow())
+                            break
+                    
+                    save_express_partners(partners)
+            except Exception as e:
+                current_app.logger.error(f"Error updating partner stats after edit: {e}")
+        
+        flash('پورسانت با موفقیت ویرایش شد.', 'success')
+        return redirect(url_for('admin.express_commissions'))
+    
+    # GET - نمایش فرم ویرایش
+    return render_template('admin/edit_commission.html', commission=commission)
 
 # -----------------------------------------------------------------------------
 # Express Partner Files (upload/list/download/delete by admin)
