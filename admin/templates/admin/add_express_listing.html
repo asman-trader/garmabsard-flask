@@ -446,6 +446,7 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   }
   
   // قرار دادن اعداد خام قبل از ارسال (بدون فرمت)
+  // مهم: باید مستقیماً value را تغییر دهیم تا در form submit شود
   sizeEl.value = sizeNum.toString();
   priceEl.value = priceNum.toString();
   
@@ -453,7 +454,21 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   const pricePerMeterEl = document.getElementById('price_per_meter');
   if (pricePerMeterEl) {
     const ppm = Math.round(priceNum / sizeNum);
+    // پاک کردن فرمت از price_per_meter اگر وجود دارد
     pricePerMeterEl.value = ppm > 0 ? ppm.toString() : '';
+  }
+  
+  // اطمینان از اینکه همه اعداد خام هستند (بدون فرمت)
+  // استفاده از requestSubmit برای اطمینان از ارسال مقادیر به‌روز شده
+  const form = document.getElementById('expressForm');
+  if (form) {
+    // یک بار دیگر مقادیر را تنظیم می‌کنیم
+    sizeEl.value = sizeNum.toString();
+    priceEl.value = priceNum.toString();
+    if (pricePerMeterEl) {
+      const ppm = Math.round(priceNum / sizeNum);
+      pricePerMeterEl.value = ppm > 0 ? ppm.toString() : '';
+    }
   }
 });
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import List, Dict, Any, Optional
@@ -1324,16 +1325,34 @@ def add_express_listing():
         # اعتبارسنجی فیلدهای اجباری
         title = form.get('title', '').strip()
         location = form.get('location', '').strip()
-        size = form.get('size', '').strip()
-        price_total = form.get('price_total', '').strip()
+        size_raw = form.get('size', '').strip()
+        price_total_raw = form.get('price_total', '').strip()
         
-        if not all([title, location, size, price_total]):
+        # پاک کردن فرمت از اعداد (حذف کاما و کاراکترهای غیر عددی)
+        size_clean = re.sub(r'[^\d]', '', size_raw) if size_raw else ''
+        price_total_clean = re.sub(r'[^\d]', '', price_total_raw) if price_total_raw else ''
+        
+        if not all([title, location, size_clean, price_total_clean]):
             flash('لطفاً فیلدهای اجباری را پر کنید.', 'error')
             return render_template('admin/add_express_listing.html',
                                   pending_count=0, approved_count=0, rejected_count=0)
         
         if len(title) < 10:
             flash('عنوان باید حداقل ۱۰ کاراکتر باشد.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
+        
+        # تبدیل به عدد
+        try:
+            size = int(size_clean)
+            price_total = int(price_total_clean)
+        except (ValueError, TypeError):
+            flash('متراژ و قیمت باید عدد معتبر باشند.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0)
+        
+        if size <= 0 or price_total <= 0:
+            flash('متراژ و قیمت باید بیشتر از صفر باشند.', 'error')
             return render_template('admin/add_express_listing.html',
                                   pending_count=0, approved_count=0, rejected_count=0)
         
@@ -1365,8 +1384,20 @@ def add_express_listing():
             express_commission_pct = float(pct_raw) if pct_raw else None
         except Exception:
             express_commission_pct = None
+        # محاسبه قیمت در متر
+        price_per_meter_raw = form.get('price_per_meter', '').strip()
+        price_per_meter_clean = re.sub(r'[^\d]', '', price_per_meter_raw) if price_per_meter_raw else ''
         try:
-            price_int = int(price_total)
+            price_per_meter = int(price_per_meter_clean) if price_per_meter_clean else 0
+            # اگر قیمت در متر محاسبه نشده، خودمان محاسبه می‌کنیم
+            if price_per_meter == 0 and size > 0:
+                price_per_meter = int(round(price_total / size))
+        except (ValueError, TypeError):
+            price_per_meter = int(round(price_total / size)) if size > 0 else 0
+        
+        # محاسبه کمیسیون
+        try:
+            price_int = price_total  # قبلاً تبدیل شده
         except Exception:
             price_int = 0
         express_commission_amount = int(round(price_int * ((express_commission_pct or 0)/100.0))) if price_int and (express_commission_pct is not None) else None
@@ -1376,9 +1407,9 @@ def add_express_listing():
             'code': new_code,
             'title': title,
             'location': location,
-            'size': size,
-            'price_total': int(price_total),
-            'price_per_meter': int(form.get('price_per_meter', 0) or 0),
+            'size': size,  # حالا int است
+            'price_total': price_total,  # حالا int است
+            'price_per_meter': price_per_meter,
             'description': form.get('description', '').strip(),
             'images': images,
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
