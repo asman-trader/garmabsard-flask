@@ -268,14 +268,6 @@
             {% endif %}
           </div>
 
-          <!-- Commission Badge -->
-          {% if land._commission_pct %}
-            <div class="absolute top-4 right-4">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white shadow-lg backdrop-blur-sm">
-                <i class="fas fa-percent text-[10px]"></i>٪{{ land._commission_pct }}
-              </div>
-            </div>
-          {% endif %}
         </div>
 
         <!-- Content Section -->
@@ -316,9 +308,16 @@
               <div class="font-black text-base text-emerald-700 dark:text-emerald-400 leading-tight">{{ (land.price_total or 0)|toman }}</div>
             </div>
             <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/30 dark:to-violet-800/20 border border-violet-200 dark:border-violet-800 p-3">
-              <div class="flex items-center gap-2 mb-1">
-                <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-xs"></i>
-                <span class="text-[10px] font-medium text-violet-700 dark:text-violet-300">پورسانت</span>
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-xs"></i>
+                  <span class="text-[10px] font-medium text-violet-700 dark:text-violet-300">پورسانت</span>
+                </div>
+                {% if land._commission_pct %}
+                  <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[9px] font-bold bg-violet-600 dark:bg-violet-500 text-white">
+                    <i class="fas fa-percent text-[8px]"></i>{{ land._commission_pct }}%
+                  </span>
+                {% endif %}
               </div>
               <div class="font-black text-base text-violet-700 dark:text-violet-400 leading-tight">{{ (land._commission_amount or 0)|toman }}</div>
             </div>
