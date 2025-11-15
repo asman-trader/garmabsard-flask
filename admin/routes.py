@@ -519,6 +519,7 @@ def login():
         password = request.form.get('password', '')
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
+            session.permanent = True  # ماندگاری session برای PWA
             flash('خوش آمدید؛ ورود موفق.', 'success')
             return redirect(url_for('admin.express_hub'))
         flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
@@ -530,7 +531,9 @@ if csrf is not None:
 
 @admin_bp.route('/logout', methods=['POST', 'GET'])
 def logout():
-    session.pop('logged_in', None)
+    # پاک کردن کامل session برای خروج کامل از حساب
+    session.clear()
+    session.permanent = False
     flash('خروج انجام شد.', 'info')
     return redirect(url_for('admin.login'))
 

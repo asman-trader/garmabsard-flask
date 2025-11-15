@@ -609,8 +609,9 @@ def mark_in_transaction(code: str):
 
 @express_partner_bp.route('/logout', methods=['GET'], endpoint='logout')
 def logout():
-    for k in ('user_id', 'user_phone', 'otp_code', 'otp_phone'):
-        session.pop(k, None)
+    # پاک کردن کامل session برای خروج کامل از حساب
+    session.clear()
+    session.permanent = False
     flash('از حساب خارج شدید.', 'info')
     return redirect(url_for('express_partner.login'))
 
