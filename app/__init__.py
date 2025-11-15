@@ -228,6 +228,14 @@ def create_app() -> Flask:
     except Exception as e:
         app.logger.warning(f"Express Partner blueprint not available: {e}")
 
+    # Admin blueprint
+    try:
+        from admin import admin_bp
+        app.register_blueprint(admin_bp)
+        app.logger.info(f"Admin blueprint registered successfully: {admin_bp.name}")
+    except Exception as e:
+        app.logger.error(f"Admin blueprint registration failed: {e}", exc_info=True)
+
     # ---------- CSRF ----------
     if CSRFProtect is not None:
         csrf = CSRFProtect()
