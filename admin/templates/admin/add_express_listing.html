@@ -106,10 +106,11 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 قیمت در متر (تومان)
+                <span class="text-xs text-gray-500 dark:text-gray-400">(محاسبه خودکار)</span>
               </label>
-              <input type="text" name="price_per_meter" data-format-int
-                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                     placeholder="2000000">
+              <input type="text" name="price_per_meter" id="price_per_meter" data-format-int readonly
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                     placeholder="--">
             </div>
           </div>
 
@@ -256,6 +257,7 @@
               <div>موقعیت: <span id="summaryLocation" class="font-medium text-gray-900 dark:text-white">-</span></div>
               <div>متراژ: <span id="summarySize" class="font-medium text-gray-900 dark:text-white">-</span> متر</div>
               <div>قیمت کل: <span id="summaryPrice" class="font-medium text-gray-900 dark:text-white">-</span></div>
+              <div>قیمت در متر: <span id="summaryPricePerMeter" class="font-medium text-gray-900 dark:text-white">-</span></div>
             </div>
           </div>
           
@@ -366,11 +368,36 @@ function updateSummary() {
   
   document.getElementById('summaryTitle').textContent = formData.get('title') || '-';
   document.getElementById('summaryLocation').textContent = formData.get('location') || '-';
-  const size = formData.get('size') || '0';
-  document.getElementById('summarySize').textContent = size.replace(/[^\d]/g, '') || '-';
-  const price = formData.get('price_total') || '0';
-  const priceNum = parseInt(price.replace(/[^\d]/g, ''), 10) || 0;
+  
+  // محاسبه و نمایش متراژ
+  const sizeRaw = formData.get('size') || '0';
+  const sizeNum = parseInt(sizeRaw.replace(/[^\d]/g, ''), 10) || 0;
+  document.getElementById('summarySize').textContent = sizeNum > 0 ? sizeNum.toLocaleString('fa-IR') : '-';
+  
+  // محاسبه و نمایش قیمت کل
+  const priceRaw = formData.get('price_total') || '0';
+  const priceNum = parseInt(priceRaw.replace(/[^\d]/g, ''), 10) || 0;
   document.getElementById('summaryPrice').textContent = priceNum > 0 ? priceNum.toLocaleString('fa-IR') + ' تومان' : '-';
+  
+  // محاسبه خودکار قیمت در متر
+  let pricePerMeter = 0;
+  if (sizeNum > 0 && priceNum > 0) {
+    pricePerMeter = Math.round(priceNum / sizeNum);
+  }
+  const pricePerMeterInput = document.getElementById('price_per_meter');
+  if (pricePerMeterInput) {
+    // ذخیره مقدار خام در data attribute برای ارسال
+    pricePerMeterInput.dataset.rawValue = pricePerMeter > 0 ? pricePerMeter.toString() : '';
+    // نمایش فرمت شده به کاربر
+    pricePerMeterInput.value = pricePerMeter > 0 ? pricePerMeter.toLocaleString('fa-IR') : '';
+  }
+  
+  // نمایش در خلاصه
+  const summaryPricePerMeter = document.getElementById('summaryPricePerMeter');
+  if (summaryPricePerMeter) {
+    summaryPricePerMeter.textContent = pricePerMeter > 0 ? pricePerMeter.toLocaleString('fa-IR') + ' تومان' : '-';
+  }
+  
   document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر` : 'تصویری انتخاب نشده';
   
   const doc1 = formData.get('document_1');
@@ -380,7 +407,7 @@ function updateSummary() {
   if (doc2 && doc2.name) docs.push(doc2.name);
   document.getElementById('summaryDocuments').textContent = docs.length > 0 ? docs.join(', ') : 'مدرکی آپلود نشده';
   
-  // Calculate commission
+  // محاسبه پورسانت
   const pct = parseFloat(formData.get('express_commission_pct') || '0') || 0;
   const amount = Math.round(priceNum * (pct / 100));
   const amtInput = document.getElementById('express_commission_amount');
@@ -401,18 +428,35 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   }
   
   // Clean numbers before submit
-  ['price_total','price_per_meter','size'].forEach((name)=>{
+  ['price_total','size'].forEach((name)=>{
     const el = document.querySelector(`[name="${name}"]`);
     if (el) el.value = (el.value||'').replace(/[^\d]/g,'');
   });
+  
+  // محاسبه نهایی قیمت در متر قبل از ارسال (عدد خام بدون فرمت)
+  const sizeEl = document.querySelector('input[name="size"]');
+  const priceEl = document.querySelector('input[name="price_total"]');
+  const pricePerMeterEl = document.getElementById('price_per_meter');
+  if (sizeEl && priceEl && pricePerMeterEl) {
+    const size = parseInt((sizeEl.value || '').replace(/[^\d]/g, ''), 10) || 0;
+    const price = parseInt((priceEl.value || '').replace(/[^\d]/g, ''), 10) || 0;
+    if (size > 0 && price > 0) {
+      const ppm = Math.round(price / size);
+      // ارسال عدد خام (بدون فرمت)
+      pricePerMeterEl.value = ppm.toString();
+    } else {
+      pricePerMeterEl.value = '';
+    }
+  }
 });
 
 // Initialize
 showStep(1);
 
-// Real-time commission calculation
+// Real-time calculations
 document.getElementById('express_commission_pct')?.addEventListener('input', updateSummary);
 document.querySelector('input[name="price_total"]')?.addEventListener('input', updateSummary);
+document.querySelector('input[name="size"]')?.addEventListener('input', updateSummary);
 
 // Number formatting
 (function(){
