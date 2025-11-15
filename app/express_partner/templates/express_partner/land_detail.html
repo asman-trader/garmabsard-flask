@@ -73,6 +73,7 @@
       <section class="space-y-2">
         <h3 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h3>
         <dl class="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+          {% if land.code %}<div><dt class="font-semibold text-gray-900 dark:text-white">کد فایل</dt><dd class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700"><i class="fas fa-hashtag"></i>{{ land.code }}</dd></div>{% endif %}
           {% if land.rooms %}<div><dt class="font-semibold text-gray-900 dark:text-white">اتاق</dt><dd>{{ land.rooms }}</dd></div>{% endif %}
           {% if land.floor %}<div><dt class="font-semibold text-gray-900 dark:text-white">طبقه</dt><dd>{{ land.floor }}</dd></div>{% endif %}
           {% if land.year_built %}<div><dt class="font-semibold text-gray-900 dark:text-white">سال ساخت</dt><dd>{{ land.year_built }}</dd></div>{% endif %}
