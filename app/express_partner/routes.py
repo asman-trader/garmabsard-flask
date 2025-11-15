@@ -564,6 +564,15 @@ def support():
     return render_template('express_partner/support.html', hide_header=True)
 
 
+@express_partner_bp.route('/training', methods=['GET'], endpoint='training')
+def training():
+    """صفحه آموزش مینیمال برای همکاران"""
+    if not session.get("user_phone"):
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.training")))
+    
+    return render_template('express_partner/training.html', hide_header=True)
+
+
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
 def mark_in_transaction(code: str):
     """Toggle وضعیت ملک بین در حال معامله و فعال"""
