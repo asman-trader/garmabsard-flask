@@ -2,50 +2,100 @@
 {% block title %}درخواست همکاری - مرحله ۱{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4">
+{% set steps = [
+  {'id': 1, 'title': 'اطلاعات پایه', 'desc': 'معرفی اولیه'},
+  {'id': 2, 'title': 'سوابق و توضیحات', 'desc': 'شناخت بیشتر'},
+  {'id': 3, 'title': 'بازبینی نهایی', 'desc': 'ارسال درخواست'}
+] %}
 
-  <!-- Minimal sticky header -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
-    <div class="max-w-6xl mx-auto h-14 flex items-center justify-between">
-      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-        <i class="fas fa-arrow-right"></i>
-      </button>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">درخواست همکاری - مرحله ۱</h1>
-      <div class="w-9"></div>
-    </div>
-  </header>
+<section class="min-h-screen w-full bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
-  <div class="mt-4 flex items-start justify-center">
-    <div class="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-700 dark:text-violet-300">1</div>
-      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۱: اطلاعات پایه</h1>
+    <div class="mb-6 sm:mb-8 text-center sm:text-right">
+      <p class="text-xs uppercase tracking-[0.4em] text-violet-500 font-semibold">VINOR EXPRESS</p>
+      <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-2">مسیر ورود به شبکه همکاران وینور</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+        در سه مرحله کوتاه، اطلاعات خود را ثبت کنید تا تیم ما سریع‌ترین مسیر همکاری را برای شما فعال کند.
+      </p>
     </div>
 
-    <form method="post" class="space-y-4" action="{{ url_for('express_partner.apply_step1') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div>
-        <label class="block text-sm mb-1">نام و نام‌خانوادگی</label>
-        <input type="text" name="name" value="{{ name }}" required class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-violet-500 focus:border-violet-500" />
-      </div>
-      <div>
-        <label class="block text-sm mb-1">شهر فعالیت</label>
-        <input type="text" name="city" value="{{ city }}" required class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-violet-500 focus:border-violet-500" />
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 sm:mb-8">
+      {% for step in steps %}
+        <div class="flex flex-col gap-2 p-3 rounded-2xl border {% if step.id == 1 %}border-violet-200 dark:border-violet-800 bg-white dark:bg-slate-900 shadow-sm{% else %}border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-slate-900/60{% endif %}">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-full grid place-items-center text-sm font-bold {% if step.id == 1 %}bg-violet-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-500{% endif %}">
+              {{ step.id }}
+            </span>
+            <div>
+              <p class="text-xs text-gray-500">{{ step.desc }}</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ step.title }}</p>
+            </div>
+          </div>
+          {% if step.id == 1 %}
+          <p class="text-xs text-violet-600 dark:text-violet-300">در حال تکمیل...</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+      <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-violet-100/70 dark:shadow-none border border-violet-50 dark:border-slate-800">
+        <div class="p-5 sm:p-7">
+          <div class="flex items-start gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-200 grid place-items-center text-lg font-bold">۱</div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900.dark:text-white">اطلاعات هویتی و شهر فعالیت</h2>
+              <p class="text-sm text-gray-500 mt-1">این داده‌ها برای معرفی شما به تیم انتساب الزامی هستند.</p>
+            </div>
+          </div>
+
+          <form method="post" action="{{ url_for('express_partner.apply_step1') }}" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label class="block">
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-300">نام و نام‌خانوادگی<span class="text-rose-500">*</span></span>
+              <input type="text" name="name" value="{{ name }}" required
+                     class="mt-1 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:border-transparent">
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-medium.text-gray-600 dark:text-gray-300">شهر فعالیت اصلی<span class="text-rose-500">*</span></span>
+              <input type="text" name="city" value="{{ city }}" required
+                     class="mt-1 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:border-transparent">
+            </label>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <a href="{{ url_for('main.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">بازگشت به صفحه اصلی</a>
+              <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-lg shadow-violet-500/25 transition">
+                مرحله بعد
+                <i class="fas fa-arrow-left text-xs mr-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div class="flex items-center justify-between pt-2">
-        <a href="{{ url_for('main.index') }}" class="text-sm text-gray-500">انصراف</a>
-        <button type="submit" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">ادامه</button>
-      </div>
-    </form>
-
-    <div class="mt-6 flex items-center gap-2 text-xs text-gray-500" aria-label="پیشرفت">
-      <span class="w-6 h-1 rounded bg-violet-600"></span>
-      <span class="w-6 h-1 rounded bg-gray-300 dark:bg-gray-700"></span>
-      <span class="w-6 h-1 rounded bg-gray-300 dark:bg-gray-700"></span>
+      <aside class="space-y-4">
+        <div class="rounded-3xl border border-gray-200.dark:border-gray-800 bg-white.dark:bg-slate-900 p-5">
+          <p class="text-xs uppercase tracking-widest text-gray-400 mb-2">چرا وینور؟</p>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">حمایت کامل از همکاران</h3>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <li class="flex.items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>دسترسی به فایل‌های اختصاصی وینور اکسپرس</li>
+            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>آموزش و پشتیبانی دائمی تیم اکسپرس</li>
+            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>پرداخت منظم پورسانت و ابزارهای پیگیری آنلاین</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl border border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/40 p-5 text-sm text-violet-900 dark:text-violet-100">
+          <p class="font-semibold text-base mb-1">سوال یا مشکلی دارید؟</p>
+          <p>تیم پشتیبانی وینور از شنبه تا چهارشنبه، ۱۰ تا ۱۸ پاسخگو است.</p>
+          <div class="mt-3 flex items-center gap-3 text-xs">
+            <span class="px-3 py-1 rounded-full bg-white/70.dark:bg-violet-900/40 font-semibold">021-9100-5100</span>
+            <span class="px-3 py-1 rounded-full bg-white/70.dark:bg-violet-900/40 font-semibold">support@vinor.ir</span>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
-  </div>
+</section>
 {% endblock %}
-
 

@@ -1,37 +1,48 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}درخواست ثبت شد | وینور اکسپرس{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4">
+<section class="min-h-screen w-full bg-gradient-to-b from-emerald-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-emerald-100 dark:border-emerald-900/40 shadow-xl shadow-emerald-100/70 dark:shadow-none p-6 sm:p-10">
+      <div class="w-24 h-24 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+        <i class="fa-solid fa-check text-4xl text-emerald-600 dark:text-emerald-300"></i>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-center text-gray-900 dark:text-white mt-6">درخواست شما ثبت شد</h1>
+      <p class="text-center text-gray-600 dark:text-gray-400 mt-3 text-sm sm:text-base leading-relaxed">
+        {{ name or 'کاربر عزیز' }}، درخواست شما در صف بررسی قرار گرفت. نتیجه نهایی و دسترسی پنل از طریق پیامک و نوتیفیکیشن به شما اطلاع داده می‌شود.
+      </p>
 
-  <!-- Minimal sticky header -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
-    <div class="max-w-6xl mx-auto h-14 flex items-center justify-between">
-      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-        <i class="fas fa-arrow-right"></i>
-      </button>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">ثبت درخواست همکاری</h1>
-      <div class="w-9"></div>
-    </div>
-  </header>
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-gray-400 mb-2">گام بعد</p>
+          <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            کارشناسان جذب ظرف حداکثر ۲۴ ساعت با شما تماس می‌گیرند. لطفاً پاسخ‌گو باشید تا فرآیند فعال‌سازی سریع‌تر انجام شود.
+          </p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+          <p class="text-xs uppercase tracking-[0.3em] text-gray-400.mb-2">پشتیبانی</p>
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            021-9100-5100 <span class="mx-2">|</span> support@vinor.ir
+          </p>
+        </div>
+      </div>
 
-  <div class="mt-4 flex items-center justify-center min-h-[calc(100vh-12rem)]">
-    <div class="w-full max-w-2xl text-center">
-    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-      <i class="fa-solid fa-check text-3xl text-violet-700 dark:text-violet-300"></i>
-    </div>
-    <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">درخواست شما ثبت شد</h1>
-    <p class="text-gray-600 dark:text-gray-400 mb-6">
-      {{ name or 'کاربر عزیز' }}، درخواست همکاری شما دریافت شد و پس از بررسی نتیجه اطلاع‌رسانی می‌شود.
-    </p>
-    <div class="flex items-center justify-center gap-3">
-      <a href="{{ url_for('express_partner.dashboard') }}" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">مشاهده وضعیت</a>
-      <a href="{{ url_for('main.index') }}" class="px-5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">بازگشت به خانه</a>
-    </div>
-    <p class="text-xs text-gray-500 dark:text-gray-500 mt-6">در صورت نیاز، می‌توانید با پشتیبانی وینور در ارتباط باشید.</p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <form method="post" action="{{ url_for('express_partner.apply_cancel') }}" class="w-full sm:w-auto">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit"
+             class="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-center shadow-lg shadow-rose-500/30 transition">
+            لغو درخواست
+          </button>
+        </form>
+        <a href="tel:02191005100"
+           class="w-full sm:w-auto px-6 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-center">
+          تماس با پشتیبانی
+        </a>
+      </div>
     </div>
   </div>
-
-</div>
+</section>
 {% endblock %}
-
 

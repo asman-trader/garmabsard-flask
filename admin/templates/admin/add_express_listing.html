@@ -3,6 +3,14 @@
 {% block head %}
   {{ super() }}
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
 {% endblock %}
 
 {% block title %}افزودن آگهی اکسپرس{% endblock %}
@@ -65,6 +73,42 @@
             <input type="text" name="location" required 
                    class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                    placeholder="مثال: دشت اول، گرمابسرد">
+          </div>
+
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div class="flex items-center justify-between mb-3">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <i class="fas fa-map-marker-alt text-blue-600"></i>
+                موقعیت دقیق (مختصات جغرافیایی)
+              </label>
+              <button type="button" id="getCurrentLocationBtn" 
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition">
+                <i class="fas fa-crosshairs"></i>
+                موقعیت فعلی
+              </button>
+            </div>
+            
+            <!-- نقشه -->
+            <div id="locationMap" class="w-full h-64 rounded-lg border border-gray-300 dark:border-gray-700 mb-3" style="z-index: 1;"></div>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">عرض جغرافیایی (Latitude)</label>
+                <input type="number" step="0.000001" name="latitude" id="latitude"
+                       class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                       placeholder="مثال: 35.6892">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">طول جغرافیایی (Longitude)</label>
+                <input type="number" step="0.000001" name="longitude" id="longitude"
+                       class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                       placeholder="مثال: 51.3890">
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <i class="fas fa-info-circle"></i>
+              روی نقشه کلیک کنید یا از دکمه "موقعیت فعلی" استفاده کنید
+            </p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -519,6 +563,199 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
 
 // Initialize
 showStep(1);
+
+// نقشه تعاملی برای انتخاب موقعیت
+let locationMap = null;
+let locationMarker = null;
+
+function initLocationMap() {
+  // مختصات پیش‌فرض: تهران
+  const defaultLat = 35.6892;
+  const defaultLon = 51.3890;
+  
+  // بررسی اگر مختصات از قبل وجود دارد
+  const latInput = document.getElementById('latitude');
+  const lonInput = document.getElementById('longitude');
+  let initialLat = defaultLat;
+  let initialLon = defaultLon;
+  
+  if (latInput && latInput.value) {
+    initialLat = parseFloat(latInput.value) || defaultLat;
+  }
+  if (lonInput && lonInput.value) {
+    initialLon = parseFloat(lonInput.value) || defaultLon;
+  }
+  
+  // ایجاد نقشه
+  locationMap = L.map('locationMap').setView([initialLat, initialLon], 13);
+  
+  // افزودن لایه نقشه OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(locationMap);
+  
+  // افزودن مارکر اولیه
+  if (latInput && latInput.value && lonInput && lonInput.value) {
+    locationMarker = L.marker([initialLat, initialLon], {
+      draggable: true
+    }).addTo(locationMap);
+  } else {
+    locationMarker = L.marker([initialLat, initialLon], {
+      draggable: true
+    }).addTo(locationMap);
+    updateCoordinates(initialLat, initialLon);
+  }
+  
+  // رویداد کلیک روی نقشه
+  locationMap.on('click', function(e) {
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+    
+    if (locationMarker) {
+      locationMarker.setLatLng([lat, lon]);
+    } else {
+      locationMarker = L.marker([lat, lon], {
+        draggable: true
+      }).addTo(locationMap);
+    }
+    
+    updateCoordinates(lat, lon);
+  });
+  
+  // رویداد drag مارکر
+  locationMarker.on('dragend', function(e) {
+    const lat = e.target.getLatLng().lat;
+    const lon = e.target.getLatLng().lng;
+    updateCoordinates(lat, lon);
+  });
+  
+  // به‌روزرسانی مختصات هنگام تغییر دستی در فیلدها
+  latInput?.addEventListener('change', function() {
+    const lat = parseFloat(this.value);
+    const lon = parseFloat(lonInput?.value) || initialLon;
+    if (!isNaN(lat) && !isNaN(lon)) {
+      if (locationMarker) {
+        locationMarker.setLatLng([lat, lon]);
+        locationMap.setView([lat, lon], locationMap.getZoom());
+      }
+    }
+  });
+  
+  lonInput?.addEventListener('change', function() {
+    const lat = parseFloat(latInput?.value) || initialLat;
+    const lon = parseFloat(this.value);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      if (locationMarker) {
+        locationMarker.setLatLng([lat, lon]);
+        locationMap.setView([lat, lon], locationMap.getZoom());
+      }
+    }
+  });
+}
+
+function updateCoordinates(lat, lon) {
+  const latInput = document.getElementById('latitude');
+  const lonInput = document.getElementById('longitude');
+  
+  if (latInput) {
+    latInput.value = lat.toFixed(6);
+  }
+  if (lonInput) {
+    lonInput.value = lon.toFixed(6);
+  }
+}
+
+// دریافت موقعیت فعلی دستگاه
+document.getElementById('getCurrentLocationBtn')?.addEventListener('click', function() {
+  const btn = this;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال دریافت...';
+  
+  if (!navigator.geolocation) {
+    alert('مرورگر شما از دریافت موقعیت جغرافیایی پشتیبانی نمی‌کند.');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      
+      if (locationMap && locationMarker) {
+        locationMarker.setLatLng([lat, lon]);
+        locationMap.setView([lat, lon], 15);
+        updateCoordinates(lat, lon);
+      } else if (locationMap) {
+        locationMarker = L.marker([lat, lon], {
+          draggable: true
+        }).addTo(locationMap);
+        locationMap.setView([lat, lon], 15);
+        updateCoordinates(lat, lon);
+        
+        locationMarker.on('dragend', function(e) {
+          const lat = e.target.getLatLng().lat;
+          const lon = e.target.getLatLng().lng;
+          updateCoordinates(lat, lon);
+        });
+      }
+      
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    },
+    function(error) {
+      let errorMsg = 'خطا در دریافت موقعیت: ';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMsg += 'دسترسی به موقعیت جغرافیایی رد شد.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMsg += 'اطلاعات موقعیت در دسترس نیست.';
+          break;
+        case error.TIMEOUT:
+          errorMsg += 'زمان دریافت موقعیت به پایان رسید.';
+          break;
+        default:
+          errorMsg += 'خطای ناشناخته.';
+          break;
+      }
+      alert(errorMsg);
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+});
+
+// راه‌اندازی نقشه پس از بارگذاری صفحه
+let mapInitialized = false;
+function initMapIfNeeded() {
+  if (!mapInitialized && document.getElementById('locationMap') && typeof L !== 'undefined') {
+    initLocationMap();
+    mapInitialized = true;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // کمی تاخیر برای اطمینان از بارگذاری کامل Leaflet
+  setTimeout(initMapIfNeeded, 500);
+});
+
+// راه‌اندازی نقشه هنگام نمایش مرحله 1
+const originalShowStep = showStep;
+showStep = function(step) {
+  originalShowStep(step);
+  if (step === 1) {
+    setTimeout(initMapIfNeeded, 100);
+  }
+};
 
 // Real-time calculations - محاسبه لحظه‌ای قیمت در متر و پورسانت
 function setupRealTimeCalculations() {

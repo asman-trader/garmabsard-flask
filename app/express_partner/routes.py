@@ -6,8 +6,9 @@ from typing import Any, Dict, List
 
 from flask import (
     render_template, request, redirect, url_for, session,
-    send_from_directory, current_app, abort, flash
+    send_from_directory, current_app, abort, flash, g
 )
+from functools import wraps
 import random, re
 
 from . import express_partner_bp
@@ -72,6 +73,58 @@ def _has_active_application(phone: str) -> bool:
     except Exception:
         pass
     return False
+
+
+APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
+
+
+def _is_partner_approved(profile: Dict[str, Any] | None) -> bool:
+    if not profile:
+        return False
+    status = str(profile.get("status") or "").strip().lower()
+    return profile.get("status") is True or status in APPROVED_PARTNER_STATUSES
+
+
+def require_partner_access(json_response: bool = False, allow_pending: bool = False):
+    """Decorator to ensure the user is an approved Express partner before accessing a route."""
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if not session.get("user_phone"):
+                if json_response:
+                    return jsonify({"success": False, "error": "unauthorized"}), 401
+                nxt = request.full_path.rstrip("?") if request.full_path else request.path
+                return redirect(url_for("express_partner.login", next=nxt))
+
+            me_phone = (session.get("user_phone") or "").strip()
+            try:
+                partners = load_express_partners() or []
+            except Exception:
+                partners = []
+            profile = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
+
+            approved = _is_partner_approved(profile)
+            if not approved:
+                if allow_pending:
+                    g.express_partner_profile = profile
+                    return fn(*args, **kwargs)
+                if json_response:
+                    return jsonify({"success": False, "error": "not_approved"}), 403
+                last_app = _get_my_last_application(me_phone)
+                if last_app:
+                    return render_template(
+                        'express_partner/thanks.html',
+                        name=(last_app.get('name') or ''),
+                        pending=True,
+                        waiting=True
+                    )
+                flash('ابتدا درخواست همکاری خود را ثبت و تکمیل کنید.', 'warning')
+                return redirect(url_for('express_partner.apply_step1'))
+
+            g.express_partner_profile = profile
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 @express_partner_bp.app_context_processor
@@ -271,14 +324,32 @@ def apply_step3():
     return render_template('express_partner/apply_step3.html', data=data)
 
 
-@express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
-def dashboard():
+@express_partner_bp.post('/apply/cancel', endpoint='apply_cancel')
+def apply_cancel():
     if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
-
+        return redirect(url_for("express_partner.login", next=url_for("express_partner.apply")))
     me_phone = (session.get("user_phone") or "").strip()
-    partners = load_express_partners() or []
-    profile = next((p for p in partners if str(p.get("phone")) == me_phone), None)
+    apps = load_express_partner_apps() or []
+    updated = False
+    for app in apps:
+        if str(app.get('phone')) == me_phone and str(app.get('status') or '').strip().lower() in ('', 'new', 'pending', 'under_review'):
+            app['status'] = 'cancelled'
+            app['cancelled_at'] = datetime.utcnow().isoformat() + "Z"
+            updated = True
+            break
+    if updated:
+        save_express_partner_apps(apps)
+        flash('درخواست شما لغو شد. در هر زمان می‌توانید دوباره درخواست ثبت کنید.', 'info')
+    else:
+        flash('درخواست فعالی برای لغو یافت نشد.', 'warning')
+    return redirect(url_for('express_partner.apply_step1'))
+
+
+@express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
+@require_partner_access()
+def dashboard():
+    me_phone = (session.get("user_phone") or "").strip()
+    profile = getattr(g, 'express_partner_profile', None)
 
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
@@ -360,18 +431,16 @@ def dashboard():
 
 
 @express_partner_bp.get('/notes', endpoint='notes')
+@require_partner_access()
 def notes_page():
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.notes")))
     me_phone = (session.get("user_phone") or "").strip()
     items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
     return render_template("express_partner/notes.html", notes=items, hide_header=True, SHOW_SUBMIT_BUTTON=False, brand="وینور", domain="vinor.ir")
 
 
 @express_partner_bp.get('/commissions', endpoint='commissions')
+@require_partner_access()
 def commissions_page():
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.commissions")))
     me_phone = (session.get("user_phone") or "").strip()
     try:
         comms = load_express_commissions() or []
@@ -412,9 +481,8 @@ def commissions_page():
 
 
 @express_partner_bp.post('/notes/add')
+@require_partner_access()
 def add_note():
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     content = (request.form.get("content") or "").strip()
     if not content:
@@ -436,9 +504,8 @@ def add_note():
 
 
 @express_partner_bp.post('/notes/<int:nid>/delete')
+@require_partner_access()
 def delete_note(nid: int):
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_notes() or []
     items = [n for n in items if not (int(n.get('id',0) or 0) == int(nid) and str(n.get('phone')) == me_phone)]
@@ -456,9 +523,8 @@ def delete_note(nid: int):
 
 
 @express_partner_bp.post('/sales/add')
+@require_partner_access()
 def add_sale():
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     title = (request.form.get("title") or "").strip()
     amount = (request.form.get("amount") or "").strip()
@@ -484,9 +550,8 @@ def add_sale():
 
 
 @express_partner_bp.post('/files/upload')
+@require_partner_access()
 def upload_file():
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     f = request.files.get('file')
     if not f or not f.filename:
@@ -505,9 +570,18 @@ def upload_file():
 
 
 @express_partner_bp.get('/files/<int:fid>/download')
+@require_partner_access()
 def download_file(fid: int):
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
+    me_phone = (session.get("user_phone") or "").strip()
+    metas = load_partner_files_meta() or []
+    meta = next((m for m in metas if int(m.get('id',0) or 0) == int(fid) and str(m.get('phone')) == me_phone), None)
+    if not meta:
+        abort(404)
+    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', me_phone)
+    fp = os.path.join(base, meta.get('filename') or '')
+    if not os.path.isfile(fp):
+        abort(404)
+    return send_from_directory(base, os.path.basename(fp), as_attachment=True)
 
 
 # -------------------------
@@ -515,6 +589,13 @@ def download_file(fid: int):
 # -------------------------
 @express_partner_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
+    # اگر از قبل لاگین است، مستقیم به داشبورد (یا مسیر هدف) برود
+    if session.get("user_phone"):
+        nxt = request.args.get('next') or session.get('next')
+        if nxt and nxt.startswith('/'):
+            return redirect(nxt)
+        return redirect(url_for('express_partner.dashboard'))
+
     if request.method == 'POST':
         phone_raw = request.form.get('phone', '')
         phone = _normalize_phone(phone_raw)
@@ -571,20 +652,16 @@ def verify():
 
 
 @express_partner_bp.route('/support', methods=['GET'], endpoint='support')
+@require_partner_access()
 def support():
     """صفحه پشتیبانی مجزا برای Express Partner"""
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.support")))
-    
     return render_template('express_partner/support.html', hide_header=True)
 
 
 @express_partner_bp.route('/training', methods=['GET'], endpoint='training')
+@require_partner_access()
 def training():
     """صفحه آموزش مینیمال برای همکاران"""
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.training")))
-    
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی خوانده شود
     training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")
     # اگر URL خالی است، از یک placeholder استفاده می‌کنیم
@@ -597,11 +674,9 @@ def training():
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
+@require_partner_access()
 def mark_in_transaction(code: str):
     """Toggle وضعیت ملک بین در حال معامله و فعال - برای تمامی همکاران"""
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.dashboard")))
-    
     me_phone = (session.get("user_phone") or "").strip()
     
     try:
@@ -797,27 +872,15 @@ def otp_resend():
 
 
 @express_partner_bp.route('/profile', methods=['GET'], endpoint='profile')
+@require_partner_access()
 def profile_page():
-    if not session.get('user_phone'):
-        return redirect(url_for('express_partner.login', next=url_for('express_partner.profile')))
     me_phone = (session.get('user_phone') or '').strip()
     return render_template('express_partner/profile.html', me_phone=me_phone)
-    me_phone = (session.get("user_phone") or "").strip()
-    metas = load_partner_files_meta() or []
-    meta = next((m for m in metas if int(m.get('id',0) or 0) == int(fid) and str(m.get('phone')) == me_phone), None)
-    if not meta:
-        abort(404)
-    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', me_phone)
-    fp = os.path.join(base, meta.get('filename') or '')
-    if not (os.path.isfile(fp)):
-        abort(404)
-    return send_from_directory(base, os.path.basename(fp), as_attachment=True)
 
 
 @express_partner_bp.post('/files/<int:fid>/delete')
+@require_partner_access()
 def delete_file(fid: int):
-    if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     metas = load_partner_files_meta() or []
     kept = []
@@ -843,9 +906,8 @@ def delete_file(fid: int):
 
 
 @express_partner_bp.post('/sales/<int:sid>/update')
+@require_partner_access()
 def update_sale(sid: int):
-    if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_sales() or []
     for s in items:
@@ -867,9 +929,8 @@ def update_sale(sid: int):
 
 
 @express_partner_bp.post('/sales/<int:sid>/delete')
+@require_partner_access()
 def delete_sale(sid: int):
-    if not session.get("user_phone"):
-        return redirect(url_for("main.login", next=url_for("express_partner.dashboard")))
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_sales() or []
     items = [s for s in items if not (int(s.get('id',0) or 0) == int(sid) and str(s.get('phone')) == me_phone)]
@@ -877,14 +938,26 @@ def delete_sale(sid: int):
     return redirect(url_for("express_partner.dashboard"))
 
 
+@express_partner_bp.get('/notifications', endpoint='notifications')
+@require_partner_access(allow_pending=True)
+def notifications_page():
+    me_phone = (session.get("user_phone") or "").strip()
+    notifications = get_user_notifications(me_phone, limit=200)
+    unread = unread_count(me_phone)
+    return render_template(
+        'express_partner/notifications.html',
+        notifications=notifications,
+        unread_count=unread,
+    )
+
+
 # -------------------------
 # Notifications API
 # -------------------------
 @express_partner_bp.route('/api/notifications', methods=['GET'])
+@require_partner_access(json_response=True, allow_pending=True)
 def get_notifications():
     """Get user notifications"""
-    if not session.get("user_phone"):
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
     me_phone = (session.get("user_phone") or "").strip()
     notifications = get_user_notifications(me_phone, limit=50)
     return jsonify({
@@ -895,10 +968,9 @@ def get_notifications():
 
 
 @express_partner_bp.route('/api/notifications/unread-count', methods=['GET'])
+@require_partner_access(json_response=True, allow_pending=True)
 def get_unread_count():
     """Get unread notifications count"""
-    if not session.get("user_phone"):
-        return jsonify({"success": False, "unread_count": 0})
     me_phone = (session.get("user_phone") or "").strip()
     return jsonify({
         "success": True,
@@ -907,10 +979,9 @@ def get_unread_count():
 
 
 @express_partner_bp.route('/api/notifications/<string:notif_id>/read', methods=['POST'])
+@require_partner_access(json_response=True, allow_pending=True)
 def mark_notification_read(notif_id: str):
     """Mark a notification as read"""
-    if not session.get("user_phone"):
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
     me_phone = (session.get("user_phone") or "").strip()
     success = mark_read(me_phone, notif_id)
     return jsonify({
@@ -920,10 +991,9 @@ def mark_notification_read(notif_id: str):
 
 
 @express_partner_bp.route('/api/notifications/read-all', methods=['POST'])
+@require_partner_access(json_response=True, allow_pending=True)
 def mark_all_notifications_read():
     """Mark all notifications as read"""
-    if not session.get("user_phone"):
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
     me_phone = (session.get("user_phone") or "").strip()
     count = mark_all_read(me_phone)
     return jsonify({
@@ -934,11 +1004,9 @@ def mark_all_notifications_read():
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
+@require_partner_access()
 def land_detail(code: str):
     """Express land detail page within partner panel."""
-    if not session.get("user_phone"):
-        return redirect(url_for("express_partner.login", next=url_for("express_partner.land_detail", code=code)))
-
     lands = load_ads_cached() or []
     land = next((l for l in lands if l.get('code') == code and l.get('is_express')), None)
 

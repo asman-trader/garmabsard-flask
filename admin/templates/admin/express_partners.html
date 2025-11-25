@@ -37,6 +37,13 @@
                 </span>
               </div>
             </div>
+            <form method="post" action="{{ url_for('admin.express_partner_delete', phone=c.phone) }}" onsubmit="return confirm('همکار حذف شود؟');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 border border-rose-200 dark:border-rose-700 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+                <i class="fa-solid fa-trash"></i>
+                حذف
+              </button>
+            </form>
           </div>
         </div>
       {% endfor %}

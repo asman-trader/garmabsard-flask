@@ -201,7 +201,262 @@
     })();
   </script>
 
+  <script>
+    window.VINOR_NOTIFY_CFG = {
+      enabled: {{ 'true' if session.get('user_phone') else 'false' }},
+      endpoints: {
+        list: "{{ url_for('express_partner.get_notifications') }}",
+        unread: "{{ url_for('express_partner.get_unread_count') }}",
+        markAll: "{{ url_for('express_partner.mark_all_notifications_read') }}",
+        markOneTemplate: "{{ url_for('express_partner.mark_notification_read', notif_id='__ID__') }}"
+      },
+      csrfToken: "{{ csrf_token() }}"
+    };
+  </script>
+
+  <script>
+    (function(){
+      const cfg = window.VINOR_NOTIFY_CFG || {};
+      const enabled = cfg.enabled === true || cfg.enabled === 'true';
+      const endpoints = cfg.endpoints || {};
+      const headers = {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      };
+      if (cfg.csrfToken) {
+        headers['X-CSRFToken'] = cfg.csrfToken;
+      }
+
+      const state = {
+        notifications: [],
+        unread: 0,
+        loading: false
+      };
+      let pollTimer = null;
+      let bootstrapped = false;
+
+      function cloneState() {
+        return {
+          notifications: (state.notifications || []).map(n => ({ ...n })),
+          unread: state.unread,
+          loading: state.loading
+        };
+      }
+
+      function dispatch(name, detail) {
+        window.dispatchEvent(new CustomEvent(name, { detail }));
+      }
+
+      async function fetchNotifications(force = false) {
+        if (!enabled) {
+          if (!bootstrapped) {
+            state.notifications = [];
+            state.unread = 0;
+            state.loading = false;
+            dispatch('vinor:notifications:update', cloneState());
+            bootstrapped = true;
+          }
+          return [];
+        }
+        if (state.loading && !force) {
+          return state.notifications;
+        }
+        state.loading = true;
+        dispatch('vinor:notifications:update', cloneState());
+        try {
+          const res = await fetch(endpoints.list, { credentials: 'same-origin' });
+          if (!res.ok) {
+            if (res.status === 401) stopPolling();
+            return [];
+          }
+          const data = await res.json();
+          if (!data.success) return [];
+          state.notifications = Array.isArray(data.notifications) ? data.notifications : [];
+          state.unread = Number(data.unread_count || 0);
+          dispatch('vinor:notifications:update', cloneState());
+          bootstrapped = true;
+          return state.notifications;
+        } catch (err) {
+          console.warn('Vinor notifications fetch failed', err);
+          return [];
+        } finally {
+          state.loading = false;
+          dispatch('vinor:notifications:update', cloneState());
+        }
+      }
+
+      function startPolling() {
+        if (!enabled) return;
+        stopPolling();
+        pollTimer = setInterval(fetchNotifications, 30000);
+      }
+
+      function stopPolling() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      async function markAll() {
+        if (!enabled) return;
+        try {
+          const res = await fetch(endpoints.markAll, {
+            method: 'POST',
+            headers,
+            credentials: 'same-origin'
+          });
+          const data = await res.json();
+          if (data.success) {
+            state.notifications = state.notifications.map(n => ({ ...n, is_read: true }));
+            state.unread = 0;
+            dispatch('vinor:notifications:update', cloneState());
+          }
+        } catch (err) {
+          console.warn('Vinor notifications markAll failed', err);
+        }
+      }
+
+      async function markRead(id) {
+        if (!enabled || !id || !endpoints.markOneTemplate) return;
+        try {
+          const url = endpoints.markOneTemplate.replace('__ID__', encodeURIComponent(id));
+          const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            credentials: 'same-origin'
+          });
+          const data = await res.json();
+          if (data.success) {
+            state.notifications = state.notifications.map(n => n.id === id ? { ...n, is_read: true } : n);
+            state.unread = Number(
+              data.unread_count !== undefined ? data.unread_count : Math.max(0, state.unread - 1)
+            );
+            dispatch('vinor:notifications:update', cloneState());
+          }
+        } catch (err) {
+          console.warn('Vinor notifications markRead failed', err);
+        }
+      }
+
+      window.VinorNotifyCenter = {
+        getState: cloneState,
+        fetchList: fetchNotifications,
+        markAll,
+        markRead
+      };
+
+      window.addEventListener('vinor:notifications:mark-all', () => {
+        markAll();
+      });
+
+      if (enabled) {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            fetchNotifications(true);
+          }
+        });
+        window.addEventListener('focus', () => fetchNotifications(true), { passive: true });
+        fetchNotifications(true);
+        startPolling();
+      } else {
+        dispatch('vinor:notifications:update', cloneState());
+      }
+
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('vinorNotifyBadge', () => ({
+          unreadCount: 0,
+          loading: true,
+          init() {
+            this.sync(VinorNotifyCenter.getState());
+            this._onUpdate = (evt) => this.sync(evt.detail);
+            window.addEventListener('vinor:notifications:update', this._onUpdate);
+            VinorNotifyCenter.fetchList(true);
+          },
+          destroy() {
+            if (this._onUpdate) {
+              window.removeEventListener('vinor:notifications:update', this._onUpdate);
+            }
+          },
+          sync(state) {
+            if (!state) return;
+            this.unreadCount = state.unread || 0;
+            this.loading = !!state.loading;
+          },
+          badgeLabel() {
+            if (!this.unreadCount) return '';
+            return this.unreadCount > 99 ? '99+' : String(this.unreadCount);
+          }
+        }));
+
+        Alpine.data('vinorNotificationsPage', (initialList = [], initialUnread = 0) => ({
+          items: Array.isArray(initialList) ? initialList : [],
+          unreadCount: Number(initialUnread || 0),
+          loading: !(initialList && initialList.length),
+          init() {
+            this.sync(VinorNotifyCenter.getState());
+            this._onUpdate = (evt) => this.sync(evt.detail);
+            window.addEventListener('vinor:notifications:update', this._onUpdate);
+            VinorNotifyCenter.fetchList(true);
+          },
+          destroy() {
+            if (this._onUpdate) {
+              window.removeEventListener('vinor:notifications:update', this._onUpdate);
+            }
+          },
+          sync(state) {
+            if (!state) return;
+            this.items = state.notifications || [];
+            this.unreadCount = state.unread || 0;
+            this.loading = !!state.loading && !this.items.length;
+          },
+          markAll() {
+            VinorNotifyCenter.markAll();
+          },
+          markRead(notif) {
+            if (!notif || !notif.id) return;
+            VinorNotifyCenter.markRead(notif.id);
+          },
+          openLink(url) {
+            if (url) window.location.href = url;
+          },
+          formatDate(ts) {
+            if (!ts) return '';
+            try {
+              const value = typeof ts === 'number' ? ts : Number(ts);
+              const date = String(value).length > 10 ? new Date(value) : new Date(value * 1000);
+              if (isNaN(date.getTime())) return '';
+              return date.toLocaleString('fa-IR', {
+                timeZone: 'Asia/Tehran',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            } catch {
+              return '';
+            }
+          },
+          iconClass(type) {
+            if (type === 'success') return 'fa-check-circle text-green-500';
+            if (type === 'warning') return 'fa-exclamation-triangle text-amber-500';
+            if (type === 'error') return 'fa-times-circle text-red-500';
+            return 'fa-info-circle text-blue-500';
+          },
+          iconWrapper(type) {
+            if (type === 'success') return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30';
+            if (type === 'warning') return 'bg-amber-100 text-amber-600 dark:bg-amber-900/30';
+            if (type === 'error') return 'bg-rose-100 text-rose-600 dark:bg-rose-900/30';
+            return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30';
+          }
+        }));
+      });
+    })();
+  </script>
+
   {% block scripts %}{% endblock %}
 </body>
 </html>
+
 

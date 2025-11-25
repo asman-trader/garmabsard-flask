@@ -15,9 +15,6 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
-# اختیاری: ارسال OTP برای توسعه‌های بعدی
-import requests
-import time
 
 # اگر CSRFProtect در app factory فعال است، فقط روی روت لاگین موقتاً معاف می‌کنیم
 try:
@@ -53,7 +50,7 @@ def _save_express_document(file, land_code):
     return filename
 from app.api.push import _load_subs, _send_one
 from app.services.sms import send_sms_template
-from app.utils.storage import load_users, load_reports, save_reports, load_consultant_apps, save_consultant_apps, load_consultants, save_consultants, save_ads
+from app.utils.storage import load_users, load_reports, save_reports, save_ads
 from app.utils.storage import (
     load_express_partner_apps,
     save_express_partner_apps,
@@ -237,27 +234,6 @@ ADMIN_PASSWORD = 'm430128185'
 # پیش‌فرض صفحه‌بندی برای گرید 3 ستونه
 PER_PAGE_DEFAULT = 9
 
-# -----------------------------------------------------------------------------
-# ابزار پیامک OTP (رزرو برای آینده)
-# -----------------------------------------------------------------------------
-def send_otp_sms(phone: str, code: str):
-    url = "https://api.sms.ir/v1/send/verify"
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "X-API-KEY": "cwDc9dmxkF4c1avGDTBFnlRPyJQkxk2TVhpZCj6ShGrVx9y4"
-    }
-    payload = {
-        "mobile": phone,
-        "templateId": 753422,
-        "parameters": [{"name": "CODE", "value": str(code)}]
-    }
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=15)
-        body = response.json() if response.headers.get('Content-Type', '').startswith('application/json') else {"raw": response.text}
-        return response.status_code, body
-    except Exception as e:
-        return 0, {"error": str(e)}
 
 # -----------------------------------------------------------------------------
 # مسیرهای فایل‌ها (instance/data با fallback)
@@ -279,11 +255,6 @@ def _lands_path() -> str:
     fallback = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app", "data", "lands.json")
     return fallback
 
-def _consults_path() -> str:
-    return current_app.config.get(
-        "CONSULTS_FILE",
-        os.path.join(current_app.instance_path, "data", "consults.json")
-    )
 
 # ریشه آپلود تصاویر (static/uploads)
 def _uploads_root() -> str:
@@ -814,8 +785,6 @@ def settings():
                            settings=settings_data,
                            pending_count=p, approved_count=a, rejected_count=r)
 
-## admin consults removed
-
 # -----------------------------------------------------------------------------
 # فهرست آگهی‌ها (با صفحه‌بندی)
 # -----------------------------------------------------------------------------
@@ -983,7 +952,7 @@ def _next_numeric_code(lands: List[Dict[str, Any]]) -> str:
         int(l['code']) for l in lands
         if isinstance(l, dict) and 'code' in l and str(l['code']).isdigit()
     ]
-    return str(max(existing_codes) + 1) if existing_codes else '100'
+    return str(max(existing_codes) + 1) if existing_codes else '1'
 
 def _normalize_images_from_form(form, files) -> List[str]:
     """
@@ -1356,8 +1325,13 @@ def add_express_listing():
             return render_template('admin/add_express_listing.html',
                                   pending_count=0, approved_count=0, rejected_count=0)
         
+        # بارگذاری لیست آگهی‌ها برای تولید کد
+        lands = load_json(_lands_path())
+        if not isinstance(lands, list):
+            lands = []
+        
         # تولید کد منحصر به فرد
-        new_code = datetime.now().strftime('%Y%m%d%H%M%S')
+        new_code = form.get("code") or _next_numeric_code(lands)
         
         # ذخیره مدارک
         documents = []
@@ -1412,6 +1386,19 @@ def add_express_listing():
             price_int = 0
         express_commission_amount = int(round(price_int * ((express_commission_pct or 0)/100.0))) if price_int and (express_commission_pct is not None) else None
 
+        # دریافت مختصات جغرافیایی
+        latitude = None
+        longitude = None
+        try:
+            lat_str = form.get('latitude', '').strip()
+            lon_str = form.get('longitude', '').strip()
+            if lat_str:
+                latitude = float(lat_str)
+            if lon_str:
+                longitude = float(lon_str)
+        except (ValueError, TypeError):
+            pass  # اگر مقدار نامعتبر بود، None می‌ماند
+
         # ایجاد آگهی اکسپرس
         new_express_land = {
             'code': new_code,
@@ -1437,14 +1424,18 @@ def add_express_listing():
             }
         }
         
+        # افزودن مختصات جغرافیایی در صورت وجود
+        if latitude is not None:
+            new_express_land['latitude'] = latitude
+        if longitude is not None:
+            new_express_land['longitude'] = longitude
+        
         # ذخیره در فایل
         lands = load_json(_lands_path())
         lands.append(new_express_land)
         save_ads(lands)
         
         # ارسال نوتیفیکیشن به کاربران منطقه
-        _send_express_notification(new_express_land)
-
         # در صورت انتخاب «ارسال خودکار برای تمامی همکاران» → ساخت انتساب برای همه + اعلان
         if (form.get('auto_send_all_partners') or '').strip():
             try:
@@ -1518,6 +1509,21 @@ def edit_express_listing(code):
         land['description'] = form.get('description', '').strip()
         land['vinor_contact'] = form.get('vinor_contact', '09121234567')
         
+        # به‌روزرسانی مختصات جغرافیایی
+        try:
+            lat_str = form.get('latitude', '').strip()
+            lon_str = form.get('longitude', '').strip()
+            if lat_str:
+                land['latitude'] = float(lat_str)
+            else:
+                land.pop('latitude', None)
+            if lon_str:
+                land['longitude'] = float(lon_str)
+            else:
+                land.pop('longitude', None)
+        except (ValueError, TypeError):
+            pass  # اگر مقدار نامعتبر بود، تغییر نمی‌دهیم
+        
         # اضافه کردن تصاویر جدید
         for i in range(1, 4):  # image_1, image_2, image_3
             img_key = f'image_{i}'
@@ -1570,28 +1576,6 @@ def delete_express_listing(code):
     flash(f'آگهی اکسپرس با کد {code} با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.express_listings'))
 
-def _send_express_notification(express_land):
-    """ارسال نوتیفیکیشن برای آگهی اکسپرس جدید"""
-    try:
-        location = express_land.get('location', '')
-        title = express_land.get('title', '')
-        
-        message = f"🏠 ملک تأییدشده جدید در {location} - وینور اکسپرس"
-        
-        # ارسال نوتیفیکیشن به کاربران منطقه
-        add_notification(
-            title="ملک تأییدشده جدید",
-            message=message,
-            notification_type="express_listing",
-            data={
-                "land_code": express_land.get('code'),
-                "location": location,
-                "title": title
-            }
-        )
-    except Exception as e:
-        current_app.logger.error(f"Error sending express notification: {e}")
-
 @admin_bp.route('/express-docs/<filename>')
 @login_required
 def serve_express_document(filename):
@@ -1604,23 +1588,6 @@ def serve_express_document(filename):
         abort(404)
 
 # -----------------------------------------------------------------------------
-# Push/SMS routes moved to dedicated modules
-
-
-# -----------------------------------------------------------------------------
-# Consultants: Applications & List (MVP)
-# -----------------------------------------------------------------------------
-## روت‌های مربوط به درخواست‌های مشاورین حذف شدند
-
-## روت فهرست مشاورین حذف شد
-
-# -----------------------------------------------------------------------------
-# Consultants: Approve / Reject applications
-# -----------------------------------------------------------------------------
-## روت تایید درخواست مشاور حذف شد
-
-## روت رد درخواست مشاور حذف شد
-
 # -----------------------------------------------------------------------------
 # Express Partners: Applications & Partners list + actions
 # -----------------------------------------------------------------------------
@@ -1649,6 +1616,44 @@ def express_partners():
     except Exception:
         items = []
     return render_template('admin/express_partners.html', items=items)
+
+
+@admin_bp.post('/express/partners/<string:phone>/delete')
+@login_required
+def express_partner_delete(phone: str):
+    phone = (phone or '').strip()
+    if not phone:
+        flash('شماره همراه معتبر نیست.', 'warning')
+        return redirect(url_for('admin.express_partners'))
+    try:
+        partners = load_express_partners() or []
+        filtered = [p for p in partners if str(p.get('phone') or '').strip() != phone]
+        if len(filtered) == len(partners):
+            flash('همکار یافت نشد.', 'warning')
+            return redirect(url_for('admin.express_partners'))
+        save_express_partners(filtered)
+        flash('همکار با موفقیت حذف شد.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Failed to delete partner {phone}: {e}")
+        flash('خطا در حذف همکار.', 'danger')
+    return redirect(url_for('admin.express_partners'))
+
+
+@admin_bp.post('/express/applications/<int:aid>/delete')
+@login_required
+def express_partner_application_delete(aid: int):
+    try:
+        apps = load_express_partner_apps() or []
+        filtered = [app for app in apps if int(app.get('id', 0) or 0) != int(aid)]
+        if len(filtered) == len(apps):
+            flash('درخواست یافت نشد.', 'warning')
+            return redirect(url_for('admin.express_partner_applications'))
+        save_express_partner_apps(filtered)
+        flash('درخواست حذف شد.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Failed to delete application {aid}: {e}")
+        flash('حذف درخواست با خطا مواجه شد.', 'danger')
+    return redirect(url_for('admin.express_partner_applications'))
 
 # -----------------------------------------------------------------------------
 # Express Assignments (assign lands to partners)

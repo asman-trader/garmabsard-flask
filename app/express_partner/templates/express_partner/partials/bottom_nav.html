@@ -1,10 +1,11 @@
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 <nav class="fixed inset-x-0 bottom-3 z-50 px-4">
   <div class="max-w-md mx-auto">
-    <div class="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200/70 dark:border-gray-700/70 bg-white/90 dark:bg-gray-900/90 backdrop-blur shadow-lg px-2 py-2">
+    <div class="grid grid-cols-4 gap-2 rounded-2xl border border-gray-200/70 dark:border-gray-700/70 bg-white/90 dark:bg-gray-900/90 backdrop-blur shadow-lg px-2 py-2">
       {% set nav_items = [
         {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-folder-open', 'label': 'فایل‌ها'},
         {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
+        {'key': 'notifications', 'endpoint': 'express_partner.notifications', 'icon': 'fa-bell', 'label': 'اعلان'},
         {'key': 'profile', 'endpoint': 'express_partner.profile', 'icon': 'fa-user', 'label': 'من'}
       ] %}
       {% for item in nav_items %}

@@ -52,14 +52,26 @@ def inject_vinor_globals():
 def index():
     """
     لندینگ همکاران وینور – معرفی فرصت‌های همکاری
+    اگر کاربر وارد شده باشد، مستقیم به داشبورد همکاران می‌رود.
     """
+    if session.get("user_phone") or session.get("user_id"):
+        nxt = request.args.get('next')
+        if nxt and nxt.startswith('/'):
+            return redirect(nxt)
+        return redirect(url_for("express_partner.dashboard"))
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/partners", endpoint="partners")
 def partners():
     """
     لندینگ همکاران وینور – معرفی فرصت‌های همکاری
+    اگر کاربر وارد شده باشد، مستقیم به داشبورد می‌رود.
     """
+    if session.get("user_phone") or session.get("user_id"):
+        nxt = request.args.get('next')
+        if nxt and nxt.startswith('/'):
+            return redirect(nxt)
+        return redirect(url_for("express_partner.dashboard"))
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/start", endpoint="start")

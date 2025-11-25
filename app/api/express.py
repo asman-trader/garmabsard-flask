@@ -82,18 +82,15 @@ def express_contact_request(code):
             }), 404
         
         # Add notification for admin
-        add_notification(
-            title="درخواست مشاوره اکسپرس",
-            message=f"درخواست مشاوره برای آگهی {express_land.get('title', '')} از {name} ({phone})",
-            notification_type="express_contact",
-            data={
-                "land_code": code,
-                "land_title": express_land.get('title', ''),
-                "contact_name": name,
-                "contact_phone": phone,
-                "message": message
-            }
-        )
+        # نیاز به user_id برای ارسال نوتیفیکیشن
+        # در صورت نیاز می‌توان به ادمین یا کاربر خاصی ارسال کرد
+        # add_notification(
+        #     user_id="admin",
+        #     title="درخواست مشاوره اکسپرس",
+        #     body=f"درخواست مشاوره برای آگهی {express_land.get('title', '')} از {name} ({phone})",
+        #     ntype="info",
+        #     ad_id=code
+        # )
         
         return jsonify({
             'success': True,

@@ -2,50 +2,96 @@
 {% block title %}درخواست همکاری - مرحله ۲{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4">
+{% set steps = [
+  {'id': 1, 'title': 'اطلاعات پایه'},
+  {'id': 2, 'title': 'سوابق و توضیحات'},
+  {'id': 3, 'title': 'بازبینی نهایی'}
+] %}
 
-  <!-- Minimal sticky header -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
-    <div class="max-w-6xl mx-auto h-14 flex items-center justify-between">
-      <a href="{{ url_for('express_partner.apply_step1') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-        <i class="fas fa-arrow-right"></i>
-      </a>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">درخواست همکاری - مرحله ۲</h1>
-      <div class="w-9"></div>
-    </div>
-  </header>
+<section class="min-h-screen w-full bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
-  <div class="mt-4 flex items-start justify-center">
-    <div class="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-700 dark:text-violet-300">2</div>
-      <h1 class="text-lg font-bold text-gray-900 dark:text-white">مرحله ۲: سوابق و توضیحات</h1>
+    <div class="mb-6 sm:mb-8 text-center sm:text-right">
+      <p class="text-xs uppercase tracking-[0.4em] text-violet-500 font-semibold">STEP 2</p>
+      <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-2">سوابق و نگاه شما به همکاری</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+        با چند خط، تجربه‌ها و توضیحات شخصی خود را بنویسید تا تیم جذب بهتر شما را بشناسد.
+      </p>
     </div>
 
-    <form method="post" class="space-y-4" action="{{ url_for('express_partner.apply_step2') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div>
-        <label class="block text-sm mb-1">سابقه کار در حوزه ملک (اختیاری)</label>
-        <input type="text" name="experience" value="{{ experience }}" class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-violet-500 focus:border-violet-500" />
-      </div>
-      <div>
-        <label class="block text-sm mb-1">توضیحات تکمیلی (اختیاری)</label>
-        <textarea name="note" rows="4" class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-violet-500 focus:border-violet-500">{{ note }}</textarea>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 sm:mb-8">
+      {% for step in steps %}
+        <div class="p-3 rounded-2xl border {% if step.id <= 2 %}border-violet-200 dark:border-violet-800 bg-white dark:bg-slate-900 shadow-sm{% else %}border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-slate-900/60{% endif %}">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-full grid place-items-center text-sm font-bold {% if step.id <= 2 %}bg-violet-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-500{% endif %}">
+              {{ step.id }}
+            </span>
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ step.title }}</p>
+          </div>
+          {% if step.id == 2 %}
+            <p class="text-xs mt-2 text-violet-600 dark:text-violet-300">در حال تکمیل...</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+      <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-violet-100/70 dark:shadow-none border border-violet-50 dark:border-slate-800">
+        <div class="p-5 sm:p-7">
+          <div class="flex items-start gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-200 grid place-items-center text-lg font-bold">۲</div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">سوابق، تجربیات و توضیحات تکمیلی</h2>
+              <p class="text-sm text-gray-500 mt-1">نوشتن این موارد اختیاری است اما به تصمیم‌گیری سریع‌تر کمک می‌کند.</p>
+            </div>
+          </div>
+
+          <form method="post" action="{{ url_for('express_partner.apply_step2') }}" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label class="block">
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-300">سابقه همکاری در بازار ملک</span>
+              <input type="text" name="experience" value="{{ experience }}"
+                     class="mt-1 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                     placeholder="مثال: ۳ سال مشاور فروش در منطقه ۵">
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-300">توضیحات تکمیلی</span>
+              <textarea name="note" rows="5"
+                        class="mt-1 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                        placeholder="به ما بگویید چه توانمندی یا شبکه‌ای دارید که می‌تواند به فروش سریع‌تر کمک کند.">{{ note }}</textarea>
+            </label>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <a href="{{ url_for('express_partner.apply_step1') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                بازگشت به مرحله قبل
+              </a>
+              <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-lg shadow-violet-500/25 transition">
+                ادامه و بازبینی
+                <i class="fas fa-arrow-left text-xs mr-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div class="flex items-center justify-between pt-2">
-        <a href="{{ url_for('express_partner.apply_step1') }}" class="text-sm text-gray-500">بازگشت</a>
-        <button type="submit" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold">ادامه</button>
-      </div>
-    </form>
-
-    <div class="mt-6 flex items-center gap-2 text-xs text-gray-500" aria-label="پیشرفت">
-      <span class="w-6 h-1 rounded bg-violet-600"></span>
-      <span class="w-6 h-1 rounded bg-violet-600"></span>
-      <span class="w-6 h-1 rounded bg-gray-300 dark:bg-gray-700"></span>
+      <aside class="space-y-4">
+        <div class="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 p-5">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">چه چیزهایی بنویسم؟</h3>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <li class="flex items-start gap-2"><i class="fa-solid fa-pen text-violet-500 mt-0.5"></i>تجربه در دفاتر املاک، تیم‌های فروش یا شبکه‌های شخصی</li>
+            <li class="flex items-start gap-2"><i class="fa-solid fa-pen text-violet-500 mt-0.5"></i>شهرها و محدوده‌هایی که پوشش می‌دهید</li>
+            <li class="flex items-start gap-2"><i class="fa-solid fa-pen text-violet-500 mt-0.5"></i>توانمندی‌های ویژه؛ مذاکره، تولید محتوا، CRM و ...</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 p-5 text-sm text-amber-900 dark:text-amber-100">
+          <p class="font-semibold text-base mb-1">یادآوری مهم</p>
+          <p>اطلاعات شما صرفاً برای ارزیابی داخلی استفاده می‌شود و هیچ‌وقت بدون اجازه عمومی نمی‌شود.</p>
+        </div>
+      </aside>
     </div>
   </div>
-  </div>
+</section>
 {% endblock %}
-
 

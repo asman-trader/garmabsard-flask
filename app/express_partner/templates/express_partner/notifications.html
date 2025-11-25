@@ -1,0 +1,82 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}اعلان‌ها | وینور اکسپرس{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto pt-0 px-3 sm:px-4 pb-20" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
+
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
+    <div class="max-w-5xl mx-auto h-14 flex items-center justify-between">
+      <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">اعلان‌های من</h1>
+      <button type="button"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-violet-600 dark:text-violet-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              :disabled="loading || unreadCount === 0"
+              @click="markAll()">
+        همه را خوانده‌شده
+      </button>
+    </div>
+  </header>
+
+  <div class="mt-4">
+    <template x-if="loading">
+      <div class="space-y-3">
+        <div class="h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+        <div class="h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+        <div class="h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+      </div>
+    </template>
+
+    <template x-if="!loading && items.length === 0">
+      <div class="text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500">
+          <i class="fas fa-bell-slash text-2xl"></i>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">اعلانی برای نمایش وجود ندارد.</p>
+      </div>
+    </template>
+
+    <div class="space-y-3">
+      <template x-for="notif in items" :key="notif.id">
+        <article :class="notif.is_read ? 'bg-white dark:bg-gray-900' : 'bg-violet-50 dark:bg-violet-900/20'"
+                 class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-colors">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl grid place-items-center text-lg"
+                 :class="iconWrapper(notif.type)">
+              <i class="fas" :class="iconClass(notif.type)"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white" x-text="notif.title || 'اعلان جدید'"></h3>
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap" x-text="formatDate(notif.created_at)"></span>
+              </div>
+              <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed" x-text="notif.body"></p>
+              <div class="flex items-center gap-3 mt-3 text-[11px] font-semibold">
+                <button type="button"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-60"
+                        :disabled="notif.is_read"
+                        @click.prevent="markRead(notif)">
+                  <i class="fas fa-check text-[10px]"></i>
+                  خوانده شد
+                </button>
+                <button type="button"
+                        x-show="notif.action_url"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition"
+                        @click="openLink(notif.action_url)">
+                  <i class="fas fa-arrow-left text-[10px]"></i>
+                  جزئیات
+                </button>
+              </div>
+            </div>
+            <span x-show="!notif.is_read" class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-1"></span>
+          </div>
+        </article>
+      </template>
+    </div>
+  </div>
+
+  {% set bottom_nav_active = 'notifications' %}
+  {% include 'express_partner/partials/bottom_nav.html' %}
+</div>
+{% endblock %}
+

@@ -1,158 +1,305 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}جزئیات فایل اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto pt-0 px-3 sm:px-4 pb-24">
-
-  <header class="sticky top-0 z-50 -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-    <button type="button" onclick="history.back()" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-      <i class="fas fa-arrow-right"></i>
-    </button>
-    <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
-    <span class="w-9 h-9"></span>
+<div class="min-h-screen bg-white dark:bg-gray-950 pb-6">
+  
+  <!-- Header مینیمال -->
+  <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-900">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <button type="button" onclick="history.back()" 
+              class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors" 
+              aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+      </button>
+      <h1 class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات فایل</h1>
+      {% if land.code %}
+      <span class="text-xs font-mono text-gray-500 dark:text-gray-400">#{{ land.code }}</span>
+      {% else %}
+      <span class="w-9"></span>
+      {% endif %}
+    </div>
   </header>
 
-  <article class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+  <!-- تصویر اصلی -->
+  <div class="relative -mx-4 mb-6">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
-    <div class="relative">
-      {% if primary_image %}
-        {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
-        <div class="aspect-[4/3]">
-          <img src="{{ image_src }}" alt="{{ land.title }}" class="w-full h-full object-cover">
-        </div>
-      {% else %}
-        <div class="aspect-[4/3] grid place-items-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 text-gray-400">
-          <i class="fas fa-image text-5xl opacity-40"></i>
-        </div>
-      {% endif %}
-      {% if land._assignment_status == 'in_transaction' %}
-        <span class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-500/95 text-white shadow-lg backdrop-blur">
-          <i class="fas fa-handshake text-[10px]"></i>در حال معامله
+    {% if primary_image %}
+      {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900">
+        <img src="{{ image_src }}" alt="{{ land.title }}" 
+             class="w-full h-full object-cover">
+      </div>
+    {% else %}
+      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
+      </div>
+    {% endif %}
+    
+    {% if land._assignment_status == 'in_transaction' %}
+    <div class="absolute top-4 left-4">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-orange-500 text-white">
+        <i class="fas fa-handshake text-[10px]"></i>
+        در حال معامله
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 space-y-6">
+    
+    <!-- عنوان و اطلاعات اصلی -->
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+        {% if land.location or land.city %}
+        <span class="inline-flex items-center gap-1.5">
+          <i class="fas fa-location-dot text-xs"></i>
+          {{ land.location or land.city }}
         </span>
-      {% endif %}
+        {% endif %}
+        {% if land.size %}
+        <span class="inline-flex items-center gap-1.5">
+          <i class="fas fa-ruler-combined text-xs"></i>
+          {{ land.size }} متر
+        </span>
+        {% endif %}
+        {% if land.category %}
+        <span class="inline-flex items-center gap-1.5">
+          <i class="fas fa-tag text-xs"></i>
+          {{ land.category }}
+        </span>
+        {% endif %}
+      </div>
     </div>
 
-    <div class="p-5 sm:p-6 space-y-6">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white leading-tight">{{ land.title or '—' }}</h2>
-          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-2">
-            {% if land.location or land.city %}
-              <span class="inline-flex items-center gap-1"><i class="fas fa-location-dot"></i>{{ land.location or land.city }}</span>
-            {% endif %}
-            {% if land.size %}
-              <span class="inline-flex items-center gap-1"><i class="fas fa-ruler-combined"></i>{{ land.size }} متر</span>
-            {% endif %}
-          </div>
-        </div>
-        {% if land.code %}
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-semibold bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
-            <i class="fas fa-hashtag"></i>{{ land.code }}
-          </span>
+    <!-- قیمت و پورسانت -->
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">قیمت کل</div>
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ (land.price_total or 0)|toman }}</div>
+        {% if land.price_per_meter %}
+        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">قیمت در متر: {{ land.price_per_meter|toman }}</div>
         {% endif %}
       </div>
-
-      <div class="grid sm:grid-cols-2 gap-3">
-        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4">
-          <div class="text-xs text-gray-500 dark:text-gray-400">قیمت کل</div>
-          <div class="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400">{{ (land.price_total or 0)|toman }}</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4">
-          <div class="text-xs text-gray-500 dark:text-gray-400">پورسانت</div>
-          <div class="mt-1 text-lg font-black text-violet-600 dark:text-violet-400">{{ (land._commission_amount or 0)|toman }}</div>
-        </div>
-      </div>
-
-      {% if land.description %}
-        <section class="space-y-2">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-white">توضیحات</h3>
-          <p class="text-sm leading-7 text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ land.description }}</p>
-        </section>
-      {% endif %}
-
-      <section class="space-y-2">
-        <h3 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h3>
-        <dl class="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
-          {% if land.code %}<div><dt class="font-semibold text-gray-900 dark:text-white">کد فایل</dt><dd class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700"><i class="fas fa-hashtag"></i>{{ land.code }}</dd></div>{% endif %}
-          {% if land.rooms %}<div><dt class="font-semibold text-gray-900 dark:text-white">اتاق</dt><dd>{{ land.rooms }}</dd></div>{% endif %}
-          {% if land.floor %}<div><dt class="font-semibold text-gray-900 dark:text-white">طبقه</dt><dd>{{ land.floor }}</dd></div>{% endif %}
-          {% if land.year_built %}<div><dt class="font-semibold text-gray-900 dark:text-white">سال ساخت</dt><dd>{{ land.year_built }}</dd></div>{% endif %}
-          {% if land.docs_status %}<div><dt class="font-semibold text-gray-900 dark:text-white">وضعیت سند</dt><dd>{{ land.docs_status }}</dd></div>{% endif %}
-          {% if land.features %}<div class="sm:col-span-2"><dt class="font-semibold text-gray-900 dark:text-white">امکانات</dt><dd>{{ land.features }}</dd></div>{% endif %}
-        </dl>
-      </section>
-
-      <section class="space-y-3">
-        <h3 class="text-sm font-bold text-gray-900 dark:text-white">اقدام سریع</h3>
-        {% if share_url %}
-        <div class="rounded-2xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold text-violet-700 dark:text-violet-300">لینک اختصاصی شما</p>
-            <p class="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-200 break-all">{{ share_url }}</p>
-          </div>
-          <button type="button" class="copy-btn-secondary inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white text-xs font-medium shadow-md hover:shadow-lg transition" data-url="{{ share_url }}">
-            <i class="fas fa-copy"></i>
-            کپی لینک
-          </button>
-        </div>
-        {% endif %}
-        <div class="grid sm:grid-cols-4 gap-2">
-          {% set public_link = share_url %}
-          <a href="{{ public_link }}" target="_blank" rel="noopener"
-             class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-            <i class="far fa-eye"></i>
-            مشاهده عمومی
-          </a>
-          <button type="button" class="share-btn inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] hover:from-[#6D28D9] hover:to-[#5B21B6] text-white text-xs font-medium transition shadow-md" data-url="{{ public_link }}">
-            <i class="fas fa-share-nodes"></i>
-            اشتراک
-          </button>
-          <button type="button" class="copy-btn inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition" data-url="{{ public_link }}">
-            <i class="fas fa-link"></i>
-            کپی لینک
-          </button>
-          {% if land.owner_phone %}
-          <a href="tel:{{ land.owner_phone }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-emerald-300 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition">
-            <i class="fas fa-phone"></i>
-            تماس سریع
-          </a>
+      
+      <div class="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs text-gray-500 dark:text-gray-400">پورسانت شما</div>
+          {% if land._commission_pct %}
+          <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ land._commission_pct }}%</span>
           {% endif %}
         </div>
-      </section>
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ (land._commission_amount or 0)|toman }}</div>
+      </div>
     </div>
-  </article>
 
-  {% set bottom_nav_active = '' %}
-  {% include 'express_partner/partials/bottom_nav.html' %}
+    <!-- توضیحات -->
+    {% if land.description %}
+    <div class="prose prose-sm dark:prose-invert max-w-none">
+      <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{{ land.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- جزئیات فایل -->
+    {% if land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات</h3>
+      <div class="grid sm:grid-cols-2 gap-3">
+        {% if land.rooms %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">اتاق</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.rooms }}</span>
+        </div>
+        {% endif %}
+        {% if land.floor %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">طبقه</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.floor }}</span>
+        </div>
+        {% endif %}
+        {% if land.year_built %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">سال ساخت</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.year_built }}</span>
+        </div>
+        {% endif %}
+        {% if land.docs_status %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">وضعیت سند</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.docs_status }}</span>
+        </div>
+        {% endif %}
+        {% if land.features %}
+        <div class="sm:col-span-2 py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400 block mb-1">امکانات</span>
+          <span class="text-sm text-gray-900 dark:text-white">{{ land.features }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- موقعیت دقیق -->
+    {% if land.latitude and land.longitude %}
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">موقعیت دقیق</h3>
+      <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+        <div class="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
+          <i class="fas fa-map-marker-alt"></i>
+          <span class="font-mono">{{ land.latitude }}, {{ land.longitude }}</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <a href="https://www.google.com/maps?q={{ land.latitude }},{{ land.longitude }}" 
+             target="_blank" rel="noopener"
+             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <i class="fab fa-google text-red-500"></i>
+            <span class="hidden sm:inline">Google</span>
+          </a>
+          <a href="https://waze.com/ul?ll={{ land.latitude }},{{ land.longitude }}&navigate=yes" 
+             target="_blank" rel="noopener"
+             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <i class="fas fa-route text-blue-500"></i>
+            <span class="hidden sm:inline">Waze</span>
+          </a>
+          <a href="https://www.openstreetmap.org/?mlat={{ land.latitude }}&mlon={{ land.longitude }}&zoom=15" 
+             target="_blank" rel="noopener"
+             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <i class="fas fa-map text-green-500"></i>
+            <span class="hidden sm:inline">OSM</span>
+          </a>
+          <a href="geo:{{ land.latitude }},{{ land.longitude }}" 
+             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <i class="fas fa-mobile-alt text-purple-500"></i>
+            <span class="hidden sm:inline">مسیریاب</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- لینک اشتراک -->
+    {% if share_url %}
+    <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">لینک اختصاصی</div>
+          <p class="text-xs text-gray-600 dark:text-gray-400 break-all font-mono">{{ share_url }}</p>
+        </div>
+        <button type="button" 
+                class="copy-btn-secondary flex-shrink-0 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                data-url="{{ share_url }}">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- دکمه‌های اقدام -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {% set public_link = share_url %}
+      <a href="{{ public_link }}" 
+         target="_blank" rel="noopener"
+         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <i class="far fa-eye text-lg text-gray-600 dark:text-gray-400"></i>
+        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">مشاهده</span>
+      </a>
+      
+      <button type="button" 
+              class="share-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+              data-url="{{ public_link }}">
+        <i class="fas fa-share-nodes text-lg text-gray-600 dark:text-gray-400"></i>
+        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">اشتراک</span>
+      </button>
+      
+      <button type="button" 
+              class="copy-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+              data-url="{{ public_link }}">
+        <i class="fas fa-link text-lg text-gray-600 dark:text-gray-400"></i>
+        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">کپی</span>
+      </button>
+      
+      {% if land.owner_phone or land.vinor_contact %}
+      <a href="tel:{{ land.owner_phone or land.vinor_contact }}" 
+         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+        <i class="fas fa-phone text-lg text-emerald-600 dark:text-emerald-400"></i>
+        <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">تماس</span>
+      </a>
+      {% else %}
+      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
+        <i class="fas fa-phone text-lg text-gray-400"></i>
+        <span class="text-xs text-gray-400">تماس</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- گالری تصاویر -->
+    {% if images|length > 1 %}
+    <div class="space-y-3">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">تصاویر بیشتر</h3>
+      <div class="grid grid-cols-3 gap-2">
+        {% for image in images[1:7] %}
+          {% set image_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
+          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <img src="{{ image_src }}" alt="تصویر {{ loop.index + 1 }}" class="w-full h-full object-cover">
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // کپی لینک
     document.querySelectorAll('.copy-btn, .copy-btn-secondary').forEach(function(btn) {
       btn.addEventListener('click', async function () {
         const url = btn.getAttribute('data-url') || btn.dataset.url || window.location.href;
         try {
           await navigator.clipboard.writeText(url);
-          alert('لینک کپی شد');
+          const icon = btn.querySelector('i');
+          if (icon) {
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check text-green-500';
+            setTimeout(() => {
+              icon.className = originalClass;
+            }, 1500);
+          }
         } catch (err) {
           console.error(err);
         }
-      }, { passive: true });
+      });
     });
+    
+    // اشتراک
     document.querySelectorAll('.share-btn').forEach(function(btn) {
       btn.addEventListener('click', async function () {
         const url = btn.dataset.url || window.location.href;
         try {
           if (navigator.share) {
-            await navigator.share({ title: document.title, url });
+            await navigator.share({ 
+              title: document.title, 
+              url: url
+            });
           } else {
             await navigator.clipboard.writeText(url);
-            alert('لینک کپی شد');
+            const icon = btn.querySelector('i');
+            if (icon) {
+              const originalClass = icon.className;
+              icon.className = 'fas fa-check text-green-500';
+              setTimeout(() => {
+                icon.className = originalClass;
+              }, 1500);
+            }
           }
         } catch (err) {
-          console.error(err);
+          if (err.name !== 'AbortError') {
+            console.error(err);
+          }
         }
-      }, { passive: true });
+      });
     });
   });
 </script>
