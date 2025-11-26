@@ -270,8 +270,65 @@
     </div>
     {% endif %}
 
+    <!-- فضای خالی برای دکمه ثابت پایین در موبایل -->
+    <div class="h-20 sm:hidden"></div>
+
   </div>
 </div>
+
+<!-- دکمه تماس ثابت پایین (فقط موبایل) -->
+{% if land.owner_phone or land.vinor_contact %}
+{% set contact_phone = land.owner_phone or land.vinor_contact %}
+<div class="fixed bottom-0 inset-x-0 p-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 sm:hidden z-50">
+  <button type="button" onclick="openContactModal()"
+     class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">
+    <i class="fas fa-phone"></i>
+    تماس
+  </button>
+</div>
+
+<!-- مودال تماس -->
+<div id="contactModal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/60" onclick="closeContactModal()"></div>
+  <div class="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-900 rounded-t-3xl p-6 space-y-4 animate-slide-up">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">انتخاب روش تماس</h3>
+      <button onclick="closeContactModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+        <i class="fas fa-times text-gray-500"></i>
+      </button>
+    </div>
+    <a href="tel:{{ contact_phone }}" 
+       class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+      <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+        <i class="fas fa-phone text-emerald-600 dark:text-emerald-400 text-lg"></i>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-900 dark:text-white">تماس مستقیم</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">{{ contact_phone }}</div>
+      </div>
+    </a>
+    <a href="https://wa.me/98{{ contact_phone[1:] if contact_phone.startswith('0') else contact_phone }}?text={{ 'سلام، در مورد آگهی ' ~ (land.title or land.code) ~ ' سوال داشتم.' | urlencode }}" 
+       target="_blank" rel="noopener"
+       class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+      <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+        <i class="fab fa-whatsapp text-green-600 dark:text-green-400 text-xl"></i>
+      </div>
+      <div>
+        <div class="font-semibold text-gray-900 dark:text-white">واتس‌اپ</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">ارسال پیام در واتس‌اپ</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<style>
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.3s ease-out; }
+</style>
+{% endif %}
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -345,6 +402,16 @@
     });
   });
   
+  // مودال تماس
+  function openContactModal() {
+    document.getElementById('contactModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeContactModal() {
+    document.getElementById('contactModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
   // لایت‌باکس تصویر
   function openLightbox(src) {
     const lightbox = document.createElement('div');
@@ -364,3 +431,4 @@
   }
 </script>
 {% endblock %}
+
