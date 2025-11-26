@@ -71,3 +71,56 @@ Thumbs.db
 # ----------------------------
 tmp/
 .cache/
+
+# ----------------------------
+# فایل‌های لوکال که نباید به هاست برن
+# ----------------------------
+# تنظیمات لوکال
+config.local.py
+settings.local.py
+local_settings.py
+*.local.json
+*.local.yaml
+*.local.yml
+
+# بکاپ‌ها
+*.bak
+*.backup
+*.old
+*~
+
+# فایل‌های تست لوکال
+test_data/
+fixtures/local/
+
+# داکر لوکال
+docker-compose.override.yml
+docker-compose.local.yml
+.docker/
+
+# Node (اگر فرانت دارید)
+node_modules/
+package-lock.json
+yarn.lock
+
+# فایل‌های IDE و دیباگ
+*.swp
+*.swo
+.history/
+*.sublime-*
+
+# سکرت‌ها و کردنشیال‌ها
+secrets/
+credentials/
+*.secret
+service-account*.json
+
+# فایل‌های میگریشن لوکال (اختیاری)
+# migrations/versions/*.py
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
