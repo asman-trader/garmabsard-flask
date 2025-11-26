@@ -161,38 +161,51 @@
 
     <!-- موقعیت دقیق -->
     {% if land.latitude and land.longitude %}
-    <div class="space-y-3">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">موقعیت دقیق</h3>
-      <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-        <div class="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
-          <i class="fas fa-map-marker-alt"></i>
-          <span class="font-mono">{{ land.latitude }}, {{ land.longitude }}</span>
+    <button type="button" onclick="openLocationModal()"
+            class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <i class="fas fa-map-marker-alt text-blue-600 dark:text-blue-400"></i>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <a href="https://www.google.com/maps?q={{ land.latitude }},{{ land.longitude }}" 
-             target="_blank" rel="noopener"
-             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <i class="fab fa-google text-red-500"></i>
-            <span class="hidden sm:inline">Google</span>
-          </a>
-          <a href="https://waze.com/ul?ll={{ land.latitude }},{{ land.longitude }}&navigate=yes" 
-             target="_blank" rel="noopener"
-             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <i class="fas fa-route text-blue-500"></i>
-            <span class="hidden sm:inline">Waze</span>
-          </a>
-          <a href="https://www.openstreetmap.org/?mlat={{ land.latitude }}&mlon={{ land.longitude }}&zoom=15" 
-             target="_blank" rel="noopener"
-             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <i class="fas fa-map text-green-500"></i>
-            <span class="hidden sm:inline">OSM</span>
-          </a>
-          <a href="geo:{{ land.latitude }},{{ land.longitude }}" 
-             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <i class="fas fa-mobile-alt text-purple-500"></i>
-            <span class="hidden sm:inline">مسیریاب</span>
-          </a>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">موقعیت دقیق</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">باز کردن در نقشه</div>
         </div>
+      </div>
+      <i class="fas fa-chevron-left text-gray-400"></i>
+    </button>
+
+    <!-- مودال موقعیت -->
+    <div id="locationModal" class="fixed inset-0 z-[100] hidden">
+      <div class="absolute inset-0 bg-black/60" onclick="closeLocationModal()"></div>
+      <div class="absolute bottom-0 inset-x-0 bg-white dark:bg-gray-900 rounded-t-3xl p-6 space-y-4 animate-slide-up">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">باز کردن با</h3>
+          <button onclick="closeLocationModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+            <i class="fas fa-times text-gray-500"></i>
+          </button>
+        </div>
+        <a href="https://www.google.com/maps?q={{ land.latitude }},{{ land.longitude }}" target="_blank" rel="noopener"
+           class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <i class="fab fa-google text-red-500 text-xl"></i>
+          </div>
+          <div class="font-semibold text-gray-900 dark:text-white">Google Maps</div>
+        </a>
+        <a href="https://waze.com/ul?ll={{ land.latitude }},{{ land.longitude }}&navigate=yes" target="_blank" rel="noopener"
+           class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <i class="fas fa-route text-blue-500 text-xl"></i>
+          </div>
+          <div class="font-semibold text-gray-900 dark:text-white">Waze</div>
+        </a>
+        <a href="geo:{{ land.latitude }},{{ land.longitude }}" 
+           class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+            <i class="fas fa-location-arrow text-purple-500 text-xl"></i>
+          </div>
+          <div class="font-semibold text-gray-900 dark:text-white">مسیریاب پیش‌فرض</div>
+        </a>
       </div>
     </div>
     {% endif %}
@@ -411,6 +424,16 @@
   }
   function closeContactModal() {
     document.getElementById('contactModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+  
+  // مودال موقعیت
+  function openLocationModal() {
+    document.getElementById('locationModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLocationModal() {
+    document.getElementById('locationModal').classList.add('hidden');
     document.body.style.overflow = '';
   }
 
