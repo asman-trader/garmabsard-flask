@@ -6,11 +6,11 @@
   <!-- Header مینیمال -->
   <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-900">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      <button type="button" onclick="history.back()" 
+      <a href="{{ url_for('express_partner.dashboard') }}" 
               class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors" 
               aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
-      </button>
+      </a>
       <h1 class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات فایل</h1>
       {% if land.code %}
       <span class="text-xs font-mono text-gray-500 dark:text-gray-400">#{{ land.code }}</span>
