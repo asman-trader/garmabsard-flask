@@ -1018,6 +1018,25 @@ def land_detail(code: str):
     me_phone = (session.get("user_phone") or "").strip()
     partner_profile = next((p for p in partners if str(p.get("phone")) == me_phone), None)
 
+    # محاسبه پورسانت از assignments
+    assignments = load_express_assignments() or []
+    assignment = next((a for a in assignments if a.get('land_code') == code and a.get('partner_phone') == me_phone), None)
+    
+    if assignment:
+        land['_assignment_id'] = assignment.get('id')
+        land['_assignment_status'] = assignment.get('status', 'active')
+        land['_commission_pct'] = assignment.get('commission_pct')
+        # محاسبه مبلغ پورسانت
+        try:
+            total_price = float(land.get('price_total') or 0)
+        except Exception:
+            total_price = 0
+        try:
+            pct = float(land.get('_commission_pct') or 0)
+        except Exception:
+            pct = 0.0
+        land['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
+
     share_token = encode_partner_ref(me_phone)
     share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True)
 

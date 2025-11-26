@@ -21,17 +21,21 @@
   </header>
 
   <!-- تصویر اصلی -->
-  <div class="relative -mx-4 mb-6">
+  <div class="relative mb-6">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
     {% if primary_image %}
       {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
-      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900">
+      <div class="aspect-[16/9] bg-gray-100 dark:bg-gray-900 relative group rounded-xl overflow-hidden mx-4">
         <img src="{{ image_src }}" alt="{{ land.title }}" 
-             class="w-full h-full object-cover">
+             class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
+        <a href="{{ image_src }}" download class="absolute bottom-4 right-4 px-3 py-2 rounded-lg bg-black/60 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2" onclick="event.stopPropagation()">
+          <i class="fas fa-download"></i>
+          دانلود
+        </a>
       </div>
     {% else %}
-      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div class="aspect-[16/9] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl mx-4">
         <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
       </div>
     {% endif %}
@@ -50,7 +54,12 @@
     
     <!-- عنوان و اطلاعات اصلی -->
     <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
+      <div class="flex items-start justify-between gap-2">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
+        <button type="button" class="copy-text-btn flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-text="{{ land.title or '' }}" title="کپی عنوان">
+          <i class="fas fa-copy text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
       <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
         {% if land.location or land.city %}
         <span class="inline-flex items-center gap-1.5">
@@ -83,21 +92,31 @@
         {% endif %}
       </div>
       
-      <div class="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+      <div class="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/30 dark:to-violet-800/20 border border-violet-200 dark:border-violet-800">
         <div class="flex items-center justify-between mb-2">
-          <div class="text-xs text-gray-500 dark:text-gray-400">پورسانت شما</div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-sm"></i>
+            <span class="text-xs font-medium text-violet-700 dark:text-violet-300">پورسانت شما</span>
+          </div>
           {% if land._commission_pct %}
-          <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ land._commission_pct }}%</span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-600 dark:bg-violet-500 text-white">
+            <i class="fas fa-percent text-[10px]"></i>{{ land._commission_pct }}%
+          </span>
           {% endif %}
         </div>
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ (land._commission_amount or 0)|toman }}</div>
+        <div class="text-2xl font-black text-violet-700 dark:text-violet-400">{{ (land._commission_amount or 0)|toman }}</div>
       </div>
     </div>
 
     <!-- توضیحات -->
     {% if land.description %}
     <div class="prose prose-sm dark:prose-invert max-w-none">
-      <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{{ land.description }}</p>
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line flex-1">{{ land.description }}</p>
+        <button type="button" class="copy-text-btn flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-text="{{ land.description }}" title="کپی توضیحات">
+          <i class="fas fa-copy text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
     </div>
     {% endif %}
 
@@ -240,8 +259,11 @@
       <div class="grid grid-cols-3 gap-2">
         {% for image in images[1:7] %}
           {% set image_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
-          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-            <img src="{{ image_src }}" alt="تصویر {{ loop.index + 1 }}" class="w-full h-full object-cover">
+          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 relative group">
+            <img src="{{ image_src }}" alt="تصویر {{ loop.index + 1 }}" class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
+            <a href="{{ image_src }}" download class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" onclick="event.stopPropagation()">
+              <i class="fas fa-download text-xs"></i>
+            </a>
           </div>
         {% endfor %}
       </div>
@@ -259,6 +281,26 @@
         const url = btn.getAttribute('data-url') || btn.dataset.url || window.location.href;
         try {
           await navigator.clipboard.writeText(url);
+          const icon = btn.querySelector('i');
+          if (icon) {
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check text-green-500';
+            setTimeout(() => {
+              icon.className = originalClass;
+            }, 1500);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+    
+    // کپی متن (عنوان و توضیحات)
+    document.querySelectorAll('.copy-text-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const text = btn.getAttribute('data-text') || '';
+        try {
+          await navigator.clipboard.writeText(text);
           const icon = btn.querySelector('i');
           if (icon) {
             const originalClass = icon.className;
@@ -302,5 +344,23 @@
       });
     });
   });
+  
+  // لایت‌باکس تصویر
+  function openLightbox(src) {
+    const lightbox = document.createElement('div');
+    lightbox.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4';
+    lightbox.onclick = () => lightbox.remove();
+    lightbox.innerHTML = `
+      <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl hover:bg-white/20 transition-colors" onclick="this.parentElement.remove()">
+        <i class="fas fa-times"></i>
+      </button>
+      <img src="${src}" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
+      <a href="${src}" download class="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2" onclick="event.stopPropagation()">
+        <i class="fas fa-download"></i>
+        دانلود تصویر
+      </a>
+    `;
+    document.body.appendChild(lightbox);
+  }
 </script>
 {% endblock %}
