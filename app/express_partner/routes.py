@@ -39,6 +39,37 @@ def _normalize_phone(phone: str) -> str:
     return p[:11]
 
 
+def _auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> None:
+    """رفع خودکار معاملات بعد از ۵ روز بدون تأیید پشتیبان"""
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    updated = False
+    
+    for a in assignments:
+        if a.get('status') != 'in_transaction':
+            continue
+        
+        started_at_str = a.get('transaction_started_at')
+        if not started_at_str:
+            continue
+        
+        try:
+            started_at = datetime.strptime(started_at_str, '%Y-%m-%d %H:%M:%S')
+            if now - started_at > timedelta(days=5):
+                a['status'] = 'active'
+                a['updated_at'] = now.strftime('%Y-%m-%d %H:%M:%S')
+                a['auto_released'] = True
+                a['auto_released_at'] = now.strftime('%Y-%m-%d %H:%M:%S')
+                a.pop('transaction_holder', None)
+                a.pop('transaction_started_at', None)
+                updated = True
+        except Exception:
+            continue
+    
+    if updated:
+        save_express_assignments(assignments)
+
+
 def _get_my_last_application(phone: str) -> Dict[str, Any] | None:
     """Return latest Express Partner application for a phone, if any."""
     try:
@@ -361,6 +392,8 @@ def dashboard():
 
     try:
         assignments = load_express_assignments() or []
+        # رفع خودکار معاملات بعد از ۵ روز
+        _auto_release_expired_transactions(assignments)
     except Exception:
         assignments = []
     my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved','in_transaction')]
@@ -677,7 +710,7 @@ def training():
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
 @require_partner_access()
 def mark_in_transaction(code: str):
-    """Toggle وضعیت ملک بین در حال معامله و فعال - برای تمامی همکاران"""
+    """Toggle وضعیت ملک بین در حال معامله و فعال - فقط یک همکار می‌تواند معامله کند"""
     me_phone = (session.get("user_phone") or "").strip()
     
     try:
@@ -691,28 +724,49 @@ def mark_in_transaction(code: str):
             if (str(a.get('land_code')) == str(code) and 
                 str(a.get('partner_phone')) == me_phone):
                 my_assignment = a
-                current_status = a.get('status', 'active')
-                # Toggle: اگر در حال معامله است، به active برگردان، وگرنه به in_transaction تغییر بده
-                if current_status == 'in_transaction':
-                    new_status = 'active'
-                else:
-                    new_status = 'in_transaction'
                 break
         
         if my_assignment is None:
             flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
             return redirect(url_for('express_partner.dashboard'))
         
-        # حالا تمام assignment های مربوط به این فایل را برای همه همکاران تغییر می‌دهیم
-        # فقط assignment های active, pending, یا in_transaction را تغییر می‌دهیم (closed را تغییر نمی‌دهیم)
+        current_status = my_assignment.get('status', 'active')
+        
+        # بررسی آیا فایل توسط همکار دیگری در حال معامله است
+        transaction_holder = None
+        for a in assignments:
+            if (str(a.get('land_code')) == str(code) and 
+                a.get('status') == 'in_transaction'):
+                transaction_holder = a
+                break
+        
+        # اگر در حال معامله توسط کسی هست
+        if transaction_holder:
+            holder_phone = str(transaction_holder.get('partner_phone', ''))
+            # فقط همان همکار می‌تواند رفع معامله کند
+            if holder_phone != me_phone:
+                flash('❌ این فایل توسط همکار دیگری در حال معامله است.', 'error')
+                return redirect(url_for('express_partner.dashboard'))
+            # همکار صاحب معامله می‌خواهد رفع معامله کند
+            new_status = 'active'
+        else:
+            # هیچ‌کس معامله نکرده، این همکار می‌تواند معامله کند
+            new_status = 'in_transaction'
+        
+        # اعمال تغییرات
         for a in assignments:
             if str(a.get('land_code')) == str(code):
                 current_a_status = a.get('status', 'active')
-                # فقط assignment های active, pending, یا in_transaction را تغییر می‌دهیم
-                # assignment های closed را تغییر نمی‌دهیم چون بسته شده‌اند
                 if current_a_status in ('active', 'pending', 'in_transaction'):
                     a['status'] = new_status
                     a['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    # ذخیره همکار صاحب معامله و زمان شروع
+                    if new_status == 'in_transaction':
+                        a['transaction_holder'] = me_phone
+                        a['transaction_started_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        a.pop('transaction_holder', None)
+                        a.pop('transaction_started_at', None)
                     updated = True
                     current_app.logger.info(f"Updated assignment {a.get('id')} for partner {a.get('partner_phone')} to status {new_status}")
         
