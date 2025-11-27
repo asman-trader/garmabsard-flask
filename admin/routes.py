@@ -1593,6 +1593,14 @@ def toggle_express_sold(code):
     current_status = land.get('express_status', 'active')
     if current_status == 'sold':
         land['express_status'] = 'active'
+        # برگرداندن وضعیت انتساب‌ها به active
+        assignments = load_express_assignments() or []
+        for a in assignments:
+            if str(a.get('land_code')) == str(code):
+                a['status'] = 'active'
+                a['transaction_holder'] = None
+                a['transaction_started_at'] = None
+        save_express_assignments(assignments)
         flash(f'آگهی {code} به حالت در انتظار فروش برگشت.', 'success')
     else:
         land['express_status'] = 'sold'
