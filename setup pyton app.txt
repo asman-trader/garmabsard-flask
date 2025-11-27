@@ -68,3 +68,11 @@ pip install -r requirements.txt
 
 touch tmp/restart.txt
 
+source /home/garmabs2/virtualenv/vinor/3.11/bin/activate && cd /home/garmabs2/vinor
+git pull
+touch tmp/restart.txt
+
+
+
+
+
