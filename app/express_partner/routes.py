@@ -732,20 +732,18 @@ def mark_in_transaction(code: str):
         
         current_status = my_assignment.get('status', 'active')
         
-        # بررسی آیا فایل توسط همکار دیگری در حال معامله است
-        transaction_holder = None
+        # بررسی آیا فایل توسط همکاری در حال معامله است (چک کردن transaction_holder)
+        holder_phone = None
         for a in assignments:
-            if (str(a.get('land_code')) == str(code) and 
-                a.get('status') == 'in_transaction'):
-                transaction_holder = a
+            if str(a.get('land_code')) == str(code) and a.get('transaction_holder'):
+                holder_phone = str(a.get('transaction_holder', ''))
                 break
         
         # اگر در حال معامله توسط کسی هست
-        if transaction_holder:
-            holder_phone = str(transaction_holder.get('partner_phone', ''))
+        if holder_phone:
             # فقط همان همکار می‌تواند رفع معامله کند
             if holder_phone != me_phone:
-                flash('❌ این فایل توسط همکار دیگری در حال معامله است.', 'error')
+                flash('❌ این فایل توسط همکار دیگری در حال معامله است. فقط او می‌تواند رفع معامله کند.', 'error')
                 return redirect(url_for('express_partner.dashboard'))
             # همکار صاحب معامله می‌خواهد رفع معامله کند
             new_status = 'active'
