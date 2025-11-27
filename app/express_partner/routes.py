@@ -795,81 +795,78 @@ def mark_in_transaction(code: str):
                         created_count = 0
                         skipped_count = 0
                         
-                        # برای هر assignment که به in_transaction تغییر کرد، رکورد پورسانت ایجاد کن
-                        for a in assignments:
-                            if (str(a.get('land_code')) == str(code) and 
-                                a.get('status') == 'in_transaction'):
-                                
-                                partner_phone = str(a.get('partner_phone', '')).strip()
-                                commission_pct_raw = a.get('commission_pct')
-                                
+                        # فقط برای همکاری که معامله را شروع کرده پورسانت ایجاد کن
+                        my_assignment_for_commission = next(
+                            (a for a in assignments 
+                             if str(a.get('land_code')) == str(code) and 
+                                str(a.get('partner_phone')) == me_phone),
+                            None
+                        )
+                        
+                        if my_assignment_for_commission:
+                            partner_phone = me_phone
+                            commission_pct_raw = my_assignment_for_commission.get('commission_pct')
+                            
+                            try:
+                                commission_pct = float(commission_pct_raw) if commission_pct_raw is not None else 0.0
+                            except (ValueError, TypeError):
+                                commission_pct = 0.0
+                                current_app.logger.warning(f"Invalid commission_pct for partner {partner_phone}, land {code}: {commission_pct_raw}")
+                            
+                            # بررسی اینکه آیا قبلاً برای این همکار و این فایل پورسانتی ثبت شده یا نه
+                            existing_commission = next(
+                                (c for c in commissions 
+                                 if (str(c.get('partner_phone', '')).strip() == partner_phone and 
+                                     str(c.get('land_code')) == str(code))),
+                                None
+                            )
+                            
+                            if existing_commission:
+                                current_app.logger.info(f"Commission already exists for partner {partner_phone} and land {code}, skipping")
+                                skipped_count += 1
+                            elif commission_pct > 0:
+                                # محاسبه مبلغ پورسانت
                                 try:
-                                    commission_pct = float(commission_pct_raw) if commission_pct_raw is not None else 0.0
-                                except (ValueError, TypeError):
-                                    commission_pct = 0.0
-                                    current_app.logger.warning(f"Invalid commission_pct for partner {partner_phone}, land {code}: {commission_pct_raw}")
+                                    price_total_str = str(land.get('price_total') or land.get('price') or '0')
+                                    price_total = int(price_total_str.replace(',', '').replace(' ', '').strip() or '0')
+                                except Exception as e:
+                                    price_total = 0
+                                    current_app.logger.warning(f"Error parsing price_total for land {code}: {e}")
                                 
-                                # بررسی اینکه آیا قبلاً برای این همکار و این فایل پورسانتی ثبت شده یا نه
-                                # بررسی همه وضعیت‌ها (pending, approved, rejected, paid) - فقط یک بار برای هر فایل
-                                existing_commission = next(
-                                    (c for c in commissions 
-                                     if (str(c.get('partner_phone', '')).strip() == partner_phone and 
-                                         str(c.get('land_code')) == str(code))),
-                                    None
-                                )
+                                commission_amount = int(round(price_total * (commission_pct / 100.0))) if price_total > 0 else 0
                                 
-                                if existing_commission:
-                                    current_app.logger.info(f"Commission already exists for partner {partner_phone} and land {code}, skipping")
-                                    skipped_count += 1
-                                    continue
-                                
-                                # اگر قبلاً هیچ پورسانتی برای این فایل و همکار ثبت نشده، رکورد جدید ایجاد کن
-                                if commission_pct > 0:
-                                    # محاسبه مبلغ پورسانت
-                                    try:
-                                        price_total_str = str(land.get('price_total') or land.get('price') or '0')
-                                        price_total = int(price_total_str.replace(',', '').replace(' ', '').strip() or '0')
-                                    except Exception as e:
-                                        price_total = 0
-                                        current_app.logger.warning(f"Error parsing price_total for land {code}: {e}")
+                                if commission_amount > 0:
+                                    # ایجاد ID جدید
+                                    new_id = (max([int(x.get('id', 0) or 0) for x in commissions if isinstance(x, dict)], default=0) or 0) + 1
                                     
-                                    commission_amount = int(round(price_total * (commission_pct / 100.0))) if price_total > 0 else 0
+                                    # ایجاد رکورد پورسانت
+                                    new_commission = {
+                                        'id': new_id,
+                                        'partner_phone': partner_phone,
+                                        'land_code': str(code),
+                                        'sale_amount': price_total,
+                                        'commission_pct': commission_pct,
+                                        'commission_amount': commission_amount,
+                                        'status': 'pending',
+                                        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                    }
                                     
-                                    if commission_amount > 0:
-                                        # ایجاد ID جدید
-                                        new_id = (max([int(x.get('id', 0) or 0) for x in commissions if isinstance(x, dict)], default=0) or 0) + 1
-                                        
-                                        # ایجاد رکورد پورسانت
-                                        new_commission = {
-                                            'id': new_id,
-                                            'partner_phone': partner_phone,
-                                            'land_code': str(code),
-                                            'sale_amount': price_total,
-                                            'commission_pct': commission_pct,
-                                            'commission_amount': commission_amount,
-                                            'status': 'pending',
-                                            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                                        }
-                                        
-                                        commissions.append(new_commission)
-                                        created_count += 1
-                                        current_app.logger.info(f"Created commission record {new_id} for partner {partner_phone} and land {code}: amount={commission_amount}, pct={commission_pct}, price={price_total}")
-                                    else:
-                                        current_app.logger.warning(f"Commission amount is 0 for partner {partner_phone}, land {code}: price={price_total}, pct={commission_pct}")
+                                    commissions.append(new_commission)
+                                    created_count += 1
+                                    current_app.logger.info(f"Created commission record {new_id} for partner {partner_phone} and land {code}: amount={commission_amount}, pct={commission_pct}, price={price_total}")
                                 else:
-                                    current_app.logger.warning(f"Commission percentage is 0 or missing for partner {partner_phone}, land {code}")
+                                    current_app.logger.warning(f"Commission amount is 0 for partner {partner_phone}, land {code}: price={price_total}, pct={commission_pct}")
+                            else:
+                                current_app.logger.warning(f"Commission percentage is 0 or missing for partner {partner_phone}, land {code}")
                         
                         if created_count > 0:
                             save_express_commissions(commissions)
-                            msg = f'✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد و {created_count} پورسانت به لیست انتظار اضافه شد.'
-                            if skipped_count > 0:
-                                msg += f' ({skipped_count} پورسانت قبلاً ثبت شده بود)'
-                            flash(msg, 'success')
+                            flash(f'✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد و پورسانت شما به لیست انتظار اضافه شد.', 'success')
                         else:
                             if skipped_count > 0:
-                                flash(f'✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد. ({skipped_count} پورسانت قبلاً ثبت شده بود)', 'success')
+                                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد. (پورسانت قبلاً ثبت شده بود)', 'success')
                             else:
-                                flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد. (پورسانتی ایجاد نشد - درصد پورسانت یا قیمت صفر است)', 'warning')
+                                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
                 except Exception as e:
                     current_app.logger.error(f"Error creating commission records: {e}", exc_info=True)
                     # خطا را لاگ می‌کنیم اما فرآیند را متوقف نمی‌کنیم
