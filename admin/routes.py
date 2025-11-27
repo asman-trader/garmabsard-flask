@@ -1643,12 +1643,20 @@ def express_partner_applications():
 @login_required
 def express_partners():
     try:
-        items = load_express_partners() or []
-        if not isinstance(items, list):
-            items = []
+        partners = load_express_partners() or []
+        if not isinstance(partners, list):
+            partners = []
     except Exception:
-        items = []
-    return render_template('admin/express_partners.html', items=items)
+        partners = []
+    
+    try:
+        applications = load_express_partner_apps() or []
+        if not isinstance(applications, list):
+            applications = []
+    except Exception:
+        applications = []
+    
+    return render_template('admin/express_partners.html', partners=partners, applications=applications)
 
 
 @admin_bp.post('/express/partners/<string:phone>/delete')

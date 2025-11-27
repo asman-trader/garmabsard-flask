@@ -42,18 +42,6 @@
       <span class="text-sm font-medium">همکاران</span>
     </a>
 
-    <!-- درخواست‌های همکاری -->
-    <a href="{{ url_for('admin.express_partner_applications') }}" 
-       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.express_partner_applications' %}
-                bg-violet-600 text-white
-              {% else %}
-                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-              {% endif %}">
-      <i class="fa-solid fa-file-circle-check w-5"></i>
-      <span class="text-sm font-medium">درخواست‌ها</span>
-    </a>
-
     <!-- انتساب‌ها -->
     <a href="{{ url_for('admin.express_assignments') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
