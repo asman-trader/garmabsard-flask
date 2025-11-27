@@ -18,7 +18,7 @@ from ..utils.storage import (
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
-    load_ads_cached,
+    load_ads_cached, load_active_cities,
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
@@ -248,7 +248,8 @@ def apply_step1():
         return redirect(url_for('express_partner.apply_step2'))
 
     data = session.get('apply_data') or {}
-    return render_template('express_partner/apply_step1.html', name=data.get('name',''), city=data.get('city',''))
+    cities = load_active_cities() or []
+    return render_template('express_partner/apply_step1.html', name=data.get('name',''), city=data.get('city',''), cities=cities)
 
 
 @express_partner_bp.route('/apply/step2', methods=['GET', 'POST'], endpoint='apply_step2')

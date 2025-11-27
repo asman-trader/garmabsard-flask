@@ -1,0 +1,59 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}شهرهای فعال همکاری{% endblock %}
+{% block page_title %}شهرهای فعال{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  
+  <!-- فرم افزودن شهر جدید -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">افزودن شهر جدید</h3>
+    <form method="post" class="flex flex-col sm:flex-row gap-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add">
+      <input type="text" name="city" placeholder="نام شهر..." required
+             class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent">
+      <button type="submit" class="px-6 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold transition">
+        <i class="fas fa-plus ml-2"></i>
+        افزودن
+      </button>
+    </form>
+  </div>
+
+  <!-- لیست شهرها -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">شهرهای فعال ({{ cities|length }})</h3>
+    
+    {% if cities and cities|length > 0 %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {% for city in cities %}
+          <div class="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <span class="text-gray-900 dark:text-white font-medium">{{ city }}</span>
+            <form method="post" onsubmit="return confirm('شهر {{ city }} حذف شود؟');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="city" value="{{ city }}">
+              <button type="submit" class="w-8 h-8 rounded-lg text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition flex items-center justify-center">
+                <i class="fas fa-times"></i>
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <i class="fas fa-city text-4xl mb-3 opacity-50"></i>
+        <p>هیچ شهری تعریف نشده است.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- راهنما -->
+  <div class="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-4 text-sm text-violet-800 dark:text-violet-200">
+    <p class="font-semibold mb-2"><i class="fas fa-info-circle ml-2"></i>راهنما</p>
+    <p>شهرهای تعریف شده در این بخش، در فرم درخواست همکاری به صورت لیست انتخابی نمایش داده می‌شوند.</p>
+  </div>
+
+</div>
+{% endblock %}
+

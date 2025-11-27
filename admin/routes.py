@@ -62,6 +62,8 @@ from app.utils.storage import (
     save_express_commissions,
     load_partner_files_meta,
     save_partner_files_meta,
+    load_active_cities,
+    save_active_cities,
 )
 from app.services.notifications import add_notification
 
@@ -2160,3 +2162,37 @@ def express_partner_application_reject(aid: int):
         return jsonify({ 'ok': True, 'id': int(aid), 'status': 'rejected' })
     flash('درخواست رد شد.', 'info')
     return redirect(url_for('admin.express_partner_applications'))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# مدیریت شهرهای فعال برای همکاری
+# ─────────────────────────────────────────────────────────────────────────────
+@admin_bp.route('/express/cities', methods=['GET', 'POST'])
+@admin_required
+def express_cities():
+    """مدیریت شهرهای فعال برای درخواست همکاری"""
+    cities = load_active_cities() or []
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add':
+            new_city = (request.form.get('city') or '').strip()
+            if new_city and new_city not in cities:
+                cities.append(new_city)
+                cities.sort()
+                save_active_cities(cities)
+                flash(f'شهر "{new_city}" اضافه شد.', 'success')
+            elif new_city in cities:
+                flash('این شهر قبلاً اضافه شده است.', 'warning')
+        
+        elif action == 'delete':
+            city_to_delete = request.form.get('city')
+            if city_to_delete in cities:
+                cities.remove(city_to_delete)
+                save_active_cities(cities)
+                flash(f'شهر "{city_to_delete}" حذف شد.', 'info')
+        
+        return redirect(url_for('admin.express_cities'))
+    
+    return render_template('admin/express_cities.html', cities=cities)

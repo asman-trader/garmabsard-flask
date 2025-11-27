@@ -133,6 +133,10 @@ def save_consults(items, app=None): return _save(ensure_file('CONSULTS_FILE','co
 
 def load_settings(app=None):  return _load(ensure_file('SETTINGS_FILE','settings.json',{"approval_method":"manual","show_submit_button": True},app))
 
+# شهرهای فعال برای همکاری
+def load_active_cities(app=None):        return _load(ensure_file('ACTIVE_CITIES_FILE','active_cities.json',["تهران", "کرج", "اصفهان", "شیراز", "مشهد", "تبریز"],app))
+def save_active_cities(items, app=None): return _save(ensure_file('ACTIVE_CITIES_FILE','active_cities.json',[],app), items)
+
 def load_notifications(app=None):        return _load(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app))
 def save_notifications(items, app=None): return _save(ensure_file('NOTIFICATIONS_FILE','notifications.json',[],app), items)
 

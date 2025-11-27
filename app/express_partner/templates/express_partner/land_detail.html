@@ -55,7 +55,7 @@
     <!-- عنوان و اطلاعات اصلی -->
     <div>
       <div class="flex items-start justify-between gap-2">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
         <button type="button" class="copy-text-btn flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-text="{{ land.title or '' }}" title="کپی عنوان">
           <i class="fas fa-copy text-gray-500 dark:text-gray-400"></i>
         </button>
@@ -189,23 +189,23 @@
            class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
             <i class="fab fa-google text-red-500 text-xl"></i>
-          </div>
+        </div>
           <div class="font-semibold text-gray-900 dark:text-white">Google Maps</div>
-        </a>
+          </a>
         <a href="https://waze.com/ul?ll={{ land.latitude }},{{ land.longitude }}&navigate=yes" target="_blank" rel="noopener"
            class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
             <i class="fas fa-route text-blue-500 text-xl"></i>
           </div>
           <div class="font-semibold text-gray-900 dark:text-white">Waze</div>
-        </a>
-        <a href="geo:{{ land.latitude }},{{ land.longitude }}" 
+          </a>
+          <a href="geo:{{ land.latitude }},{{ land.longitude }}" 
            class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
             <i class="fas fa-location-arrow text-purple-500 text-xl"></i>
           </div>
           <div class="font-semibold text-gray-900 dark:text-white">مسیریاب پیش‌فرض</div>
-        </a>
+          </a>
       </div>
     </div>
     {% endif %}

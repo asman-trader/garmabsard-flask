@@ -90,6 +90,18 @@
       <span class="text-sm font-medium">فایل‌های همکار</span>
     </a>
 
+    <!-- شهرهای فعال -->
+    <a href="{{ url_for('admin.express_cities') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.express_cities' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-city w-5"></i>
+      <span class="text-sm font-medium">شهرهای فعال</span>
+    </a>
+
     <!-- آگهی‌های اکسپرس -->
     <div x-data="{ open: {{ 'true' if _endpoint in ['admin.express_listings', 'admin.add_express_listing', 'admin.edit_express_listing'] else 'false' }} }">
       <button @click="open = !open" 
