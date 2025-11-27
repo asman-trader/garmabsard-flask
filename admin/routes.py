@@ -1950,6 +1950,13 @@ def express_commission_reject(cid: int):
         flash('فقط پورسانت‌های در انتظار یا تایید شده قابل رد هستند.', 'warning')
     return redirect(url_for('admin.express_commissions'))
 
+@admin_bp.post('/express/commissions/clear-all')
+@login_required
+def clear_all_commissions():
+    save_express_commissions([])
+    flash('همه پورسانت‌ها حذف شدند.', 'info')
+    return redirect(url_for('admin.express_commissions'))
+
 @admin_bp.route('/express/commissions/<int:cid>/edit', methods=['GET', 'POST'])
 @login_required
 def express_commission_edit(cid: int):
