@@ -1747,6 +1747,13 @@ def express_assignment_close(aid: int):
         flash('انتساب بسته شد.', 'info')
     return redirect(url_for('admin.express_assignments'))
 
+@admin_bp.post('/express/assignments/clear-all')
+@login_required
+def express_assignments_clear_all():
+    save_express_assignments([])
+    flash('همه انتساب‌ها پاک شدند.', 'info')
+    return redirect(url_for('admin.express_assignments'))
+
 # -----------------------------------------------------------------------------
 # Express Commissions (list/approve/pay)
 # -----------------------------------------------------------------------------

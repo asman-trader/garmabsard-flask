@@ -51,10 +51,23 @@
 
   <!-- لیست انتساب‌ها -->
   <div>
-    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-      <i class="fa-solid fa-list text-violet-600"></i>
-      انتساب‌های فعال
-    </h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-list text-violet-600"></i>
+        انتساب‌های فعال
+      </h2>
+      {% if items and items|length > 0 %}
+      <form method="post" action="{{ url_for('admin.express_assignments_clear_all') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" 
+                onclick="return confirm('همه انتساب‌ها پاک شوند؟ این عمل قابل بازگشت نیست!')"
+                class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition">
+          <i class="fa-solid fa-trash ml-1"></i>
+          پاک کردن همه
+        </button>
+      </form>
+      {% endif %}
+    </div>
     
     {% if items and items|length > 0 %}
       <div class="grid grid-cols-1 gap-3">
