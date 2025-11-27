@@ -31,13 +31,20 @@
         {% endif %}
         {% set cover = (_imgs[0] if _imgs and _imgs|length > 0 else None) %}
 
-        <article class="bg-white dark:bg-gray-800 border-2 border-green-200 dark:border-green-700 rounded-2xl shadow-lg hover:shadow-xl transition p-4 flex flex-col relative">
+        <article class="bg-white dark:bg-gray-800 border-2 {% if land.express_status == 'sold' %}border-red-200 dark:border-red-700{% else %}border-green-200 dark:border-green-700{% endif %} rounded-2xl shadow-lg hover:shadow-xl transition p-4 flex flex-col relative">
           
-          <!-- برچسب اکسپرس -->
+          <!-- برچسب اکسپرس یا فروخته شد -->
+          {% if land.express_status == 'sold' %}
+          <div class="absolute -top-2 -right-2 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <i class="fa-solid fa-check-double"></i>
+            <span>فروخته شد</span>
+          </div>
+          {% else %}
           <div class="absolute -top-2 -right-2 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
             <i class="fa-solid fa-star"></i>
             <span>اکسپرس</span>
           </div>
+          {% endif %}
 
           <!-- تصویر کاور -->
           {% if cover %}
@@ -125,7 +132,7 @@
           </div>
 
           <!-- دکمه‌های عملیات -->
-          <div class="mt-4 grid grid-cols-3 gap-2">
+          <div class="mt-4 grid grid-cols-2 gap-2">
             <a href="{{ url_for('admin.edit_express_listing', code=land.code) }}"
                class="bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
               <i class="fa-regular fa-pen-to-square mr-1"></i>ویرایش
@@ -135,8 +142,27 @@
                class="bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
               <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>مشاهده
             </a>
+          </div>
+          
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            {% if land.express_status == 'sold' %}
+            <form method="post" action="{{ url_for('admin.toggle_express_sold', code=land.code) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-rotate-left mr-1"></i>در انتظار فروش
+              </button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('admin.toggle_express_sold', code=land.code) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-check-double mr-1"></i>فروخته شد
+              </button>
+            </form>
+            {% endif %}
             
             <form method="post" action="{{ url_for('admin.delete_express_listing', code=land.code) }}" onsubmit="return confirm('آیا مطمئن هستید که می‌خواهید این آگهی را حذف کنید؟');" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 px-3 rounded-lg text-sm font-medium transition">
                 <i class="fa-solid fa-trash mr-1"></i>حذف
               </button>

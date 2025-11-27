@@ -1578,6 +1578,29 @@ def delete_express_listing(code):
     flash(f'آگهی اکسپرس با کد {code} با موفقیت حذف شد.', 'success')
     return redirect(url_for('admin.express_listings'))
 
+@admin_bp.post('/express/<string:code>/toggle-sold')
+@login_required
+def toggle_express_sold(code):
+    """تغییر وضعیت فروخته شد / در انتظار فروش"""
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    
+    land = find_by_code(lands_list, code)
+    if not land or not land.get('is_express', False):
+        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        return redirect(url_for('admin.express_listings'))
+    
+    current_status = land.get('express_status', 'active')
+    if current_status == 'sold':
+        land['express_status'] = 'active'
+        flash(f'آگهی {code} به حالت در انتظار فروش برگشت.', 'success')
+    else:
+        land['express_status'] = 'sold'
+        flash(f'آگهی {code} به فروخته شد تغییر کرد.', 'success')
+    
+    save_ads(lands_list)
+    return redirect(url_for('admin.express_listings'))
+
 @admin_bp.route('/express-docs/<filename>')
 @login_required
 def serve_express_document(filename):
