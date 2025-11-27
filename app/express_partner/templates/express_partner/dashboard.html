@@ -203,7 +203,11 @@
           <!-- Status Badge -->
           {% set _st = (land._assignment_status|default('active')) %}
           <div class="absolute top-4 left-4">
-            {% if _st == 'closed' %}
+            {% if _st == 'sold' %}
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/95 text-white backdrop-blur-sm shadow-lg">
+                <i class="fas fa-check-double text-[10px]"></i>فروخته شد
+              </span>
+            {% elif _st == 'closed' %}
               <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-800/90 text-white backdrop-blur-sm shadow-lg">
                 <i class="fas fa-lock text-[10px]"></i>بسته
               </span>
@@ -285,9 +289,15 @@
           </div>
 
           <div class="mt-4">
+            {% set _st = (land._assignment_status|default('active')) %}
+            {% if _st == 'sold' %}
+              <div class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-green-400 dark:border-green-500 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30">
+                <i class="fas fa-check-double text-sm"></i>
+                <span class="text-[10px]">فروخته شد</span>
+              </div>
+            {% else %}
             <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="inline-block w-full" onclick="event.stopPropagation();">
               {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-              {% set _st = (land._assignment_status|default('active')) %}
               {% if _st == 'in_transaction' %}
                 <button type="submit" class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
                   <i class="fas fa-check-circle text-sm"></i>
@@ -300,6 +310,7 @@
                 </button>
               {% endif %}
             </form>
+            {% endif %}
           </div>
 
         </div>

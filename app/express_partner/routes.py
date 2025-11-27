@@ -396,7 +396,7 @@ def dashboard():
         _auto_release_expired_transactions(assignments)
     except Exception:
         assignments = []
-    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved','in_transaction')]
+    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved','in_transaction','sold')]
     lands_all = load_ads_cached() or []
     code_to_land = {str(l.get('code')): l for l in lands_all}
     assigned_lands = []
@@ -731,6 +731,11 @@ def mark_in_transaction(code: str):
             return redirect(url_for('express_partner.dashboard'))
         
         current_status = my_assignment.get('status', 'active')
+        
+        # اگر فایل فروخته شده، امکان تغییر وضعیت نیست
+        if current_status == 'sold':
+            flash('❌ این فایل فروخته شده و امکان تغییر وضعیت وجود ندارد.', 'error')
+            return redirect(url_for('express_partner.dashboard'))
         
         # بررسی آیا فایل توسط همکاری در حال معامله است (چک کردن transaction_holder)
         holder_phone = None

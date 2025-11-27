@@ -1822,6 +1822,21 @@ def express_commission_approve(cid: int):
     if changed and commission_record:
         save_express_commissions(items)
         
+        # تغییر وضعیت فایل به "فروخته شده" در انتساب‌ها
+        try:
+            land_code = str(commission_record.get('land_code', ''))
+            if land_code:
+                assignments = load_express_assignments() or []
+                for a in assignments:
+                    if str(a.get('land_code')) == land_code:
+                        a['status'] = 'sold'
+                        a['sold_at'] = iso_z(utcnow())
+                        a.pop('transaction_holder', None)
+                        a.pop('transaction_started_at', None)
+                save_express_assignments(assignments)
+        except Exception as e:
+            current_app.logger.error(f"Error updating assignment status to sold: {e}")
+        
         # به‌روزرسانی آمار همکار
         try:
             partner_phone = str(commission_record.get('partner_phone', '')).strip()
@@ -1851,7 +1866,7 @@ def express_commission_approve(cid: int):
         except Exception as e:
             current_app.logger.error(f"Error updating partner stats: {e}")
         
-        flash('پورسانت تایید شد و به آمار همکار اضافه شد.', 'success')
+        flash('پورسانت تایید شد، فایل به فروخته شده تغییر کرد و آمار همکار به‌روز شد.', 'success')
     elif not changed:
         flash('پورسانت قبلاً تایید شده است.', 'warning')
     return redirect(url_for('admin.express_commissions'))
