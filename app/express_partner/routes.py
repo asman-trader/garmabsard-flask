@@ -748,6 +748,14 @@ def mark_in_transaction(code: str):
             # همکار صاحب معامله می‌خواهد رفع معامله کند
             new_status = 'active'
         else:
+            # بررسی تعداد فایل‌های در حال معامله این همکار (حداکثر ۲ فایل)
+            my_transaction_count = sum(
+                1 for a in assignments 
+                if a.get('transaction_holder') == me_phone
+            )
+            if my_transaction_count >= 2:
+                flash('❌ شما حداکثر ۲ فایل را می‌توانید همزمان در حال معامله داشته باشید.', 'error')
+                return redirect(url_for('express_partner.dashboard'))
             # هیچ‌کس معامله نکرده، این همکار می‌تواند معامله کند
             new_status = 'in_transaction'
         
