@@ -2106,6 +2106,35 @@ def express_partner_application_approve(aid: int):
     save_express_partners(partners)
     save_express_partner_apps(apps)
 
+    # انتساب خودکار همه فایل‌های اکسپرس به همکار جدید
+    try:
+        lands = load_json(_lands_path()) or []
+        express_lands = [l for l in lands if l.get('is_express', False)]
+        assignments = load_express_assignments() or []
+        
+        # فایل‌هایی که قبلاً به این همکار انتساب نشده‌اند
+        existing_codes = {a.get('land_code') for a in assignments if a.get('partner_phone') == phone}
+        new_assignments_count = 0
+        
+        for land in express_lands:
+            land_code = land.get('code')
+            if land_code and land_code not in existing_codes:
+                new_id = (max([int(x.get('id', 0) or 0) for x in assignments if isinstance(x, dict)], default=0) or 0) + 1
+                assignments.append({
+                    'id': new_id,
+                    'partner_phone': phone,
+                    'land_code': land_code,
+                    'commission_pct': 2.0,  # درصد پیش‌فرض
+                    'status': 'active',
+                    'created_at': iso_z(utcnow())
+                })
+                new_assignments_count += 1
+        
+        if new_assignments_count > 0:
+            save_express_assignments(assignments)
+    except Exception as e:
+        current_app.logger.error(f"Error auto-assigning lands to partner: {e}")
+
     # اعلان به کاربر
     try:
         if phone:
@@ -2121,7 +2150,7 @@ def express_partner_application_approve(aid: int):
 
     if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
         return jsonify({ 'ok': True, 'id': int(aid), 'status': 'approved' })
-    flash('درخواست تأیید شد و کاربر به همکاران اکسپرس افزوده شد.', 'success')
+    flash(f'درخواست تأیید شد و {new_assignments_count} فایل به همکار انتساب یافت.', 'success')
     return redirect(url_for('admin.express_partner_applications'))
 
 @admin_bp.post('/express/partners/applications/<int:aid>/reject')
