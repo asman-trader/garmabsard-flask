@@ -2168,7 +2168,7 @@ def express_partner_application_reject(aid: int):
 # مدیریت شهرهای فعال برای همکاری
 # ─────────────────────────────────────────────────────────────────────────────
 @admin_bp.route('/express/cities', methods=['GET', 'POST'])
-@admin_required
+@login_required
 def express_cities():
     """مدیریت شهرهای فعال برای درخواست همکاری"""
     cities = load_active_cities() or []
