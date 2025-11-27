@@ -70,12 +70,6 @@
 
     <!-- Actions -->
     <div class="space-y-3">
-      <a href="tel:02191005100"
-         class="w-full py-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-base transition flex items-center justify-center gap-2">
-        <i class="fas fa-headset"></i>
-        تماس با پشتیبانی
-      </a>
-      
       <form method="post" action="{{ url_for('express_partner.apply_cancel') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit"
@@ -84,11 +78,6 @@
           لغو درخواست
         </button>
       </form>
-      
-      <a href="{{ url_for('main.index') }}"
-         class="block w-full py-3 rounded-xl text-gray-500 dark:text-gray-400 font-medium text-sm text-center hover:text-gray-700 dark:hover:text-gray-300 transition">
-        بازگشت به صفحه اصلی
-      </a>
     </div>
 
   </main>
