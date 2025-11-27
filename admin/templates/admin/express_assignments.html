@@ -18,6 +18,7 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">همکار</label>
         <select name="partner_phone" class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" required>
           <option value="">انتخاب همکار…</option>
+          <option value="__ALL__">🔄 همه همکاران</option>
           {% for p in partners %}
             <option value="{{ p.phone }}">{{ p.name or p.phone }} ({{ p.phone }})</option>
           {% endfor %}

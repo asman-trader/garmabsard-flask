@@ -1687,18 +1687,45 @@ def express_assignment_new():
         pct = float(commission_pct or '0')
     except Exception:
         pct = 0.0
+    
     items = load_express_assignments() or []
-    new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
-    items.append({
-        'id': new_id,
-        'partner_phone': partner_phone,
-        'land_code': land_code,
-        'commission_pct': pct,
-        'status': 'active',
-        'created_at': iso_z(utcnow())
-    })
-    save_express_assignments(items)
-    flash('فایل به همکار اختصاص یافت.', 'success')
+    
+    # اگر "همه همکاران" انتخاب شده
+    if partner_phone == '__ALL__':
+        partners = load_express_partners() or []
+        count = 0
+        for p in partners:
+            phone = str(p.get('phone', '')).strip()
+            if not phone:
+                continue
+            # چک کن که قبلاً این فایل به این همکار انتساب نشده باشد
+            exists = any(a.get('partner_phone') == phone and a.get('land_code') == land_code for a in items)
+            if not exists:
+                new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+                items.append({
+                    'id': new_id,
+                    'partner_phone': phone,
+                    'land_code': land_code,
+                    'commission_pct': pct,
+                    'status': 'active',
+                    'created_at': iso_z(utcnow())
+                })
+                count += 1
+        save_express_assignments(items)
+        flash(f'فایل به {count} همکار اختصاص یافت.', 'success')
+    else:
+        new_id = (max([int(x.get('id',0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+        items.append({
+            'id': new_id,
+            'partner_phone': partner_phone,
+            'land_code': land_code,
+            'commission_pct': pct,
+            'status': 'active',
+            'created_at': iso_z(utcnow())
+        })
+        save_express_assignments(items)
+        flash('فایل به همکار اختصاص یافت.', 'success')
+    
     return redirect(url_for('admin.express_assignments'))
 
 @admin_bp.post('/express/assignments/<int:aid>/close')
