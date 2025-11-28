@@ -48,7 +48,7 @@ def _save_express_document(file, land_code):
     file_path = os.path.join(docs_dir, filename)
     file.save(file_path)
     return filename
-from app.api.push import _load_subs, _send_one
+from app.api.push import _load_subs, _send_one, _save_subs
 from app.services.sms import send_sms_template
 from app.utils.storage import load_users, load_reports, save_reports, save_ads
 from app.utils.storage import (
@@ -749,6 +749,16 @@ def notifications_broadcast():
 # -----------------------------------------------------------------------------
 # ارسال اعلان به همکاران (Express Partners)
 # -----------------------------------------------------------------------------
+def _normalize_phone(phone: str) -> str:
+    """Normalize phone number to standard format (09xxxxxxxxx)"""
+    import re
+    p = (phone or "").strip()
+    p = re.sub(r"\D+", "", p)
+    if p.startswith("0098"): p = "0" + p[4:]
+    elif p.startswith("98"): p = "0" + p[2:]
+    if not p.startswith("0"): p = "0" + p
+    return p[:11]
+
 @admin_bp.route('/notifications/colleagues', methods=['GET', 'POST'])
 @login_required
 def notifications_colleagues():
@@ -771,29 +781,28 @@ def notifications_colleagues():
     except Exception:
         partners = []
     
-    # فیلتر همکاران تایید شده
+    # فیلتر همکاران تایید شده و normalize کردن شماره تلفن
     APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
     approved_partners = []
     for p in partners if isinstance(partners, list) else []:
         if not isinstance(p, dict):
             continue
         status = p.get('status')
+        is_approved = False
         if status is True:
-            # status is boolean True
-            phone = str(p.get('phone') or '').strip()
-            if phone:
-                approved_partners.append({
-                    'phone': phone,
-                    'name': p.get('name') or p.get('full_name') or phone
-                })
+            is_approved = True
         elif isinstance(status, str):
-            # status is a string, check if it's in approved statuses
             if status.lower() in APPROVED_PARTNER_STATUSES:
-                phone = str(p.get('phone') or '').strip()
-                if phone:
+                is_approved = True
+        
+        if is_approved:
+            phone_raw = str(p.get('phone') or '').strip()
+            if phone_raw:
+                phone_normalized = _normalize_phone(phone_raw)
+                if phone_normalized and len(phone_normalized) == 11:
                     approved_partners.append({
-                        'phone': phone,
-                        'name': p.get('name') or p.get('full_name') or phone
+                        'phone': phone_normalized,
+                        'name': p.get('name') or p.get('full_name') or phone_normalized
                     })
     
     if request.method == 'POST':
@@ -807,39 +816,72 @@ def notifications_colleagues():
             error = 'هیچ همکار تایید شده‌ای یافت نشد.'
         else:
             sent = 0
+            failed = 0
             # ثبت اعلان در in-app notifications برای همکاران
             for partner in approved_partners:
                 try:
-                    # استفاده از شماره تلفن به عنوان user_id
-                    add_notification(
-                        user_id=partner['phone'],
-                        title=title,
-                        body=body,
-                        ntype=ntype,
-                        action_url=url_for('express_partner.dashboard', _external=True)
-                    )
-                    sent += 1
-                except Exception:
-                    pass
+                    # استفاده از شماره تلفن normalize شده به عنوان user_id
+                    # مطمئن می‌شویم که شماره تلفن normalize شده است
+                    phone_normalized = _normalize_phone(partner['phone'])
+                    if phone_normalized and len(phone_normalized) == 11:
+                        add_notification(
+                            user_id=phone_normalized,
+                            title=title,
+                            body=body,
+                            ntype=ntype,
+                            action_url=url_for('express_partner.dashboard', _external=True)
+                        )
+                        sent += 1
+                    else:
+                        failed += 1
+                        current_app.logger.warning(f"Invalid phone number format: {partner['phone']}")
+                except Exception as e:
+                    failed += 1
+                    current_app.logger.error(f"Failed to send notification to {partner['phone']}: {e}")
 
             # تلاش برای ارسال Web Push با صدا (در کلاینت)
+            # توجه: چون push subscriptions با user_id مرتبط نیستند، 
+            # به همه subscriptions ارسال می‌شود (ممکن است شامل همکاران و غیرهمکاران باشد)
+            push_sent = 0
+            push_failed = 0
             try:
                 subs = _load_subs()
             except Exception:
                 subs = []
-            push_sent = 0
-            payload = {
-                "title": title,
-                "body": body,
-                "icon": "/static/icons/icon-192.png",
-                "badge": "/static/icons/monochrome-192.png",
-                "url": url_for('express_partner.dashboard', _external=True),
-                "sound": "/static/sounds/notify.mp3"
-            }
-            for s in subs:
-                res = _send_one(s, payload)
-                if res.get('ok'): push_sent += 1
-            message = f'اعلان برای {sent} همکار ثبت و {push_sent} پوش ارسال شد.'
+            
+            if subs:
+                payload = {
+                    "title": title,
+                    "body": body,
+                    "icon": "/static/icons/icon-192.png",
+                    "badge": "/static/icons/monochrome-192.png",
+                    "url": url_for('express_partner.dashboard', _external=True),
+                    "sound": "/static/sounds/notify.mp3"
+                }
+                for s in subs:
+                    try:
+                        res = _send_one(s, payload)
+                        if res.get('ok'):
+                            push_sent += 1
+                        elif res.get('remove'):
+                            # حذف subscription نامعتبر
+                            try:
+                                subs_updated = _load_subs()
+                                subs_updated = [sub for sub in subs_updated if sub.get('endpoint') != s.get('endpoint')]
+                                _save_subs(subs_updated)
+                            except Exception:
+                                pass
+                        else:
+                            push_failed += 1
+                    except Exception as e:
+                        push_failed += 1
+                        current_app.logger.error(f"Failed to send push: {e}")
+            
+            if failed > 0:
+                message = f'اعلان برای {sent} همکار ثبت شد ({failed} خطا). {push_sent} پوش ارسال شد ({push_failed} خطا).'
+            else:
+                message = f'اعلان برای {sent} همکار ثبت و {push_sent} پوش ارسال شد.'
+            
             # update diagnostics after send
             try:
                 subs_for_diag = _load_subs()
