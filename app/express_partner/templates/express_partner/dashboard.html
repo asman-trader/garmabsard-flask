@@ -211,10 +211,6 @@
               <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-800/90 text-white backdrop-blur-sm shadow-lg">
                 <i class="fas fa-lock text-[10px]"></i>بسته
               </span>
-            {% elif _st == 'in_transaction' %}
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-500/95 text-white backdrop-blur-sm shadow-lg animate-pulse">
-                <i class="fas fa-handshake text-[10px]"></i>در حال معامله
-              </span>
             {% elif _st == 'pending' %}
               <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/95 text-white backdrop-blur-sm shadow-lg">
                 <i class="fas fa-clock text-[10px]"></i>در انتظار
@@ -294,13 +290,6 @@
             <div class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-green-400 dark:border-green-500 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30">
               <i class="fas fa-check-double text-sm"></i>
               <span class="text-[10px]">فروخته شد</span>
-            </div>
-          </div>
-          {% elif _st == 'in_transaction' %}
-          <div class="mt-4">
-            <div class="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30">
-              <i class="fas fa-handshake text-sm"></i>
-              <span class="text-[10px]">در حال معامله</span>
             </div>
           </div>
           {% endif %}
