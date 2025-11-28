@@ -710,6 +710,17 @@
               const existing = await reg.pushManager.getSubscription();
               if (!existing) {
                 try { const sub = await subscribePush(); await saveSubscription(sub); } catch(_){}
+              } else {
+                // اگر subscription موجود است، آن را در سرور ثبت کن
+                try {
+                  const subObj = existing.toJSON();
+                  await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(subObj)
+                  });
+                } catch(_){}
               }
             }
           }

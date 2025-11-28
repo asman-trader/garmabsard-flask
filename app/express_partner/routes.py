@@ -174,8 +174,17 @@ def inject_role_flags():
         )
     except Exception:
         is_express_partner = False
+    
+    # دریافت VAPID_PUBLIC_KEY از config
+    try:
+        from flask import current_app
+        vapid_public = current_app.config.get("VAPID_PUBLIC_KEY", "")
+    except Exception:
+        vapid_public = ""
+    
     return {
         "VINOR_IS_EXPRESS_PARTNER": is_express_partner,
+        "VAPID_PUBLIC_KEY": vapid_public,
     }
 
 
