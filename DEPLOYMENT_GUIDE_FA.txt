@@ -59,6 +59,8 @@ cat > instance/data/vapid.json << 'JSON'
 }
 JSON
 
+----
+
 این فایل توسط passenger_wsgi.py خوانده می‌شود و در نبود EnvVars، کلیدها را به اپ تزریق می‌کند؛ بنابراین ری‌استارت/به‌روزرسانی باعث حذف کلیدها نمی‌شود.
 
 سناریو A: استقرار روی cPanel + Passenger
