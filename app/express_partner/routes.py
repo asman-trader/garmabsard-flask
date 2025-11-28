@@ -1035,11 +1035,35 @@ def get_notifications():
     me_phone_raw = (session.get("user_phone") or "").strip()
     # normalize کردن شماره تلفن برای اطمینان از تطابق
     me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Getting notifications for phone: {me_phone_raw} -> normalized: {me_phone}")
+    except Exception:
+        pass
+    
     notifications = get_user_notifications(me_phone, limit=50)
+    
+    # Debug: بررسی همه کلیدهای موجود
+    try:
+        from app.services.notifications import _load
+        all_data = _load()
+        all_keys = list(all_data.keys())
+        from flask import current_app
+        current_app.logger.info(f"All notification keys in storage: {all_keys}")
+        current_app.logger.info(f"Notifications found for {me_phone}: {len(notifications)} items")
+    except Exception as e:
+        pass
+    
     return jsonify({
         "success": True,
         "notifications": notifications,
-        "unread_count": unread_count(me_phone)
+        "unread_count": unread_count(me_phone),
+        "debug": {
+            "phone_raw": me_phone_raw,
+            "phone_normalized": me_phone
+        }
     })
 
 

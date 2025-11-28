@@ -50,6 +50,9 @@ def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
     if not user_id:
         raise ValueError("user_id is required")
 
+    # Normalize user_id (phone number)
+    user_id = str(user_id).strip()
+    
     data = _load()
     notif = {
         "id": str(uuid.uuid4()),
@@ -63,18 +66,53 @@ def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
         # (اختیاری) برای سازگاری با نسخه‌های قدیمی:
         "user_id": user_id,
     }
-    data.setdefault(user_id, []).insert(0, notif)
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Adding notification for user_id: {user_id}, title: {title}")
+        current_app.logger.info(f"Current data keys before add: {list(data.keys())}")
+    except Exception:
+        pass
+    
+    # اطمینان از اینکه user_id به عنوان کلید استفاده می‌شود
+    if user_id not in data:
+        data[user_id] = []
+    data[user_id].insert(0, notif)
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Notification added. Total for {user_id}: {len(data[user_id])}")
+        current_app.logger.info(f"Data keys after add: {list(data.keys())}")
+    except Exception:
+        pass
+    
     _save(data)
     return notif
 
 def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     if not user_id:
         return []
+    
+    # Normalize user_id
+    user_id = str(user_id).strip()
+    
     data = _load()
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Getting notifications for user_id: {user_id}")
+        current_app.logger.info(f"Available keys in data: {list(data.keys())}")
+    except Exception:
+        pass
+    
     # بررسی مستقیم با user_id
     items = data.get(user_id, [])
     if not isinstance(items, list):
-        return []
+        items = []
+    
     # اگر اعلانی پیدا نشد، ممکن است user_id به فرمت دیگری باشد
     # بررسی همه کلیدها برای تطابق احتمالی
     if not items:
@@ -89,7 +127,20 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
             if variant in data and variant != user_id:
                 items = data.get(variant, [])
                 if items:
+                    try:
+                        from flask import current_app
+                        current_app.logger.info(f"Found notifications with variant key: {variant}")
+                    except Exception:
+                        pass
                     break
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Returning {len(items)} notifications for {user_id}")
+    except Exception:
+        pass
+    
     return items[: max(1, int(limit or 1))]
 
 def unread_count(user_id: str) -> int:
