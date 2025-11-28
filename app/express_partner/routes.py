@@ -1004,7 +1004,9 @@ def delete_sale(sid: int):
 @express_partner_bp.get('/notifications', endpoint='notifications')
 @require_partner_access(allow_pending=True)
 def notifications_page():
-    me_phone = (session.get("user_phone") or "").strip()
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    # normalize کردن شماره تلفن برای اطمینان از تطابق
+    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
     notifications = get_user_notifications(me_phone, limit=200)
     unread = unread_count(me_phone)
     return render_template(
@@ -1021,7 +1023,9 @@ def notifications_page():
 @require_partner_access(json_response=True, allow_pending=True)
 def get_notifications():
     """Get user notifications"""
-    me_phone = (session.get("user_phone") or "").strip()
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    # normalize کردن شماره تلفن برای اطمینان از تطابق
+    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
     notifications = get_user_notifications(me_phone, limit=50)
     return jsonify({
         "success": True,
@@ -1034,7 +1038,9 @@ def get_notifications():
 @require_partner_access(json_response=True, allow_pending=True)
 def get_unread_count():
     """Get unread notifications count"""
-    me_phone = (session.get("user_phone") or "").strip()
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    # normalize کردن شماره تلفن برای اطمینان از تطابق
+    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
     return jsonify({
         "success": True,
         "unread_count": unread_count(me_phone)
@@ -1045,7 +1051,9 @@ def get_unread_count():
 @require_partner_access(json_response=True, allow_pending=True)
 def mark_notification_read(notif_id: str):
     """Mark a notification as read"""
-    me_phone = (session.get("user_phone") or "").strip()
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    # normalize کردن شماره تلفن برای اطمینان از تطابق
+    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
     success = mark_read(me_phone, notif_id)
     return jsonify({
         "success": success,
@@ -1057,7 +1065,9 @@ def mark_notification_read(notif_id: str):
 @require_partner_access(json_response=True, allow_pending=True)
 def mark_all_notifications_read():
     """Mark all notifications as read"""
-    me_phone = (session.get("user_phone") or "").strip()
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    # normalize کردن شماره تلفن برای اطمینان از تطابق
+    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
     count = mark_all_read(me_phone)
     return jsonify({
         "success": True,

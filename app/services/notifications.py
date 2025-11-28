@@ -71,9 +71,25 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
     if not user_id:
         return []
     data = _load()
+    # بررسی مستقیم با user_id
     items = data.get(user_id, [])
     if not isinstance(items, list):
         return []
+    # اگر اعلانی پیدا نشد، ممکن است user_id به فرمت دیگری باشد
+    # بررسی همه کلیدها برای تطابق احتمالی
+    if not items:
+        # تلاش برای پیدا کردن با فرمت‌های مختلف
+        user_id_variants = [
+            user_id,
+            user_id.strip(),
+            user_id.replace(" ", ""),
+            user_id.replace("-", ""),
+        ]
+        for variant in user_id_variants:
+            if variant in data and variant != user_id:
+                items = data.get(variant, [])
+                if items:
+                    break
     return items[: max(1, int(limit or 1))]
 
 def unread_count(user_id: str) -> int:
