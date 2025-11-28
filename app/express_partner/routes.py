@@ -1013,11 +1013,28 @@ def delete_sale(sid: int):
 @express_partner_bp.get('/notifications', endpoint='notifications')
 @require_partner_access(allow_pending=True)
 def notifications_page():
+    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id
+    
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # normalize کردن شماره تلفن برای اطمینان از تطابق
-    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
+    me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
+    
+    # Debug logging
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Page: Getting notifications for phone: {me_phone_raw} -> normalized: {me_phone}")
+    except Exception:
+        pass
+    
     notifications = get_user_notifications(me_phone, limit=200)
     unread = unread_count(me_phone)
+    
+    try:
+        from flask import current_app
+        current_app.logger.info(f"Page: Found {len(notifications)} notifications for {me_phone}")
+    except Exception:
+        pass
+    
     return render_template(
         'express_partner/notifications.html',
         notifications=notifications,
@@ -1032,28 +1049,40 @@ def notifications_page():
 @require_partner_access(json_response=True, allow_pending=True)
 def get_notifications():
     """Get user notifications"""
+    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id, _load_all
+    
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # normalize کردن شماره تلفن برای اطمینان از تطابق
-    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
+    me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     
     # Debug logging
     try:
         from flask import current_app
-        current_app.logger.info(f"Getting notifications for phone: {me_phone_raw} -> normalized: {me_phone}")
-    except Exception:
-        pass
+        current_app.logger.info(f"API: Getting notifications for phone: {me_phone_raw} -> normalized: {me_phone}")
+        
+        # بررسی همه کلیدهای موجود
+        all_data = _load_all()
+        all_keys = list(all_data.keys())
+        current_app.logger.info(f"API: All notification keys in storage: {all_keys}")
+        
+        # بررسی اینکه آیا کلید دقیق وجود دارد
+        if me_phone in all_data:
+            current_app.logger.info(f"API: Key '{me_phone}' found in storage with {len(all_data[me_phone])} items")
+        else:
+            current_app.logger.warning(f"API: Key '{me_phone}' NOT found in storage!")
+            # بررسی تطابق احتمالی
+            for key in all_keys:
+                if _normalize_user_id(key) == me_phone:
+                    current_app.logger.info(f"API: Found matching key '{key}' that normalizes to '{me_phone}'")
+    except Exception as e:
+        current_app.logger.error(f"API: Debug error: {e}")
     
     notifications = get_user_notifications(me_phone, limit=50)
     
-    # Debug: بررسی همه کلیدهای موجود
     try:
-        from app.services.notifications import _load_all
-        all_data = _load_all()
-        all_keys = list(all_data.keys())
         from flask import current_app
-        current_app.logger.info(f"All notification keys in storage: {all_keys}")
-        current_app.logger.info(f"Notifications found for {me_phone}: {len(notifications)} items")
-    except Exception as e:
+        current_app.logger.info(f"API: Returning {len(notifications)} notifications for {me_phone}")
+    except Exception:
         pass
     
     return jsonify({
@@ -1062,7 +1091,8 @@ def get_notifications():
         "unread_count": unread_count(me_phone),
         "debug": {
             "phone_raw": me_phone_raw,
-            "phone_normalized": me_phone
+            "phone_normalized": me_phone,
+            "notifications_count": len(notifications)
         }
     })
 
@@ -1071,9 +1101,11 @@ def get_notifications():
 @require_partner_access(json_response=True, allow_pending=True)
 def get_unread_count():
     """Get unread notifications count"""
+    from app.services.notifications import unread_count, _normalize_user_id
+    
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # normalize کردن شماره تلفن برای اطمینان از تطابق
-    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
+    me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     return jsonify({
         "success": True,
         "unread_count": unread_count(me_phone)
@@ -1084,9 +1116,11 @@ def get_unread_count():
 @require_partner_access(json_response=True, allow_pending=True)
 def mark_notification_read(notif_id: str):
     """Mark a notification as read"""
+    from app.services.notifications import mark_read, unread_count, _normalize_user_id
+    
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # normalize کردن شماره تلفن برای اطمینان از تطابق
-    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
+    me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     success = mark_read(me_phone, notif_id)
     return jsonify({
         "success": success,
@@ -1098,14 +1132,60 @@ def mark_notification_read(notif_id: str):
 @require_partner_access(json_response=True, allow_pending=True)
 def mark_all_notifications_read():
     """Mark all notifications as read"""
+    from app.services.notifications import mark_all_read, _normalize_user_id
+    
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # normalize کردن شماره تلفن برای اطمینان از تطابق
-    me_phone = _normalize_phone(me_phone_raw) if me_phone_raw else ""
+    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
+    me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     count = mark_all_read(me_phone)
     return jsonify({
         "success": True,
         "marked_count": count,
         "unread_count": 0
+    })
+
+
+# -----------------------------------------------------------------------------
+# Debug endpoint برای بررسی اعلان‌ها
+# -----------------------------------------------------------------------------
+@express_partner_bp.route('/api/notifications/debug', methods=['GET'])
+@require_partner_access(json_response=True, allow_pending=True)
+def notifications_debug():
+    """Debug endpoint برای بررسی مشکل اعلان‌ها"""
+    from app.services.notifications import _load_all, _normalize_user_id, get_user_notifications
+    
+    me_phone_raw = (session.get("user_phone") or "").strip()
+    me_phone_normalized = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
+    
+    # بارگذاری همه داده‌ها
+    all_data = _load_all()
+    all_keys = list(all_data.keys())
+    
+    # بررسی اعلان‌های کاربر
+    user_notifications = get_user_notifications(me_phone_normalized, limit=50)
+    
+    # بررسی تطابق کلیدها
+    matching_keys = []
+    for key in all_keys:
+        if _normalize_user_id(key) == me_phone_normalized:
+            matching_keys.append({
+                "original_key": key,
+                "normalized": _normalize_user_id(key),
+                "notifications_count": len(all_data.get(key, []))
+            })
+    
+    return jsonify({
+        "success": True,
+        "debug_info": {
+            "session_phone_raw": me_phone_raw,
+            "session_phone_normalized": me_phone_normalized,
+            "all_keys_in_storage": all_keys,
+            "matching_keys": matching_keys,
+            "user_notifications_count": len(user_notifications),
+            "user_notifications": user_notifications[:5],  # فقط 5 تا اول
+            "direct_key_exists": me_phone_normalized in all_data,
+            "direct_key_notifications": len(all_data.get(me_phone_normalized, [])) if me_phone_normalized in all_data else 0
+        }
     })
 
 

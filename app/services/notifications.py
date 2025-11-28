@@ -24,20 +24,35 @@ def _get_notifications_file_path() -> str:
 
 
 def _normalize_user_id(user_id: str) -> str:
-    """Normalize کردن user_id (شماره تلفن)"""
+    """
+    Normalize کردن user_id (شماره تلفن) به فرمت استاندارد 09xxxxxxxxx
+    این تابع باید در همه جا استفاده شود تا تطابق کامل باشد.
+    """
     if not user_id:
         return ""
-    # حذف فاصله‌ها و کاراکترهای غیرعددی
+    
+    # تبدیل به string و حذف فاصله‌ها
+    user_id = str(user_id).strip()
+    
+    # حذف همه کاراکترهای غیرعددی
     import re
-    normalized = re.sub(r'\D+', '', str(user_id).strip())
+    normalized = re.sub(r'\D+', '', user_id)
+    
     # تبدیل به فرمت استاندارد 09xxxxxxxxx
-    if normalized.startswith('0098'):
+    if normalized.startswith('0098') and len(normalized) >= 14:
         normalized = '0' + normalized[4:]
-    elif normalized.startswith('98'):
+    elif normalized.startswith('98') and len(normalized) >= 12:
         normalized = '0' + normalized[2:]
-    if not normalized.startswith('0') and len(normalized) == 10:
+    elif not normalized.startswith('0') and len(normalized) == 10:
         normalized = '0' + normalized
-    return normalized[:11] if len(normalized) >= 11 else normalized
+    
+    # اطمینان از طول 11 رقم
+    if len(normalized) >= 11:
+        return normalized[:11]
+    elif len(normalized) == 10:
+        return '0' + normalized
+    else:
+        return normalized
 
 
 def _load_all() -> Dict[str, List[Dict[str, Any]]]:
@@ -177,30 +192,53 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
     # Normalize کردن user_id
     normalized_user_id = _normalize_user_id(user_id)
     if not normalized_user_id:
+        try:
+            current_app.logger.warning(f"Invalid user_id after normalization: {user_id}")
+        except Exception:
+            pass
         return []
     
     # بارگذاری داده‌ها
     data = _load_all()
     
-    # دریافت اعلان‌های کاربر
+    # Logging برای debug
+    try:
+        current_app.logger.info(
+            f"get_user_notifications: user_id={user_id} -> normalized={normalized_user_id}"
+        )
+        current_app.logger.info(f"Available keys in storage: {list(data.keys())}")
+    except Exception:
+        pass
+    
+    # دریافت اعلان‌های کاربر - اول با کلید normalize شده
     items = data.get(normalized_user_id, [])
     if not isinstance(items, list):
         items = []
     
-    # اگر اعلانی پیدا نشد، بررسی فرمت‌های مختلف
+    # اگر اعلانی پیدا نشد، بررسی همه کلیدها برای تطابق احتمالی
     if not items:
-        # بررسی همه کلیدها برای تطابق احتمالی
+        try:
+            current_app.logger.info(f"No direct match for '{normalized_user_id}', searching variants...")
+        except Exception:
+            pass
+        
+        # بررسی همه کلیدها - normalize کردن هر کلید و مقایسه
         for key in data.keys():
-            if _normalize_user_id(key) == normalized_user_id:
-                items = data.get(key, [])
-                if items:
+            normalized_key = _normalize_user_id(key)
+            if normalized_key == normalized_user_id:
+                found_items = data.get(key, [])
+                if found_items:
+                    items = found_items
+                    try:
+                        current_app.logger.info(f"Found notifications with variant key '{key}' (normalizes to '{normalized_key}')")
+                    except Exception:
+                        pass
                     break
     
     # Logging
     try:
         current_app.logger.info(
-            f"Getting notifications: user_id={user_id} -> normalized={normalized_user_id}, "
-            f"found={len(items)} items"
+            f"Returning {len(items)} notifications for user_id={normalized_user_id}"
         )
     except Exception:
         pass

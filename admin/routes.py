@@ -750,14 +750,9 @@ def notifications_broadcast():
 # ارسال اعلان به همکاران (Express Partners)
 # -----------------------------------------------------------------------------
 def _normalize_phone(phone: str) -> str:
-    """Normalize phone number to standard format (09xxxxxxxxx)"""
-    import re
-    p = (phone or "").strip()
-    p = re.sub(r"\D+", "", p)
-    if p.startswith("0098"): p = "0" + p[4:]
-    elif p.startswith("98"): p = "0" + p[2:]
-    if not p.startswith("0"): p = "0" + p
-    return p[:11]
+    """Normalize phone number to standard format (09xxxxxxxxx) - استفاده از همان تابع notifications"""
+    from app.services.notifications import _normalize_user_id
+    return _normalize_user_id(phone)
 
 @admin_bp.route('/notifications/colleagues', methods=['GET', 'POST'])
 @login_required
