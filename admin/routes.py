@@ -900,6 +900,77 @@ def notifications_colleagues():
         partners_count=len(approved_partners)
     )
 
+# -----------------------------------------------------------------------------
+# تست سیستم اعلان‌ها
+# -----------------------------------------------------------------------------
+@admin_bp.route('/notifications/test', methods=['GET', 'POST'])
+@login_required
+def notifications_test():
+    """تست سیستم اعلان‌ها"""
+    from app.services.notifications import (
+        add_notification, get_user_notifications, get_all_notifications_stats,
+        _load_all, _normalize_user_id
+    )
+    
+    message = None
+    error = None
+    test_result = None
+    
+    if request.method == 'POST':
+        test_phone = (request.form.get('test_phone') or '').strip()
+        if not test_phone:
+            error = 'شماره تلفن تست الزامی است.'
+        else:
+            try:
+                normalized = _normalize_user_id(test_phone)
+                
+                # افزودن اعلان تست
+                test_notif = add_notification(
+                    user_id=normalized,
+                    title="تست اعلان",
+                    body="این یک اعلان تستی است برای بررسی سیستم.",
+                    ntype="info"
+                )
+                
+                # دریافت اعلان‌ها
+                notifications = get_user_notifications(normalized, limit=10)
+                
+                # آمار کلی
+                stats = get_all_notifications_stats()
+                
+                # بررسی داده‌های خام
+                all_data = _load_all()
+                all_keys = list(all_data.keys())
+                
+                test_result = {
+                    "phone_raw": test_phone,
+                    "phone_normalized": normalized,
+                    "notification_added": test_notif.get("id") if test_notif else None,
+                    "notifications_found": len(notifications),
+                    "notifications_list": notifications[:5],  # فقط 5 تا اول
+                    "all_keys_in_storage": all_keys,
+                    "stats": stats
+                }
+                
+                message = f'تست موفقیت‌آمیز بود. اعلان برای {normalized} اضافه شد و {len(notifications)} اعلان پیدا شد.'
+            except Exception as e:
+                error = f'خطا در تست: {str(e)}'
+                current_app.logger.error(f"Notification test error: {e}", exc_info=True)
+    
+    # آمار کلی
+    try:
+        stats = get_all_notifications_stats()
+    except Exception:
+        stats = {}
+    
+    return render_template(
+        'admin/notifications_test.html',
+        message=message,
+        error=error,
+        test_result=test_result,
+        stats=stats
+    )
+
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():

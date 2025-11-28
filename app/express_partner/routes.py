@@ -1047,8 +1047,8 @@ def get_notifications():
     
     # Debug: بررسی همه کلیدهای موجود
     try:
-        from app.services.notifications import _load
-        all_data = _load()
+        from app.services.notifications import _load_all
+        all_data = _load_all()
         all_keys = list(all_data.keys())
         from flask import current_app
         current_app.logger.info(f"All notification keys in storage: {all_keys}")

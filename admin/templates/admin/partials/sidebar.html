@@ -90,6 +90,18 @@
       <span class="text-sm font-medium">ارسال پیام به همکاران</span>
     </a>
 
+    <!-- تست سیستم اعلان‌ها -->
+    <a href="{{ url_for('admin.notifications_test') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.notifications_test' %}
+                bg-violet-600 text-white
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-vial w-5"></i>
+      <span class="text-sm font-medium">تست سیستم اعلان‌ها</span>
+    </a>
+
     <!-- شهرهای فعال -->
     <a href="{{ url_for('admin.express_cities') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable

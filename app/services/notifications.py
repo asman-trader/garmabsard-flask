@@ -1,177 +1,297 @@
 # -*- coding: utf-8 -*-
 """
-Vinor Notifications Service – instance/data backend via utils.storage
+Vinor Notifications Service – سیستم مرکزی مدیریت اعلان‌ها
 """
-import time, uuid
-from typing import List, Dict, Any
+import time
+import uuid
+import os
+import json
+from typing import List, Dict, Any, Optional
+from flask import current_app
 
-from app.utils.storage import load_notifications, save_notifications
+
+def _get_notifications_file_path() -> str:
+    """مسیر فایل اعلان‌ها"""
+    try:
+        app = current_app._get_current_object()
+        instance_path = app.instance_path
+    except Exception:
+        instance_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance')
+    
+    data_dir = os.path.join(instance_path, 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    return os.path.join(data_dir, 'notifications.json')
 
 
-def _normalize_loaded(raw) -> Dict[str, List[Dict[str, Any]]]:
-    """
-    ورودی ممکنه dict یا list باشه. این تابع هر چیزی رو به ساختار استاندارد:
-    { user_id: [ {notif}, ... ] } تبدیل می‌کنه.
-    """
-    # حالت سالم
+def _normalize_user_id(user_id: str) -> str:
+    """Normalize کردن user_id (شماره تلفن)"""
+    if not user_id:
+        return ""
+    # حذف فاصله‌ها و کاراکترهای غیرعددی
+    import re
+    normalized = re.sub(r'\D+', '', str(user_id).strip())
+    # تبدیل به فرمت استاندارد 09xxxxxxxxx
+    if normalized.startswith('0098'):
+        normalized = '0' + normalized[4:]
+    elif normalized.startswith('98'):
+        normalized = '0' + normalized[2:]
+    if not normalized.startswith('0') and len(normalized) == 10:
+        normalized = '0' + normalized
+    return normalized[:11] if len(normalized) >= 11 else normalized
+
+
+def _load_all() -> Dict[str, List[Dict[str, Any]]]:
+    """بارگذاری همه اعلان‌ها از فایل"""
+    file_path = _get_notifications_file_path()
+    
+    if not os.path.exists(file_path):
+        return {}
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            raw = json.load(f)
+    except Exception as e:
+        try:
+            current_app.logger.error(f"Error loading notifications: {e}")
+        except Exception:
+            pass
+        return {}
+    
+    # تبدیل به ساختار استاندارد
     if isinstance(raw, dict):
-        fixed: Dict[str, List[Dict[str, Any]]] = {}
-        for k, v in raw.items():
-            if isinstance(v, list):
-                # فقط آیتم‌های دیکشنری نگه‌داری بشن
-                fixed[k] = [n for n in v if isinstance(n, dict)]
-            else:
-                fixed[k] = []
-        return fixed
-
-    # حالت قدیمی/خراب: لیست تخت از اعلان‌ها
+        # Normalize کردن کلیدها
+        normalized_data = {}
+        for key, value in raw.items():
+            normalized_key = _normalize_user_id(key)
+            if normalized_key and isinstance(value, list):
+                normalized_data[normalized_key] = [n for n in value if isinstance(n, dict)]
+        return normalized_data
+    
+    # حالت قدیمی: لیست تخت
     if isinstance(raw, list):
-        grouped: Dict[str, List[Dict[str, Any]]] = {}
+        grouped = {}
         for n in raw:
             if not isinstance(n, dict):
                 continue
-            uid = n.get("user_id") or n.get("uid")  # اگر قبلاً فیلد user_id ذخیره شده
+            uid = n.get("user_id") or n.get("uid") or ""
             if uid:
-                grouped.setdefault(uid, []).append(n)
-        return grouped  # ممکنه خالی باشد
-
-    # هر چیز دیگر → خالی
+                normalized_uid = _normalize_user_id(uid)
+                if normalized_uid:
+                    grouped.setdefault(normalized_uid, []).append(n)
+        return grouped
+    
     return {}
 
-def _load() -> Dict[str, List[Dict[str, Any]]]:
-    raw = load_notifications()
-    return _normalize_loaded(raw)
 
-def _save(data: Dict[str, List[Dict[str, Any]]]):
-    save_notifications(data)
+def _save_all(data: Dict[str, List[Dict[str, Any]]]) -> bool:
+    """ذخیره همه اعلان‌ها در فایل"""
+    file_path = _get_notifications_file_path()
+    
+    try:
+        # Normalize کردن همه کلیدها قبل از ذخیره
+        normalized_data = {}
+        for key, value in data.items():
+            normalized_key = _normalize_user_id(key)
+            if normalized_key and isinstance(value, list):
+                normalized_data[normalized_key] = value
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(normalized_data, f, ensure_ascii=False, indent=2)
+        
+        try:
+            current_app.logger.info(f"Notifications saved successfully. Total users: {len(normalized_data)}")
+        except Exception:
+            pass
+        
+        return True
+    except Exception as e:
+        try:
+            current_app.logger.error(f"Error saving notifications: {e}", exc_info=True)
+        except Exception:
+            pass
+        return False
+
 
 def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
-                     ad_id: str | None = None, action_url: str | None = None) -> Dict[str, Any]:
+                     ad_id: Optional[str] = None, action_url: Optional[str] = None) -> Dict[str, Any]:
+    """
+    افزودن اعلان جدید برای یک کاربر
+    """
     if not user_id:
         raise ValueError("user_id is required")
-
-    # Normalize user_id (phone number)
-    user_id = str(user_id).strip()
     
-    data = _load()
+    # Normalize کردن user_id
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id or len(normalized_user_id) != 11:
+        raise ValueError(f"Invalid user_id format: {user_id} -> {normalized_user_id}")
+    
+    # بارگذاری داده‌های موجود
+    data = _load_all()
+    
+    # ایجاد اعلان جدید
     notif = {
         "id": str(uuid.uuid4()),
-        "title": title,
-        "body": body,
-        "type": ntype,  # info | success | warning | error | status
+        "title": str(title).strip(),
+        "body": str(body).strip(),
+        "type": str(ntype).strip() or "info",
         "created_at": int(time.time()),
         "is_read": False,
         "ad_id": ad_id,
         "action_url": action_url,
-        # (اختیاری) برای سازگاری با نسخه‌های قدیمی:
-        "user_id": user_id,
+        "user_id": normalized_user_id,  # ذخیره user_id normalize شده
     }
     
-    # Debug logging
+    # افزودن به لیست اعلان‌های کاربر
+    if normalized_user_id not in data:
+        data[normalized_user_id] = []
+    
+    data[normalized_user_id].insert(0, notif)
+    
+    # محدود کردن تعداد اعلان‌ها (حفظ آخرین 100 اعلان)
+    if len(data[normalized_user_id]) > 100:
+        data[normalized_user_id] = data[normalized_user_id][:100]
+    
+    # ذخیره
+    if not _save_all(data):
+        raise RuntimeError("Failed to save notification")
+    
+    # Logging
     try:
-        from flask import current_app
-        current_app.logger.info(f"Adding notification for user_id: {user_id}, title: {title}")
-        current_app.logger.info(f"Current data keys before add: {list(data.keys())}")
+        current_app.logger.info(
+            f"Notification added: user_id={normalized_user_id}, title={title}, "
+            f"total_notifications={len(data[normalized_user_id])}"
+        )
     except Exception:
         pass
     
-    # اطمینان از اینکه user_id به عنوان کلید استفاده می‌شود
-    if user_id not in data:
-        data[user_id] = []
-    data[user_id].insert(0, notif)
-    
-    # Debug logging
-    try:
-        from flask import current_app
-        current_app.logger.info(f"Notification added. Total for {user_id}: {len(data[user_id])}")
-        current_app.logger.info(f"Data keys after add: {list(data.keys())}")
-    except Exception:
-        pass
-    
-    _save(data)
     return notif
 
+
 def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """
+    دریافت اعلان‌های یک کاربر
+    """
     if not user_id:
         return []
     
-    # Normalize user_id
-    user_id = str(user_id).strip()
+    # Normalize کردن user_id
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return []
     
-    data = _load()
+    # بارگذاری داده‌ها
+    data = _load_all()
     
-    # Debug logging
-    try:
-        from flask import current_app
-        current_app.logger.info(f"Getting notifications for user_id: {user_id}")
-        current_app.logger.info(f"Available keys in data: {list(data.keys())}")
-    except Exception:
-        pass
-    
-    # بررسی مستقیم با user_id
-    items = data.get(user_id, [])
+    # دریافت اعلان‌های کاربر
+    items = data.get(normalized_user_id, [])
     if not isinstance(items, list):
         items = []
     
-    # اگر اعلانی پیدا نشد، ممکن است user_id به فرمت دیگری باشد
-    # بررسی همه کلیدها برای تطابق احتمالی
+    # اگر اعلانی پیدا نشد، بررسی فرمت‌های مختلف
     if not items:
-        # تلاش برای پیدا کردن با فرمت‌های مختلف
-        user_id_variants = [
-            user_id,
-            user_id.strip(),
-            user_id.replace(" ", ""),
-            user_id.replace("-", ""),
-        ]
-        for variant in user_id_variants:
-            if variant in data and variant != user_id:
-                items = data.get(variant, [])
+        # بررسی همه کلیدها برای تطابق احتمالی
+        for key in data.keys():
+            if _normalize_user_id(key) == normalized_user_id:
+                items = data.get(key, [])
                 if items:
-                    try:
-                        from flask import current_app
-                        current_app.logger.info(f"Found notifications with variant key: {variant}")
-                    except Exception:
-                        pass
                     break
     
-    # Debug logging
+    # Logging
     try:
-        from flask import current_app
-        current_app.logger.info(f"Returning {len(items)} notifications for {user_id}")
+        current_app.logger.info(
+            f"Getting notifications: user_id={user_id} -> normalized={normalized_user_id}, "
+            f"found={len(items)} items"
+        )
     except Exception:
         pass
     
-    return items[: max(1, int(limit or 1))]
+    # محدود کردن تعداد
+    limit = max(1, int(limit or 50))
+    return items[:limit]
+
 
 def unread_count(user_id: str) -> int:
-    return sum(1 for n in get_user_notifications(user_id, 9999) if not n.get("is_read"))
+    """شمارش اعلان‌های خوانده نشده"""
+    notifications = get_user_notifications(user_id, limit=9999)
+    return sum(1 for n in notifications if not n.get("is_read", False))
+
 
 def mark_read(user_id: str, notif_id: str) -> bool:
+    """علامت‌گذاری یک اعلان به عنوان خوانده شده"""
     if not user_id or not notif_id:
         return False
-    data = _load()
-    arr = data.get(user_id, [])
-    ok = False
-    if isinstance(arr, list):
-        for n in arr:
-            if n.get("id") == notif_id:
-                n["is_read"] = True
-                ok = True
-                break
-    if ok:
-        _save(data)
-    return ok
+    
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return False
+    
+    data = _load_all()
+    items = data.get(normalized_user_id, [])
+    
+    if not isinstance(items, list):
+        return False
+    
+    found = False
+    for n in items:
+        if n.get("id") == notif_id:
+            n["is_read"] = True
+            found = True
+            break
+    
+    if found:
+        _save_all(data)
+        try:
+            current_app.logger.info(f"Notification marked as read: user_id={normalized_user_id}, notif_id={notif_id}")
+        except Exception:
+            pass
+    
+    return found
+
 
 def mark_all_read(user_id: str) -> int:
+    """علامت‌گذاری همه اعلان‌های یک کاربر به عنوان خوانده شده"""
     if not user_id:
         return 0
-    data = _load()
-    arr = data.get(user_id, [])
-    c = 0
-    if isinstance(arr, list):
-        for n in arr:
-            if not n.get("is_read"):
-                n["is_read"] = True
-                c += 1
-        _save(data)
-    return c
+    
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return 0
+    
+    data = _load_all()
+    items = data.get(normalized_user_id, [])
+    
+    if not isinstance(items, list):
+        return 0
+    
+    count = 0
+    for n in items:
+        if not n.get("is_read", False):
+            n["is_read"] = True
+            count += 1
+    
+    if count > 0:
+        _save_all(data)
+        try:
+            current_app.logger.info(f"Marked {count} notifications as read for user_id={normalized_user_id}")
+        except Exception:
+            pass
+    
+    return count
+
+
+def get_all_notifications_stats() -> Dict[str, Any]:
+    """دریافت آمار کلی اعلان‌ها (برای ادمین)"""
+    data = _load_all()
+    total_users = len(data)
+    total_notifications = sum(len(items) for items in data.values() if isinstance(items, list))
+    total_unread = 0
+    
+    for items in data.values():
+        if isinstance(items, list):
+            total_unread += sum(1 for n in items if not n.get("is_read", False))
+    
+    return {
+        "total_users": total_users,
+        "total_notifications": total_notifications,
+        "total_unread": total_unread
+    }
