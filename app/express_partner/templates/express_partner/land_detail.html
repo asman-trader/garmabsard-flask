@@ -228,7 +228,7 @@
     {% endif %}
 
     <!-- دکمه‌های اقدام -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
       {% set public_link = share_url %}
       <a href="{{ public_link }}" 
          target="_blank" rel="noopener"
@@ -252,7 +252,7 @@
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">کپی</span>
       </button>
       
-      <!-- تماس -->
+      <!-- تماس - کنار دکمه معامله -->
       {% if land.owner_phone or land.vinor_contact %}
       <a href="tel:{{ land.owner_phone or land.vinor_contact }}" 
          class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
@@ -263,6 +263,30 @@
       <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
         <i class="fas fa-phone text-lg text-gray-400"></i>
         <span class="text-xs text-gray-400">تماس</span>
+      </div>
+      {% endif %}
+      
+      <!-- دکمه معامله - کنار دکمه تماس -->
+      {% set _st = (land._assignment_status|default('active')) %}
+      {% if _st != 'sold' %}
+      <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" onclick="event.stopPropagation();">
+        {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+        {% if _st == 'in_transaction' %}
+          <button type="submit" class="w-full flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
+            <i class="fas fa-check-circle text-lg"></i>
+            <span class="text-xs font-medium">رفع معامله</span>
+          </button>
+        {% else %}
+          <button type="submit" class="w-full flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
+            <i class="fas fa-handshake text-lg"></i>
+            <span class="text-xs font-medium">معامله</span>
+          </button>
+        {% endif %}
+      </form>
+      {% else %}
+      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-green-400 dark:border-green-500 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30">
+        <i class="fas fa-check-double text-lg"></i>
+        <span class="text-xs font-medium">فروخته شد</span>
       </div>
       {% endif %}
     </div>
@@ -293,18 +317,42 @@
 
 <!-- دکمه‌های ثابت پایین (فقط موبایل) -->
 {% set contact_phone = land.owner_phone or land.vinor_contact %}
+{% set _st = (land._assignment_status|default('active')) %}
 <div class="fixed bottom-0 inset-x-0 p-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 sm:hidden z-50">
-  <div class="flex justify-center">
+  <div class="grid grid-cols-2 gap-3">
     {% if contact_phone %}
     <button type="button" onclick="openContactModal()"
-       class="w-full max-w-xs flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">
+       class="flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">
       <i class="fas fa-phone"></i>
       تماس
     </button>
     {% else %}
-    <div class="w-full max-w-xs flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-300 dark:bg-gray-700 text-gray-500 opacity-50">
+    <div class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-300 dark:bg-gray-700 text-gray-500 opacity-50">
       <i class="fas fa-phone"></i>
       تماس
+    </div>
+    {% endif %}
+    
+    <!-- دکمه معامله در موبایل -->
+    {% if _st != 'sold' %}
+    <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="h-full">
+      {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+      {% if _st == 'in_transaction' %}
+        <button type="submit" class="w-full h-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">
+          <i class="fas fa-check-circle"></i>
+          رفع معامله
+        </button>
+      {% else %}
+        <button type="submit" class="w-full h-full flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors">
+          <i class="fas fa-handshake"></i>
+          معامله
+        </button>
+      {% endif %}
+    </form>
+    {% else %}
+    <div class="flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500 text-white font-bold">
+      <i class="fas fa-check-double"></i>
+      فروخته شد
     </div>
     {% endif %}
   </div>
