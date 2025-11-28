@@ -36,6 +36,13 @@ class Config:
     # --- محدودیت آپلود ---
     MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20MB
 
+    # --- VAPID Keys برای Web Push Notifications ---
+    # کلیدهای ثابت برای تست و توسعه (در پروداکشن باید از environment variables استفاده شود)
+    # این کلیدها به فرمت base64url هستند و معتبر هستند
+    VAPID_PUBLIC_KEY = "BCEikptArx4_523jsZ1e0RedsGx34NonMWYkMSlsUU5vBqseQfHq0mZdI2sdL0h9nTcQQGO_jKMAXjdl1Q15jHQ"
+    VAPID_PRIVATE_KEY = "dhvthKpfzxwl73td79EM41VuA6CSpvlg6zjTNQQv__A"
+    VAPID_SUB = "mailto:admin@vinor.ir"
+
 class DevelopmentConfig(Config):
     DEBUG = True
 

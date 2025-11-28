@@ -150,7 +150,12 @@ def create_app() -> Flask:
     )
 
     cookie_secure = os.environ.get("SESSION_COOKIE_SECURE", "0") == "1"
-    vapid_sub = os.environ.get("VAPID_SUB", "mailto:admin@vinor.ir")
+    
+    # کلیدهای VAPID: اول از environment variables، سپس از config
+    from config import Config
+    vapid_public = os.environ.get("VAPID_PUBLIC_KEY") or getattr(Config, "VAPID_PUBLIC_KEY", "")
+    vapid_private = os.environ.get("VAPID_PRIVATE_KEY") or getattr(Config, "VAPID_PRIVATE_KEY", "")
+    vapid_sub = os.environ.get("VAPID_SUB") or getattr(Config, "VAPID_SUB", "mailto:admin@vinor.ir")
 
     app.config.update(
         SESSION_COOKIE_NAME=SESSION_COOKIE_NAME,
@@ -163,8 +168,8 @@ def create_app() -> Flask:
         JSON_AS_ASCII=False,
         UPLOAD_FOLDER=os.environ.get("UPLOAD_FOLDER", default_upload_folder),
         MAX_CONTENT_LENGTH=20 * 1024 * 1024,  # 20MB
-        VAPID_PUBLIC_KEY=os.environ.get("VAPID_PUBLIC_KEY", ""),
-        VAPID_PRIVATE_KEY=os.environ.get("VAPID_PRIVATE_KEY", ""),
+        VAPID_PUBLIC_KEY=vapid_public,
+        VAPID_PRIVATE_KEY=vapid_private,
         # هر دو کلید برای سازگاری: dict و زیرکلید متنی
         VAPID_CLAIMS={"sub": vapid_sub},
         VAPID_CLAIMS_SUB=vapid_sub,
