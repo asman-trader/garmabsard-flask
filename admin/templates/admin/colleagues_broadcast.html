@@ -1,0 +1,68 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-3 py-4">
+  <h1 class="text-xl font-bold mb-4">ارسال پیام به همکاران</h1>
+
+  {% if message %}
+    <div class="mb-3 p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="mb-3 p-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <!-- اطلاعات همکاران -->
+    <div class="mb-2 text-xs rounded-lg border p-3"
+         style="border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.06);">
+      <div class="font-bold mb-1">اطلاعات ارسال</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div>تعداد همکاران تایید شده: <span class="font-mono font-bold">{{ partners_count or 0 }}</span></div>
+        <div>این پیام به همه همکاران تایید شده ارسال می‌شود</div>
+      </div>
+    </div>
+    
+    {% if push_diag %}
+    <div class="mb-2 text-xs rounded-lg border p-3"
+         style="border-color: rgba(59,130,246,.4); background: rgba(59,130,246,.06);">
+      <div class="font-bold mb-1">وضعیت پوش</div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div>کلید عمومی: <span class="font-mono">{{ '✅' if push_diag.has_public else '❌' }}</span></div>
+        <div>کلید خصوصی: <span class="font-mono">{{ '✅' if push_diag.has_private else '❌' }}</span></div>
+        <div>تعداد مشترک: <span class="font-mono">{{ push_diag.subs_count or 0 }}</span></div>
+      </div>
+      {% if not push_diag.has_private %}
+        <div class="mt-1 text-amber-700 dark:text-amber-300">کلید خصوصی VAPID تنظیم نشده؛ ارسال Web Push انجام نمی‌شود.</div>
+      {% elif (push_diag.subs_count or 0) == 0 %}
+        <div class="mt-1 text-amber-700 dark:text-amber-300">هنوز مشترکی ثبت نشده است؛ از صفحهٔ «تست اعلان پوش» برای عضویت یک مرورگر اقدام کنید.</div>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    <div>
+      <label class="block text-sm mb-1">عنوان پیام</label>
+      <input type="text" name="title" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="مثلاً اطلاعیه مهم" required>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">متن پیام</label>
+      <textarea name="body" rows="4" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" placeholder="متن پیام برای همکاران" required></textarea>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">نوع اعلان</label>
+      <select name="type" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2 text-sm">
+        <option value="info">اطلاعات</option>
+        <option value="success">موفقیت</option>
+        <option value="warning">هشدار</option>
+        <option value="error">خطا</option>
+        <option value="status">وضعیت</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white">ارسال به همکاران</button>
+      <a href="{{ url_for('admin.dashboard') }}" class="px-4 py-2 rounded-lg border">انصراف</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

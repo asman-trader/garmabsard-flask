@@ -746,6 +746,115 @@ def notifications_broadcast():
 
     return render_template('admin/broadcast.html', message=message, error=error, push_diag=push_diag)
 
+# -----------------------------------------------------------------------------
+# ارسال اعلان به همکاران (Express Partners)
+# -----------------------------------------------------------------------------
+@admin_bp.route('/notifications/colleagues', methods=['GET', 'POST'])
+@login_required
+def notifications_colleagues():
+    message = None
+    error = None
+    # Diagnostics for push configuration/subscribers
+    try:
+        subs_for_diag = _load_subs()
+    except Exception:
+        subs_for_diag = []
+    push_diag = {
+        'has_public': bool(current_app.config.get('VAPID_PUBLIC_KEY')),
+        'has_private': bool(current_app.config.get('VAPID_PRIVATE_KEY')),
+        'subs_count': len(subs_for_diag or []),
+    }
+    
+    # واکشی همکاران تایید شده
+    try:
+        partners = load_express_partners() or []
+    except Exception:
+        partners = []
+    
+    # فیلتر همکاران تایید شده
+    APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
+    approved_partners = []
+    for p in partners if isinstance(partners, list) else []:
+        if not isinstance(p, dict):
+            continue
+        status = p.get('status')
+        if status is True:
+            # status is boolean True
+            phone = str(p.get('phone') or '').strip()
+            if phone:
+                approved_partners.append({
+                    'phone': phone,
+                    'name': p.get('name') or p.get('full_name') or phone
+                })
+        elif isinstance(status, str):
+            # status is a string, check if it's in approved statuses
+            if status.lower() in APPROVED_PARTNER_STATUSES:
+                phone = str(p.get('phone') or '').strip()
+                if phone:
+                    approved_partners.append({
+                        'phone': phone,
+                        'name': p.get('name') or p.get('full_name') or phone
+                    })
+    
+    if request.method == 'POST':
+        title = (request.form.get('title') or '').strip()
+        body  = (request.form.get('body') or '').strip()
+        ntype = (request.form.get('type') or 'info').strip() or 'info'
+        
+        if not title or not body:
+            error = 'عنوان و متن اعلان الزامی است.'
+        elif not approved_partners:
+            error = 'هیچ همکار تایید شده‌ای یافت نشد.'
+        else:
+            sent = 0
+            # ثبت اعلان در in-app notifications برای همکاران
+            for partner in approved_partners:
+                try:
+                    # استفاده از شماره تلفن به عنوان user_id
+                    add_notification(
+                        user_id=partner['phone'],
+                        title=title,
+                        body=body,
+                        ntype=ntype,
+                        action_url=url_for('express_partner.dashboard', _external=True)
+                    )
+                    sent += 1
+                except Exception:
+                    pass
+
+            # تلاش برای ارسال Web Push با صدا (در کلاینت)
+            try:
+                subs = _load_subs()
+            except Exception:
+                subs = []
+            push_sent = 0
+            payload = {
+                "title": title,
+                "body": body,
+                "icon": "/static/icons/icon-192.png",
+                "badge": "/static/icons/monochrome-192.png",
+                "url": url_for('express_partner.dashboard', _external=True),
+                "sound": "/static/sounds/notify.mp3"
+            }
+            for s in subs:
+                res = _send_one(s, payload)
+                if res.get('ok'): push_sent += 1
+            message = f'اعلان برای {sent} همکار ثبت و {push_sent} پوش ارسال شد.'
+            # update diagnostics after send
+            try:
+                subs_for_diag = _load_subs()
+            except Exception:
+                subs_for_diag = []
+            push_diag.update({'subs_count': len(subs_for_diag or [])})
+
+    return render_template(
+        'admin/colleagues_broadcast.html',
+        message=message,
+        error=error,
+        push_diag=push_diag,
+        partners_count=len(approved_partners)
+    )
+
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
