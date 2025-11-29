@@ -4,7 +4,7 @@
 <div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4 pb-16">
 
   <!-- Header - سبک دیوار -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+  <header data-tour="dashboard-header" class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
     <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
       <a href="/" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="صفحه اصلی">
         <i class="fas fa-home text-gray-600 dark:text-gray-400"></i>
@@ -16,6 +16,7 @@
 
   <!-- نوار آموزش - سبک دیوار -->
   <a href="{{ url_for('express_partner.training') }}" 
+     data-tour="training-bar"
      class="block mt-2 mb-3 mx-3 sm:mx-0 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -108,7 +109,7 @@
 
     <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-4 pb-4 sm:overflow-x-auto sm:snap-x sm:snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article class="snap-start shrink-0 w-full sm:w-[320px] group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md" data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
+      <article {% if loop.first %}data-tour="land-card"{% endif %} class="snap-start shrink-0 w-full sm:w-[320px] group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md" data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         {% set _st = (land._assignment_status|default('active')) %}
         

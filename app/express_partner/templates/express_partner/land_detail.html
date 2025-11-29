@@ -21,7 +21,7 @@
   </header>
 
   <!-- تصویر اصلی - سبک دیوار -->
-  <div class="relative mb-4">
+  <div data-tour="land-image" class="relative mb-4">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
     {% if primary_image %}
@@ -48,7 +48,7 @@
   <div class="max-w-4xl mx-auto px-4 space-y-4">
     
     <!-- عنوان و اطلاعات اصلی - سبک دیوار -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div data-tour="land-info" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
         {% if land.location or land.city %}
@@ -223,6 +223,7 @@
       </a>
       
       <button type="button" 
+              data-tour="share-btn"
               class="share-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors" 
               data-url="{{ public_link }}">
         <i class="fas fa-share-nodes text-lg text-gray-600 dark:text-gray-400"></i>
@@ -240,6 +241,7 @@
       <!-- تماس - فقط دسکتاپ -->
       {% if land.owner_phone or land.vinor_contact %}
       <a href="tel:{{ land.owner_phone or land.vinor_contact }}" 
+         data-tour="contact-btn"
          class="hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
         <i class="fas fa-phone text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">تماس</span>
@@ -255,7 +257,7 @@
     <!-- دکمه معامله - جداگانه -->
     {% set _st = (land._assignment_status|default('active')) %}
     {% if _st != 'sold' %}
-    <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="hidden sm:block">
+    <form data-tour="transaction-btn" method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="hidden sm:block">
       {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
       {% if _st == 'in_transaction' %}
         <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">

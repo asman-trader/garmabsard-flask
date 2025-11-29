@@ -12,7 +12,7 @@
   </header>
 
   <!-- فرم افزودن یادداشت - سبک Google Keep -->
-  <div class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm transition-all"
+  <div data-tour="notes-input" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm transition-all"
        :class="expanded ? 'shadow-md' : 'shadow-sm'">
     <form method="post" action="{{ url_for('express_partner.add_note') }}" @submit="expanded = false">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -56,7 +56,7 @@
 
   <!-- Grid یادداشت‌ها - سبک Google Keep -->
   {% if notes and notes|length > 0 %}
-  <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  <div data-tour="notes-grid" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {% for n in notes %}
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-all group relative min-h-[120px] flex flex-col">
       <!-- محتوای یادداشت -->
