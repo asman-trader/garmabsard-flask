@@ -1,17 +1,17 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}جزئیات فایل اکسپرس{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-white dark:bg-gray-950 pb-6">
+<div class="min-h-screen bg-white dark:bg-gray-950 pb-16">
   
-  <!-- Header مینیمال -->
-  <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-900">
+  <!-- Header - سبک دیوار -->
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="{{ url_for('express_partner.dashboard') }}" 
-              class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors" 
+              class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" 
               aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات فایل</h1>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
       {% if land.code %}
       <span class="text-xs font-mono text-gray-500 dark:text-gray-400">#{{ land.code }}</span>
       {% else %}
@@ -20,61 +20,51 @@
     </div>
   </header>
 
-  <!-- تصویر اصلی -->
-  <div class="relative mb-6">
+  <!-- تصویر اصلی - سبک دیوار -->
+  <div class="relative mb-4">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
     {% if primary_image %}
       {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
-      <div class="aspect-[16/9] bg-gray-100 dark:bg-gray-900 relative group rounded-xl overflow-hidden mx-4">
+      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden">
         <img src="{{ image_src }}" alt="{{ land.title }}" 
              class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
-        <a href="{{ image_src }}" download class="absolute bottom-4 right-4 px-3 py-2 rounded-lg bg-black/60 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2" onclick="event.stopPropagation()">
-          <i class="fas fa-download"></i>
-          دانلود
-        </a>
       </div>
     {% else %}
-      <div class="aspect-[16/9] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl mx-4">
+      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
       </div>
     {% endif %}
     
     {% if land._assignment_status == 'in_transaction' %}
-    <div class="absolute top-4 left-4">
-      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-orange-500 text-white">
-        <i class="fas fa-handshake text-[10px]"></i>
+    <div class="absolute top-2 left-2">
+      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-500 text-white">
         در حال معامله
       </span>
     </div>
     {% endif %}
   </div>
 
-  <div class="max-w-4xl mx-auto px-4 space-y-6">
+  <div class="max-w-4xl mx-auto px-4 space-y-4">
     
-    <!-- عنوان و اطلاعات اصلی -->
-    <div>
-      <div class="flex items-start justify-between gap-2">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
-        <button type="button" class="copy-text-btn flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-text="{{ land.title or '' }}" title="کپی عنوان">
-          <i class="fas fa-copy text-gray-500 dark:text-gray-400"></i>
-        </button>
-      </div>
-      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+    <!-- عنوان و اطلاعات اصلی - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{{ land.title or '—' }}</h2>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
         {% if land.location or land.city %}
-        <span class="inline-flex items-center gap-1.5">
-          <i class="fas fa-location-dot text-xs"></i>
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-map-marker-alt text-xs"></i>
           {{ land.location or land.city }}
         </span>
         {% endif %}
         {% if land.size %}
-        <span class="inline-flex items-center gap-1.5">
+        <span class="flex items-center gap-1.5">
           <i class="fas fa-ruler-combined text-xs"></i>
           {{ land.size }} متر
         </span>
         {% endif %}
         {% if land.category %}
-        <span class="inline-flex items-center gap-1.5">
+        <span class="flex items-center gap-1.5">
           <i class="fas fa-tag text-xs"></i>
           {{ land.category }}
         </span>
@@ -82,49 +72,44 @@
       </div>
     </div>
 
-    <!-- قیمت و پورسانت -->
-    <div class="grid sm:grid-cols-2 gap-4">
-      <div class="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">قیمت کل</div>
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ (land.price_total or 0)|toman }}</div>
-        {% if land.price_per_meter %}
-        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">قیمت در متر: {{ land.price_per_meter|toman }}</div>
-        {% endif %}
-      </div>
-      
-      <div class="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/30 dark:to-violet-800/20 border border-violet-200 dark:border-violet-800">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-wallet text-violet-600 dark:text-violet-400 text-sm"></i>
-            <span class="text-xs font-medium text-violet-700 dark:text-violet-300">پورسانت شما</span>
-          </div>
-          {% if land._commission_pct %}
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-600 dark:bg-violet-500 text-white">
-            <i class="fas fa-percent text-[10px]"></i>{{ land._commission_pct }}%
-          </span>
-          {% endif %}
+    <!-- قیمت و پورسانت - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="space-y-3">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">قیمت کل</span>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">{{ (land.price_total or 0)|toman }}</span>
         </div>
-        <div class="text-2xl font-black text-violet-700 dark:text-violet-400">{{ (land._commission_amount or 0)|toman }}</div>
+        {% if land.price_per_meter %}
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">قیمت در متر</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.price_per_meter|toman }}</span>
+        </div>
+        {% endif %}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">پورسانت شما</span>
+            {% if land._commission_pct %}
+            <span class="text-xs text-gray-500 dark:text-gray-400">({{ land._commission_pct }}%)</span>
+            {% endif %}
+          </div>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">{{ (land._commission_amount or 0)|toman }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- توضیحات -->
+    <!-- توضیحات - سبک دیوار -->
     {% if land.description %}
-    <div class="prose prose-sm dark:prose-invert max-w-none">
-      <div class="flex items-start justify-between gap-2">
-        <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line flex-1">{{ land.description }}</p>
-        <button type="button" class="copy-text-btn flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" data-text="{{ land.description }}" title="کپی توضیحات">
-          <i class="fas fa-copy text-gray-500 dark:text-gray-400"></i>
-        </button>
-      </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">توضیحات</h3>
+      <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{{ land.description }}</p>
     </div>
     {% endif %}
 
-    <!-- جزئیات فایل -->
+    <!-- جزئیات فایل - سبک دیوار -->
     {% if land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
-    <div class="space-y-3">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات</h3>
-      <div class="grid sm:grid-cols-2 gap-3">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">جزئیات</h3>
+      <div class="space-y-2">
         {% if land.rooms %}
         <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
           <span class="text-sm text-gray-600 dark:text-gray-400">اتاق</span>
@@ -150,7 +135,7 @@
         </div>
         {% endif %}
         {% if land.features %}
-        <div class="sm:col-span-2 py-2 border-b border-gray-100 dark:border-gray-800">
+        <div class="py-2">
           <span class="text-sm text-gray-600 dark:text-gray-400 block mb-1">امکانات</span>
           <span class="text-sm text-gray-900 dark:text-white">{{ land.features }}</span>
         </div>
@@ -159,20 +144,20 @@
     </div>
     {% endif %}
 
-    <!-- موقعیت دقیق -->
+    <!-- موقعیت دقیق - سبک دیوار -->
     {% if land.latitude and land.longitude %}
     <button type="button" onclick="openLocationModal()"
-            class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-          <i class="fas fa-map-marker-alt text-blue-600 dark:text-blue-400"></i>
+        <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-map-marker-alt text-gray-600 dark:text-gray-400"></i>
         </div>
         <div class="text-right">
           <div class="text-sm font-semibold text-gray-900 dark:text-white">موقعیت دقیق</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">باز کردن در نقشه</div>
         </div>
       </div>
-      <i class="fas fa-chevron-left text-gray-400"></i>
+      <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500"></i>
     </button>
 
     <!-- مودال موقعیت -->
@@ -210,16 +195,16 @@
     </div>
     {% endif %}
 
-    <!-- لینک اشتراک -->
+    <!-- لینک اشتراک - سبک دیوار -->
     {% if share_url %}
-    <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div class="flex items-start justify-between gap-3">
         <div class="flex-1 min-w-0">
           <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">لینک اختصاصی</div>
           <p class="text-xs text-gray-600 dark:text-gray-400 break-all font-mono">{{ share_url }}</p>
         </div>
         <button type="button" 
-                class="copy-btn-secondary flex-shrink-0 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                class="copy-btn-secondary flex-shrink-0 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
                 data-url="{{ share_url }}">
           <i class="fas fa-copy"></i>
         </button>
@@ -227,18 +212,18 @@
     </div>
     {% endif %}
 
-    <!-- دکمه‌های اقدام -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+    <!-- دکمه‌های اقدام - سبک دیوار -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {% set public_link = share_url %}
       <a href="{{ public_link }}" 
          target="_blank" rel="noopener"
-         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
         <i class="far fa-eye text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">مشاهده</span>
       </a>
       
       <button type="button" 
-              class="share-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+              class="share-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors" 
               data-url="{{ public_link }}">
         <i class="fas fa-share-nodes text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">اشتراک</span>
@@ -246,63 +231,60 @@
       
       <!-- کپی - فقط دسکتاپ -->
       <button type="button" 
-              class="copy-btn hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+              class="copy-btn hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors" 
               data-url="{{ public_link }}">
         <i class="fas fa-link text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">کپی</span>
       </button>
       
-      <!-- تماس - کنار دکمه معامله -->
+      <!-- تماس -->
       {% if land.owner_phone or land.vinor_contact %}
       <a href="tel:{{ land.owner_phone or land.vinor_contact }}" 
-         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
-        <i class="fas fa-phone text-lg text-emerald-600 dark:text-emerald-400"></i>
-        <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">تماس</span>
+         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+        <i class="fas fa-phone text-lg text-gray-600 dark:text-gray-400"></i>
+        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">تماس</span>
       </a>
       {% else %}
-      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
+      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
         <i class="fas fa-phone text-lg text-gray-400"></i>
         <span class="text-xs text-gray-400">تماس</span>
       </div>
       {% endif %}
       
-      <!-- دکمه معامله - کنار دکمه تماس -->
+      <!-- دکمه معامله -->
       {% set _st = (land._assignment_status|default('active')) %}
       {% if _st != 'sold' %}
-      <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" onclick="event.stopPropagation();">
+      <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="col-span-2 sm:col-span-4">
         {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
         {% if _st == 'in_transaction' %}
-          <button type="submit" class="w-full flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
-            <i class="fas fa-check-circle text-lg"></i>
-            <span class="text-xs font-medium">رفع معامله</span>
+          <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+            <i class="fas fa-check-circle"></i>
+            <span class="text-sm font-medium">رفع معامله</span>
           </button>
         {% else %}
-          <button type="submit" class="w-full flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-orange-400 dark:border-orange-500 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-all active:scale-95" onclick="event.stopPropagation();">
-            <i class="fas fa-handshake text-lg"></i>
-            <span class="text-xs font-medium">معامله</span>
+          <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+            <i class="fas fa-handshake"></i>
+            <span class="text-sm font-medium">معامله</span>
           </button>
         {% endif %}
       </form>
       {% else %}
-      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-green-400 dark:border-green-500 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30">
-        <i class="fas fa-check-double text-lg"></i>
-        <span class="text-xs font-medium">فروخته شد</span>
+      <div class="col-span-2 sm:col-span-4 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400">
+        <i class="fas fa-check-double"></i>
+        <span class="text-sm font-medium">فروخته شد</span>
       </div>
       {% endif %}
     </div>
 
-    <!-- گالری تصاویر -->
+    <!-- گالری تصاویر - سبک دیوار -->
     {% if images|length > 1 %}
-    <div class="space-y-3">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">تصاویر بیشتر</h3>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">تصاویر بیشتر</h3>
       <div class="grid grid-cols-3 gap-2">
         {% for image in images[1:7] %}
           {% set image_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
-          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 relative group">
+          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 relative">
             <img src="{{ image_src }}" alt="تصویر {{ loop.index + 1 }}" class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
-            <a href="{{ image_src }}" download class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" onclick="event.stopPropagation()">
-              <i class="fas fa-download text-xs"></i>
-            </a>
           </div>
         {% endfor %}
       </div>
