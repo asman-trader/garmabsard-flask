@@ -1,7 +1,7 @@
 {% set bottom_nav_active = bottom_nav_active|default('') %}
-<nav class="fixed inset-x-0 bottom-3 z-50 px-4">
+<nav class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
   <div class="max-w-md mx-auto">
-    <div class="grid grid-cols-4 gap-2 rounded-2xl border border-gray-200/70 dark:border-gray-700/70 bg-white/90 dark:bg-gray-900/90 backdrop-blur shadow-lg px-2 py-2">
+    <div class="grid grid-cols-4 gap-0">
       {% set nav_items = [
         {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-folder-open', 'label': 'فایل‌ها'},
         {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
@@ -11,15 +11,10 @@
       {% for item in nav_items %}
         {% set is_active = (bottom_nav_active == item.key) %}
         <a href="{{ url_for(item.endpoint) }}"
-           class="relative flex flex-col items-center gap-1 text-[11px] sm:text-xs font-medium transition-all duration-200 {{ 'text-gray-900 dark:text-white' if is_active else 'text-gray-500 dark:text-gray-400' }}"
+           class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 transition-colors duration-150 {{ 'text-blue-600 dark:text-blue-400' if is_active else 'text-gray-600 dark:text-gray-400' }} hover:text-gray-900 dark:hover:text-gray-100"
            aria-current="{{ 'page' if is_active else 'false' }}">
-          <span class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all {{ 'bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] text-white shadow-lg scale-100' if is_active else 'bg-gray-100/80 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400 shadow-none scale-95' }}">
-            <i class="fas {{ item.icon }} text-[15px]"></i>
-          </span>
-          <span class="leading-tight">{{ item.label }}</span>
-          {% if is_active %}
-            <span class="absolute -top-1 h-1.5 w-6 rounded-full bg-[#7C3AED]"></span>
-          {% endif %}
+          <i class="fas {{ item.icon }} text-lg"></i>
+          <span class="text-[11px] font-medium leading-tight">{{ item.label }}</span>
         </a>
       {% endfor %}
     </div>
