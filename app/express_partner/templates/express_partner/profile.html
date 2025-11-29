@@ -1,7 +1,7 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پروفایل همکار اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4 pb-20">
+<div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
 
   <!-- Header - سبک دیوار -->
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
@@ -14,23 +14,47 @@
     </div>
   </header>
 
-  <!-- Profile Section -->
-  <section class="mt-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-violet-50 dark:from-gray-900 dark:to-gray-800 shadow-sm p-4 sm:p-6">
-    <div class="flex items-center gap-3 sm:gap-4">
-      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] text-white grid place-items-center text-xl sm:text-2xl font-extrabold shadow">{{ (me_phone or '')[-4:] }}</div>
+  <!-- Profile Section - سبک دیوار -->
+  <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 grid place-items-center text-lg font-semibold">{{ (me_phone or '')[-4:] }}</div>
       <div class="flex-1 min-w-0">
-        <div class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white truncate">همکار اکسپرس</div>
-        <div class="mt-0.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300">{{ me_phone }}</div>
+        <div class="text-base font-semibold text-gray-900 dark:text-white truncate">همکار اکسپرس</div>
+        <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
       </div>
-      <a href="{{ url_for('express_partner.logout') }}" class="px-3 sm:px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-[13px] sm:text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">خروج</a>
+      <a href="{{ url_for('express_partner.logout') }}" class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">خروج</a>
     </div>
   </section>
 
-  <!-- Quick Links -->
-  <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-    <a href="{{ url_for('express_partner.notes') }}" class="p-3 sm:p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-      <i class="fas fa-sticky-note text-violet-600 dark:text-violet-400.text-lg sm:text-xl mb-2 block"></i>
-      <div class="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">یادداشت‌ها</div>
+  <!-- Quick Links - سبک دیوار -->
+  <div class="mt-3 space-y-2">
+    <a href="{{ url_for('express_partner.notes') }}" 
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-sticky-note text-gray-600 dark:text-gray-400"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">یادداشت‌ها</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">یادداشت‌های خصوصی</div>
+        </div>
+        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+      </div>
+    </a>
+
+    <!-- تماس با پشتیبانی -->
+    <a href="{{ url_for('express_partner.support') }}" 
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-headset text-gray-600 dark:text-gray-400"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">تماس با پشتیبانی</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">راهنمایی و پشتیبانی</div>
+        </div>
+        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+      </div>
     </a>
   </div>
 
