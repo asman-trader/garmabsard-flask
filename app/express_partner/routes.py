@@ -1016,11 +1016,23 @@ def delete_sale(sid: int):
 @express_partner_bp.get('/notifications', endpoint='notifications')
 @require_partner_access(allow_pending=True)
 def notifications_page():
-    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id
+    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id, merge_duplicate_keys
     
     me_phone_raw = (session.get("user_phone") or "").strip()
     # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
     me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
+    
+    # اجرای merge خودکار کلیدهای تکراری (فقط یک بار)
+    try:
+        merge_result = merge_duplicate_keys()
+        if merge_result.get("merged_count", 0) > 0:
+            try:
+                from flask import current_app
+                current_app.logger.info(f"Page: Merged {merge_result['merged_count']} duplicate keys")
+            except Exception:
+                pass
+    except Exception:
+        pass
     
     # Debug logging
     try:

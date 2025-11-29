@@ -563,11 +563,31 @@
         Alpine.data('vinorNotificationsPage', (initialList = [], initialUnread = 0) => ({
           items: Array.isArray(initialList) ? initialList : [],
           unreadCount: Number(initialUnread || 0),
-          loading: !(initialList && initialList.length),
+          loading: false,
           init() {
-            this.sync(VinorNotifyCenter.getState());
+            // اگر initial data وجود دارد، از آن استفاده کن
+            if (Array.isArray(initialList) && initialList.length > 0) {
+              this.items = initialList;
+              this.unreadCount = Number(initialUnread || 0);
+              this.loading = false;
+            } else {
+              // در غیر این صورت، از state موجود استفاده کن
+              const currentState = VinorNotifyCenter.getState();
+              if (currentState && currentState.notifications && currentState.notifications.length > 0) {
+                this.items = currentState.notifications;
+                this.unreadCount = currentState.unread || 0;
+                this.loading = false;
+              } else {
+                // اگر هیچ داده‌ای نیست، loading را true کن و fetch کن
+                this.loading = true;
+              }
+            }
+            
+            // تنظیم event listener برای به‌روزرسانی‌های بعدی
             this._onUpdate = (evt) => this.sync(evt.detail);
             window.addEventListener('vinor:notifications:update', this._onUpdate);
+            
+            // همیشه fetch کن تا داده‌های جدید را بگیر
             VinorNotifyCenter.fetchList(true);
           },
           destroy() {
