@@ -1,7 +1,7 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پشتیبانی - وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4 pb-20">
+<div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
   
   <!-- Header - سبک دیوار -->
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
@@ -14,60 +14,69 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <div class="mt-4 space-y-4 sm:space-y-6">
+  <!-- Main Content - سبک دیوار -->
+  <div class="mt-4 space-y-3">
     
-    <!-- Support Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-700">
-      <div class="text-center space-y-6">
+    <!-- Support Card - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="text-center space-y-4">
         
         <!-- Icon -->
         <div class="flex justify-center">
-          <div class="w-20 h-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-            <i class="fas fa-headset text-3xl text-violet-600 dark:text-violet-400"></i>
+          <div class="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <i class="fas fa-headset text-2xl text-gray-600 dark:text-gray-400"></i>
           </div>
         </div>
 
         <!-- Title -->
         <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">پشتیبانی وینور اکسپرس</h2>
-          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">پشتیبانی وینور اکسپرس</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
             تیم پشتیبانی ما آماده پاسخگویی به سوالات و مشکلات شماست
           </p>
         </div>
 
         <!-- Contact Button -->
-        <div class="pt-4">
+        <div class="pt-2">
           <a href="tel:09121471301" 
-             class="inline-flex items-center gap-3 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold text-lg transition-colors shadow-lg">
-            <i class="fas fa-phone text-xl"></i>
+             class="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg font-medium text-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+            <i class="fas fa-phone"></i>
             <span>تماس با پشتیبانی</span>
           </a>
         </div>
-
-        <!-- Info -->
-        <div class="pt-4 space-y-3 text-sm text-gray-600 dark:text-gray-400">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-clock text-violet-600 dark:text-violet-400 mt-1"></i>
-            <div class="text-right">
-              <p class="font-semibold text-gray-900 dark:text-white">ساعات پاسخگویی:</p>
-              <p>شنبه تا پنجشنبه: ۹ صبح تا ۶ عصر</p>
-              <p>جمعه: ۱۰ صبح تا ۲ بعدازظهر</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-3">
-            <i class="fas fa-info-circle text-violet-600 dark:text-violet-400 mt-1"></i>
-            <div class="text-right">
-              <p class="font-semibold text-gray-900 dark:text-white">نکته:</p>
-              <p>برای دریافت سریع‌تر پاسخ، لطفاً شماره خود را در ابتدای تماس ذکر کنید</p>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
+    <!-- ساعات پاسخگویی - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-clock text-gray-600 dark:text-gray-400"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">ساعات پاسخگویی</h3>
+          <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+            <p>شنبه تا پنجشنبه: ۹ صبح تا ۶ عصر</p>
+            <p>جمعه: ۱۰ صبح تا ۲ بعدازظهر</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نکته - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-info-circle text-gray-600 dark:text-gray-400"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">نکته</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            برای دریافت سریع‌تر پاسخ، لطفاً شماره خود را در ابتدای تماس ذکر کنید
+          </p>
+        </div>
+      </div>
+    </div>
 
   </div>
 
