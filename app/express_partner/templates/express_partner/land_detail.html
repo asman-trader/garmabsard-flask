@@ -237,15 +237,15 @@
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">کپی</span>
       </button>
       
-      <!-- تماس -->
+      <!-- تماس - فقط دسکتاپ -->
       {% if land.owner_phone or land.vinor_contact %}
       <a href="tel:{{ land.owner_phone or land.vinor_contact }}" 
-         class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+         class="hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
         <i class="fas fa-phone text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">تماس</span>
       </a>
       {% else %}
-      <div class="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
+      <div class="hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50">
         <i class="fas fa-phone text-lg text-gray-400"></i>
         <span class="text-xs text-gray-400">تماس</span>
       </div>
