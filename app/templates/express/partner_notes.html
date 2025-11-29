@@ -1,4 +1,4 @@
-<div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
+<div class="max-w-6xl mx-auto pt-0 px-4 pb-16" x-data="notesApp()">
 
   <!-- Header - سبک دیوار -->
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
@@ -11,55 +11,90 @@
     </div>
   </header>
 
-  <!-- فرم افزودن یادداشت - سبک دیوار -->
-  <div class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-    <form method="post" action="{{ url_for('express_partner.add_note') }}" class="space-y-3">
+  <!-- فرم افزودن یادداشت - سبک Google Keep -->
+  <div class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm transition-all"
+       :class="expanded ? 'shadow-md' : 'shadow-sm'">
+    <form method="post" action="{{ url_for('express_partner.add_note') }}" @submit="expanded = false">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
-      <div class="flex gap-2">
-        <input type="text" name="content" 
-               class="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600" 
-               placeholder="متن یادداشت..." required>
-        <button class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-medium hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-          افزودن
-        </button>
+      
+      <div class="p-3" @click="expanded = true" @click.away="if(!$refs.contentInput.value) expanded = false">
+        <div class="flex items-center gap-2">
+          <input type="text" 
+                 name="content"
+                 x-ref="contentInput"
+                 @focus="expanded = true"
+                 class="flex-1 border-0 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none" 
+                 placeholder="یادداشت بنویسید..." 
+                 required>
+          <button type="button" 
+                  @click.stop="expanded = !expanded"
+                  class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  x-show="!expanded">
+            <i class="fas fa-plus text-gray-500 dark:text-gray-400 text-xs"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div x-show="expanded" 
+           x-transition
+           class="px-3 pb-3 border-t border-gray-100 dark:border-gray-800 pt-3">
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" 
+                  @click="expanded = false; $refs.contentInput.value = ''"
+                  class="px-3 py-1.5 rounded text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            انصراف
+          </button>
+          <button type="submit" 
+                  class="px-4 py-1.5 rounded text-xs font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+            ذخیره
+          </button>
+        </div>
       </div>
     </form>
   </div>
 
-  <!-- لیست یادداشت‌ها - سبک دیوار -->
-  <div class="mt-3 space-y-2">
+  <!-- Grid یادداشت‌ها - سبک Google Keep -->
+  {% if notes and notes|length > 0 %}
+  <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {% for n in notes %}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-900 dark:text-white leading-relaxed">{{ n.content }}</p>
-          <div class="mt-2 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-            <span>#{{ n.id }}</span>
-            <span>•</span>
-            <span class="jalali-dt" data-dt="{{ n.created_at }}"></span>
-          </div>
-        </div>
-        <form method="post" action="{{ url_for('express_partner.delete_note', nid=n.id) }}" 
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-all group relative min-h-[120px] flex flex-col">
+      <!-- محتوای یادداشت -->
+      <div class="flex-1">
+        <p class="text-sm text-gray-900 dark:text-white leading-relaxed whitespace-pre-wrap break-words">{{ n.content }}</p>
+      </div>
+      
+      <!-- Footer با تاریخ و دکمه حذف -->
+      <div class="mt-3 flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          <span class="jalali-dt" data-dt="{{ n.created_at }}"></span>
+        </span>
+        <form method="post" 
+              action="{{ url_for('express_partner.delete_note', nid=n.id) }}" 
               onsubmit="return confirm('حذف شود؟');" 
-              class="flex-shrink-0">
+              class="opacity-0 group-hover:opacity-100 transition-opacity">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="next" value="{{ url_for('express_partner.notes') }}">
-          <button type="submit" class="px-3 py-1.5 rounded text-xs font-medium border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-            حذف
+          <button type="submit" 
+                  class="w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="حذف">
+            <i class="fas fa-trash text-xs text-red-500 dark:text-red-400"></i>
           </button>
         </form>
       </div>
     </div>
-    {% else %}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-      <div class="w-16 h-16 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
-        <i class="fas fa-sticky-note text-gray-400 dark:text-gray-600 text-2xl"></i>
-      </div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">یادداشتی ثبت نشده است.</p>
-    </div>
     {% endfor %}
   </div>
+  {% else %}
+  <!-- حالت خالی -->
+  <div class="mt-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+    <div class="w-16 h-16 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+      <i class="fas fa-sticky-note text-gray-400 dark:text-gray-600 text-2xl"></i>
+    </div>
+    <p class="text-sm text-gray-600 dark:text-gray-400">یادداشتی ثبت نشده است.</p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">برای شروع، یک یادداشت جدید بنویسید</p>
+  </div>
+  {% endif %}
 
   {% set bottom_nav_active = 'dashboard' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
@@ -67,6 +102,13 @@
 </div>
 
 <script>
+  // Alpine.js برای مدیریت فرم
+  function notesApp() {
+    return {
+      expanded: false
+    }
+  }
+
   // Convert dates to Persian (Jalali) format
   (function(){
     function fmt(dt){
