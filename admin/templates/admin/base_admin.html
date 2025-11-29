@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>{% block title %}پنل مدیریت | وینور{% endblock %}</title>
-  <meta name="theme-color" content="#7C3AED" />
+  <meta name="theme-color" content="#2563EB" />
   
   <!-- PWA Manifest -->
   <link rel="manifest" href="{{ url_for('admin.admin_manifest') }}" />
@@ -27,7 +27,7 @@
 
   <style>
     html, body { font-family: 'Vazirmatn', sans-serif; }
-    .focusable:focus { outline: 2px solid #7C3AED; outline-offset: 2px; }
+    .focusable:focus { outline: 2px solid #2563EB; outline-offset: 2px; }
     [x-cloak] { display: none !important; }
   </style>
 
@@ -35,21 +35,21 @@
 </head>
 <body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
 
-  <!-- Header - Minimal & Mobile-first -->
-  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
+  <!-- Header - Divar Style -->
+  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
     <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <button @click="menuOpen = !menuOpen" class="lg:hidden focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-          <i class="fa-solid fa-bars text-lg"></i>
+          <i class="fa-solid fa-bars text-lg text-gray-600 dark:text-gray-400"></i>
         </button>
-        <h1 class="text-lg font-bold text-gray-900 dark:text-white">
+        <h1 class="text-base font-semibold text-gray-900 dark:text-white">
           {% block page_title %}پنل همکاران{% endblock %}
         </h1>
       </div>
       <div class="flex items-center gap-2">
         <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" 
-                class="focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-          <i class="fa-solid" :class="darkMode ? 'fa-sun text-yellow-400' : 'fa-moon'"></i>
+                class="focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+          <i class="fa-solid" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
         </button>
       </div>
     </div>
@@ -87,20 +87,20 @@
   <main class="flex-1 lg:pr-64">
     <div class="px-4 py-6 max-w-7xl mx-auto">
       
-      <!-- Flash Messages -->
+      <!-- Flash Messages - Divar Style -->
       {% with messages = get_flashed_messages(with_categories=True) %}
         {% if messages %}
           <div class="mb-6 space-y-2">
             {% for category, msg in messages %}
-              <div class="text-sm rounded-lg px-4 py-3 border flex items-start gap-2
+              <div class="text-sm rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-start gap-2
                           {% if category in ['success', 'ok'] %}
-                            bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800
+                            text-green-700 dark:text-green-400
                           {% elif category in ['warning'] %}
-                            bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800
+                            text-amber-700 dark:text-amber-400
                           {% elif category in ['info'] %}
-                            bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800
+                            text-blue-700 dark:text-blue-400
                           {% else %}
-                            bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800
+                            text-red-700 dark:text-red-400
                           {% endif %}">
                 <i class="fa-solid mt-0.5 flex-shrink-0
                           {% if category in ['success', 'ok'] %}fa-check-circle
@@ -118,29 +118,29 @@
     </div>
   </main>
 
-  <!-- Bottom Navigation - Mobile Only (فقط همکاران) -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-    <div class="grid grid-cols-4 gap-1 px-2 py-2">
+  <!-- Bottom Navigation - Mobile Only (Divar Style) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+    <div class="grid grid-cols-4 gap-0 px-2 py-2">
       <a href="{{ url_for('admin.dashboard') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
-                {% if request.endpoint == 'admin.dashboard' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+                {% if request.endpoint == 'admin.dashboard' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
         <i class="fa-solid fa-gauge-high text-lg"></i>
         <span class="text-xs">داشبورد</span>
       </a>
       <a href="{{ url_for('admin.express_partners') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
-                {% if request.endpoint == 'admin.express_partners' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+                {% if request.endpoint == 'admin.express_partners' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
         <i class="fa-solid fa-users text-lg"></i>
         <span class="text-xs">همکاران</span>
       </a>
       <a href="{{ url_for('admin.express_partner_applications') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
-                {% if request.endpoint == 'admin.express_partner_applications' %}text-violet-600 dark:text-violet-400{% else %}text-gray-500 dark:text-gray-400{% endif %}">
+                {% if request.endpoint == 'admin.express_partner_applications' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
         <i class="fa-solid fa-file-circle-check text-lg"></i>
         <span class="text-xs">درخواست‌ها</span>
       </a>
       <button @click="menuOpen = !menuOpen" 
-              class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-500 dark:text-gray-400">
+              class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-600 dark:text-gray-400">
         <i class="fa-solid fa-bars text-lg"></i>
         <span class="text-xs">منو</span>
       </button>

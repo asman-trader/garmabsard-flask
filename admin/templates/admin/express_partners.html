@@ -5,19 +5,19 @@
 {% block content %}
 <div class="space-y-6">
 
-  <!-- تب‌ها -->
+  <!-- تب‌ها - Divar Style -->
   <div class="flex border-b border-gray-200 dark:border-gray-700">
     <button type="button" onclick="showTab('partners')" id="tab-partners"
-      class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-violet-600 text-violet-600">
+      class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600">
       <i class="fa-solid fa-users ml-1"></i>
       همکاران تأیید شده
-      <span class="mr-1 px-1.5 py-0.5 text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-600 rounded-full">{{ partners|length }}</span>
+      <span class="mr-1 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">{{ partners|length }}</span>
     </button>
     <button type="button" onclick="showTab('applications')" id="tab-applications"
-      class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+      class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
       <i class="fa-solid fa-file-circle-check ml-1"></i>
       درخواست‌ها
-      <span class="mr-1 px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full">{{ applications|length }}</span>
+      <span class="mr-1 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">{{ applications|length }}</span>
     </button>
   </div>
 
@@ -26,12 +26,12 @@
     {% if partners and partners|length > 0 %}
       <div class="grid grid-cols-1 gap-3">
         {% for c in partners %}
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 hover:shadow-md transition">
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-2">
-                  <div class="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fa-solid fa-user text-violet-600 text-lg"></i>
+                  <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-user text-gray-600 dark:text-gray-400 text-lg"></i>
                   </div>
                   <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ c.name or 'بدون نام' }}</h3>
@@ -44,7 +44,7 @@
                     <i class="fa-solid fa-location-dot text-xs"></i>
                     {{ c.city or '—' }}
                   </span>
-                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-xs font-medium">
                     <i class="fa-solid fa-check-circle text-xs"></i>
                     تأیید شده
                   </span>
@@ -66,7 +66,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <i class="fa-solid fa-users text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
         <p class="text-gray-500 dark:text-gray-400">همکار تأیید شده‌ای وجود ندارد.</p>
       </div>
@@ -78,13 +78,10 @@
     {% if applications and applications|length > 0 %}
       <div class="grid grid-cols-1 gap-3">
         {% for a in applications %}
-          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl hover:shadow-md transition" x-data="{ open: false }">
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition" x-data="{ open: false }">
             <button type="button" class="w-full text-right p-4" @click="open = !open">
               <div class="flex items-start gap-3">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center 
-                  {% if a.status == 'approved' %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600
-                  {% elif a.status == 'rejected' %}bg-rose-100 dark:bg-rose-900/30 text-rose-600
-                  {% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-600{% endif %}">
+                <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400">
                   <i class="fa-solid fa-file-circle-check text-xl"></i>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -98,10 +95,7 @@
                   <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <span class="inline-flex items-center gap-1"><i class="fa-solid fa-location-dot text-[10px]"></i>{{ a.city or '—' }}</span>
                     <span class="inline-flex items-center gap-1"><i class="fa-solid fa-briefcase text-[10px]"></i>{{ a.experience or '—' }}</span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px]
-                      {% if a.status == 'approved' %}border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-300
-                      {% elif a.status == 'rejected' %}border-rose-500 text-rose-600 dark:border-rose-400 dark:text-rose-300
-                      {% else %}border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-300{% endif %}">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-[11px]">
                       {% if a.status == 'approved' %}تأیید شده{% elif a.status == 'rejected' %}رد شده{% else %}در انتظار{% endif %}
                     </span>
                     <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-500 text-[11px]">
@@ -136,7 +130,7 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                       @click.prevent="if(confirm('تأیید این درخواست؟')) $el.closest('form').submit()"
-                      class="w-full px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition">
+                      class="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
                       <i class="fa-solid fa-check ml-1"></i>
                       تأیید
                     </button>
@@ -148,7 +142,7 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                       @click.prevent="if(confirm('رد این درخواست؟')) $el.closest('form').submit()"
-                      class="w-full px-3 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold hover:bg-amber-200 transition">
+                      class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:border-gray-400 dark:hover:border-gray-500 transition">
                       <i class="fa-solid fa-times ml-1"></i>
                       رد
                     </button>
@@ -159,7 +153,7 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit"
                     @click.prevent="if(confirm('این درخواست حذف شود؟')) $el.closest('form').submit()"
-                    class="w-full px-3 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 transition">
+                    class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-sm font-medium hover:border-red-400 dark:hover:border-red-600 transition">
                     <i class="fa-solid fa-trash ml-1"></i>
                     حذف
                   </button>
@@ -170,7 +164,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-8 text-center">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <i class="fa-solid fa-file-circle-check text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
         <p class="text-gray-500 dark:text-gray-400">درخواستی وجود ندارد.</p>
       </div>
@@ -193,8 +187,8 @@ function showTab(tab) {
   document.getElementById('section-' + tab).classList.remove('hidden');
   // فعال کردن تب
   const activeTab = document.getElementById('tab-' + tab);
-  activeTab.classList.remove('border-transparent', 'text-gray-500');
-  activeTab.classList.add('border-violet-600', 'text-violet-600');
+  activeTab.classList.remove('border-transparent', 'text-gray-500', 'text-gray-400');
+  activeTab.classList.add('border-blue-600', 'text-blue-600');
 }
 
 (function(){
