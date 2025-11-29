@@ -815,9 +815,8 @@ def notifications_colleagues():
             # ثبت اعلان در in-app notifications برای همکاران
             for partner in approved_partners:
                 try:
-                    # استفاده از شماره تلفن normalize شده به عنوان user_id
-                    # مطمئن می‌شویم که شماره تلفن normalize شده است
-                    phone_normalized = _normalize_phone(partner['phone'])
+                    # partner['phone'] قبلاً normalize شده است
+                    phone_normalized = partner['phone']
                     if phone_normalized and len(phone_normalized) == 11:
                         # Log برای debug
                         current_app.logger.info(f"Sending notification to partner: {partner['name']} ({phone_normalized})")
@@ -832,10 +831,10 @@ def notifications_colleagues():
                         current_app.logger.info(f"Notification sent successfully to {phone_normalized}")
                     else:
                         failed += 1
-                        current_app.logger.warning(f"Invalid phone number format: {partner['phone']} -> normalized: {phone_normalized}")
+                        current_app.logger.warning(f"Invalid phone number format: {partner.get('phone', 'unknown')} (length: {len(phone_normalized) if phone_normalized else 0})")
                 except Exception as e:
                     failed += 1
-                    current_app.logger.error(f"Failed to send notification to {partner.get('phone', 'unknown')}: {e}", exc_info=True)
+                    current_app.logger.error(f"Failed to send notification to {partner.get('name', 'unknown')} ({partner.get('phone', 'unknown')}): {e}", exc_info=True)
 
             # تلاش برای ارسال Web Push با صدا (در کلاینت)
             # توجه: چون push subscriptions با user_id مرتبط نیستند، 

@@ -266,6 +266,20 @@ def mark_read(user_id: str, notif_id: str) -> bool:
     data = _load_all()
     items = data.get(normalized_user_id, [])
     
+    # اگر با کلید normalize شده پیدا نشد، بررسی همه کلیدها
+    if not isinstance(items, list) or not items:
+        for key in data.keys():
+            normalized_key = _normalize_user_id(key)
+            if normalized_key == normalized_user_id:
+                items = data.get(key, [])
+                if isinstance(items, list) and items:
+                    # به‌روزرسانی data با کلید normalize شده
+                    data[normalized_user_id] = items
+                    if key != normalized_user_id:
+                        # حذف کلید قدیمی
+                        data.pop(key, None)
+                    break
+    
     if not isinstance(items, list):
         return False
     
@@ -277,6 +291,8 @@ def mark_read(user_id: str, notif_id: str) -> bool:
             break
     
     if found:
+        # اطمینان از اینکه items در data با کلید normalize شده ذخیره شده است
+        data[normalized_user_id] = items
         _save_all(data)
         try:
             current_app.logger.info(f"Notification marked as read: user_id={normalized_user_id}, notif_id={notif_id}")
@@ -298,6 +314,20 @@ def mark_all_read(user_id: str) -> int:
     data = _load_all()
     items = data.get(normalized_user_id, [])
     
+    # اگر با کلید normalize شده پیدا نشد، بررسی همه کلیدها
+    if not isinstance(items, list) or not items:
+        for key in data.keys():
+            normalized_key = _normalize_user_id(key)
+            if normalized_key == normalized_user_id:
+                items = data.get(key, [])
+                if isinstance(items, list) and items:
+                    # به‌روزرسانی data با کلید normalize شده
+                    data[normalized_user_id] = items
+                    if key != normalized_user_id:
+                        # حذف کلید قدیمی
+                        data.pop(key, None)
+                    break
+    
     if not isinstance(items, list):
         return 0
     
@@ -308,6 +338,8 @@ def mark_all_read(user_id: str) -> int:
             count += 1
     
     if count > 0:
+        # اطمینان از اینکه items در data با کلید normalize شده ذخیره شده است
+        data[normalized_user_id] = items
         _save_all(data)
         try:
             current_app.logger.info(f"Marked {count} notifications as read for user_id={normalized_user_id}")

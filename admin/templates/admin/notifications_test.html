@@ -1,84 +1,104 @@
 {% extends 'admin/base_admin.html' %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-3 py-4">
-  <h1 class="text-xl font-bold mb-4">تست سیستم اعلان‌ها</h1>
+<div class="max-w-4xl mx-auto px-4 py-4">
+  <h1 class="text-lg font-bold mb-4">تست سیستم اعلان‌ها</h1>
 
   {% if message %}
-    <div class="mb-3 p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">{{ message }}</div>
+    <div class="mb-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">{{ message }}</div>
   {% endif %}
   {% if error %}
-    <div class="mb-3 p-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">{{ error }}</div>
+    <div class="mb-3 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800">{{ error }}</div>
   {% endif %}
 
+  <!-- آمار کلی - سبک دیوار -->
   {% if stats %}
-  <div class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-    <h2 class="font-bold mb-2">آمار کلی</h2>
+  <div class="mb-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <h2 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">آمار کلی</h2>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div>
-        <div class="text-sm text-gray-600 dark:text-gray-400">تعداد کاربران</div>
-        <div class="text-2xl font-bold">{{ stats.total_users or 0 }}</div>
+      <div class="border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 pb-3 sm:pb-0 sm:pr-3">
+        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">تعداد کاربران</div>
+        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ stats.total_users or 0 }}</div>
+      </div>
+      <div class="border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 pb-3 sm:pb-0 sm:pr-3">
+        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">کل اعلان‌ها</div>
+        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ stats.total_notifications or 0 }}</div>
       </div>
       <div>
-        <div class="text-sm text-gray-600 dark:text-gray-400">کل اعلان‌ها</div>
-        <div class="text-2xl font-bold">{{ stats.total_notifications or 0 }}</div>
-      </div>
-      <div>
-        <div class="text-sm text-gray-600 dark:text-gray-400">اعلان‌های خوانده نشده</div>
-        <div class="text-2xl font-bold">{{ stats.total_unread or 0 }}</div>
+        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">اعلان‌های خوانده نشده</div>
+        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ stats.total_unread or 0 }}</div>
       </div>
     </div>
   </div>
   {% endif %}
 
-  <form method="post" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4 mb-4">
+  <!-- فرم تست - سبک دیوار -->
+  <form method="post" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 mb-4">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
-      <label class="block text-sm mb-1">شماره تلفن تست</label>
-      <input type="text" name="test_phone" class="w-full rounded-lg border dark:border-gray-700 dark:bg-gray-800 px-3 py-2" 
+      <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1">شماره تلفن تست</label>
+      <input type="text" name="test_phone" class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600" 
              placeholder="09123456789" required>
-      <p class="text-xs text-gray-500 mt-1">شماره تلفنی که می‌خواهید برای آن اعلان تست ارسال شود</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">شماره تلفنی که می‌خواهید برای آن اعلان تست ارسال شود</p>
     </div>
     <div>
-      <button class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">اجرای تست</button>
+      <button type="submit" class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-medium hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+        اجرای تست
+      </button>
     </div>
   </form>
 
+  <!-- نتیجه تست - سبک دیوار -->
   {% if test_result %}
-  <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-    <h2 class="font-bold mb-3">نتیجه تست</h2>
-    <div class="space-y-3 text-sm">
-      <div>
-        <span class="font-semibold">شماره خام:</span> {{ test_result.phone_raw }}
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <h2 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">نتیجه تست</h2>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+        <span class="text-sm text-gray-600 dark:text-gray-400">شماره خام</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ test_result.phone_raw }}</span>
       </div>
-      <div>
-        <span class="font-semibold">شماره normalize شده:</span> {{ test_result.phone_normalized }}
+      <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+        <span class="text-sm text-gray-600 dark:text-gray-400">شماره normalize شده</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-white font-mono">{{ test_result.phone_normalized }}</span>
       </div>
-      <div>
-        <span class="font-semibold">شناسه اعلان اضافه شده:</span> {{ test_result.notification_added or 'نامشخص' }}
+      <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+        <span class="text-sm text-gray-600 dark:text-gray-400">شناسه اعلان اضافه شده</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-white font-mono text-xs">{{ test_result.notification_added or 'نامشخص' }}</span>
       </div>
-      <div>
-        <span class="font-semibold">تعداد اعلان‌های پیدا شده:</span> {{ test_result.notifications_found }}
+      <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+        <span class="text-sm text-gray-600 dark:text-gray-400">تعداد اعلان‌های پیدا شده</span>
+        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ test_result.notifications_found }}</span>
       </div>
       
       {% if test_result.all_keys_in_storage %}
-      <div>
-        <span class="font-semibold">کلیدهای موجود در storage:</span>
-        <div class="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
-          {{ test_result.all_keys_in_storage|join(', ') }}
+      <div class="pt-2">
+        <span class="text-sm font-medium text-gray-900 dark:text-white block mb-2">کلیدهای موجود در storage</span>
+        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div class="text-xs font-mono text-gray-700 dark:text-gray-300 break-all">
+            {{ test_result.all_keys_in_storage|join(', ') }}
+          </div>
         </div>
       </div>
       {% endif %}
 
       {% if test_result.notifications_list %}
-      <div>
-        <span class="font-semibold">اعلان‌های پیدا شده:</span>
-        <div class="mt-2 space-y-2">
+      <div class="pt-2">
+        <span class="text-sm font-medium text-gray-900 dark:text-white block mb-2">اعلان‌های پیدا شده</span>
+        <div class="space-y-2">
           {% for notif in test_result.notifications_list %}
-          <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs">
-            <div><strong>عنوان:</strong> {{ notif.title }}</div>
-            <div><strong>متن:</strong> {{ notif.body }}</div>
-            <div><strong>خوانده شده:</strong> {{ 'بله' if notif.is_read else 'خیر' }}</div>
-            <div><strong>زمان:</strong> {{ notif.created_at }}</div>
+          <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-400">عنوان:</span>
+                <span class="font-medium text-gray-900 dark:text-white">{{ notif.title }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-400">خوانده شده:</span>
+                <span class="font-medium {{ 'text-green-600 dark:text-green-400' if notif.is_read else 'text-red-600 dark:text-red-400' }}">
+                  {{ 'بله' if notif.is_read else 'خیر' }}
+                </span>
+              </div>
+              <div class="text-gray-700 dark:text-gray-300 mt-2">{{ notif.body }}</div>
+            </div>
           </div>
           {% endfor %}
         </div>

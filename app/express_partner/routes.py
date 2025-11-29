@@ -1132,16 +1132,18 @@ def mark_notification_read(notif_id: str):
 @require_partner_access(json_response=True, allow_pending=True)
 def mark_all_notifications_read():
     """Mark all notifications as read"""
-    from app.services.notifications import mark_all_read, _normalize_user_id
+    from app.services.notifications import mark_all_read, unread_count, _normalize_user_id
     
     me_phone_raw = (session.get("user_phone") or "").strip()
     # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
     me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     count = mark_all_read(me_phone)
+    # دریافت unread_count بعد از mark_all_read
+    remaining_unread = unread_count(me_phone)
     return jsonify({
         "success": True,
         "marked_count": count,
-        "unread_count": 0
+        "unread_count": remaining_unread
     })
 
 
