@@ -3,14 +3,14 @@
 {% block content %}
 <div class="max-w-5xl mx-auto pt-0 px-3 sm:px-4 pb-20" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
 
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
-    <div class="max-w-5xl mx-auto h-14 flex items-center justify-between">
-      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
-        <i class="fas fa-arrow-right"></i>
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">اعلان‌های من</h1>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">اعلان‌های من</h1>
       <button type="button"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-violet-600 dark:text-violet-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
               :disabled="loading || unreadCount === 0"
               @click="markAll()">
         همه را خوانده‌شده
