@@ -1,7 +1,7 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}آموزش - وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto pt-0 px-3 sm:px-4 pb-20">
+<div class="max-w-4xl mx-auto pt-0 px-3 sm:px-4 pb-16">
   
   <!-- Minimal sticky header -->
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 -mx-3 px-3 sm:-mx-4 sm:px-4">
@@ -9,141 +9,174 @@
       <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
         <i class="fas fa-arrow-right"></i>
       </a>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">آموزش</h1>
+      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">آموزش و دستورالعمل‌ها</h1>
       <div class="w-9"></div>
     </div>
   </header>
 
   <!-- Main Content -->
-  <div class="mt-6 space-y-6">
+  <div class="mt-4 space-y-4">
     
-    <!-- Video Section -->
-    {% if training_video_url %}
-    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div class="aspect-video bg-black">
-        {% if 'youtube.com' in training_video_url or 'youtu.be' in training_video_url %}
-          {# YouTube Embed #}
-          {% if '/embed/' in training_video_url %}
-            {# Already an embed URL #}
-            <iframe src="{{ training_video_url }}" 
-                    class="w-full h-full" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
-          {% elif 'youtu.be/' in training_video_url %}
-            {# Short URL format: youtu.be/VIDEO_ID #}
-            {% set video_id = training_video_url.split('youtu.be/')[-1].split('?')[0] %}
-            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
-                    class="w-full h-full" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
-          {% elif 'watch?v=' in training_video_url %}
-            {# Standard URL format: youtube.com/watch?v=VIDEO_ID #}
-            {% set video_id = training_video_url.split('watch?v=')[-1].split('&')[0] %}
-            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
-                    class="w-full h-full" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
-          {% else %}
-            {# Fallback: try to extract from URL #}
-            {% set video_id = training_video_url.split('/')[-1].split('?')[0] %}
-            <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
-                    class="w-full h-full" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
-          {% endif %}
-        {% else %}
-          {# Direct Video File #}
-          <video class="w-full h-full" controls>
-            <source src="{{ training_video_url }}" type="video/mp4">
-            مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
-          </video>
-        {% endif %}
-      </div>
-    </div>
-    {% else %}
-    <!-- Placeholder when no video URL is set -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div class="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
-        <div class="text-center space-y-3">
-          <div class="w-20 h-20 mx-auto rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
-            <i class="fas fa-video text-blue-600 dark:text-blue-400 text-3xl"></i>
-          </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">ویدئو آموزش به زودی اضافه می‌شود</p>
+    <!-- Introduction Card - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+          <i class="fas fa-graduation-cap text-white text-lg"></i>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-1">راهنمای کامل همکاری</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            در این بخش مراحل کامل همکاری با وینور اکسپرس را به صورت گام به گام یاد خواهید گرفت.
+          </p>
         </div>
       </div>
     </div>
-    {% endif %}
 
-    <!-- Introduction -->
-    <div class="text-center space-y-2">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">راهنمای همکاری</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400">آموزش‌های ضروری برای همکاران اکسپرس</p>
-    </div>
-
-    <!-- Training Sections -->
-    <div class="space-y-4">
+    <!-- مراحل کامل - سبک دیوار -->
+    <div class="space-y-3">
       
-      <!-- Section 1 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <i class="fas fa-file-alt text-blue-600 dark:text-blue-400"></i>
-          معرفی فایل‌ها به مشتریان
-        </h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          فایل‌های اختصاص یافته را با دقت بررسی کنید و اطلاعات کامل را به مشتریان ارائه دهید. از لینک اشتراک‌گذاری برای ارسال مستقیم استفاده کنید.
-        </p>
+      <!-- مرحله 1 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">1</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">دریافت و بررسی فایل‌ها</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• فایل‌های اختصاص یافته به شما در صفحه اصلی (داشبورد) نمایش داده می‌شوند.</p>
+                <p>• هر فایل شامل اطلاعات کامل ملک، قیمت، موقعیت و جزئیات مهم است.</p>
+                <p>• قبل از معرفی به مشتری، تمام اطلاعات فایل را با دقت بررسی کنید.</p>
+                <p>• تصاویر، متراژ، قیمت و موقعیت را چک کنید تا اطلاعات دقیق باشند.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Section 2 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <i class="fas fa-calculator text-blue-600 dark:text-blue-400"></i>
-          محاسبه پورسانت
-        </h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          پورسانت شما بر اساس درصد تعیین شده از قیمت کل معامله محاسبه می‌شود. درصد پورسانت در کارت هر فایل نمایش داده می‌شود.
-        </p>
+      <!-- مرحله 2 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">2</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">معرفی فایل به مشتری</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• برای اشتراک‌گذاری فایل، روی دکمه "اشتراک" در صفحه جزئیات کلیک کنید.</p>
+                <p>• لینک فایل را می‌توانید از طریق واتساپ، تلگرام یا هر روش دیگری برای مشتری ارسال کنید.</p>
+                <p>• اطلاعات فایل را به صورت کامل و دقیق برای مشتری توضیح دهید.</p>
+                <p>• در صورت نیاز، می‌توانید از دکمه "کپی لینک" برای کپی سریع لینک استفاده کنید.</p>
+                <p>• برای تماس مستقیم با مالک یا وینور، از دکمه "تماس" استفاده کنید.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Section 3 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <i class="fas fa-handshake text-blue-600 dark:text-blue-400"></i>
-          ثبت معامله
-        </h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          پس از توافق با مشتری، وضعیت فایل را به «در حال معامله» تغییر دهید. پس از تکمیل معامله، اطلاعات را در بخش کمیسیون‌ها ثبت کنید.
-        </p>
+      <!-- مرحله 3 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">3</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">ثبت وضعیت معامله</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• پس از توافق اولیه با مشتری، وارد صفحه جزئیات فایل شوید.</p>
+                <p>• روی دکمه "معامله" کلیک کنید تا وضعیت فایل به "در حال معامله" تغییر کند.</p>
+                <p>• این کار به سایر همکاران نشان می‌دهد که این فایل در حال معامله است.</p>
+                <p>• در صورت لغو معامله، می‌توانید از دکمه "رفع معامله" استفاده کنید.</p>
+                <p>• وضعیت معامله در صفحه اصلی نیز نمایش داده می‌شود.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Section 4 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <i class="fas fa-gavel text-blue-600 dark:text-blue-400"></i>
-          قوانین و مقررات
-        </h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          رعایت اصول اخلاقی و قوانین معاملات ملکی الزامی است. اطلاعات ارائه شده باید دقیق و به‌روز باشد.
-        </p>
+      <!-- مرحله 4 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">4</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">محاسبه پورسانت</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• درصد پورسانت شما برای هر فایل در کارت فایل نمایش داده می‌شود.</p>
+                <p>• مبلغ پورسانت به صورت خودکار بر اساس قیمت کل و درصد محاسبه می‌شود.</p>
+                <p>• فرمول محاسبه: (قیمت کل × درصد پورسانت) ÷ 100 = مبلغ پورسانت</p>
+                <p>• مبلغ پورسانت در کارت هر فایل به صورت جداگانه نمایش داده می‌شود.</p>
+                <p>• می‌توانید تمام پورسانت‌های خود را در بخش "پورسانت" مشاهده کنید.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- مرحله 5 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">5</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">تکمیل معامله و دریافت پورسانت</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• پس از تکمیل معامله و دریافت وجه از مشتری، معامله به صورت خودکار به "فروخته شد" تغییر می‌کند.</p>
+                <p>• پورسانت شما پس از تایید معامله توسط ادمین، در بخش "پورسانت" ثبت می‌شود.</p>
+                <p>• وضعیت پورسانت‌ها شامل: در انتظار، تایید شده و پرداخت شده است.</p>
+                <p>• می‌توانید تاریخچه تمام پورسانت‌های خود را در بخش "پورسانت" مشاهده کنید.</p>
+                <p>• در صورت نیاز به اطلاعات بیشتر، با پشتیبانی تماس بگیرید.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- مرحله 6 -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <span class="text-white text-sm font-bold">6</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">قوانین و نکات مهم</h3>
+              <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>• اطلاعات ارائه شده به مشتری باید دقیق و به‌روز باشد.</p>
+                <p>• رعایت اصول اخلاقی و قوانین معاملات ملکی الزامی است.</p>
+                <p>• در صورت بروز هرگونه مشکل یا سوال، با پشتیبانی تماس بگیرید.</p>
+                <p>• از ارسال اطلاعات نادرست یا گمراه‌کننده به مشتری خودداری کنید.</p>
+                <p>• اعلان‌های سیستم را به صورت منظم بررسی کنید تا از آخرین تغییرات مطلع شوید.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
 
-    <!-- Support Link -->
-    <div class="pt-4">
+    <!-- Support Link - سبک دیوار -->
+    <div class="pt-2">
       <a href="{{ url_for('express_partner.support') }}" 
-         class="block bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-500 transition-colors">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-headset text-blue-600 dark:text-blue-400 text-xl"></i>
-          <div class="text-right flex-1">
-            <p class="font-semibold text-gray-900 dark:text-white">نیاز به کمک دارید؟</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">تماس با پشتیبانی</p>
+         class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 dark:hover:border-blue-600 transition-colors">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <i class="fas fa-headset text-blue-600 dark:text-blue-400 text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">نیاز به کمک دارید؟</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">تماس با پشتیبانی</p>
+            </div>
           </div>
-          <i class="fas fa-arrow-left text-gray-400"></i>
+          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm flex-shrink-0"></i>
         </div>
       </a>
     </div>
@@ -155,4 +188,3 @@
 
 </div>
 {% endblock %}
-
