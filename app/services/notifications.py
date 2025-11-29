@@ -74,12 +74,34 @@ def _load_all() -> Dict[str, List[Dict[str, Any]]]:
     
     # تبدیل به ساختار استاندارد
     if isinstance(raw, dict):
-        # Normalize کردن کلیدها
+        # Normalize کردن کلیدها و merge کردن کلیدهای تکراری
         normalized_data = {}
+        needs_save = False
         for key, value in raw.items():
             normalized_key = _normalize_user_id(key)
             if normalized_key and isinstance(value, list):
-                normalized_data[normalized_key] = [n for n in value if isinstance(n, dict)]
+                # اگر کلید normalize شده از قبل وجود دارد، merge کن
+                if normalized_key in normalized_data:
+                    # merge کردن لیست‌ها (حذف تکراری‌ها بر اساس id)
+                    existing_ids = {n.get('id') for n in normalized_data[normalized_key] if n.get('id')}
+                    new_items = [n for n in value if isinstance(n, dict) and n.get('id') not in existing_ids]
+                    normalized_data[normalized_key].extend(new_items)
+                    # sort بر اساس created_at (جدیدترین اول)
+                    normalized_data[normalized_key].sort(key=lambda x: x.get('created_at', 0), reverse=True)
+                    needs_save = True  # اگر merge انجام شد، باید ذخیره شود
+                else:
+                    normalized_data[normalized_key] = [n for n in value if isinstance(n, dict)]
+                    # اگر کلید normalize شده با کلید اصلی متفاوت است، باید ذخیره شود
+                    if normalized_key != key:
+                        needs_save = True
+        
+        # اگر تغییراتی انجام شد، ذخیره کن
+        if needs_save:
+            try:
+                _save_all(normalized_data)
+            except Exception:
+                pass
+        
         return normalized_data
     
     # حالت قدیمی: لیست تخت
@@ -92,7 +114,15 @@ def _load_all() -> Dict[str, List[Dict[str, Any]]]:
             if uid:
                 normalized_uid = _normalize_user_id(uid)
                 if normalized_uid:
-                    grouped.setdefault(normalized_uid, []).append(n)
+                    if normalized_uid not in grouped:
+                        grouped[normalized_uid] = []
+                    grouped[normalized_uid].append(n)
+        # ذخیره به فرمت جدید
+        if grouped:
+            try:
+                _save_all(grouped)
+            except Exception:
+                pass
         return grouped
     
     return {}
@@ -103,12 +133,21 @@ def _save_all(data: Dict[str, List[Dict[str, Any]]]) -> bool:
     file_path = _get_notifications_file_path()
     
     try:
-        # Normalize کردن همه کلیدها قبل از ذخیره
+        # Normalize کردن همه کلیدها و merge کردن کلیدهای تکراری
         normalized_data = {}
         for key, value in data.items():
             normalized_key = _normalize_user_id(key)
             if normalized_key and isinstance(value, list):
-                normalized_data[normalized_key] = value
+                # اگر کلید normalize شده از قبل وجود دارد، merge کن
+                if normalized_key in normalized_data:
+                    # merge کردن لیست‌ها (حذف تکراری‌ها بر اساس id)
+                    existing_ids = {n.get('id') for n in normalized_data[normalized_key] if n.get('id')}
+                    new_items = [n for n in value if isinstance(n, dict) and n.get('id') not in existing_ids]
+                    normalized_data[normalized_key].extend(new_items)
+                    # sort بر اساس created_at (جدیدترین اول)
+                    normalized_data[normalized_key].sort(key=lambda x: x.get('created_at', 0), reverse=True)
+                else:
+                    normalized_data[normalized_key] = [n for n in value if isinstance(n, dict)]
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(normalized_data, f, ensure_ascii=False, indent=2)
@@ -215,7 +254,7 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
     if not isinstance(items, list):
         items = []
     
-    # اگر اعلانی پیدا نشد، بررسی همه کلیدها برای تطابق احتمالی
+    # اگر اعلانی پیدا نشد، بررسی همه کلیدها برای تطابق احتمالی و merge
     if not items:
         try:
             current_app.logger.info(f"No direct match for '{normalized_user_id}', searching variants...")
@@ -223,17 +262,42 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
             pass
         
         # بررسی همه کلیدها - normalize کردن هر کلید و مقایسه
+        found_items_list = []
+        keys_to_remove = []
         for key in data.keys():
             normalized_key = _normalize_user_id(key)
             if normalized_key == normalized_user_id:
                 found_items = data.get(key, [])
-                if found_items:
-                    items = found_items
-                    try:
-                        current_app.logger.info(f"Found notifications with variant key '{key}' (normalizes to '{normalized_key}')")
-                    except Exception:
-                        pass
-                    break
+                if found_items and isinstance(found_items, list):
+                    found_items_list.extend(found_items)
+                    # علامت‌گذاری کلید قدیمی برای حذف
+                    if key != normalized_user_id:
+                        keys_to_remove.append(key)
+        
+        if found_items_list:
+            # حذف تکراری‌ها بر اساس id
+            seen_ids = set()
+            unique_items = []
+            for item in found_items_list:
+                item_id = item.get('id')
+                if item_id and item_id not in seen_ids:
+                    seen_ids.add(item_id)
+                    unique_items.append(item)
+            
+            # sort بر اساس created_at (جدیدترین اول)
+            unique_items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
+            items = unique_items
+            
+            # ذخیره با کلید normalize شده و حذف کلیدهای قدیمی
+            if items:
+                data[normalized_user_id] = items
+                for old_key in keys_to_remove:
+                    data.pop(old_key, None)
+                _save_all(data)
+                try:
+                    current_app.logger.info(f"Merged {len(items)} notifications from {len(keys_to_remove)} variant keys into '{normalized_user_id}'")
+                except Exception:
+                    pass
     
     # Logging
     try:
@@ -364,4 +428,69 @@ def get_all_notifications_stats() -> Dict[str, Any]:
         "total_users": total_users,
         "total_notifications": total_notifications,
         "total_unread": total_unread
+    }
+
+
+def merge_duplicate_keys() -> Dict[str, Any]:
+    """
+    Merge کردن کلیدهای تکراری (که normalize می‌شوند به یک کلید)
+    این تابع باید بعد از تغییرات در normalize کردن اجرا شود
+    """
+    data = _load_all()
+    
+    # گروه‌بندی کلیدها بر اساس normalize شده
+    normalized_groups = {}
+    for key in data.keys():
+        normalized_key = _normalize_user_id(key)
+        if normalized_key:
+            if normalized_key not in normalized_groups:
+                normalized_groups[normalized_key] = []
+            normalized_groups[normalized_key].append(key)
+    
+    # merge کردن کلیدهای تکراری
+    merged_data = {}
+    merged_count = 0
+    removed_keys = []
+    
+    for normalized_key, original_keys in normalized_groups.items():
+        if len(original_keys) > 1:
+            # چند کلید با normalize یکسان - merge کن
+            all_items = []
+            for orig_key in original_keys:
+                items = data.get(orig_key, [])
+                if items:
+                    all_items.extend(items)
+            
+            # حذف تکراری‌ها بر اساس id
+            seen_ids = set()
+            unique_items = []
+            for item in all_items:
+                item_id = item.get('id')
+                if item_id and item_id not in seen_ids:
+                    seen_ids.add(item_id)
+                    unique_items.append(item)
+            
+            # sort بر اساس created_at
+            unique_items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
+            
+            merged_data[normalized_key] = unique_items
+            removed_keys.extend([k for k in original_keys if k != normalized_key])
+            merged_count += len(original_keys) - 1
+        else:
+            # فقط یک کلید - بدون تغییر
+            merged_data[normalized_key] = data.get(original_keys[0], [])
+    
+    # ذخیره داده‌های merge شده
+    if merged_count > 0:
+        _save_all(merged_data)
+        try:
+            current_app.logger.info(f"Merged {merged_count} duplicate keys. Removed {len(removed_keys)} keys: {removed_keys}")
+        except Exception:
+            pass
+    
+    return {
+        "merged_count": merged_count,
+        "removed_keys": removed_keys,
+        "total_users_before": len(data),
+        "total_users_after": len(merged_data)
     }

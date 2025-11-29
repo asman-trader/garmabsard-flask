@@ -31,6 +31,9 @@ def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
 
 def _normalize_phone(phone: str) -> str:
+    """Normalize phone number - استفاده از همان تابع notifications"""
+    from app.services.notifications import _normalize_user_id
+    return _normalize_user_id(phone)
     p = (phone or "").strip()
     p = re.sub(r"\D+", "", p)
     if p.startswith("0098"): p = "0" + p[4:]
@@ -1154,12 +1157,15 @@ def mark_all_notifications_read():
 @require_partner_access(json_response=True, allow_pending=True)
 def notifications_debug():
     """Debug endpoint برای بررسی مشکل اعلان‌ها"""
-    from app.services.notifications import _load_all, _normalize_user_id, get_user_notifications
+    from app.services.notifications import _load_all, _normalize_user_id, get_user_notifications, merge_duplicate_keys
     
     me_phone_raw = (session.get("user_phone") or "").strip()
     me_phone_normalized = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
     
-    # بارگذاری همه داده‌ها
+    # اجرای merge خودکار کلیدهای تکراری
+    merge_result = merge_duplicate_keys()
+    
+    # بارگذاری همه داده‌ها (بعد از merge)
     all_data = _load_all()
     all_keys = list(all_data.keys())
     
@@ -1178,6 +1184,7 @@ def notifications_debug():
     
     return jsonify({
         "success": True,
+        "merge_result": merge_result,
         "debug_info": {
             "session_phone_raw": me_phone_raw,
             "session_phone_normalized": me_phone_normalized,
