@@ -11,7 +11,10 @@
               aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
+      <div class="flex items-center gap-2">
+        <h1 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
+        <div class="header-loading-spinner"></div>
+      </div>
       {% if land.code %}
       <span class="text-xs font-mono text-gray-500 dark:text-gray-400">#{{ land.code }}</span>
       {% else %}

@@ -74,6 +74,28 @@
   </style>
 
   {% block head %}{% endblock %}
+  <style>
+    /* Spinner برای لودینگ صفحات در هدر */
+    .header-loading-spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .dark .header-loading-spinner {
+      border-color: #374151;
+      border-top-color: #3b82f6;
+    }
+    .header-loading-spinner.active {
+      display: inline-block;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
 
@@ -650,6 +672,60 @@
   
   <!-- Onboarding Tour System -->
   <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+  
+  <!-- Page Loading Spinner Script -->
+  <script>
+    (function() {
+      // پیدا کردن spinner در هدر
+      function findHeaderSpinner() {
+        const headers = document.querySelectorAll('header');
+        for (const header of headers) {
+          const spinner = header.querySelector('.header-loading-spinner');
+          if (spinner) return spinner;
+        }
+        return null;
+      }
+      
+      // ایجاد spinner در هدر اگر وجود نداشته باشد
+      function ensureHeaderSpinner() {
+        const headers = document.querySelectorAll('header');
+        for (const header of headers) {
+          const title = header.querySelector('h1, span[class*="font-bold"]');
+          if (title && !header.querySelector('.header-loading-spinner')) {
+            const spinner = document.createElement('div');
+            spinner.className = 'header-loading-spinner ml-2';
+            title.parentNode.insertBefore(spinner, title.nextSibling);
+          }
+        }
+      }
+      
+      // نمایش spinner هنگام کلیک روی لینک‌ها
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href]');
+        if (link && link.href && !link.href.startsWith('#') && !link.href.startsWith('javascript:')) {
+          const url = new URL(link.href, window.location.href);
+          // فقط برای لینک‌های داخلی
+          if (url.origin === window.location.origin && url.pathname.startsWith('/express/partner/')) {
+            ensureHeaderSpinner();
+            const spinner = findHeaderSpinner();
+            if (spinner) spinner.classList.add('active');
+          }
+        }
+      });
+      
+      // مخفی کردن spinner هنگام لود کامل صفحه
+      window.addEventListener('load', function() {
+        const spinner = findHeaderSpinner();
+        if (spinner) spinner.classList.remove('active');
+      });
+      
+      // مخفی کردن spinner هنگام تغییر صفحه
+      document.addEventListener('DOMContentLoaded', function() {
+        const spinner = findHeaderSpinner();
+        if (spinner) spinner.classList.remove('active');
+      });
+    })();
+  </script>
 </body>
 </html>
 

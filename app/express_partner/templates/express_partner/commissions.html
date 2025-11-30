@@ -9,7 +9,10 @@
       <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
+      <div class="flex items-center gap-2">
+        <h1 class="text-sm font-bold text-gray-900 dark:text-white">پورسانت‌های من</h1>
+        <div class="header-loading-spinner"></div>
+      </div>
       <div class="w-9"></div>
     </div>
   </header>
