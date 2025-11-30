@@ -1,16 +1,25 @@
 {% extends 'admin/base_admin.html' %}
 
+{% block head %}
+  {{ super() }}
+  <style>
+    /* مخفی کردن فوتر اصلی در صفحه لیست آگهی‌ها */
+    nav[class*="fixed bottom-0"][class*="grid grid-cols-4"] {
+      display: none !important;
+    }
+    /* حذف spacer فوتر اصلی */
+    div[class*="lg:hidden h-16"]:not([class*="h-20"]) {
+      display: none !important;
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
 
   <!-- هدر صفحه - سبک دیوار -->
-  <div class="flex items-center justify-between">
+  <div>
     <h1 class="text-lg font-semibold text-gray-900 dark:text-white">آگهی‌های اکسپرس</h1>
-    <a href="{{ url_for('admin.add_express_listing') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition focusable">
-      <i class="fa-solid fa-plus text-sm"></i>
-      افزودن آگهی اکسپرس
-    </a>
   </div>
 
   {% if lands and lands|length > 0 %}
@@ -243,6 +252,21 @@
   {% endif %}
 
 </div>
+
+{% block bottom_footer %}
+<!-- فوتر ثبت آگهی - سبک دیوار -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+  <div class="px-4 py-3 max-w-7xl mx-auto">
+    <a href="{{ url_for('admin.add_express_listing') }}"
+       class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-3 rounded-lg transition focusable">
+      <i class="fa-solid fa-plus text-base"></i>
+      ثبت آگهی جدید
+    </a>
+  </div>
+</nav>
+<!-- Spacer for bottom footer -->
+<div class="h-20"></div>
+{% endblock %}
 
 <script>
 (function(){
