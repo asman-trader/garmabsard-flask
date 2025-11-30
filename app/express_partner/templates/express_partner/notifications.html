@@ -8,10 +8,7 @@
       <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <div class="flex items-center gap-2">
-        <h1 class="text-sm font-bold text-gray-900 dark:text-white">اعلان‌های من</h1>
-        <div class="header-loading-spinner"></div>
-      </div>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">اعلان‌های من</h1>
       <button type="button"
               class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
               :disabled="loading || unreadCount === 0"
