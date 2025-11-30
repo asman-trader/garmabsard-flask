@@ -11,6 +11,22 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>
+  <style>
+    /* مخفی کردن هدر و فوتر در صفحه ثبت آگهی */
+    header,
+    nav[class*="fixed bottom-0"],
+    aside[class*="fixed"],
+    div[class*="lg:hidden h-16"] {
+      display: none !important;
+    }
+    /* تنظیم padding برای main content */
+    main {
+      padding-top: 0 !important;
+    }
+    main > div {
+      padding-top: 1rem !important;
+    }
+  </style>
 {% endblock %}
 
 {% block title %}افزودن آگهی اکسپرس{% endblock %}
