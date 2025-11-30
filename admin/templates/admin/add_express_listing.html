@@ -19,27 +19,27 @@
 {% block content %}
 <div class="space-y-4">
   
-  <!-- Stepper ساده -->
-  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+  <!-- Stepper ساده - سبک دیوار -->
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
     <div class="flex items-center justify-between text-xs">
       <div class="flex items-center gap-2">
-        <span id="step1-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-violet-600 text-white text-xs font-medium">1</span>
-        <span class="hidden sm:inline">اطلاعات</span>
+        <span id="step1-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-blue-600 text-white text-xs font-medium">1</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">اطلاعات</span>
       </div>
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step2-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">2</span>
-        <span class="hidden sm:inline">تصاویر</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">تصاویر</span>
       </div>
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step3-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">3</span>
-        <span class="hidden sm:inline">مدارک</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">مدارک</span>
       </div>
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step4-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">4</span>
-        <span class="hidden sm:inline">بررسی</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">بررسی</span>
       </div>
     </div>
   </div>
@@ -50,9 +50,8 @@
     
     <!-- مرحله 1: اطلاعات اصلی -->
     <div id="step1" class="step-content">
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <i class="fa-solid fa-info-circle text-violet-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           اطلاعات اصلی
         </h2>
         
@@ -62,7 +61,7 @@
               عنوان آگهی <span class="text-red-500">*</span>
             </label>
             <input type="text" name="title" required 
-                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                    placeholder="مثال: زمین باغی 1000 متری">
           </div>
 
@@ -71,14 +70,13 @@
               موقعیت <span class="text-red-500">*</span>
             </label>
             <input type="text" name="location" required 
-                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                    placeholder="مثال: دشت اول، گرمابسرد">
           </div>
 
-          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div class="flex items-center justify-between mb-3">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                <i class="fas fa-map-marker-alt text-blue-600"></i>
                 موقعیت دقیق (مختصات جغرافیایی)
               </label>
               <button type="button" id="getCurrentLocationBtn" 
@@ -89,24 +87,23 @@
             </div>
             
             <!-- نقشه -->
-            <div id="locationMap" class="w-full h-64 rounded-lg border border-gray-300 dark:border-gray-700 mb-3" style="z-index: 1;"></div>
+            <div id="locationMap" class="w-full h-64 rounded-lg border border-gray-200 dark:border-gray-700 mb-3" style="z-index: 1;"></div>
             
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">عرض جغرافیایی (Latitude)</label>
                 <input type="number" step="0.000001" name="latitude" id="latitude"
-                       class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                       class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                        placeholder="مثال: 35.6892">
               </div>
               <div>
                 <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">طول جغرافیایی (Longitude)</label>
                 <input type="number" step="0.000001" name="longitude" id="longitude"
-                       class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                       class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                        placeholder="مثال: 51.3890">
               </div>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <i class="fas fa-info-circle"></i>
               روی نقشه کلیک کنید یا از دکمه "موقعیت فعلی" استفاده کنید
             </p>
           </div>
@@ -117,7 +114,7 @@
                 متراژ (متر) <span class="text-red-500">*</span>
               </label>
               <input type="text" name="size" required data-format-int
-                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                      placeholder="1000">
             </div>
 
@@ -126,7 +123,7 @@
                 دسته‌بندی
               </label>
               <select name="category" 
-                      class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                      class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 <option value="">انتخاب کنید</option>
                 <option value="زمین">زمین</option>
                 <option value="باغ">باغ</option>
@@ -143,7 +140,7 @@
                 قیمت کل (تومان) <span class="text-red-500">*</span>
               </label>
               <input type="text" name="price_total" required data-format-int
-                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                      placeholder="2000000000">
             </div>
 
@@ -164,7 +161,7 @@
                 درصد پورسانت (٪) <span class="text-red-500">*</span>
               </label>
               <input type="number" step="0.1" min="0" max="100" name="express_commission_pct" id="express_commission_pct" required
-                     class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                      placeholder="1.5">
             </div>
 
@@ -183,7 +180,7 @@
               توضیحات
             </label>
             <textarea name="description" rows="3" 
-                      class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="توضیحات کامل..."></textarea>
           </div>
 
@@ -193,9 +190,9 @@
           </div>
         </div>
 
-        <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-800">
+        <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
           <button type="button" onclick="nextStep()" 
-                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <span>ادامه</span>
             <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
@@ -205,16 +202,15 @@
 
     <!-- مرحله 2: تصاویر -->
     <div id="step2" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <i class="fa-solid fa-images text-violet-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           تصاویر ملک
         </h2>
         
         <div id="dropzone" role="button" tabindex="0"
-             class="w-full h-24 border-2 border-dashed border-violet-300 dark:border-violet-700 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900/30 transition">
-          <i class="fa-solid fa-cloud-arrow-up text-xl text-violet-600 mb-1"></i>
-          <p class="text-xs font-medium text-gray-700 dark:text-gray-300">انتخاب تصاویر</p>
+             class="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition">
+          <i class="fa-solid fa-cloud-arrow-up text-xl text-gray-400 dark:text-gray-500 mb-1"></i>
+          <p class="text-xs font-medium text-gray-600 dark:text-gray-400">انتخاب تصاویر</p>
         </div>
         <input type="file" id="imagesInput" name="images" accept="image/*" multiple class="hidden">
         
@@ -237,9 +233,8 @@
 
     <!-- مرحله 3: مدارک -->
     <div id="step3" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <i class="fa-solid fa-file-pdf text-violet-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           مدارک و تماس
         </h2>
         
@@ -249,7 +244,7 @@
               سند ملک (PDF)
             </label>
             <input type="file" name="document_1" accept=".pdf,.jpg,.jpeg,.png" 
-                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm">
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
           
           <div>
@@ -257,7 +252,7 @@
               مدارک اضافی (PDF)
             </label>
             <input type="file" name="document_2" accept=".pdf,.jpg,.jpeg,.png" 
-                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm">
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
 
           <div>
@@ -265,19 +260,19 @@
               شماره تماس پشتیبانی <span class="text-red-500">*</span>
             </label>
             <input type="tel" name="vinor_contact" required 
-                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                    value="09121234567" placeholder="09121234567">
           </div>
         </div>
 
-        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
           <button type="button" onclick="prevStep()" 
-                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
           <button type="button" onclick="nextStep()" 
-                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <span>ادامه</span>
             <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
@@ -287,14 +282,13 @@
 
     <!-- مرحله 4: بررسی و انتشار -->
     <div id="step4" class="step-content hidden">
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-4">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <i class="fa-solid fa-check-circle text-violet-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           بررسی نهایی
         </h2>
         
         <div class="space-y-3 text-sm">
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+          <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div class="font-medium mb-2">اطلاعات اصلی</div>
             <div class="space-y-1 text-gray-600 dark:text-gray-400">
               <div>عنوان: <span id="summaryTitle" class="font-medium text-gray-900 dark:text-white">-</span></div>
@@ -307,25 +301,25 @@
             </div>
           </div>
           
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+          <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div class="font-medium mb-2">تصاویر</div>
             <div id="summaryImages" class="text-gray-600 dark:text-gray-400">-</div>
           </div>
           
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+          <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div class="font-medium mb-2">مدارک</div>
             <div id="summaryDocuments" class="text-gray-600 dark:text-gray-400">-</div>
           </div>
         </div>
 
-        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
           <button type="button" onclick="prevStep()" 
-                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
           <button type="submit" 
-                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <i class="fa-solid fa-check text-xs"></i>
             <span>ثبت آگهی</span>
           </button>
@@ -351,9 +345,9 @@ function showStep(step) {
     const indicator = document.getElementById(`step${i}-indicator`);
     if (i <= step) {
       indicator.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-400');
-      indicator.classList.add('bg-violet-600', 'text-white');
+      indicator.classList.add('bg-blue-600', 'text-white');
     } else {
-      indicator.classList.remove('bg-violet-600', 'text-white');
+      indicator.classList.remove('bg-blue-600', 'text-white');
       indicator.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-400');
     }
   }

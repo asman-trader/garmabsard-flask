@@ -16,13 +16,12 @@
 {% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6">
 
-  <!-- هدر صفحه -->
+  <!-- هدر صفحه - سبک دیوار -->
   <div class="mb-6">
-    <h1 class="text-xl sm:text-2xl font-extrabold text-green-700 dark:text-green-600 flex items-center gap-2">
-      <i class="fa-regular fa-pen-to-square"></i>
+    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
       ویرایش آگهی اکسپرس
     </h1>
-    <p class="text-gray-600 dark:text-gray-300 mt-2">کد آگهی: {{ land.code }}</p>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">کد آگهی: {{ land.code }}</p>
   </div>
 
   <!-- پیام‌های سیستم -->
@@ -52,10 +51,9 @@
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
-    <!-- اطلاعات اصلی -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-circle-info text-green-600"></i>
+    <!-- اطلاعات اصلی - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         اطلاعات اصلی
       </h2>
       
@@ -65,7 +63,7 @@
             عنوان آگهی <span class="text-red-500">*</span>
           </label>
           <input type="text" name="title" required 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                  value="{{ land.title or '' }}"
                  placeholder="مثال: زمین باغی 1000 متری در دشت اول">
         </div>
@@ -75,16 +73,15 @@
             موقعیت <span class="text-red-500">*</span>
           </label>
           <input type="text" name="location" required 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                  value="{{ land.location or '' }}"
                  placeholder="مثال: دشت اول، گرمابسرد">
         </div>
       </div>
 
-      <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div class="mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <div class="flex items-center justify-between mb-3">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            <i class="fas fa-map-marker-alt text-blue-600"></i>
             موقعیت دقیق (مختصات جغرافیایی)
           </label>
           <button type="button" id="getCurrentLocationBtn" 
@@ -101,20 +98,19 @@
           <div>
             <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">عرض جغرافیایی (Latitude)</label>
             <input type="number" step="0.000001" name="latitude" id="latitude"
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                   class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
                    value="{{ land.latitude or '' }}"
                    placeholder="مثال: 35.6892">
           </div>
           <div>
             <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">طول جغرافیایی (Longitude)</label>
             <input type="number" step="0.000001" name="longitude" id="longitude"
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                   class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
                    value="{{ land.longitude or '' }}"
                    placeholder="مثال: 51.3890">
           </div>
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          <i class="fas fa-info-circle"></i>
           روی نقشه کلیک کنید یا از دکمه "موقعیت فعلی" استفاده کنید
         </p>
       </div>
@@ -126,7 +122,7 @@
             متراژ (متر) <span class="text-red-500">*</span>
           </label>
           <input type="number" name="size" required 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                  value="{{ land.size or '' }}"
                  placeholder="1000">
         </div>
@@ -136,7 +132,7 @@
             دسته‌بندی
           </label>
           <select name="category" 
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
             <option value="">انتخاب کنید</option>
             <option value="زمین" {{ 'selected' if land.category == 'زمین' else '' }}>زمین</option>
             <option value="باغ" {{ 'selected' if land.category == 'باغ' else '' }}>باغ</option>
@@ -151,7 +147,7 @@
             قیمت کل (تومان) <span class="text-red-500">*</span>
           </label>
           <input type="number" name="price_total" required 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                  value="{{ land.price_total or '' }}"
                  placeholder="2000000000">
         </div>
@@ -161,7 +157,7 @@
             قیمت در متر (تومان)
           </label>
           <input type="number" name="price_per_meter" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                  value="{{ land.price_per_meter or '' }}"
                  placeholder="2000000">
         </div>
@@ -172,16 +168,15 @@
           توضیحات
         </label>
         <textarea name="description" rows="4" 
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   placeholder="توضیحات کامل درباره ملک...">{{ land.description or '' }}</textarea>
       </div>
     </div>
 
-    <!-- تصاویر موجود -->
+    <!-- تصاویر موجود - سبک دیوار -->
     {% if land.images and land.images|length > 0 %}
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-images text-green-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
           تصاویر موجود
         </h2>
         
@@ -199,10 +194,9 @@
       </div>
     {% endif %}
 
-    <!-- تصاویر جدید -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-plus text-green-600"></i>
+    <!-- تصاویر جدید - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         افزودن تصاویر جدید
       </h2>
       
@@ -212,7 +206,7 @@
             تصویر جدید
           </label>
           <input type="file" name="image_1" accept="image/*" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
         </div>
         
         <div>
@@ -220,7 +214,7 @@
             تصویر جدید
           </label>
           <input type="file" name="image_2" accept="image/*" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
         </div>
         
         <div>
@@ -228,29 +222,28 @@
             تصویر جدید
           </label>
           <input type="file" name="image_3" accept="image/*" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
         </div>
       </div>
     </div>
 
-    <!-- مدارک موجود -->
+    <!-- مدارک موجود - سبک دیوار -->
     {% if land.express_documents and land.express_documents|length > 0 %}
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <i class="fa-regular fa-file-pdf text-green-600"></i>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
           مدارک موجود
         </h2>
         
         <div class="space-y-2">
           {% for doc in land.express_documents %}
-            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
               <div class="flex items-center gap-3">
-                <i class="fa-regular fa-file-pdf text-red-600"></i>
-                <span class="text-gray-700 dark:text-gray-300">{{ doc }}</span>
+                <i class="fa-regular fa-file-pdf text-gray-500 dark:text-gray-400"></i>
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ doc }}</span>
               </div>
               <a href="{{ url_for('admin.serve_express_document', filename=doc) }}" target="_blank" 
-                 class="text-blue-600 hover:text-blue-800 text-sm">
-                <i class="fa-solid fa-download"></i> دانلود
+                 class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <i class="fa-solid fa-download text-xs ml-1"></i> دانلود
               </a>
             </div>
           {% endfor %}
@@ -258,10 +251,9 @@
       </div>
     {% endif %}
 
-    <!-- مدارک جدید -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-plus text-green-600"></i>
+    <!-- مدارک جدید - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         افزودن مدارک جدید
       </h2>
       
@@ -271,7 +263,7 @@
             سند ملک (PDF)
           </label>
           <input type="file" name="document_1" accept=".pdf,.jpg,.jpeg,.png" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
         </div>
         
         <div>
@@ -279,15 +271,14 @@
             مدارک اضافی (PDF)
           </label>
           <input type="file" name="document_2" accept=".pdf,.jpg,.jpeg,.png" 
-                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700">
+                 class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
         </div>
       </div>
     </div>
 
-    <!-- اطلاعات تماس -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-phone text-green-600"></i>
+    <!-- اطلاعات تماس - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
         اطلاعات تماس
       </h2>
       
@@ -296,29 +287,29 @@
           شماره تماس پشتیبانی وینور <span class="text-red-500">*</span>
         </label>
         <input type="tel" name="vinor_contact" required 
-               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+               class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                value="{{ land.vinor_contact or '09121234567' }}"
                placeholder="09121234567">
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">این شماره برای تماس کاربران با پشتیبانی وینور استفاده می‌شود</p>
       </div>
     </div>
 
-    <!-- دکمه‌های عملیات -->
-    <div class="flex gap-4 justify-end">
+    <!-- دکمه‌های عملیات - سبک دیوار -->
+    <div class="flex gap-3 justify-end">
       <a href="{{ url_for('admin.express_listings') }}" 
-         class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition">
+         class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition focusable">
         انصراف
       </a>
       
       <a href="{{ url_for('main.express_detail', code=land.code) }}" target="_blank"
-         class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center gap-2">
-        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+         class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
+        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
         مشاهده
       </a>
       
       <button type="submit" 
-              class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2">
-        <i class="fa-solid fa-floppy-disk"></i>
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
+        <i class="fa-solid fa-floppy-disk text-xs"></i>
         ذخیره تغییرات
       </button>
     </div>
