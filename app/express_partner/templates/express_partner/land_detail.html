@@ -20,12 +20,12 @@
     </div>
   </header>
 
-  <!-- گالری بالای صفحه - سبک دیوار -->
+  <!-- تصویر اصلی بالای صفحه - سبک دیوار -->
   <div data-tour="land-image" class="relative mb-4 bg-black/5 dark:bg-black/20">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
 
-    <div class="max-w-4xl mx-auto px-4 pt-2 pb-3">
+    <div class="max-w-4xl mx-auto px-4 pt-2 pb-4">
       {% if primary_image %}
         {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
         <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-xl">
@@ -41,22 +41,6 @@
         </div>
       {% endif %}
 
-      {% if images|length > 1 %}
-      <!-- نوار تصاویر کوچک (کالر‌ی) -->
-      <div class="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-        {% for image in images %}
-          {% set thumb_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
-          <button type="button"
-                  class="thumb-image relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border {{ 'border-blue-500 ring-2 ring-blue-400/80' if loop.first else 'border-gray-200 dark:border-gray-700' }} bg-gray-100 dark:bg-gray-900"
-                  data-src="{{ thumb_src }}"
-                  aria-label="تصویر {{ loop.index }}">
-            <img src="{{ thumb_src }}"
-                 alt="تصویر {{ loop.index }}"
-                 class="w-full h-full object-cover">
-          </button>
-        {% endfor %}
-      </div>
-      {% endif %}
     </div>
     
     {% if land._assignment_status == 'in_transaction' %}
@@ -463,27 +447,6 @@
       });
     });
 
-    // گالری بالای صفحه: تعویض تصویر اصلی با کلیک روی تصاویر کوچک
-    (function(){
-      const mainImg = document.getElementById('landMainImage');
-      if (!mainImg) return;
-      const thumbs = document.querySelectorAll('.thumb-image');
-      thumbs.forEach(function(btn){
-        btn.addEventListener('click', function(e){
-          e.preventDefault();
-          const src = btn.getAttribute('data-src');
-          if (!src) return;
-          mainImg.src = src;
-          // هایلایت فعال
-          thumbs.forEach(function(b){
-            b.classList.remove('border-blue-500','ring-2','ring-blue-400/80');
-            b.classList.add('border-gray-200','dark:border-gray-700');
-          });
-          btn.classList.remove('border-gray-200','dark:border-gray-700');
-          btn.classList.add('border-blue-500','ring-2','ring-blue-400/80');
-        }, { passive: true });
-      });
-    })();
   });
   
   // مودال تماس
