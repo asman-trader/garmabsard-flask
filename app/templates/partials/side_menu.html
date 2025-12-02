@@ -38,9 +38,10 @@
       <div class="flex items-center gap-2">
 
         {% if VINOR_IS_EXPRESS_PARTNER %}
+        {% set _partner_name = session.get('user_name') or session.get('user_phone') %}
         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-700 text-[11px]">
           <i class="fas fa-star"></i>
-          همکار اکسپرس
+          {{ _partner_name }}
         </span>
         {% endif %}
       </div>

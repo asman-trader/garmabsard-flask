@@ -950,7 +950,9 @@ def otp_resend():
 @require_partner_access()
 def profile_page():
     me_phone = (session.get('user_phone') or '').strip()
-    return render_template('express_partner/profile.html', me_phone=me_phone)
+    profile = getattr(g, 'express_partner_profile', None) or {}
+    me_name = (profile.get('name') or '').strip()
+    return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name)
 
 
 @express_partner_bp.post('/files/<int:fid>/delete')

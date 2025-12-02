@@ -1,5 +1,5 @@
 {% extends 'express_partner/base.html' %}
-{% block title %}پروفایل همکار اکسپرس{% endblock %}
+{% block title %}پروفایل{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
 
@@ -17,9 +17,13 @@
   <!-- Profile Section - سبک دیوار -->
   <section data-tour="profile-section" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
     <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 grid place-items-center text-lg font-semibold">{{ (me_phone or '')[-4:] }}</div>
+      <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 grid place-items-center text-lg font-semibold">
+        {{ (me_name or (me_phone or '')[-4:])[:2] }}
+      </div>
       <div class="flex-1 min-w-0">
-        <div class="text-base font-semibold text-gray-900 dark:text-white truncate">همکار اکسپرس</div>
+        <div class="text-base font-semibold text-gray-900 dark:text-white truncate">
+          {{ me_name or 'همکار وینور' }}
+        </div>
         <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
       </div>
       <a href="{{ url_for('express_partner.logout') }}" class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">خروج</a>
