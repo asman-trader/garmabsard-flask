@@ -257,23 +257,6 @@
     </div>
     {% endif %}
 
-    <!-- لینک اشتراک - سبک دیوار -->
-    {% if share_url %}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">لینک اختصاصی</div>
-          <p class="text-xs text-gray-600 dark:text-gray-400 break-all font-mono">{{ share_url }}</p>
-        </div>
-        <button type="button" 
-                class="copy-btn-secondary flex-shrink-0 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
-                data-url="{{ share_url }}">
-          <i class="fas fa-copy"></i>
-        </button>
-      </div>
-    </div>
-    {% endif %}
-
     <!-- دکمه‌های اقدام - سبک دیوار -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {% set public_link = share_url %}
