@@ -164,6 +164,28 @@
         {% endif %}
       </section>
       {% endif %}
+
+      <!-- بلوک لینک اختصاصی - سبک بلوک موقعیت -->
+      <section>
+        <button type="button"
+                class="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-600 transition-colors copy-public-link"
+                data-url="{{ request.url }}">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 grid place-items-center">
+              <i class="fas fa-link text-sm"></i>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                لینک اختصاصی این فایل
+              </div>
+              <div class="text-[11px] text-gray-500 dark:text-gray-400">
+                برای اشتراک‌گذاری با مشتریان استفاده کنید
+              </div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+        </button>
+      </section>
     </main>
 
     <!-- نوار تماس ثابت پایین - سبک دیوار -->
