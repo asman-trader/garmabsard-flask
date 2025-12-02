@@ -93,8 +93,27 @@
             {% endif %}
           </header>
 
+          {# نوع معامله: فروش / رهن / اجاره #}
+          {% set _extras = land.extras or {} %}
+          {% set _dep = _extras.deposit %}
+          {% set _rent = _extras.rent %}
+          {% if _rent %}
+            {% if _dep %}
+              {% set _deal_label = 'رهن و اجاره' %}
+            {% else %}
+              {% set _deal_label = 'اجاره' %}
+            {% endif %}
+          {% elif _dep and not land.price_total %}
+            {% set _deal_label = 'رهن کامل' %}
+          {% else %}
+            {% set _deal_label = 'فروش' %}
+          {% endif %}
+
           <!-- جزئیات -->
           <div class="mt-2 space-y-1.5 text-sm">
+            {% if _deal_label %}
+              <p class="text-gray-700 dark:text-gray-200 font-semibold">نوع معامله: {{ _deal_label }}</p>
+            {% endif %}
             {% if land.size %}
               <p class="text-gray-600 dark:text-gray-300">📏 متراژ: {{ land.size }} متر</p>
             {% endif %}
