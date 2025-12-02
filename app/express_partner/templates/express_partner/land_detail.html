@@ -257,8 +257,8 @@
     </div>
     {% endif %}
 
-    <!-- دکمه‌های اقدام - سبک دیوار -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <!-- دکمه‌های اقدام - فقط مشاهده و تماس (اشتراک از هدر) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {% set public_link = share_url %}
       <a href="{{ public_link }}" 
          target="_blank" rel="noopener"
@@ -266,22 +266,6 @@
         <i class="far fa-eye text-lg text-gray-600 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">مشاهده</span>
       </a>
-      
-      <button type="button" 
-              data-tour="share-btn"
-              class="share-btn flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors" 
-              data-url="{{ public_link }}">
-        <i class="fas fa-share-nodes text-lg text-gray-600 dark:text-gray-400"></i>
-        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">اشتراک</span>
-      </button>
-      
-      <!-- کپی - فقط دسکتاپ -->
-      <button type="button" 
-              class="copy-btn hidden sm:flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors" 
-              data-url="{{ public_link }}">
-        <i class="fas fa-link text-lg text-gray-600 dark:text-gray-400"></i>
-        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">کپی</span>
-      </button>
       
       <!-- تماس - فقط دسکتاپ -->
       {% if land.owner_phone or land.vinor_contact %}
