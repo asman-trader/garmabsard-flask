@@ -5,18 +5,30 @@
   
   <!-- Header - سبک دیوار -->
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
       <a href="{{ url_for('express_partner.dashboard') }}" 
               class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" 
               aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm font-bold text-gray-900 dark:text-white">جزئیات فایل</h1>
-      {% if land.code %}
-      <span class="text-xs font-mono text-gray-500 dark:text-gray-400">#{{ land.code }}</span>
-      {% else %}
-      <span class="w-9"></span>
-      {% endif %}
+
+      <div class="flex flex-col items-center flex-1 min-w-0">
+        <h1 class="text-sm font-bold text-gray-900 dark:text-white truncate max-w-full">جزئیات فایل</h1>
+        {% if land.code %}
+        <span class="text-[11px] text-gray-500 dark:text-gray-400 font-mono">کد {{ land.code }}</span>
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-1">
+        {% if share_url %}
+        <button type="button"
+                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 copy-btn"
+                data-url="{{ share_url }}"
+                aria-label="کپی لینک اشتراک">
+          <i class="fas fa-share-nodes text-sm"></i>
+        </button>
+        {% endif %}
+      </div>
     </div>
   </header>
 
