@@ -20,25 +20,48 @@
     </div>
   </header>
 
-  <!-- تصویر اصلی - سبک دیوار -->
-  <div data-tour="land-image" class="relative mb-4">
+  <!-- گالری بالای صفحه - سبک دیوار -->
+  <div data-tour="land-image" class="relative mb-4 bg-black/5 dark:bg-black/20">
     {% set images = land.images or [] %}
     {% set primary_image = images[0] if images else None %}
-    {% if primary_image %}
-      {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
-      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden">
-        <img src="{{ image_src }}" alt="{{ land.title }}" 
-             class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
+
+    <div class="max-w-4xl mx-auto px-4 pt-2 pb-3">
+      {% if primary_image %}
+        {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+        <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-xl">
+          <img id="landMainImage"
+               src="{{ image_src }}"
+               alt="{{ land.title }}"
+               class="w-full h-full object-cover cursor-pointer"
+               onclick="openLightbox(this.src)">
+        </div>
+      {% else %}
+        <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
+          <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
+        </div>
+      {% endif %}
+
+      {% if images|length > 1 %}
+      <!-- نوار تصاویر کوچک (کالر‌ی) -->
+      <div class="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {% for image in images %}
+          {% set thumb_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
+          <button type="button"
+                  class="thumb-image relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border {{ 'border-blue-500 ring-2 ring-blue-400/80' if loop.first else 'border-gray-200 dark:border-gray-700' }} bg-gray-100 dark:bg-gray-900"
+                  data-src="{{ thumb_src }}"
+                  aria-label="تصویر {{ loop.index }}">
+            <img src="{{ thumb_src }}"
+                 alt="تصویر {{ loop.index }}"
+                 class="w-full h-full object-cover">
+          </button>
+        {% endfor %}
       </div>
-    {% else %}
-      <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
     
     {% if land._assignment_status == 'in_transaction' %}
-    <div class="absolute top-2 left-2">
-      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-500 text-white">
+    <div class="absolute top-3 left-5">
+      <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-orange-500 text-white shadow-sm">
         در حال معامله
       </span>
     </div>
@@ -278,21 +301,6 @@
     </div>
     {% endif %}
 
-    <!-- گالری تصاویر - سبک دیوار -->
-    {% if images|length > 1 %}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">تصاویر بیشتر</h3>
-      <div class="grid grid-cols-3 gap-2">
-        {% for image in images[1:7] %}
-          {% set image_src = url_for('static', filename=image) if image.startswith('uploads/') else image %}
-          <div class="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 relative">
-            <img src="{{ image_src }}" alt="تصویر {{ loop.index + 1 }}" class="w-full h-full object-cover cursor-pointer" onclick="openLightbox('{{ image_src }}')">
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
     <!-- فضای خالی برای دکمه ثابت پایین در موبایل -->
     <div class="h-20 sm:hidden"></div>
 
@@ -454,6 +462,28 @@
         }
       });
     });
+
+    // گالری بالای صفحه: تعویض تصویر اصلی با کلیک روی تصاویر کوچک
+    (function(){
+      const mainImg = document.getElementById('landMainImage');
+      if (!mainImg) return;
+      const thumbs = document.querySelectorAll('.thumb-image');
+      thumbs.forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          const src = btn.getAttribute('data-src');
+          if (!src) return;
+          mainImg.src = src;
+          // هایلایت فعال
+          thumbs.forEach(function(b){
+            b.classList.remove('border-blue-500','ring-2','ring-blue-400/80');
+            b.classList.add('border-gray-200','dark:border-gray-700');
+          });
+          btn.classList.remove('border-gray-200','dark:border-gray-700');
+          btn.classList.add('border-blue-500','ring-2','ring-blue-400/80');
+        }, { passive: true });
+      });
+    })();
   });
   
   // مودال تماس
