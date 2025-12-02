@@ -93,20 +93,36 @@
             {% endif %}
           </header>
 
-          {# نوع معامله: فروش / رهن / اجاره #}
+          {# نوع معامله: ابتدا بر اساس فیلد انتخاب‌شده، در صورت نبود بر اساس مبلغ‌ها حدس زده می‌شود #}
+          {% set _deal_code = land.deal_type or (land.extras.deal_type if land.extras is defined else '') %}
           {% set _extras = land.extras or {} %}
           {% set _dep = _extras.deposit %}
           {% set _rent = _extras.rent %}
-          {% if _rent %}
-            {% if _dep %}
+
+          {% if _deal_code %}
+            {% if _deal_code == 'sale' %}
+              {% set _deal_label = 'فروش' %}
+            {% elif _deal_code == 'mortgage_full' %}
+              {% set _deal_label = 'رهن کامل' %}
+            {% elif _deal_code == 'mortgage_rent' %}
               {% set _deal_label = 'رهن و اجاره' %}
-            {% else %}
+            {% elif _deal_code == 'rent' %}
               {% set _deal_label = 'اجاره' %}
+            {% else %}
+              {% set _deal_label = 'فروش' %}
             {% endif %}
-          {% elif _dep and not land.price_total %}
-            {% set _deal_label = 'رهن کامل' %}
           {% else %}
-            {% set _deal_label = 'فروش' %}
+            {% if _rent %}
+              {% if _dep %}
+                {% set _deal_label = 'رهن و اجاره' %}
+              {% else %}
+                {% set _deal_label = 'اجاره' %}
+              {% endif %}
+            {% elif _dep and not land.price_total %}
+              {% set _deal_label = 'رهن کامل' %}
+            {% else %}
+              {% set _deal_label = 'فروش' %}
+            {% endif %}
           {% endif %}
 
           <!-- جزئیات -->

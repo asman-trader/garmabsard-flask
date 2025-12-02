@@ -1230,6 +1230,12 @@ def add_land():
         new_code = form.get("code") or _next_numeric_code(lands)
         images = _normalize_images_from_form(request.form, request.files)
 
+        deal_type = (form.get('deal_type') or '').strip()
+        if not deal_type:
+            flash('نوع معامله را انتخاب کنید.', 'warning')
+            return render_template('admin/add_land.html',
+                                   pending_count=0, approved_count=0, rejected_count=0)
+
         new_land = {
             'code': str(new_code),
             'title': form.get('title', '').strip() or 'بدون عنوان',
@@ -1245,6 +1251,7 @@ def add_land():
             'approval_method': approval_method,
             'status': status,
             'created_at': iso_z(created_at_dt),
+            'deal_type': deal_type,
             # اگر ادمین به اسم کاربر خاص ثبت می‌کند، می‌تواند owner را نیز ست کند:
             'owner': form.get('owner', '').strip() or None,
         }

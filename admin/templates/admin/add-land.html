@@ -57,6 +57,17 @@
       </div>
 
       <div>
+        <label class="block mb-1 font-semibold">نوع معامله</label>
+        <select name="deal_type" required class="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600">
+          <option disabled selected>انتخاب نوع معامله...</option>
+          <option value="sale">فروش</option>
+          <option value="mortgage_full">رهن کامل</option>
+          <option value="mortgage_rent">رهن و اجاره</option>
+          <option value="rent">اجاره</option>
+        </select>
+      </div>
+
+      <div>
         <label class="block mb-1 font-semibold">کد ملک</label>
         <input type="text" name="code" value="{{ auto_code }}" readonly class="w-full border rounded px-3 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
       </div>
