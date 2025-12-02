@@ -1211,13 +1211,13 @@ def _save_video_from_form(files) -> str | None:
     video_file = files.get('video')
     if not video_file or not video_file.filename:
         return None
-    
+
     # بررسی فرمت
     allowed_extensions = {'.mp4', '.webm', '.mov', '.avi', '.mkv'}
     file_ext = os.path.splitext(video_file.filename)[1].lower()
     if file_ext not in allowed_extensions:
         return None
-    
+
     upload_folder = _uploads_root()
     os.makedirs(upload_folder, exist_ok=True)
     filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{video_file.filename}")
@@ -1249,7 +1249,6 @@ def add_land():
 
         new_code = form.get("code") or _next_numeric_code(lands)
         images = _normalize_images_from_form(request.form, request.files)
-        video_path = _save_video_from_form(request.files)
 
         deal_type = (form.get('deal_type') or '').strip()
         if not deal_type:
@@ -1276,9 +1275,6 @@ def add_land():
             # اگر ادمین به اسم کاربر خاص ثبت می‌کند، می‌تواند owner را نیز ست کند:
             'owner': form.get('owner', '').strip() or None,
         }
-        
-        if video_path:
-            new_land['video'] = video_path
 
         if expiry_days > 0:
             expires_at_dt = created_at_dt + timedelta(days=expiry_days)
@@ -1290,14 +1286,59 @@ def add_land():
         # ✅ اعلان (در صورت داشتن owner)
         notify_admin_create(new_land)
 
-        flash(f'آگهی با کد {new_code} با موفقیت ثبت شد.', 'success')
-        return redirect(url_for('admin.lands'))
+        flash(f'آگهی با کد {new_code} با موفقیت ثبت شد. حالا می‌توانید کلیپ آن را بارگذاری کنید.', 'success')
+        # هدایت به مرحله دوم: آپلود ویدیو
+        return redirect(url_for('admin.add_land_video', code=new_code))
 
     # GET
     cleanup_expired_ads()
     p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/add_land.html',
                            pending_count=p, approved_count=a, rejected_count=r)
+
+
+@admin_bp.route('/add-land/<string:code>/video', methods=['GET', 'POST'])
+@login_required
+def add_land_video(code: str):
+    """
+    مرحله دوم ثبت آگهی: بارگذاری کلیپ (ویدیو) به‌صورت مجزا
+    """
+    cleanup_expired_ads()
+    lands_data = load_json(_lands_path())
+    lands_list = lands_data if isinstance(lands_data, list) else []
+    land = find_by_code(lands_list, code)
+    if not land:
+        flash('آگهی مورد نظر پیدا نشد.', 'warning')
+        return redirect(url_for('admin.lands'))
+
+    if request.method == 'POST':
+        # اگر کاربر این مرحله را رد کرده
+        if request.form.get('skip') == '1':
+            flash('ثبت آگهی بدون کلیپ انجام شد.', 'info')
+            return redirect(url_for('admin.lands'))
+
+        video_path = _save_video_from_form(request.files)
+        if not video_path:
+            flash('هیچ فایلی انتخاب نشده یا فرمت ویدیو نامعتبر است.', 'warning')
+            return redirect(url_for('admin.add_land_video', code=code))
+
+        # اگر ویدیوی قبلی وجود دارد، حذف شود
+        old_video = land.get('video')
+        if old_video:
+            old_path = os.path.join(current_app.static_folder, old_video)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except Exception:
+                    pass
+
+        land['video'] = video_path
+        save_json(_lands_path(), lands_list)
+
+        flash('کلیپ آگهی با موفقیت ثبت شد.', 'success')
+        return redirect(url_for('admin.lands'))
+
+    return render_template('admin/add_land_video.html', land=land)
 
 # ویرایش – سازگاری با هر دو الگو: querystring code/land_id و مسیر <int:land_id>
 @admin_bp.route('/edit-land', methods=['GET', 'POST'])
