@@ -46,6 +46,43 @@
       </div>
     </div>
 
+    <!-- کلیپ (ویدیو) -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200">کلیپ (ویدیو) - اختیاری</label>
+        {% if land.video %}
+        <label class="inline-flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400">
+          <input type="checkbox" name="remove_video" class="rounded border-gray-300 dark:border-gray-600">
+          حذف کلیپ فعلی
+        </label>
+        {% endif %}
+      </div>
+
+      {% if land.video %}
+      <div class="mb-3">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">کلیپ فعلی:</p>
+        <video controls class="w-full max-w-md rounded border dark:border-gray-700" style="max-height: 200px;">
+          <source src="{{ land.video if ('://' in (land.video|string)) else (('/uploads/' + land.video) if not (land.video|string).startswith('/uploads/') else land.video) }}" type="video/mp4">
+          مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+        </video>
+      </div>
+      {% endif %}
+
+      <label class="w-full cursor-pointer flex items-center justify-center border-dashed border-2 border-blue-500 dark:border-blue-400 rounded-xl p-4
+                     text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+        <i class="fa-solid fa-video text-base mr-2"></i>
+        {% if land.video %}جایگزین کلیپ{% else %}افزودن کلیپ{% endif %}
+        <input type="file" name="video" accept="video/*" class="hidden" onchange="previewVideo(event)">
+      </label>
+      <div id="video-preview-container" class="mt-4 hidden">
+        <video id="video-preview" controls class="w-full max-w-md rounded border dark:border-gray-700" style="max-height: 200px;"></video>
+        <button type="button" onclick="removeVideo()" class="mt-2 text-sm text-red-600 hover:text-red-700">
+          <i class="fa-solid fa-times ml-1"></i> حذف کلیپ جدید
+        </button>
+      </div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">فرمت‌های مجاز: MP4, WebM, MOV</p>
+    </div>
+
     <!-- عنوان -->
     <div>
       <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">عنوان آگهی</label>
@@ -84,6 +121,19 @@
         <option value="باغ" {% if land.category == 'باغ' %}selected{% endif %}>باغ</option>
         <option value="زمین مسکونی" {% if land.category == 'زمین مسکونی' %}selected{% endif %}>زمین مسکونی</option>
         <option value="ویلا" {% if land.category == 'ویلا' %}selected{% endif %}>ویلا</option>
+      </select>
+    </div>
+
+    <!-- نوع معامله -->
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">نوع معامله</label>
+      <select name="deal_type" required
+              class="w-full border rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 dark:text-white">
+        <option disabled>انتخاب نوع معامله…</option>
+        <option value="sale" {% if land.deal_type == 'sale' %}selected{% endif %}>فروش</option>
+        <option value="mortgage_full" {% if land.deal_type == 'mortgage_full' %}selected{% endif %}>رهن کامل</option>
+        <option value="mortgage_rent" {% if land.deal_type == 'mortgage_rent' %}selected{% endif %}>رهن و اجاره</option>
+        <option value="rent" {% if land.deal_type == 'rent' %}selected{% endif %}>اجاره</option>
       </select>
     </div>
 
@@ -246,5 +296,28 @@
     if (totalPriceInput) totalPriceInput.value = parseNumber(totalPriceInput.value);
     if (pricePerMeterInput) pricePerMeterInput.value = parseNumber(pricePerMeterInput.value);
   });
+
+  // پیش‌نمایش ویدیو
+  function previewVideo(event) {
+    const file = event.target.files[0];
+    const container = document.getElementById('video-preview-container');
+    const preview = document.getElementById('video-preview');
+    
+    if (file) {
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      container.classList.remove('hidden');
+    }
+  }
+
+  function removeVideo() {
+    const fileInput = document.querySelector('input[name="video"]');
+    const container = document.getElementById('video-preview-container');
+    const preview = document.getElementById('video-preview');
+    
+    fileInput.value = '';
+    preview.src = '';
+    container.classList.add('hidden');
+  }
 </script>
 {% endblock %}

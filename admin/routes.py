@@ -1204,6 +1204,26 @@ def _normalize_images_from_form(form, files) -> List[str]:
 
     return image_urls
 
+def _save_video_from_form(files) -> str | None:
+    """
+    ذخیره ویدیو از فرم و برگرداندن مسیر نسبی مثل 'uploads/video.mp4'
+    """
+    video_file = files.get('video')
+    if not video_file or not video_file.filename:
+        return None
+    
+    # بررسی فرمت
+    allowed_extensions = {'.mp4', '.webm', '.mov', '.avi', '.mkv'}
+    file_ext = os.path.splitext(video_file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        return None
+    
+    upload_folder = _uploads_root()
+    os.makedirs(upload_folder, exist_ok=True)
+    filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}__{video_file.filename}")
+    video_file.save(os.path.join(upload_folder, filename))
+    return f'uploads/{filename}'
+
 @admin_bp.route('/add-land', methods=['GET', 'POST'])
 @login_required
 def add_land():
@@ -1229,6 +1249,7 @@ def add_land():
 
         new_code = form.get("code") or _next_numeric_code(lands)
         images = _normalize_images_from_form(request.form, request.files)
+        video_path = _save_video_from_form(request.files)
 
         deal_type = (form.get('deal_type') or '').strip()
         if not deal_type:
@@ -1255,6 +1276,9 @@ def add_land():
             # اگر ادمین به اسم کاربر خاص ثبت می‌کند، می‌تواند owner را نیز ست کند:
             'owner': form.get('owner', '').strip() or None,
         }
+        
+        if video_path:
+            new_land['video'] = video_path
 
         if expiry_days > 0:
             expires_at_dt = created_at_dt + timedelta(days=expiry_days)
@@ -1304,6 +1328,10 @@ def edit_land(land_id: Optional[int] = None):
     if request.method == 'POST':
         form = request.form
         # فیلدها
+        deal_type = form.get('deal_type', '').strip()
+        if not deal_type:
+            deal_type = land.get('deal_type', 'sale')  # پیش‌فرض: فروش
+        
         land.update({
             'title': form.get('title', '').strip() or land.get('title', ''),
             'size': form.get('size', '').strip() or land.get('size', ''),
@@ -1315,7 +1343,8 @@ def edit_land(land_id: Optional[int] = None):
             'features': form.getlist('features') or land.get('features', []),
             'price_total': form.get('price_total', '').strip() or land.get('price_total', ''),
             'price_per_meter': form.get('price_per_meter', '').strip() or land.get('price_per_meter', ''),
-            'status': form.get('status', land.get('status', 'pending'))
+            'status': form.get('status', land.get('status', 'pending')),
+            'deal_type': deal_type
         })
 
         # حذف همه تصاویر (اختیاری)
@@ -1333,6 +1362,32 @@ def edit_land(land_id: Optional[int] = None):
         new_images = _normalize_images_from_form(request.form, request.files)
         if new_images:
             land.setdefault('images', []).extend(new_images)
+
+        # حذف ویدیو (اگر درخواست شده)
+        if request.form.get('remove_video') == 'on':
+            old_video = land.get('video')
+            if old_video:
+                old_path = os.path.join(current_app.static_folder, old_video)
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except Exception:
+                        pass
+                land.pop('video', None)
+
+        # ذخیره ویدیو جدید (اگر آپلود شده)
+        new_video = _save_video_from_form(request.files)
+        if new_video:
+            # حذف ویدیو قدیمی در صورت وجود
+            old_video = land.get('video')
+            if old_video:
+                old_path = os.path.join(current_app.static_folder, old_video)
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except Exception:
+                        pass
+            land['video'] = new_video
 
         save_json(_lands_path(), lands)
 

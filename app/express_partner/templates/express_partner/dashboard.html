@@ -113,9 +113,18 @@
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         {% set _st = (land._assignment_status|default('active')) %}
         
-        <!-- Image Section - دیوار استایل -->
+        <!-- Image/Video Section - دیوار استایل -->
         <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
-          {% if img %}
+          {% set video = land.video %}
+          {% if video %}
+            {% set video_src = url_for('static', filename=video) if video.startswith('uploads/') else video %}
+            <video class="w-full h-full object-cover" autoplay muted loop playsinline>
+              <source src="{{ video_src }}" type="video/mp4">
+              {% if img %}
+                <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover">
+              {% endif %}
+            </video>
+          {% elif img %}
             <img src="{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}" alt="{{ land.title }}" class="w-full h-full object-cover">
           {% else %}
             <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">

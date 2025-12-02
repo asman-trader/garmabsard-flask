@@ -23,36 +23,58 @@
   <!-- گالری بالای صفحه - سبک دیوار (اسلایدر ساده مانند دیوار) -->
   <div data-tour="land-image" class="relative mb-4 bg-black/5 dark:bg-black/20">
     {% set images = land.images or [] %}
+    {% set video = land.video %}
+    {% set has_video = video and video.strip() %}
+    {% set total_items = (1 if has_video else 0) + images|length %}
     {% set primary_image = images[0] if images else None %}
 
     <div class="max-w-4xl mx-auto px-4 pt-2 pb-4">
-      {% if primary_image %}
-        {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+      {% if has_video or primary_image %}
+        {% set video_src = url_for('static', filename=video) if video and video.startswith('uploads/') else video %}
         <div id="landGallery"
              class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-xl select-none">
-          <img id="landMainImage"
-               src="{{ image_src }}"
-               alt="{{ land.title }}"
-               class="w-full h-full object-cover cursor-pointer"
-               onclick="openLightbox(this.src)">
+          
+          {# اگر ویدیو وجود دارد، اولین اسلاید ویدیو است #}
+          {% if has_video %}
+          <video id="landVideo"
+                 class="w-full h-full object-cover {% if not primary_image %}block{% else %}hidden{% endif %}"
+                 controls
+                 onclick="event.stopPropagation()">
+            <source src="{{ video_src }}" type="video/mp4">
+            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+          </video>
+          {% endif %}
 
-          {# دکمه‌های قبلی/بعدی فقط اگر بیش از یک تصویر وجود داشته باشد #}
-          {% if images|length > 1 %}
+          {# تصویر اصلی (اگر ویدیو وجود دارد، دومین اسلاید است) #}
+          {% if primary_image %}
+            {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+            <img id="landMainImage"
+                 src="{{ image_src }}"
+                 alt="{{ land.title }}"
+                 class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %}"
+                 onclick="openLightbox(this.src)">
+          {% endif %}
+
+          {# دکمه‌های قبلی/بعدی فقط اگر بیش از یک آیتم وجود داشته باشد #}
+          {% if total_items > 1 %}
           <button type="button"
                   id="landPrev"
-                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95">
+                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-10">
             <i class="fas fa-chevron-right drop-shadow"></i>
           </button>
           <button type="button"
                   id="landNext"
-                  class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95">
+                  class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-10">
             <i class="fas fa-chevron-left drop-shadow"></i>
           </button>
 
           <!-- نقطه‌های وضعیت اسلاید -->
-          <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5">
+          <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-10">
+            {% if has_video %}
+            <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 active"></span>
+            {% endif %}
             {% for _ in images %}
-            <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40"></span>
+            <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 {% if not has_video and loop.first %}active{% endif %}"></span>
             {% endfor %}
           </div>
           {% endif %}
@@ -470,15 +492,25 @@
     // اسلایدر تصاویر بالای صفحه به سبک دیوار
     (function(){
       const galleryEl = document.getElementById('landGallery');
+      if (!galleryEl) return;
       const mainImg = document.getElementById('landMainImage');
-      if (!galleryEl || !mainImg) return;
-
+      const mainVideo = document.getElementById('landVideo');
+      const hasVideo = !!mainVideo;
+      
       const images = [
         {% for img in images %}
           "{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}"{% if not loop.last %},{% endif %}
         {% endfor %}
       ];
-      if (!images.length || images.length === 1) return;
+      
+      {% if video %}
+      const videoSrc = "{{ url_for('static', filename=video) if video.startswith('uploads/') else video }}";
+      {% else %}
+      const videoSrc = null;
+      {% endif %}
+      
+      const totalItems = (hasVideo ? 1 : 0) + images.length;
+      if (totalItems <= 1) return;
 
       let currentIndex = 0;
       const dots = Array.from(document.querySelectorAll('.land-dot'));
@@ -491,27 +523,52 @@
           if (idx === currentIndex) {
             d.classList.remove('bg-white/40');
             d.classList.add('bg-white');
+            d.classList.add('active');
           } else {
             d.classList.remove('bg-white');
+            d.classList.remove('active');
             d.classList.add('bg-white/40');
           }
         });
       }
 
-      function showImage(idx) {
-        if (!images.length) return;
-        currentIndex = (idx + images.length) % images.length;
-        mainImg.src = images[currentIndex];
+      function showItem(idx) {
+        currentIndex = (idx + totalItems) % totalItems;
+        
+        if (hasVideo && currentIndex === 0) {
+          // نمایش ویدیو
+          if (mainVideo) {
+            mainVideo.classList.remove('hidden');
+            mainVideo.classList.add('block');
+          }
+          if (mainImg) {
+            mainImg.classList.add('hidden');
+            mainImg.classList.remove('block');
+          }
+        } else {
+          // نمایش تصویر
+          const imgIndex = hasVideo ? currentIndex - 1 : currentIndex;
+          if (mainImg && images[imgIndex]) {
+            mainImg.src = images[imgIndex];
+            mainImg.classList.remove('hidden');
+            mainImg.classList.add('block');
+          }
+          if (mainVideo) {
+            mainVideo.classList.add('hidden');
+            mainVideo.classList.remove('block');
+            mainVideo.pause();
+          }
+        }
         updateDots();
       }
 
       prevBtn && prevBtn.addEventListener('click', function(e){
         e.preventDefault();
-        showImage(currentIndex - 1);
+        showItem(currentIndex - 1);
       }, { passive: false });
       nextBtn && nextBtn.addEventListener('click', function(e){
         e.preventDefault();
-        showImage(currentIndex + 1);
+        showItem(currentIndex + 1);
       }, { passive: false });
 
       // لمس برای اسلاید (موبایل)
@@ -538,10 +595,10 @@
         if (Math.abs(dx) > SWIPE_THRESHOLD) {
           if (dx < 0) {
             // کشیدن به چپ → بعدی
-            showImage(currentIndex + 1);
+            showItem(currentIndex + 1);
           } else {
             // کشیدن به راست → قبلی
-            showImage(currentIndex - 1);
+            showItem(currentIndex - 1);
           }
         }
         touchStartX = null;
