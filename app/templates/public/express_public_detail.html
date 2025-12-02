@@ -7,12 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjkM7yC4GdZ7+6puj8m0yP0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body { font-family: 'Vazirmatn', sans-serif; background: #f8fafc; color: #1f2933; }
-    .glass { backdrop-filter: blur(18px); background: rgba(255, 255, 255, 0.82); }
-    .dark .glass { background: rgba(15, 23, 42, 0.82); }
+    body { font-family: 'Vazirmatn', sans-serif; }
+    .glass { backdrop-filter: blur(18px); background: rgba(255, 255, 255, 0.9); }
+    .dark .glass { background: rgba(15, 23, 42, 0.9); }
   </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   {% set images = land.images or [] %}
   {% set primary_image = images[0] if images else None %}
   {% if primary_image and primary_image.startswith('uploads/') %}
@@ -21,22 +21,22 @@
     {% set hero_image = primary_image %}
   {% endif %}
 
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- هدر ثابت - سبک دیوار -->
-    <header class="sticky top-0 z-30 bg-white/95 border-b border-gray-200 backdrop-blur">
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur">
       <div class="max-w-4xl mx-auto h-14 px-3 sm:px-4 flex items-center justify-between">
         <button type="button"
                 onclick="history.back()"
-                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 text-gray-700"
+                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
                 aria-label="بازگشت">
           <i class="fas fa-arrow-right text-sm"></i>
         </button>
         <div class="flex flex-col items-center gap-0.5">
-          <span class="text-[11px] text-gray-500">فایل اکسپرس وینور</span>
-          <h1 class="text-sm font-bold text-gray-900 line-clamp-1">{{ land.title or 'فایل اکسپرس' }}</h1>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400">فایل اکسپرس وینور</span>
+          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1">{{ land.title or 'فایل اکسپرس' }}</h1>
         </div>
         <button type="button"
-                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 text-gray-700 copy-public-link"
+                class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 copy-public-link"
                 data-url="{{ request.url }}"
                 aria-label="کپی لینک">
           <i class="fas fa-share-nodes text-sm"></i>
@@ -47,11 +47,11 @@
     <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-3 pb-24 space-y-3">
       <!-- گالری تصویر - شبیه دیوار -->
       <section>
-        <div class="relative bg-gray-100 rounded-xl overflow-hidden aspect-[4/3] sm:aspect-video">
+        <div class="relative bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden aspect-[4/3] sm:aspect-video">
           {% if hero_image %}
             <img src="{{ hero_image }}" alt="{{ land.title }}" class="w-full h-full object-cover">
           {% else %}
-            <div class="w-full h-full grid place-items-center text-gray-300">
+            <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">
               <i class="fas fa-image text-4xl"></i>
             </div>
           {% endif %}
@@ -66,29 +66,29 @@
       </section>
 
       <!-- کارت عنوان و قیمت - دیوار استایل -->
-      <section class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 space-y-3">
+      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-3">
         <div class="flex items-start justify-between gap-3">
-          <h2 class="text-base sm:text-lg font-bold text-gray-900 leading-snug">
+          <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-50 leading-snug">
             {{ land.title or 'بدون عنوان' }}
           </h2>
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[11px] font-medium">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-200 text-[11px] font-medium">
             <i class="fas fa-bolt text-[10px]"></i>
             Express
           </span>
         </div>
 
         <div class="flex flex-col gap-1">
-          <div class="text-xl font-extrabold text-gray-900">
+          <div class="text-xl font-extrabold text-gray-900 dark:text-gray-50">
             {{ (land.price_total or 0)|toman }}
           </div>
           {% if land.price_per_meter %}
-          <div class="text-xs text-gray-600">
+          <div class="text-xs text-gray-600 dark:text-gray-300">
             هر متر {{ (land.price_per_meter or 0)|toman }}
           </div>
           {% endif %}
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
           {% if land.location or land.city %}
           <span class="inline-flex items-center gap-1">
             <i class="fas fa-map-marker-alt text-[10px]"></i>
@@ -112,9 +112,9 @@
 
       <!-- توضیحات -->
       {% if land.description %}
-      <section class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 space-y-2">
-        <h3 class="text-sm font-semibold text-gray-900">توضیحات</h3>
-        <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-2">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50">توضیحات</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line">
           {{ land.description }}
         </p>
       </section>
@@ -122,9 +122,9 @@
 
       <!-- ویژگی‌ها -->
       {% if land.features %}
-      <section class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 space-y-2">
-        <h3 class="text-sm font-semibold text-gray-900">ویژگی‌ها</h3>
-        <p class="text-sm text-gray-700 whitespace-pre-line">
+      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-2">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50">ویژگی‌ها</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
           {{ land.features }}
         </p>
       </section>
@@ -132,16 +132,16 @@
 
       <!-- مشاور معرفی‌شده / اطلاعات تماس -->
       {% if ref_partner %}
-      <section class="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 space-y-3">
+      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-3">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 grid place-items-center">
+          <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
             <i class="fas fa-user-tie text-sm"></i>
           </div>
           <div>
-            <p class="text-sm font-semibold text-gray-900">
+            <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
               {{ ref_partner.get('name') or 'مشاور اکسپرس' }}
             </p>
-            <p class="text-[11px] text-gray-500">
+            <p class="text-[11px] text-gray-500 dark:text-gray-400">
               {{ ref_partner.get('city') or 'مشاور منتخب اکسپرس' }}
             </p>
           </div>
@@ -170,8 +170,8 @@
     <div class="fixed inset-x-0 bottom-0 z-30 bg-white/95 border-t border-gray-200 backdrop-blur">
       <div class="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
         <div class="flex flex-col">
-          <span class="text-[11px] text-gray-500">هماهنگی بازدید</span>
-          <span class="text-xs font-medium text-gray-800">از طریق مشاور اکسپرس</span>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400">هماهنگی بازدید</span>
+          <span class="text-xs font-medium text-gray-800 dark:text-gray-100">از طریق مشاور اکسپرس</span>
         </div>
         {% if ref_partner and ref_partner.get('phone') %}
         <a href="tel:{{ ref_partner.get('phone') }}"
@@ -191,6 +191,25 @@
   </div>
 
   <script>
+    // فعال‌سازی تم تیره براساس تنظیم سیستم (مانند دیوار)
+    (function() {
+      try {
+        const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq && mq.matches) {
+          document.documentElement.classList.add('dark');
+        }
+        if (mq) {
+          mq.addEventListener('change', (e) => {
+            if (e.matches) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+          });
+        }
+      } catch (_) {}
+    })();
+
     document.querySelectorAll('.copy-public-link').forEach(function(btn) {
       btn.addEventListener('click', async function () {
         const url = btn.dataset.url || window.location.href;
