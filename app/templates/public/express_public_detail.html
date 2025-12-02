@@ -165,21 +165,22 @@
       </section>
       {% endif %}
 
-      <!-- بلوک لینک اختصاصی - سبک بلوک موقعیت -->
+      <!-- بلوک اشتراک‌گذاری لینک اختصاصی - سبک بلوک موقعیت -->
       <section>
         <button type="button"
-                class="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-600 transition-colors copy-public-link"
-                data-url="{{ request.url }}">
+                class="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-600 transition-colors share-public-link"
+                data-url="{{ request.url }}"
+                data-title="{{ land.title or 'فایل اکسپرس' }}">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 grid place-items-center">
-              <i class="fas fa-link text-sm"></i>
+              <i class="fas fa-share-nodes text-sm"></i>
             </div>
             <div class="text-right">
               <div class="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                لینک اختصاصی این فایل
+                اشتراک‌گذاری لینک این فایل
               </div>
               <div class="text-[11px] text-gray-500 dark:text-gray-400">
-                برای اشتراک‌گذاری با مشتریان استفاده کنید
+                ارسال برای مشتری در واتساپ، پیامک و شبکه‌های اجتماعی
               </div>
             </div>
           </div>
@@ -237,20 +238,27 @@
       } catch (_) {}
     })();
 
-    document.querySelectorAll('.copy-public-link').forEach(function(btn) {
+    // اشتراک‌گذاری لینک اختصاصی (ترجیحاً با Web Share API)
+    document.querySelectorAll('.share-public-link').forEach(function(btn) {
       btn.addEventListener('click', async function () {
         const url = btn.dataset.url || window.location.href;
-        try {
-          await navigator.clipboard.writeText(url);
-          btn.classList.add('bg-emerald-50','text-emerald-700');
-          btn.innerHTML = '<i class="fas fa-check ml-1"></i> لینک کپی شد';
-          setTimeout(() => {
-            btn.classList.remove('bg-emerald-50','text-emerald-700');
-            btn.innerHTML = '<i class="fas fa-share-nodes text-sm"></i>';
-          }, 2000);
-        } catch (error) {
-          console.error(error);
-          alert('امکان کپی لینک وجود ندارد');
+        const title = btn.dataset.title || document.title || 'فایل اکسپرس';
+        const text = 'مشاهده فایل اکسپرس در وینور';
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ title, text, url });
+          } catch (err) {
+            // کاربر لغو کرده یا خطای دیگر؛ کاری نمی‌کنیم
+            console.error(err);
+          }
+        } else {
+          // fallback ساده: نمایش URL برای انتخاب دستی
+          try {
+            window.prompt('لینک را برای اشتراک‌گذاری کپی کنید:', url);
+          } catch (e) {
+            console.error(e);
+          }
         }
       }, { passive: true });
     });
