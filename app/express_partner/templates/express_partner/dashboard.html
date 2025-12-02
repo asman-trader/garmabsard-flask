@@ -159,7 +159,7 @@
             </div>
             {% if land._commission_amount %}
             <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-              پورسانت: {{ (land._commission_amount or 0)|toman }}
+              پورسانت شما: {{ (land._commission_amount or 0)|toman }}
               {% if land._commission_pct %}
                 <span class="text-gray-500 dark:text-gray-400">({{ land._commission_pct }}%)</span>
               {% endif %}
