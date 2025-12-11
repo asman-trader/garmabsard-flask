@@ -236,6 +236,61 @@ ADMIN_PASSWORD = 'm430128185'
 # پیش‌فرض صفحه‌بندی برای گرید 3 ستونه
 PER_PAGE_DEFAULT = 9
 
+# -----------------------------------------------------------------------------
+# ردیابی کاربران آنلاین
+# -----------------------------------------------------------------------------
+# Dict برای ذخیره اطلاعات کاربران آنلاین
+# {session_id: {'timestamp': float, 'username': str, 'ip': str, 'last_activity': str}}
+_online_users = {}
+
+def _update_online_user(session_id: str, username: str = None, ip: str = None):
+    """به‌روزرسانی timestamp آخرین فعالیت کاربر"""
+    if session_id:
+        now = datetime.utcnow()
+        _online_users[session_id] = {
+            'timestamp': now.timestamp(),
+            'username': username or session.get('username') or 'کاربر',
+            'ip': ip or request.remote_addr or 'نامشخص',
+            'last_activity': now.strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+def _get_online_users_count() -> int:
+    """شمارش کاربران آنلاین (فعال در 5 دقیقه گذشته)"""
+    now = datetime.utcnow().timestamp()
+    timeout = 5 * 60  # 5 دقیقه
+    online = 0
+    # پاک‌سازی session‌های منقضی شده
+    expired = [sid for sid, data in _online_users.items() if isinstance(data, dict) and (now - data.get('timestamp', 0)) > timeout]
+    for sid in expired:
+        _online_users.pop(sid, None)
+    # شمارش کاربران آنلاین
+    for sid, data in _online_users.items():
+        if isinstance(data, dict) and (now - data.get('timestamp', 0)) <= timeout:
+            online += 1
+    return online
+
+def _get_online_users_list() -> List[Dict[str, Any]]:
+    """دریافت لیست کاربران آنلاین با اطلاعات کامل"""
+    now = datetime.utcnow().timestamp()
+    timeout = 5 * 60  # 5 دقیقه
+    online_list = []
+    # پاک‌سازی session‌های منقضی شده
+    expired = [sid for sid, data in _online_users.items() if isinstance(data, dict) and (now - data.get('timestamp', 0)) > timeout]
+    for sid in expired:
+        _online_users.pop(sid, None)
+    # جمع‌آوری کاربران آنلاین
+    for sid, data in _online_users.items():
+        if isinstance(data, dict) and (now - data.get('timestamp', 0)) <= timeout:
+            online_list.append({
+                'session_id': sid,
+                'username': data.get('username', 'کاربر'),
+                'ip': data.get('ip', 'نامشخص'),
+                'last_activity': data.get('last_activity', ''),
+                'timestamp': data.get('timestamp', 0)
+            })
+    # مرتب‌سازی بر اساس timestamp (جدیدترین اول)
+    online_list.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+    return online_list
 
 # -----------------------------------------------------------------------------
 # مسیرهای فایل‌ها (instance/data با fallback)
@@ -480,6 +535,20 @@ def login_required(view):
 # احراز هویت
 # -----------------------------------------------------------------------------
 
+# به‌روزرسانی خودکار timestamp کاربران آنلاین در تمام route‌های admin
+@admin_bp.before_request
+def track_online_user():
+    """به‌روزرسانی timestamp آخرین فعالیت کاربر در تمام route‌های admin"""
+    if session.get('logged_in'):
+        # استفاده از session.sid یا fallback به id(session)
+        try:
+            session_id = getattr(session, 'sid', None) or session.get('_id') or str(id(session))
+        except Exception:
+            session_id = str(id(session))
+        username = session.get('username') or ADMIN_USERNAME
+        ip = request.remote_addr or 'نامشخص'
+        _update_online_user(session_id, username, ip)
+
 @admin_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     """
@@ -493,6 +562,7 @@ def login():
         password = request.form.get('password', '')
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
+            session['username'] = username
             session.permanent = True  # ماندگاری session برای PWA
             flash('خوش آمدید؛ ورود موفق.', 'success')
             return redirect(url_for('admin.dashboard'))
@@ -588,12 +658,27 @@ def dashboard():
     # شمارش درخواست‌های در انتظار
     pending_apps = [a for a in applications if isinstance(a, dict) and a.get('status') not in ('approved', 'rejected')]
     
+    # شمارش کاربران آنلاین
+    online_users_count = _get_online_users_count()
+    
     return render_template(
         'admin/dashboard.html',
         partners_count=len(partners) if isinstance(partners, list) else 0,
         applications_count=len(pending_apps),
         assignments_count=len(assignments) if isinstance(assignments, list) else 0,
-        commissions_count=len(commissions) if isinstance(commissions, list) else 0
+        commissions_count=len(commissions) if isinstance(commissions, list) else 0,
+        online_users_count=online_users_count
+    )
+
+@admin_bp.route('/online-users', endpoint='online_users')
+@login_required
+def online_users_page():
+    """صفحه لیست کاربران آنلاین"""
+    online_users = _get_online_users_list()
+    return render_template(
+        'admin/online_users.html',
+        online_users=online_users,
+        online_users_count=len(online_users)
     )
 
 @admin_bp.route('/users')

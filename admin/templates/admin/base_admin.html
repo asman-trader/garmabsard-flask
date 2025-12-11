@@ -118,8 +118,8 @@
     </div>
   </main>
 
-  <!-- Bottom Navigation - Mobile Only (Divar Style) -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+  <!-- Bottom Navigation - All Sizes (Divar Style) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
     <div class="grid grid-cols-4 gap-0 px-2 py-2">
       <a href="{{ url_for('admin.dashboard') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
@@ -148,7 +148,7 @@
   </nav>
 
   <!-- Spacer for bottom nav -->
-  <div class="lg:hidden h-16"></div>
+  <div class="h-16"></div>
 
   {% block bottom_footer %}{% endblock %}
 
