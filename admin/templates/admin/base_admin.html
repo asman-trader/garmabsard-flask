@@ -120,7 +120,7 @@
 
   <!-- Bottom Navigation - All Sizes (Divar Style) -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
-    <div class="grid grid-cols-4 gap-0 px-2 py-2">
+    <div class="grid grid-cols-5 gap-0 px-2 py-2">
       <a href="{{ url_for('admin.dashboard') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
                 {% if request.endpoint == 'admin.dashboard' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
@@ -132,6 +132,12 @@
                 {% if request.endpoint == 'admin.express_partners' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
         <i class="fa-solid fa-users text-lg"></i>
         <span class="text-xs">همکاران</span>
+      </a>
+      <a href="{{ url_for('admin.add_express_listing') }}" 
+         class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
+                {% if request.endpoint == 'admin.add_express_listing' %}text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+        <i class="fa-solid fa-plus text-lg"></i>
+        <span class="text-xs">ثبت آگهی</span>
       </a>
       <a href="{{ url_for('admin.express_partner_applications') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
