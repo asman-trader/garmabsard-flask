@@ -310,10 +310,10 @@
       try{
         const d = new Date(String(dt||'').replace(' ','T'));
         if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('fa-IR', { 
-          timeZone: 'Asia/Tehran', 
-          year: 'numeric', 
-          month: '2-digit', 
+        return d.toLocaleDateString('fa-IR', {
+          timeZone: 'Asia/Tehran',
+          year: 'numeric',
+          month: '2-digit',
           day: '2-digit'
         });
       }catch(_){ return ''; }
@@ -322,6 +322,108 @@
       const raw = el.getAttribute('data-dt')||'';
       const formatted = fmt(raw);
       el.textContent = formatted || '—';
+    });
+  })();
+
+  // Pull-to-refresh functionality
+  (function(){
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let pullThreshold = 80; // Minimum distance to trigger refresh
+    let refreshElement = null;
+
+    function createRefreshElement() {
+      const el = document.createElement('div');
+      el.id = 'pull-refresh-indicator';
+      el.className = 'fixed top-0 left-0 right-0 z-[100] bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transform -translate-y-full transition-transform duration-300';
+      el.innerHTML = `
+        <div class="flex items-center justify-center py-4">
+          <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+            <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-emerald-500 rounded-full animate-spin"></div>
+            <span class="text-sm font-medium">در حال بروزرسانی...</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(el);
+      return el;
+    }
+
+    function showRefreshIndicator(progress) {
+      if (!refreshElement) {
+        refreshElement = createRefreshElement();
+      }
+      const translateY = Math.min(progress * 0.5, pullThreshold);
+      refreshElement.style.transform = `translateY(${translateY - pullThreshold}px)`;
+
+      // Change icon based on progress
+      if (progress >= pullThreshold) {
+        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+        refreshElement.querySelector('span').textContent = 'رها کنید برای بروزرسانی';
+      } else {
+        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
+        refreshElement.querySelector('span').textContent = 'کشیده و رها کنید';
+      }
+    }
+
+    function hideRefreshIndicator() {
+      if (refreshElement) {
+        refreshElement.style.transform = 'translateY(-100%)';
+        setTimeout(() => {
+          if (refreshElement) {
+            refreshElement.remove();
+            refreshElement = null;
+          }
+        }, 300);
+      }
+    }
+
+    function triggerRefresh() {
+      if (refreshElement) {
+        refreshElement.querySelector('.text-emerald-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+        refreshElement.querySelector('span').textContent = 'در حال بروزرسانی...';
+        refreshElement.style.transform = 'translateY(0)';
+      }
+
+      // Reload the page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+
+    document.addEventListener('touchstart', function(e) {
+      if (window.scrollY === 0) { // Only when at top of page
+        startY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      if (isPulling && startY > 0) {
+        currentY = e.touches[0].clientY;
+        const pullDistance = currentY - startY;
+
+        if (pullDistance > 0) { // Only downward pulls
+          e.preventDefault(); // Prevent default scrolling
+          showRefreshIndicator(pullDistance);
+        }
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      if (isPulling) {
+        const pullDistance = currentY - startY;
+
+        if (pullDistance >= pullThreshold) {
+          triggerRefresh();
+        } else {
+          hideRefreshIndicator();
+        }
+
+        startY = 0;
+        currentY = 0;
+        isPulling = false;
+      }
     });
   })();
 </script>
