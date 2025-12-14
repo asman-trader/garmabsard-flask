@@ -49,7 +49,7 @@ def _save_express_document(file, land_code):
     file.save(file_path)
     return filename
 from app.api.push import _load_subs, _send_one, _save_subs
-from app.services.sms import send_sms_template
+from app.services.sms import send_sms_template, send_sms_direct
 from app.utils.storage import load_users, load_reports, save_reports, save_ads
 from app.utils.storage import (
     load_express_partner_apps,
@@ -64,6 +64,8 @@ from app.utils.storage import (
     save_partner_files_meta,
     load_active_cities,
     save_active_cities,
+    load_sms_history,
+    save_sms_history,
 )
 from app.services.notifications import add_notification
 
@@ -970,14 +972,467 @@ def notifications_colleagues():
             except Exception:
                 subs_for_diag = []
             push_diag.update({'subs_count': len(subs_for_diag or [])})
+    
+    # بخش تست سیستم اعلان‌ها
+    test_message = None
+    test_error = None
+    test_result = None
+    
+    # بررسی درخواست تست
+    if request.method == 'POST' and request.form.get('test_action') == 'test':
+        from app.services.notifications import (
+            add_notification, get_user_notifications, get_all_notifications_stats,
+            _load_all, _normalize_user_id
+        )
+        test_phone = (request.form.get('test_phone') or '').strip()
+        if not test_phone:
+            test_error = 'شماره تلفن تست الزامی است.'
+        else:
+            try:
+                normalized = _normalize_user_id(test_phone)
+                
+                # افزودن اعلان تست
+                test_notif = add_notification(
+                    user_id=normalized,
+                    title="تست اعلان",
+                    body="این یک اعلان تستی است برای بررسی سیستم.",
+                    ntype="info"
+                )
+                
+                # دریافت اعلان‌ها
+                notifications = get_user_notifications(normalized, limit=10)
+                
+                # آمار کلی
+                stats = get_all_notifications_stats()
+                
+                # بررسی داده‌های خام
+                all_data = _load_all()
+                all_keys = list(all_data.keys())
+                
+                test_result = {
+                    "phone_raw": test_phone,
+                    "phone_normalized": normalized,
+                    "notification_added": test_notif.get("id") if test_notif else None,
+                    "notifications_found": len(notifications),
+                    "notifications_list": notifications[:5],  # فقط 5 تا اول
+                    "all_keys_in_storage": all_keys,
+                    "stats": stats
+                }
+                
+                test_message = f'تست موفقیت‌آمیز بود. اعلان برای {normalized} اضافه شد و {len(notifications)} اعلان پیدا شد.'
+            except Exception as e:
+                test_error = f'خطا در تست: {str(e)}'
+                current_app.logger.error(f"Notification test error: {e}", exc_info=True)
+    
+    # آمار کلی برای تست
+    try:
+        from app.services.notifications import get_all_notifications_stats
+        stats = get_all_notifications_stats()
+    except Exception:
+        stats = {}
 
     return render_template(
         'admin/colleagues_broadcast.html',
         message=message,
         error=error,
         push_diag=push_diag,
-        partners_count=len(approved_partners)
+        partners_count=len(approved_partners),
+        test_message=test_message,
+        test_error=test_error,
+        test_result=test_result,
+        stats=stats
     )
+
+# -----------------------------------------------------------------------------
+# ارسال پیامک به همکاران (Express Partners)
+# -----------------------------------------------------------------------------
+def _normalize_for_sms_ir(mobile: str) -> str:
+    """Convert various Iran mobile formats to 09xxxxxxxxx expected by sms.ir verify API."""
+    if not mobile:
+        return ''
+    s = str(mobile).strip().replace(' ', '').replace('-', '')
+    # +98XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('+98') and len(s) == 13 and s[3:].startswith('9'):
+        return '0' + s[3:]
+    # 0098XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('0098') and len(s) == 14 and s[4:].startswith('9'):
+        return '0' + s[4:]
+    # 98XXXXXXXXXX → 0XXXXXXXXXX
+    if s.startswith('98') and len(s) == 12 and s[2:].startswith('9'):
+        return '0' + s[2:]
+    # 9XXXXXXXXX → 09XXXXXXXXX
+    if s.startswith('9') and len(s) == 10:
+        return '0' + s
+    # already 09XXXXXXXXX
+    if s.startswith('0') and len(s) == 11:
+        return s
+    return s
+
+@admin_bp.route('/sms/colleagues', methods=['GET', 'POST'])
+@login_required
+def sms_colleagues():
+    """ارسال پیامک به تمام همکاران تایید شده"""
+    message = None
+    error = None
+    
+    # واکشی همکاران تایید شده
+    try:
+        partners = load_express_partners() or []
+    except Exception:
+        partners = []
+    
+    # فیلتر همکاران تایید شده و normalize کردن شماره تلفن
+    APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
+    approved_partners = []
+    for p in partners if isinstance(partners, list) else []:
+        if not isinstance(p, dict):
+            continue
+        status = p.get('status')
+        is_approved = False
+        if status is True:
+            is_approved = True
+        elif isinstance(status, str):
+            if status.lower() in APPROVED_PARTNER_STATUSES:
+                is_approved = True
+        
+        if is_approved:
+            phone_raw = str(p.get('phone') or '').strip()
+            if phone_raw:
+                phone_normalized = _normalize_for_sms_ir(phone_raw)
+                if phone_normalized and len(phone_normalized) == 11:
+                    approved_partners.append({
+                        'phone': phone_normalized,
+                        'name': p.get('name') or p.get('full_name') or phone_normalized
+                    })
+    
+    if request.method == 'POST':
+        send_mode = request.form.get('send_mode', 'template')  # 'template' or 'direct'
+        
+        if not approved_partners:
+            error = 'هیچ همکار تایید شده‌ای یافت نشد.'
+        else:
+            sent = 0
+            failed = 0
+            failed_details = []
+            from datetime import datetime
+            
+            if send_mode == 'direct':
+                # حالت ارسال مستقیم
+                direct_message = (request.form.get('direct_message') or '').strip()
+                line_number_raw = (request.form.get('line_number') or '').strip()
+                # استفاده از پیش‌فرض در صورت خالی بودن
+                from app.services.sms import DEFAULT_LINE_NUMBER
+                line_number = line_number_raw if line_number_raw else DEFAULT_LINE_NUMBER
+                
+                if not direct_message:
+                    error = 'متن پیامک الزامی است.'
+                else:
+                    for partner in approved_partners:
+                        try:
+                            phone_normalized = partner['phone']
+                            if phone_normalized and len(phone_normalized) == 11:
+                                current_app.logger.info(f"Sending direct SMS to partner: {partner['name']} ({phone_normalized})")
+                                
+                                result = send_sms_direct(
+                                    mobile=phone_normalized,
+                                    message=direct_message,
+                                    line_number=line_number
+                                )
+                                
+                                # ذخیره سابقه
+                                try:
+                                    history = load_sms_history() or []
+                                    record = {
+                                        'id': len(history) + 1,
+                                        'mobile': phone_normalized,
+                                        'recipient_name': partner['name'],
+                                        'template_id': None,
+                                        'message': direct_message,
+                                        'parameters': {},
+                                        'success': result.get('ok', False),
+                                        'status_code': result.get('status', 0),
+                                        'response': result.get('body', {}),
+                                        'source': 'admin_colleagues_direct',
+                                        'created_at': datetime.now().isoformat(),
+                                        'error': None if result.get('ok') else str(result.get('body', {}).get('message', 'Unknown error'))
+                                    }
+                                    history.append(record)
+                                    if len(history) > 10000:
+                                        history = history[-10000:]
+                                    save_sms_history(history)
+                                except Exception as hist_err:
+                                    current_app.logger.error(f"Failed to save SMS history: {hist_err}")
+                                
+                                if result.get('ok'):
+                                    sent += 1
+                                    current_app.logger.info(f"Direct SMS sent successfully to {phone_normalized}")
+                                else:
+                                    failed += 1
+                                    error_msg = result.get('body', {}).get('message', 'Unknown error')
+                                    failed_details.append({
+                                        'phone': phone_normalized,
+                                        'name': partner['name'],
+                                        'error': error_msg
+                                    })
+                                    current_app.logger.error(f"Direct SMS send failed to {phone_normalized}: {error_msg}")
+                            else:
+                                failed += 1
+                                failed_details.append({
+                                    'phone': partner.get('phone', 'unknown'),
+                                    'name': partner.get('name', 'unknown'),
+                                    'error': 'Invalid phone format'
+                                })
+                        except Exception as e:
+                            failed += 1
+                            failed_details.append({
+                                'phone': partner.get('phone', 'unknown'),
+                                'name': partner.get('name', 'unknown'),
+                                'error': str(e)
+                            })
+                            current_app.logger.error(f"Failed to send direct SMS to {partner.get('name', 'unknown')} ({partner.get('phone', 'unknown')}): {e}", exc_info=True)
+                    
+                    if failed > 0:
+                        message = f'پیامک مستقیم به {sent} همکار ارسال شد ({failed} خطا).'
+                        if len(failed_details) <= 5:
+                            error = 'خطاها: ' + '; '.join([f"{d['name']} ({d['phone']}): {d['error']}" for d in failed_details])
+                    else:
+                        message = f'پیامک مستقیم با موفقیت به {sent} همکار ارسال شد.'
+            
+            else:
+                # حالت ارسال با قالب
+                template_id_raw = (request.form.get('template_id') or '').strip()
+                message_text = (request.form.get('message_text') or '').strip()
+                
+                if not template_id_raw:
+                    error = 'شناسه قالب (template_id) الزامی است.'
+                else:
+                    try:
+                        template_id = int(template_id_raw)
+                    except ValueError:
+                        error = 'شناسه قالب باید یک عدد باشد.'
+                        return render_template(
+                            'admin/colleagues_sms.html',
+                            message=message,
+                            error=error,
+                            partners_count=len(approved_partners),
+                            approved_partners=approved_partners[:10],
+                            send_mode=send_mode
+                        )
+                    
+                    # استخراج پارامترها از فرم
+                    parameters = {}
+                    for k, v in request.form.items():
+                        if k.startswith('param_') and k != 'param_key[]' and k != 'param_value[]':
+                            param_name = k.replace('param_', '')
+                            if param_name and v:
+                                parameters[param_name] = v
+                    
+                    # پشتیبانی از آرایه‌های پارامتر
+                    param_keys = request.form.getlist('param_key[]')
+                    param_values = request.form.getlist('param_value[]')
+                    for i, key in enumerate(param_keys):
+                        if key and i < len(param_values):
+                            parameters[key.strip()] = param_values[i].strip()
+                    
+                    # اگر پیام متنی داده شده، از آن به عنوان پارامتر استفاده می‌کنیم
+                    if message_text and not parameters:
+                        parameters['MESSAGE'] = message_text
+                    
+                    for partner in approved_partners:
+                        try:
+                            phone_normalized = partner['phone']
+                            if phone_normalized and len(phone_normalized) == 11:
+                                current_app.logger.info(f"Sending SMS to partner: {partner['name']} ({phone_normalized})")
+                                
+                                result = send_sms_template(
+                                    mobile=phone_normalized,
+                                    template_id=template_id,
+                                    parameters=parameters if parameters else None
+                                )
+                                
+                                # ذخیره سابقه
+                                try:
+                                    history = load_sms_history() or []
+                                    record = {
+                                        'id': len(history) + 1,
+                                        'mobile': phone_normalized,
+                                        'recipient_name': partner['name'],
+                                        'template_id': template_id,
+                                        'parameters': parameters or {},
+                                        'success': result.get('ok', False),
+                                        'status_code': result.get('status', 0),
+                                        'response': result.get('body', {}),
+                                        'source': 'admin_colleagues',
+                                        'created_at': datetime.now().isoformat(),
+                                        'error': None if result.get('ok') else str(result.get('body', {}).get('message', 'Unknown error'))
+                                    }
+                                    history.append(record)
+                                    if len(history) > 10000:
+                                        history = history[-10000:]
+                                    save_sms_history(history)
+                                except Exception as hist_err:
+                                    current_app.logger.error(f"Failed to save SMS history: {hist_err}")
+                                
+                                if result.get('ok'):
+                                    sent += 1
+                                    current_app.logger.info(f"SMS sent successfully to {phone_normalized}")
+                                else:
+                                    failed += 1
+                                    error_msg = result.get('body', {}).get('message', 'Unknown error')
+                                    failed_details.append({
+                                        'phone': phone_normalized,
+                                        'name': partner['name'],
+                                        'error': error_msg
+                                    })
+                                    current_app.logger.error(f"SMS send failed to {phone_normalized}: {error_msg}")
+                            else:
+                                failed += 1
+                                failed_details.append({
+                                    'phone': partner.get('phone', 'unknown'),
+                                    'name': partner.get('name', 'unknown'),
+                                    'error': 'Invalid phone format'
+                                })
+                        except Exception as e:
+                            failed += 1
+                            failed_details.append({
+                                'phone': partner.get('phone', 'unknown'),
+                                'name': partner.get('name', 'unknown'),
+                                'error': str(e)
+                            })
+                            current_app.logger.error(f"Failed to send SMS to {partner.get('name', 'unknown')} ({partner.get('phone', 'unknown')}): {e}", exc_info=True)
+                    
+                    if failed > 0:
+                        message = f'پیامک به {sent} همکار ارسال شد ({failed} خطا).'
+                        if len(failed_details) <= 5:
+                            error = 'خطاها: ' + '; '.join([f"{d['name']} ({d['phone']}): {d['error']}" for d in failed_details])
+                    else:
+                        message = f'پیامک با موفقیت به {sent} همکار ارسال شد.'
+    
+    # واکشی سابقه ارسال‌ها
+    try:
+        history = load_sms_history() or []
+        # فیلتر سابقه برای همکاران (هم با قالب و هم مستقیم)
+        colleagues_history = [h for h in history if h.get('source') in ('admin_colleagues', 'admin_colleagues_direct')]
+        # مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
+        colleagues_history.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # Pagination برای سابقه
+        history_page = int(request.args.get('history_page', 1))
+        history_per_page = 20
+        history_total = len(colleagues_history)
+        history_start = (history_page - 1) * history_per_page
+        history_end = history_start + history_per_page
+        paginated_history = colleagues_history[history_start:history_end]
+        
+        # آمار سابقه
+        history_stats = {
+            'total': history_total,
+            'sent': len([h for h in colleagues_history if h.get('success')]),
+            'failed': len([h for h in colleagues_history if not h.get('success')])
+        }
+    except Exception as e:
+        current_app.logger.error(f"Error loading SMS history: {e}")
+        paginated_history = []
+        history_stats = {'total': 0, 'sent': 0, 'failed': 0}
+        history_page = 1
+        history_per_page = 20
+        history_total = 0
+    
+    # تعیین حالت پیش‌فرض
+    send_mode = request.args.get('mode', 'template')  # 'template' or 'direct'
+    if request.method == 'POST':
+        send_mode = request.form.get('send_mode', 'template')
+    
+    return render_template(
+        'admin/colleagues_sms.html',
+        message=message,
+        error=error,
+        partners_count=len(approved_partners),
+        approved_partners=approved_partners[:10],  # نمایش 10 مورد اول برای پیش‌نمایش
+        history=paginated_history,
+        history_stats=history_stats,
+        history_page=history_page,
+        history_per_page=history_per_page,
+        history_total=history_total,
+        history_total_pages=(history_total + history_per_page - 1) // history_per_page if history_total > 0 else 0,
+        send_mode=send_mode
+    )
+
+# -----------------------------------------------------------------------------
+# سابقه ارسال پیامک‌ها
+# -----------------------------------------------------------------------------
+@admin_bp.route('/sms/history', methods=['GET'])
+@login_required
+def sms_history():
+    """نمایش سابقه ارسال پیامک‌ها"""
+    try:
+        history = load_sms_history() or []
+        
+        # فیلترها
+        mobile_filter = request.args.get('mobile', '').strip()
+        success_filter = request.args.get('success')
+        source_filter = request.args.get('source', '').strip()
+        
+        filtered_history = history
+        
+        if mobile_filter:
+            mobile_normalized = _normalize_for_sms_ir(mobile_filter)
+            filtered_history = [h for h in filtered_history if h.get('mobile') == mobile_normalized]
+        
+        if success_filter is not None and success_filter != '':
+            success_bool = success_filter.lower() == 'true'
+            filtered_history = [h for h in filtered_history if h.get('success') == success_bool]
+        
+        if source_filter:
+            filtered_history = [h for h in filtered_history if h.get('source') == source_filter]
+        
+        # مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
+        filtered_history.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # Pagination
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        total = len(filtered_history)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_history = filtered_history[start:end]
+        
+        # آمار
+        total_sent = len([h for h in history if h.get('success')])
+        total_failed = len([h for h in history if not h.get('success')])
+        
+        return render_template(
+            'admin/sms_history.html',
+            history=paginated_history,
+            total=total,
+            page=page,
+            per_page=per_page,
+            total_pages=(total + per_page - 1) // per_page,
+            mobile_filter=mobile_filter,
+            success_filter=success_filter,
+            source_filter=source_filter,
+            stats={
+                'total_records': len(history),
+                'total_sent': total_sent,
+                'total_failed': total_failed,
+                'filtered_total': total
+            }
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error loading SMS history: {e}", exc_info=True)
+        flash('خطا در بارگذاری سابقه ارسال‌ها', 'danger')
+        return render_template(
+            'admin/sms_history.html',
+            history=[],
+            total=0,
+            page=1,
+            per_page=50,
+            total_pages=0,
+            mobile_filter='',
+            success_filter='',
+            source_filter='',
+            stats={'total_records': 0, 'total_sent': 0, 'total_failed': 0, 'filtered_total': 0}
+        )
 
 # -----------------------------------------------------------------------------
 # تست سیستم اعلان‌ها

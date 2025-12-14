@@ -42,9 +42,17 @@ try:
 except Exception:
     express_api_bp = None  # type: Optional[Blueprint]
 
+# -----------------------------
+# sms (اختیاری)
+# -----------------------------
+try:
+    from .sms import sms_api_bp  # type: ignore
+except Exception:
+    sms_api_bp = None  # type: Optional[Blueprint]
+
 def available_blueprints() -> List[Blueprint]:
     """لیست بلوپرینت‌های موجود (Noneها حذف می‌شوند) برای ثبت سریع در create_app."""
-    bps: List[Optional[Blueprint]] = [uploads_bp, push_bp, express_api_bp]
+    bps: List[Optional[Blueprint]] = [uploads_bp, push_bp, express_api_bp, sms_api_bp]
     return [bp for bp in bps if bp is not None]
 
-__all__ = ["uploads_bp", "push_bp", "express_api_bp", "available_blueprints"]
+__all__ = ["uploads_bp", "push_bp", "express_api_bp", "sms_api_bp", "available_blueprints"]

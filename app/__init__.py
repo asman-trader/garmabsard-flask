@@ -219,12 +219,22 @@ def create_app() -> Flask:
     except Exception as e:
         app.logger.warning(f"Express API disabled: {e}")
 
+    # SMS API (برای ارتباط با sms.ir)
+    sms_api_bp = None
+    try:
+        from .api.sms import sms_api_bp as _sms_api_bp
+        sms_api_bp = _sms_api_bp
+    except Exception as e:
+        app.logger.warning(f"SMS API disabled: {e}")
+
     # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
     if webhook_bp is not None:
         app.register_blueprint(webhook_bp)
     if express_api_bp is not None:
         app.register_blueprint(express_api_bp)
+    if sms_api_bp is not None:
+        app.register_blueprint(sms_api_bp)
 
     # Express Partner blueprint
     try:
@@ -258,6 +268,13 @@ def create_app() -> Flask:
         if express_api_bp is not None:
             try:
                 csrf.exempt(express_api_bp)
+            except Exception:
+                pass
+
+        # SMS API از CSRF مستثنا است
+        if sms_api_bp is not None:
+            try:
+                csrf.exempt(sms_api_bp)
             except Exception:
                 pass
 

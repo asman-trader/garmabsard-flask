@@ -169,3 +169,7 @@ def load_express_assignments(app=None):    return _load(ensure_file('EXPRESS_ASS
 def save_express_assignments(items, app=None): return _save(ensure_file('EXPRESS_ASSIGNMENTS_FILE','express_assignments.json',[],app), items)
 def load_express_commissions(app=None):    return _load(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app))
 def save_express_commissions(items, app=None): return _save(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app), items)
+
+# SMS History
+def load_sms_history(app=None):    return _load(ensure_file('SMS_HISTORY_FILE','sms_history.json',[],app))
+def save_sms_history(items, app=None): return _save(ensure_file('SMS_HISTORY_FILE','sms_history.json',[],app), items)

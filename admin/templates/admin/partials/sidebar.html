@@ -75,7 +75,7 @@
       <span class="text-sm font-medium">فایل‌های همکار</span>
     </a>
 
-    <!-- ارسال پیام به همکاران -->
+    <!-- نوتیفیکیشن -->
     <a href="{{ url_for('admin.notifications_colleagues') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
               {% if _endpoint == 'admin.notifications_colleagues' %}
@@ -83,20 +83,20 @@
               {% else %}
                 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
               {% endif %}">
-      <i class="fa-solid fa-paper-plane w-5"></i>
-      <span class="text-sm font-medium">ارسال پیام به همکاران</span>
+      <i class="fa-solid fa-bell w-5"></i>
+      <span class="text-sm font-medium">نوتیفیکیشن</span>
     </a>
 
-    <!-- تست سیستم اعلان‌ها -->
-    <a href="{{ url_for('admin.notifications_test') }}" 
+    <!-- پیامک -->
+    <a href="{{ url_for('admin.sms_colleagues') }}" 
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
-              {% if _endpoint == 'admin.notifications_test' %}
+              {% if _endpoint == 'admin.sms_colleagues' %}
                 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
               {% else %}
                 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
               {% endif %}">
-      <i class="fa-solid fa-vial w-5"></i>
-      <span class="text-sm font-medium">تست سیستم اعلان‌ها</span>
+      <i class="fa-solid fa-sms w-5"></i>
+      <span class="text-sm font-medium">پیامک</span>
     </a>
 
     <!-- شهرهای فعال -->

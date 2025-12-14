@@ -1,0 +1,243 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}سابقه ارسال پیامک‌ها | پنل مدیریت وینور{% endblock %}
+
+{% block page_title %}
+<i class="fa-solid fa-clock-rotate-left"></i>
+سابقه ارسال پیامک‌ها
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  
+  <!-- آمار کلی -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="text-sm text-gray-500 dark:text-gray-400">کل رکوردها</div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.total_records or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="text-sm text-gray-500 dark:text-gray-400">ارسال موفق</div>
+      <div class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{{ stats.total_sent or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="text-sm text-gray-500 dark:text-gray-400">ارسال ناموفق</div>
+      <div class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{{ stats.total_failed or 0 }}</div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="text-sm text-gray-500 dark:text-gray-400">نتیجه فیلتر</div>
+      <div class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{{ stats.filtered_total or 0 }}</div>
+    </div>
+  </div>
+
+  <!-- فیلترها -->
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+    <form method="get" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">شماره موبایل</label>
+        <input 
+          type="text" 
+          name="mobile" 
+          value="{{ mobile_filter }}" 
+          placeholder="09123456789"
+          class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">وضعیت</label>
+        <select 
+          name="success" 
+          class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="">همه</option>
+          <option value="true" {% if success_filter == 'true' %}selected{% endif %}>موفق</option>
+          <option value="false" {% if success_filter == 'false' %}selected{% endif %}>ناموفق</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">منبع</label>
+        <select 
+          name="source" 
+          class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="">همه</option>
+          <option value="api" {% if source_filter == 'api' %}selected{% endif %}>API</option>
+          <option value="api_bulk" {% if source_filter == 'api_bulk' %}selected{% endif %}>API (گروهی)</option>
+          <option value="admin_colleagues" {% if source_filter == 'admin_colleagues' %}selected{% endif %}>پنل ادمین (همکاران)</option>
+          <option value="admin_campaign" {% if source_filter == 'admin_campaign' %}selected{% endif %}>پنل ادمین (کمپین)</option>
+        </select>
+      </div>
+      <div class="flex items-end gap-2">
+        <button 
+          type="submit" 
+          class="px-4 py-2 rounded-lg bg-vinor-600 text-white text-sm font-medium hover:bg-vinor-700 transition-colors"
+        >
+          فیلتر
+        </button>
+        <a 
+          href="{{ url_for('admin.sms_history') }}" 
+          class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm font-medium hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+        >
+          پاک کردن
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- جدول سابقه -->
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+          <tr>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">تاریخ</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">شماره</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">نام</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">قالب</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">منبع</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">وضعیت</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">جزئیات</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          {% if history and history|length > 0 %}
+            {% for record in history %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+              <td class="px-4 py-3 text-gray-900 dark:text-white">
+                {% if record.created_at %}
+                  {{ record.created_at[:19]|replace('T', ' ') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white font-mono text-xs">
+                {{ record.mobile or '-' }}
+              </td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white">
+                {{ record.recipient_name or '-' }}
+              </td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white">
+                {{ record.template_id or '-' }}
+              </td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                {% if record.source == 'api' %}
+                  <span class="px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">API</span>
+                {% elif record.source == 'api_bulk' %}
+                  <span class="px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">API گروهی</span>
+                {% elif record.source == 'admin_colleagues' %}
+                  <span class="px-2 py-1 rounded text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">همکاران</span>
+                {% elif record.source == 'admin_campaign' %}
+                  <span class="px-2 py-1 rounded text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">کمپین</span>
+                {% else %}
+                  <span class="px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ record.source or '-' }}</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">
+                {% if record.success %}
+                  <span class="px-2 py-1 rounded text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium">✓ موفق</span>
+                {% else %}
+                  <span class="px-2 py-1 rounded text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium">✗ ناموفق</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">
+                <button 
+                  onclick="showDetails({{ loop.index0 }})"
+                  class="text-vinor-600 dark:text-vinor-400 hover:underline text-xs"
+                >
+                  مشاهده
+                </button>
+                <div id="details-{{ loop.index0 }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
+                  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-4">
+                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">جزئیات ارسال</h3>
+                      <button onclick="document.getElementById('details-{{ loop.index0 }}').classList.add('hidden')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">شماره موبایل:</span>
+                        <span class="text-gray-900 dark:text-white font-mono">{{ record.mobile or '-' }}</span>
+                      </div>
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">نام گیرنده:</span>
+                        <span class="text-gray-900 dark:text-white">{{ record.recipient_name or '-' }}</span>
+                      </div>
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">شناسه قالب:</span>
+                        <span class="text-gray-900 dark:text-white">{{ record.template_id or '-' }}</span>
+                      </div>
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">پارامترها:</span>
+                        <pre class="mt-1 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">{{ (record.parameters or {})|tojson(indent=2) }}</pre>
+                      </div>
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">کد وضعیت:</span>
+                        <span class="text-gray-900 dark:text-white">{{ record.status_code or '-' }}</span>
+                      </div>
+                      {% if record.error %}
+                      <div>
+                        <span class="font-semibold text-red-700 dark:text-red-300">خطا:</span>
+                        <span class="text-red-600 dark:text-red-400">{{ record.error }}</span>
+                      </div>
+                      {% endif %}
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">پاسخ API:</span>
+                        <pre class="mt-1 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">{{ (record.response or {})|tojson(indent=2) }}</pre>
+                      </div>
+                      <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300">تاریخ:</span>
+                        <span class="text-gray-900 dark:text-white">{{ record.created_at or '-' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                هیچ رکوردی یافت نشد
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        صفحه {{ page }} از {{ total_pages }} ({{ total }} رکورد)
+      </div>
+      <div class="flex gap-2">
+        {% if page > 1 %}
+        <a 
+          href="?page={{ page - 1 }}{% if mobile_filter %}&mobile={{ mobile_filter }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}"
+          class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm hover:border-gray-300 dark:hover:border-gray-600"
+        >
+          قبلی
+        </a>
+        {% endif %}
+        {% if page < total_pages %}
+        <a 
+          href="?page={{ page + 1 }}{% if mobile_filter %}&mobile={{ mobile_filter }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}"
+          class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm hover:border-gray-300 dark:hover:border-gray-600"
+        >
+          بعدی
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function showDetails(index) {
+  document.getElementById('details-' + index).classList.remove('hidden');
+}
+</script>
+{% endblock %}
