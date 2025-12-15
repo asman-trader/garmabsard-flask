@@ -19,6 +19,7 @@ from ..utils.storage import (
     load_partner_files_meta, save_partner_files_meta,
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
     load_ads_cached, load_active_cities,
+    load_sms_history, save_sms_history,
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
@@ -366,14 +367,48 @@ def apply_step3():
         
         # ارسال پیامک "در حال بررسی" به همکار
         try:
-            sms_message = "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور"
-            sms_result = send_sms_direct(mobile=me_phone, message=sms_message)
-            if sms_result.get('ok'):
-                current_app.logger.info(f"Application confirmation SMS sent to {me_phone}")
+            # Normalize شماره تلفن قبل از ارسال
+            phone_normalized = _normalize_phone(me_phone)
+            
+            # بررسی اعتبار شماره تلفن
+            if phone_normalized and len(phone_normalized) == 11 and phone_normalized.startswith('09'):
+                sms_message = "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور"
+                current_app.logger.info(f"Attempting to send SMS to {phone_normalized} (original: {me_phone})")
+                
+                sms_result = send_sms_direct(mobile=phone_normalized, message=sms_message)
+                
+                # ذخیره سابقه ارسال پیامک
+                try:
+                    history = load_sms_history(current_app) or []
+                    record = {
+                        'id': len(history) + 1,
+                        'mobile': phone_normalized,
+                        'recipient_name': data.get('name', ''),
+                        'template_id': None,
+                        'message': sms_message,
+                        'parameters': {},
+                        'success': sms_result.get('ok', False),
+                        'status_code': sms_result.get('status', 0),
+                        'response': sms_result.get('body', {}),
+                        'source': 'express_partner_application',
+                        'created_at': datetime.utcnow().isoformat() + 'Z',
+                        'error': None if sms_result.get('ok') else str(sms_result.get('body', {}).get('message', 'Unknown error'))
+                    }
+                    history.append(record)
+                    if len(history) > 10000:
+                        history = history[-10000:]
+                    save_sms_history(history, current_app)
+                except Exception as hist_err:
+                    current_app.logger.error(f"Failed to save SMS history: {hist_err}")
+                
+                if sms_result.get('ok'):
+                    current_app.logger.info(f"✅ Application confirmation SMS sent successfully to {phone_normalized}")
+                else:
+                    current_app.logger.error(f"❌ Failed to send application confirmation SMS to {phone_normalized}. Status: {sms_result.get('status')}, Body: {sms_result.get('body')}")
             else:
-                current_app.logger.warning(f"Failed to send application confirmation SMS to {me_phone}: {sms_result.get('body')}")
+                current_app.logger.error(f"❌ Invalid phone number format: {me_phone} -> normalized: {phone_normalized}")
         except Exception as e:
-            current_app.logger.error(f"Error sending application confirmation SMS to {me_phone}: {e}")
+            current_app.logger.error(f"❌ Error sending application confirmation SMS to {me_phone}: {e}", exc_info=True)
         
         session.pop('apply_data', None)
         return render_template("express_partner/thanks.html", name=record.get('name',''), brand="وینور", domain="vinor.ir")
