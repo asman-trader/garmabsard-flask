@@ -487,16 +487,18 @@ def apply_cancel():
     apps = load_express_partner_apps() or []
     updated = False
     for app in apps:
-        if str(app.get('phone')) == me_phone and str(app.get('status') or '').strip().lower() in ('', 'new', 'pending', 'under_review'):
-            app['status'] = 'cancelled'
-            app['cancelled_at'] = datetime.utcnow().isoformat() + "Z"
-            updated = True
-            break
+        try:
+            if str(app.get('phone')) == me_phone and str(app.get('status') or '').strip().lower() in ('', 'new', 'pending', 'under_review'):
+                app['status'] = 'cancelled'
+                app['cancelled_at'] = datetime.utcnow().isoformat() + "Z"
+                updated = True
+                break
+        except Exception:
+            continue
     if updated:
         save_express_partner_apps(apps)
         flash('درخواست شما لغو شد. در هر زمان می‌توانید دوباره درخواست ثبت کنید.', 'info')
-    else:
-        flash('درخواست فعالی برای لغو یافت نشد.', 'warning')
+    # اگر درخواستی پیدا نشود (مثلاً قبلاً تأیید/رد یا حذف شده)، بدون خطا فقط به مرحله ۱ برگرد
     return redirect(url_for('express_partner.apply_step1'))
 
 

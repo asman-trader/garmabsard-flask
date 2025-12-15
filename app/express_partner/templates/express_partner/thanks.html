@@ -70,10 +70,21 @@
 
     <!-- Actions -->
     <div class="space-y-3">
+      <!-- ویرایش اطلاعات (در عمل لغو + شروع مجدد فرم) -->
       <form method="post" action="{{ url_for('express_partner.apply_cancel') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit"
-                onclick="return confirm('آیا از لغو درخواست مطمئن هستید؟')"
+                onclick="return confirm('برای ویرایش اطلاعات، درخواست فعلی لغو و فرم از ابتدا باز می‌شود. ادامه می‌دهید؟')"
+                class="w-full py-3 rounded-xl border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 font-medium text-sm hover:bg-violet-50 dark:hover:bg-violet-900/20 transition">
+          ویرایش اطلاعات
+        </button>
+      </form>
+
+      <!-- لغو کامل درخواست -->
+      <form method="post" action="{{ url_for('express_partner.apply_cancel') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit"
+                onclick="return confirm('آیا از لغو کامل درخواست مطمئن هستید؟')"
                 class="w-full py-3 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 font-medium text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
           لغو درخواست
         </button>
