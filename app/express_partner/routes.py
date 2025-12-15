@@ -22,6 +22,7 @@ from ..utils.storage import (
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
+from ..services.sms import send_sms_direct
 from flask import jsonify
 
 
@@ -362,6 +363,18 @@ def apply_step3():
         }
         apps.append(record)
         save_express_partner_apps(apps)
+        
+        # ارسال پیامک "در حال بررسی" به همکار
+        try:
+            sms_message = "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور"
+            sms_result = send_sms_direct(mobile=me_phone, message=sms_message)
+            if sms_result.get('ok'):
+                current_app.logger.info(f"Application confirmation SMS sent to {me_phone}")
+            else:
+                current_app.logger.warning(f"Failed to send application confirmation SMS to {me_phone}: {sms_result.get('body')}")
+        except Exception as e:
+            current_app.logger.error(f"Error sending application confirmation SMS to {me_phone}: {e}")
+        
         session.pop('apply_data', None)
         return render_template("express_partner/thanks.html", name=record.get('name',''), brand="وینور", domain="vinor.ir")
 
