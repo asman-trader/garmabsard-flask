@@ -1272,28 +1272,54 @@ def notifications_debug():
 @express_partner_bp.route('/api/check-status', methods=['GET'], endpoint='check_status')
 def check_status():
     """بررسی وضعیت تایید همکار - برای pull-to-refresh"""
-    if not session.get("user_phone"):
-        return jsonify({"success": False, "error": "unauthorized"}), 401
-    
-    me_phone = (session.get("user_phone") or "").strip()
     try:
-        partners = load_express_partners() or []
+        if not session.get("user_phone"):
+            current_app.logger.warning("check_status: No user_phone in session")
+            return jsonify({"success": False, "error": "unauthorized"}), 401
+        
+        me_phone = (session.get("user_phone") or "").strip()
+        if not me_phone:
+            current_app.logger.warning("check_status: Empty user_phone")
+            return jsonify({"success": False, "error": "empty_phone"}), 400
+        
+        current_app.logger.info(f"check_status: Checking status for phone: {me_phone}")
+        
+        try:
+            partners = load_express_partners() or []
+            current_app.logger.debug(f"check_status: Loaded {len(partners)} partners")
+        except Exception as load_err:
+            current_app.logger.error(f"check_status: Error loading partners: {load_err}")
+            return jsonify({"success": False, "error": "failed_to_load_partners"}), 500
+        
         profile = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
         
-        if profile and _is_partner_approved(profile):
-            return jsonify({
-                "success": True,
-                "approved": True,
-                "redirect_url": url_for("express_partner.dashboard")
-            })
-        else:
-            return jsonify({
-                "success": True,
-                "approved": False
-            })
+        if profile:
+            current_app.logger.info(f"check_status: Profile found for {me_phone}, status: {profile.get('status')}")
+            is_approved = _is_partner_approved(profile)
+            current_app.logger.info(f"check_status: Is approved: {is_approved}")
+            
+            if is_approved:
+                redirect_url = url_for("express_partner.dashboard")
+                current_app.logger.info(f"check_status: Partner approved, redirecting to: {redirect_url}")
+                return jsonify({
+                    "success": True,
+                    "approved": True,
+                    "redirect_url": redirect_url
+                })
+        
+        current_app.logger.info(f"check_status: Partner not approved yet for {me_phone}")
+        return jsonify({
+            "success": True,
+            "approved": False
+        })
+        
     except Exception as e:
-        current_app.logger.error(f"Error checking partner status: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        current_app.logger.error(f"check_status: Unexpected error: {e}", exc_info=True)
+        return jsonify({
+            "success": False, 
+            "error": "internal_error",
+            "message": str(e)
+        }), 500
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')

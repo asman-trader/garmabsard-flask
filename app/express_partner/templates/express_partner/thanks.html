@@ -166,22 +166,57 @@
           credentials: 'same-origin'
         });
 
-        const data = await response.json();
+        // بررسی وضعیت HTTP response
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText || 'خطا در ارتباط با سرور'}`);
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          throw new Error('پاسخ نامعتبر از سرور');
+        }
 
         if (data.success && data.approved) {
           // همکار تایید شده - هدایت به dashboard
           if (refreshElement) {
             refreshElement.querySelector('span').textContent = '✅ تایید شد! در حال انتقال...';
-            refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+            const indicatorDiv = refreshElement.querySelector('.text-gray-600, .text-emerald-600, .text-red-600');
+            if (indicatorDiv) {
+              indicatorDiv.className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+            }
           }
           setTimeout(() => {
-            window.location.href = data.redirect_url;
+            if (data.redirect_url) {
+              window.location.href = data.redirect_url;
+            } else {
+              window.location.href = '{{ url_for("express_partner.dashboard") }}';
+            }
           }, 500);
+        } else if (data.success === false) {
+          // خطا از سمت سرور
+          const errorMsg = data.error || 'خطا در بررسی وضعیت';
+          if (refreshElement) {
+            refreshElement.querySelector('span').textContent = errorMsg;
+            const indicatorDiv = refreshElement.querySelector('.text-gray-600, .text-emerald-600, .text-red-600');
+            if (indicatorDiv) {
+              indicatorDiv.className = 'flex items-center gap-3 text-red-600 dark:text-red-400';
+            }
+          }
+          setTimeout(() => {
+            hideRefreshIndicator();
+            isRefreshing = false;
+          }, 2000);
         } else {
           // هنوز تایید نشده
           if (refreshElement) {
             refreshElement.querySelector('span').textContent = 'هنوز در انتظار بررسی';
-            refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
+            const indicatorDiv = refreshElement.querySelector('.text-gray-600, .text-emerald-600, .text-red-600');
+            if (indicatorDiv) {
+              indicatorDiv.className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
+            }
           }
           setTimeout(() => {
             hideRefreshIndicator();
@@ -191,13 +226,16 @@
       } catch (error) {
         console.error('Error checking status:', error);
         if (refreshElement) {
-          refreshElement.querySelector('span').textContent = 'خطا در بررسی وضعیت';
-          refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-red-600 dark:text-red-400';
+          refreshElement.querySelector('span').textContent = 'خطا در بررسی وضعیت: ' + (error.message || 'خطای ناشناخته');
+          const indicatorDiv = refreshElement.querySelector('.text-gray-600, .text-emerald-600, .text-red-600');
+          if (indicatorDiv) {
+            indicatorDiv.className = 'flex items-center gap-3 text-red-600 dark:text-red-400';
+          }
         }
         setTimeout(() => {
           hideRefreshIndicator();
           isRefreshing = false;
-        }, 1500);
+        }, 2000);
       }
     }
 
