@@ -349,6 +349,8 @@ def _default_settings() -> Dict[str, Any]:
         'sms_line_number': '300089930616',  # شماره خط اختصاصی SMS
         # پیام درخواست همکاری
         'partner_application_sms_message': 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور',
+        # پیام تایید همکاری
+        'partner_approval_sms_message': 'پنل همکاری وینور برای شما فعال شد. وینور',
     }
 
 def get_settings() -> Dict[str, Any]:
@@ -1536,6 +1538,7 @@ def settings():
         # تنظیمات SMS
         sms_line_number = request.form.get('sms_line_number', '300089930616') or '300089930616'
         partner_application_sms_message = request.form.get('partner_application_sms_message', '').strip()
+        partner_approval_sms_message = request.form.get('partner_approval_sms_message', '').strip()
         
         save_settings({
             'approval_method': approval_method,
@@ -1544,6 +1547,7 @@ def settings():
             'ad_post_price_toman': post_price_toman,
             'sms_line_number': sms_line_number,
             'partner_application_sms_message': partner_application_sms_message,
+            'partner_approval_sms_message': partner_approval_sms_message,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
@@ -3114,6 +3118,56 @@ def express_partner_application_approve(aid: int):
             )
     except Exception:
         pass
+
+    # ارسال پیامک تایید همکاری
+    try:
+        if phone and len(phone) == 11 and phone.startswith('09'):
+            settings = get_settings()
+            sms_message = settings.get('partner_approval_sms_message', 'پنل همکاری وینور برای شما فعال شد. وینور')
+            sms_line_number = settings.get('sms_line_number', '300089930616')
+            
+            # اگر پیام خالی است، از پیش‌فرض استفاده کن
+            if not sms_message or not sms_message.strip():
+                sms_message = 'پنل همکاری وینور برای شما فعال شد. وینور'
+            
+            current_app.logger.info(f"Sending approval SMS to partner: {name} ({phone})")
+            
+            sms_result = send_sms_direct(
+                mobile=phone,
+                message=sms_message,
+                line_number=sms_line_number
+            )
+            
+            # ذخیره سابقه ارسال پیامک
+            try:
+                history = load_sms_history() or []
+                record = {
+                    'id': len(history) + 1,
+                    'mobile': phone,
+                    'recipient_name': name,
+                    'template_id': None,
+                    'message': sms_message,
+                    'parameters': {},
+                    'success': sms_result.get('ok', False),
+                    'status_code': sms_result.get('status', 0),
+                    'response': sms_result.get('body', {}),
+                    'source': 'admin_partner_approval',
+                    'created_at': datetime.now().isoformat(),
+                    'error': None if sms_result.get('ok') else str(sms_result.get('body', {}).get('message', 'Unknown error'))
+                }
+                history.append(record)
+                if len(history) > 10000:
+                    history = history[-10000:]
+                save_sms_history(history)
+            except Exception as hist_err:
+                current_app.logger.error(f"Failed to save SMS history: {hist_err}")
+            
+            if sms_result.get('ok'):
+                current_app.logger.info(f"✅ Partner approval SMS sent successfully to {phone}")
+            else:
+                current_app.logger.error(f"❌ Failed to send partner approval SMS to {phone}. Status: {sms_result.get('status')}, Body: {sms_result.get('body')}")
+    except Exception as sms_err:
+        current_app.logger.error(f"Error sending partner approval SMS: {sms_err}", exc_info=True)
 
     if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
         return jsonify({ 'ok': True, 'id': int(aid), 'status': 'approved' })
