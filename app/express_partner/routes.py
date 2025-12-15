@@ -1269,6 +1269,33 @@ def notifications_debug():
     })
 
 
+@express_partner_bp.route('/api/check-status', methods=['GET'], endpoint='check_status')
+def check_status():
+    """بررسی وضعیت تایید همکار - برای pull-to-refresh"""
+    if not session.get("user_phone"):
+        return jsonify({"success": False, "error": "unauthorized"}), 401
+    
+    me_phone = (session.get("user_phone") or "").strip()
+    try:
+        partners = load_express_partners() or []
+        profile = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
+        
+        if profile and _is_partner_approved(profile):
+            return jsonify({
+                "success": True,
+                "approved": True,
+                "redirect_url": url_for("express_partner.dashboard")
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "approved": False
+            })
+    except Exception as e:
+        current_app.logger.error(f"Error checking partner status: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
 @require_partner_access()
 def land_detail(code: str):

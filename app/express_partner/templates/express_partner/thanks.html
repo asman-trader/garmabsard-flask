@@ -92,4 +92,149 @@
     animation: bounce-once 0.5s ease-out;
   }
 </style>
+
+<script>
+  // Pull-to-refresh functionality
+  (function(){
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let pullThreshold = 80; // Minimum distance to trigger refresh
+    let refreshElement = null;
+    let isRefreshing = false;
+
+    function createRefreshElement() {
+      const el = document.createElement('div');
+      el.id = 'pull-refresh-indicator';
+      el.className = 'fixed top-0 left-0 right-0 z-[100] bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transform -translate-y-full transition-transform duration-300';
+      el.innerHTML = `
+        <div class="flex items-center justify-center py-4">
+          <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+            <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-emerald-500 rounded-full animate-spin"></div>
+            <span class="text-sm font-medium">در حال بررسی وضعیت...</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(el);
+      return el;
+    }
+
+    function showRefreshIndicator(progress) {
+      if (!refreshElement) {
+        refreshElement = createRefreshElement();
+      }
+      const translateY = Math.min(progress * 0.5, pullThreshold);
+      refreshElement.style.transform = `translateY(${translateY - pullThreshold}px)`;
+
+      // Change icon based on progress
+      if (progress >= pullThreshold) {
+        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+        refreshElement.querySelector('span').textContent = 'رها کنید برای بررسی';
+      } else {
+        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
+        refreshElement.querySelector('span').textContent = 'کشیده و رها کنید';
+      }
+    }
+
+    function hideRefreshIndicator() {
+      if (refreshElement) {
+        refreshElement.style.transform = 'translateY(-100%)';
+        setTimeout(() => {
+          if (refreshElement) {
+            refreshElement.remove();
+            refreshElement = null;
+          }
+        }, 300);
+      }
+    }
+
+    async function checkPartnerStatus() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+      
+      if (refreshElement) {
+        refreshElement.querySelector('span').textContent = 'در حال بررسی وضعیت...';
+        refreshElement.style.transform = 'translateY(0)';
+      }
+
+      try {
+        const response = await fetch('{{ url_for("express_partner.check_status") }}', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.approved) {
+          // همکار تایید شده - هدایت به dashboard
+          if (refreshElement) {
+            refreshElement.querySelector('span').textContent = '✅ تایید شد! در حال انتقال...';
+            refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+          }
+          setTimeout(() => {
+            window.location.href = data.redirect_url;
+          }, 500);
+        } else {
+          // هنوز تایید نشده
+          if (refreshElement) {
+            refreshElement.querySelector('span').textContent = 'هنوز در انتظار بررسی';
+            refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
+          }
+          setTimeout(() => {
+            hideRefreshIndicator();
+            isRefreshing = false;
+          }, 1500);
+        }
+      } catch (error) {
+        console.error('Error checking status:', error);
+        if (refreshElement) {
+          refreshElement.querySelector('span').textContent = 'خطا در بررسی وضعیت';
+          refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-red-600 dark:text-red-400';
+        }
+        setTimeout(() => {
+          hideRefreshIndicator();
+          isRefreshing = false;
+        }, 1500);
+      }
+    }
+
+    document.addEventListener('touchstart', function(e) {
+      if (window.scrollY === 0 && !isRefreshing) { // Only when at top of page
+        startY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      if (isPulling && startY > 0 && !isRefreshing) {
+        currentY = e.touches[0].clientY;
+        const pullDistance = currentY - startY;
+
+        if (pullDistance > 0) { // Only downward pulls
+          e.preventDefault(); // Prevent default scrolling
+          showRefreshIndicator(pullDistance);
+        }
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      if (isPulling && !isRefreshing) {
+        const pullDistance = currentY - startY;
+
+        if (pullDistance >= pullThreshold) {
+          checkPartnerStatus();
+        } else {
+          hideRefreshIndicator();
+        }
+
+        startY = 0;
+        currentY = 0;
+        isPulling = false;
+      }
+    });
+  })();
+</script>
 {% endblock %}
