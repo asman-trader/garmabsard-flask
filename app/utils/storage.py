@@ -138,7 +138,9 @@ def load_settings(app=None):
         "ad_expiry_days": 30,
         "sms_line_number": "300089930616",
         "partner_application_sms_message": "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور",
-        "partner_approval_sms_message": "پنل همکاری وینور برای شما فعال شد. وینور"
+        "partner_approval_sms_message": "پنل همکاری وینور برای شما فعال شد. وینور",
+        "partner_application_admin_phone": "09121471301",
+        "partner_application_admin_sms_message": "درخواست همکاری جدید همکار در وینور ثبت شد.",
     }
     return _load(ensure_file('SETTINGS_FILE','settings.json',default_settings,app))
 

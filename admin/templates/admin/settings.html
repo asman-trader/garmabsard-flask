@@ -152,6 +152,40 @@
           این پیامک پس از تایید درخواست همکاری توسط ادمین به همکار ارسال می‌شود.
         </p>
       </div>
+
+      <!-- شماره و پیامک ادمین برای درخواست جدید -->
+      <div class="space-y-4">
+        <!-- شماره ادمین -->
+        <div class="space-y-2">
+          <label for="partner_application_admin_phone" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+            شماره موبایل ادمین برای دریافت پیامک درخواست جدید
+          </label>
+          <input id="partner_application_admin_phone"
+                 name="partner_application_admin_phone"
+                 type="text"
+                 value="{{ settings.partner_application_admin_phone or '09121471301' }}"
+                 class="block w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent"
+                 placeholder="09121471301">
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            به این شماره، هنگام ثبت هر درخواست همکاری جدید، پیامک اطلاع‌رسانی ارسال می‌شود.
+          </p>
+        </div>
+
+        <!-- متن پیامک برای ادمین -->
+        <div class="space-y-2">
+          <label for="partner_application_admin_sms_message" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+            متن پیامک درخواست همکاری جدید برای ادمین
+          </label>
+          <textarea id="partner_application_admin_sms_message"
+                    name="partner_application_admin_sms_message"
+                    rows="3"
+                    class="block w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent"
+                    placeholder="درخواست همکاری جدید همکار در وینور ثبت شد.">{{ settings.partner_application_admin_sms_message or 'درخواست همکاری جدید همکار در وینور ثبت شد.' }}</textarea>
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            می‌توانید نام و شماره همکار را هم در بدنه پیامک بنویسید؛ فعلاً متن ثابت برای همه درخواست‌ها استفاده می‌شود.
+          </p>
+        </div>
+      </div>
     </div>
 
 

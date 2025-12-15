@@ -366,15 +366,15 @@ def apply_step3():
         apps.append(record)
         save_express_partner_apps(apps)
         
-        # ارسال پیامک "در حال بررسی" به همکار
+        # ارسال پیامک "در حال بررسی" به همکار و اطلاع‌رسانی به ادمین
         try:
-            # Normalize شماره تلفن قبل از ارسال
+            settings = load_settings(current_app) or {}
+
+            # Normalize شماره تلفن همکار قبل از ارسال
             phone_normalized = _normalize_phone(me_phone)
             
-            # بررسی اعتبار شماره تلفن
+            # بررسی اعتبار شماره تلفن همکار
             if phone_normalized and len(phone_normalized) == 11 and phone_normalized.startswith('09'):
-                # خواندن تنظیمات از فایل settings
-                settings = load_settings(current_app) or {}
                 sms_message = settings.get('partner_application_sms_message', 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور')
                 sms_line_number = settings.get('sms_line_number', '300089930616')
                 
@@ -386,7 +386,7 @@ def apply_step3():
                 
                 sms_result = send_sms_direct(mobile=phone_normalized, message=sms_message, line_number=sms_line_number)
                 
-                # ذخیره سابقه ارسال پیامک
+                # ذخیره سابقه ارسال پیامک به همکار
                 try:
                     history = load_sms_history(current_app) or []
                     record = {
@@ -416,8 +416,62 @@ def apply_step3():
                     current_app.logger.error(f"❌ Failed to send application confirmation SMS to {phone_normalized}. Status: {sms_result.get('status')}, Body: {sms_result.get('body')}")
             else:
                 current_app.logger.error(f"❌ Invalid phone number format: {me_phone} -> normalized: {phone_normalized}")
+
+            # ارسال پیامک اطلاع‌رسانی به ادمین درباره درخواست جدید
+            try:
+                admin_phone_raw = settings.get('partner_application_admin_phone', '09121471301')
+                admin_phone = _normalize_phone(admin_phone_raw)
+                admin_sms_message = settings.get('partner_application_admin_sms_message',
+                                                 'درخواست همکاری جدید همکار در وینور ثبت شد.')
+
+                # اگر پیام خالی است، از پیش‌فرض استفاده کن
+                if not admin_sms_message or not admin_sms_message.strip():
+                    admin_sms_message = 'درخواست همکاری جدید همکار در وینور ثبت شد.'
+
+                if admin_phone and len(admin_phone) == 11 and admin_phone.startswith('09'):
+                    current_app.logger.info(f"Attempting to send admin SMS about new partner application to {admin_phone}")
+
+                    admin_sms_result = send_sms_direct(
+                        mobile=admin_phone,
+                        message=admin_sms_message,
+                        line_number=sms_line_number,
+                    )
+
+                    # ذخیره سابقه ارسال پیامک به ادمین
+                    try:
+                        history = load_sms_history(current_app) or []
+                        record_admin = {
+                            'id': len(history) + 1,
+                            'mobile': admin_phone,
+                            'recipient_name': 'admin',
+                            'template_id': None,
+                            'message': admin_sms_message,
+                            'parameters': {},
+                            'success': admin_sms_result.get('ok', False),
+                            'status_code': admin_sms_result.get('status', 0),
+                            'response': admin_sms_result.get('body', {}),
+                            'source': 'express_partner_application_admin',
+                            'created_at': datetime.utcnow().isoformat() + 'Z',
+                            'error': None if admin_sms_result.get('ok') else str(admin_sms_result.get('body', {}).get('message', 'Unknown error'))
+                        }
+                        history.append(record_admin)
+                        if len(history) > 10000:
+                            history = history[-10000:]
+                        save_sms_history(history, current_app)
+                    except Exception as hist_err_admin:
+                        current_app.logger.error(f"Failed to save admin SMS history: {hist_err_admin}")
+
+                    if admin_sms_result.get('ok'):
+                        current_app.logger.info(f"✅ Admin notification SMS sent successfully to {admin_phone}")
+                    else:
+                        current_app.logger.error(f"❌ Failed to send admin notification SMS to {admin_phone}. Status: {admin_sms_result.get('status')}, Body: {admin_sms_result.get('body')}")
+                else:
+                    current_app.logger.error(f"❌ Invalid admin phone format: {admin_phone_raw} -> normalized: {admin_phone}")
+            except Exception as admin_err:
+                current_app.logger.error(f"❌ Error sending admin notification SMS about partner application: {admin_err}", exc_info=True)
+
         except Exception as e:
-            current_app.logger.error(f"❌ Error sending application confirmation SMS to {me_phone}: {e}", exc_info=True)
+            current_app.logger.error(f"❌ Error in application SMS flow (partner/admin): {e}", exc_info=True)
         
         session.pop('apply_data', None)
         return render_template("express_partner/thanks.html", name=record.get('name',''), brand="وینور", domain="vinor.ir")

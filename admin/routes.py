@@ -347,10 +347,14 @@ def _default_settings() -> Dict[str, Any]:
         'show_submit_button': True,
         # تنظیمات SMS
         'sms_line_number': '300089930616',  # شماره خط اختصاصی SMS
-        # پیام درخواست همکاری
+        # پیام درخواست همکاری (برای همکار)
         'partner_application_sms_message': 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور',
-        # پیام تایید همکاری
+        # پیام تایید همکاری (برای همکار)
         'partner_approval_sms_message': 'پنل همکاری وینور برای شما فعال شد. وینور',
+        # شماره ادمین برای دریافت پیامک درخواست همکاری جدید
+        'partner_application_admin_phone': '09121471301',
+        # پیامک ارسالی به ادمین هنگام ثبت درخواست همکاری جدید
+        'partner_application_admin_sms_message': 'درخواست همکاری جدید همکار در وینور ثبت شد.',
     }
 
 def get_settings() -> Dict[str, Any]:
@@ -1539,7 +1543,10 @@ def settings():
         sms_line_number = request.form.get('sms_line_number', '300089930616') or '300089930616'
         partner_application_sms_message = request.form.get('partner_application_sms_message', '').strip()
         partner_approval_sms_message = request.form.get('partner_approval_sms_message', '').strip()
-        
+        partner_application_admin_phone = (request.form.get('partner_application_admin_phone', '').strip() or
+                                           '09121471301')
+        partner_application_admin_sms_message = request.form.get('partner_application_admin_sms_message', '').strip()
+
         save_settings({
             'approval_method': approval_method,
             'ad_expiry_days': ad_expiry_days,
@@ -1548,6 +1555,8 @@ def settings():
             'sms_line_number': sms_line_number,
             'partner_application_sms_message': partner_application_sms_message,
             'partner_approval_sms_message': partner_approval_sms_message,
+            'partner_application_admin_phone': partner_application_admin_phone,
+            'partner_application_admin_sms_message': partner_application_admin_sms_message,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
