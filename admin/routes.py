@@ -3080,10 +3080,16 @@ def express_partner_application_approve(aid: int):
     else:
         partner.update({'name': name or partner.get('name'), 'city': city or partner.get('city'), 'status': 'approved'})
 
-    # وضعیت درخواست
+    # وضعیت درخواست (برای لاگ‌کردن قبل از حذف)
     target['status'] = 'approved'
     target['approved_at'] = iso_z(utcnow())
     save_express_partners(partners)
+
+    # بعد از تایید، خود درخواست از لیست درخواست‌ها حذف شود
+    try:
+        apps = [a for a in apps if int(a.get('id', 0) or 0) != int(aid)]
+    except Exception:
+        apps = [a for a in apps if a is not target]
     save_express_partner_apps(apps)
 
     # انتساب خودکار همه فایل‌های اکسپرس به همکار جدید
@@ -3199,8 +3205,15 @@ def express_partner_application_reject(aid: int):
         flash('درخواست یافت نشد.', 'warning')
         return redirect(url_for('admin.express_partner_applications'))
 
+    # وضعیت رد شده را فقط برای ثبت زمان در آبجکت نگه می‌داریم
     target['status'] = 'rejected'
     target['rejected_at'] = iso_z(utcnow())
+
+    # بعد از رد شدن، درخواست از لیست درخواست‌ها حذف شود
+    try:
+        apps = [a for a in apps if int(a.get('id', 0) or 0) != int(aid)]
+    except Exception:
+        apps = [a for a in apps if a is not target]
     save_express_partner_apps(apps)
 
     # اعلان به کاربر

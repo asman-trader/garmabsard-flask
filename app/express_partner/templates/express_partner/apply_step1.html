@@ -30,6 +30,23 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">نام و شهر فعالیت خود را وارد کنید</p>
     </div>
 
+    <!-- Current phone & edit link -->
+    {% if session.get("user_phone") %}
+    <div class="mb-6 flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-phone text-gray-400"></i>
+        <span>شماره ثبت‌شده: <span class="font-semibold text-gray-700 dark:text-gray-200">{{ session.get("user_phone") }}</span></span>
+      </div>
+      <form method="get" action="{{ url_for('express_partner.logout') }}">
+        <button type="submit"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-[11px] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <i class="fas fa-pen"></i>
+          ویرایش شماره
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
     <!-- Form -->
     <form method="post" action="{{ url_for('express_partner.apply_step1') }}" class="space-y-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
