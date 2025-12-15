@@ -345,6 +345,10 @@ def _default_settings() -> Dict[str, Any]:
         'approval_method': 'manual',
         'ad_expiry_days': 30,  # 0 = نامحدود
         'show_submit_button': True,
+        # تنظیمات SMS
+        'sms_line_number': '300089930616',  # شماره خط اختصاصی SMS
+        # پیام درخواست همکاری
+        'partner_application_sms_message': 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور',
     }
 
 def get_settings() -> Dict[str, Any]:
@@ -1529,11 +1533,17 @@ def settings():
         if post_price_toman < 0:
             post_price_toman = 0
 
+        # تنظیمات SMS
+        sms_line_number = request.form.get('sms_line_number', '300089930616') or '300089930616'
+        partner_application_sms_message = request.form.get('partner_application_sms_message', '').strip()
+        
         save_settings({
             'approval_method': approval_method,
             'ad_expiry_days': ad_expiry_days,
             'show_submit_button': (request.form.get('show_submit_button') == 'on'),
             'ad_post_price_toman': post_price_toman,
+            'sms_line_number': sms_line_number,
+            'partner_application_sms_message': partner_application_sms_message,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))

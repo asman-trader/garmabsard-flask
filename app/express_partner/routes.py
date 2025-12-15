@@ -20,6 +20,7 @@ from ..utils.storage import (
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
     load_ads_cached, load_active_cities,
     load_sms_history, save_sms_history,
+    load_settings,
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
@@ -372,10 +373,18 @@ def apply_step3():
             
             # بررسی اعتبار شماره تلفن
             if phone_normalized and len(phone_normalized) == 11 and phone_normalized.startswith('09'):
-                sms_message = "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور"
+                # خواندن تنظیمات از فایل settings
+                settings = load_settings(current_app) or {}
+                sms_message = settings.get('partner_application_sms_message', 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور')
+                sms_line_number = settings.get('sms_line_number', '300089930616')
+                
+                # اگر پیام خالی است، از پیش‌فرض استفاده کن
+                if not sms_message or not sms_message.strip():
+                    sms_message = 'درخواست همکاری شما ثبت شد و در حال بررسی است. وینور'
+                
                 current_app.logger.info(f"Attempting to send SMS to {phone_normalized} (original: {me_phone})")
                 
-                sms_result = send_sms_direct(mobile=phone_normalized, message=sms_message)
+                sms_result = send_sms_direct(mobile=phone_normalized, message=sms_message, line_number=sms_line_number)
                 
                 # ذخیره سابقه ارسال پیامک
                 try:

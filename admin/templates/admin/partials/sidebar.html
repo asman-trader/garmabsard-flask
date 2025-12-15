@@ -111,6 +111,18 @@
       <span class="text-sm font-medium">شهرهای فعال</span>
     </a>
 
+    <!-- تنظیمات -->
+    <a href="{{ url_for('admin.settings') }}" 
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition focusable
+              {% if _endpoint == 'admin.settings' %}
+                bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
+              {% else %}
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+              {% endif %}">
+      <i class="fa-solid fa-sliders w-5"></i>
+      <span class="text-sm font-medium">تنظیمات</span>
+    </a>
+
     <!-- آگهی‌های اکسپرس -->
     <div x-data="{ open: {{ 'true' if _endpoint in ['admin.express_listings', 'admin.add_express_listing', 'admin.edit_express_listing'] else 'false' }} }">
       <button @click="open = !open" 

@@ -131,7 +131,15 @@ def save_users(items, app=None): return _save(ensure_file('USERS_FILE','users.js
 def load_consults(app=None):        return _load(ensure_file('CONSULTS_FILE','consults.json',[],app))
 def save_consults(items, app=None): return _save(ensure_file('CONSULTS_FILE','consults.json',[],app), items)
 
-def load_settings(app=None):  return _load(ensure_file('SETTINGS_FILE','settings.json',{"approval_method":"manual","show_submit_button": True},app))
+def load_settings(app=None):  
+    default_settings = {
+        "approval_method": "manual",
+        "show_submit_button": True,
+        "ad_expiry_days": 30,
+        "sms_line_number": "300089930616",
+        "partner_application_sms_message": "درخواست همکاری شما ثبت شد و در حال بررسی است. وینور"
+    }
+    return _load(ensure_file('SETTINGS_FILE','settings.json',default_settings,app))
 
 # شهرهای فعال برای همکاری
 def load_active_cities(app=None):        return _load(ensure_file('ACTIVE_CITIES_FILE','active_cities.json',["تهران", "کرج", "اصفهان", "شیراز", "مشهد", "تبریز"],app))
