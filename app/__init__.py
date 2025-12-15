@@ -227,6 +227,14 @@ def create_app() -> Flask:
     except Exception as e:
         app.logger.warning(f"SMS API disabled: {e}")
 
+    # Push API (برای Push Notifications)
+    push_api_bp = None
+    try:
+        from .api.push import api_push_bp as _push_api_bp
+        push_api_bp = _push_api_bp
+    except Exception as e:
+        app.logger.warning(f"Push API disabled: {e}")
+
     # توجه: هیچ url_prefix اضافی نده؛ هر بلوپرینت خودش دارد.
     app.register_blueprint(main_bp)
     if webhook_bp is not None:
@@ -235,6 +243,8 @@ def create_app() -> Flask:
         app.register_blueprint(express_api_bp)
     if sms_api_bp is not None:
         app.register_blueprint(sms_api_bp)
+    if push_api_bp is not None:
+        app.register_blueprint(push_api_bp)
 
     # Express Partner blueprint
     try:
