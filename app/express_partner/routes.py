@@ -573,6 +573,10 @@ def dashboard():
         item['_assignment_status'] = a.get('status','active')
         item['_commission_pct'] = a.get('commission_pct')
         item['_is_expired'] = is_expired
+        # اطمینان از وجود created_at برای مرتب‌سازی (بر اساس تاریخ ثبت آگهی)
+        # item از dict(land) ساخته شده، پس created_at باید از land بیاید
+        if not item.get('created_at'):
+            item['created_at'] = land.get('created_at') or '1970-01-01'
         # محاسبه مبلغ پورسانت همکار از روی price_total (اگر موجود) و درصد کمیسیون
         try:
             total_price_str = str(item.get('price_total') or item.get('price') or '0').replace(',', '').strip()
@@ -590,11 +594,13 @@ def dashboard():
         except Exception:
             item['_share_url'] = ''
         item['_share_token'] = share_token
-        # تنظیم created_at برای مرتب‌سازی (اولویت با تاریخ assignment، سپس land)
-        item['created_at'] = a.get('created_at') or a.get('updated_at') or land.get('created_at') or '1970-01-01'
+        # اطمینان از وجود created_at برای مرتب‌سازی (بر اساس تاریخ ثبت آگهی)
+        # item از dict(land) ساخته شده، پس created_at باید از land بیاید
+        if not item.get('created_at'):
+            item['created_at'] = land.get('created_at') or '1970-01-01'
         assigned_lands.append(item)
 
-    # مرتب‌سازی از جدید به قدیمی بر اساس تاریخ ایجاد
+    # مرتب‌سازی از جدید به قدیمی بر اساس تاریخ و زمان ثبت آگهی
     assigned_lands = _sort_by_created_at_desc(assigned_lands)
 
     try:
