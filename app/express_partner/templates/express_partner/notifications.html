@@ -1,7 +1,6 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}اعلان‌ها | وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto pt-0 px-4 pb-16" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
 
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 h-14 flex items-center justify-between">
@@ -17,6 +16,8 @@
       </button>
     </div>
   </header>
+
+<div class="max-w-5xl mx-auto pt-0 px-4 pb-16" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
 
   <div class="mt-4">
     <template x-if="loading">

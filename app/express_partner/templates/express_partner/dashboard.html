@@ -1,14 +1,15 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پنل همکاری وینور اکسپرس{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4 pb-16">
 
-  <!-- Header - سبک دیوار -->
+  <!-- Header - سبک دیوار (تمام‌عرض) -->
   <header data-tour="dashboard-header" class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 h-14 flex items-center justify-center">
       <h1 class="text-sm font-bold text-gray-900 dark:text-white">پنل همکار اکسپرس</h1>
     </div>
   </header>
+
+<div class="max-w-6xl mx-auto pt-0 px-3 sm:px-4 pb-16">
 
   <!-- کارت آموزش - سبک دیوار ساده و جذاب -->
   <a href="{{ url_for('express_partner.training') }}" 
