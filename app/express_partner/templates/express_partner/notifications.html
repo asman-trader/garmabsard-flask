@@ -160,8 +160,19 @@
       return reg;
     }
 
-    // تعریف Alpine component برای push prompt
-    document.addEventListener('alpine:init', () => {
+    // تعریف Alpine component برای push prompt - اطمینان از اینکه قبل از استفاده تعریف شده است
+    function definePushPromptComponent() {
+      if (typeof Alpine === 'undefined') {
+        // اگر Alpine هنوز لود نشده، صبر کن
+        setTimeout(definePushPromptComponent, 50);
+        return;
+      }
+
+      // اگر قبلاً تعریف شده، دوباره تعریف نکن
+      if (Alpine.data('pushPromptComponent')) {
+        return;
+      }
+
       Alpine.data('pushPromptComponent', () => ({
         showPrompt: false,
         loading: false,
@@ -309,7 +320,24 @@
           localStorage.setItem('vinor_express_push_prompt_dismissed', '1');
         }
       }));
-    });
+    }
+
+    // تلاش برای تعریف component - هم از طریق event و هم مستقیم
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof Alpine !== 'undefined') {
+          definePushPromptComponent();
+        } else {
+          document.addEventListener('alpine:init', definePushPromptComponent);
+        }
+      });
+    } else {
+      if (typeof Alpine !== 'undefined') {
+        definePushPromptComponent();
+      } else {
+        document.addEventListener('alpine:init', definePushPromptComponent);
+      }
+    }
   })();
 </script>
 
