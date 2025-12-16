@@ -590,7 +590,12 @@ def dashboard():
         except Exception:
             item['_share_url'] = ''
         item['_share_token'] = share_token
+        # تنظیم created_at برای مرتب‌سازی (اولویت با تاریخ assignment، سپس land)
+        item['created_at'] = a.get('created_at') or a.get('updated_at') or land.get('created_at') or '1970-01-01'
         assigned_lands.append(item)
+
+    # مرتب‌سازی از جدید به قدیمی بر اساس تاریخ ایجاد
+    assigned_lands = _sort_by_created_at_desc(assigned_lands)
 
     try:
         comms = load_express_commissions() or []
