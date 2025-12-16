@@ -318,7 +318,7 @@ def create_app() -> Flask:
                     dict(request.form),
                     dict(request.headers),
                 )
-                flash("⚠️ اعتبار فرم به پایان رسیده یا هماهنگ نیست. صفحه را تازه کنید و دوباره تلاش کنید.", "warning")
+                flash("لطفاً صفحه را تازه کنید و دوباره تلاش کنید.", "warning")
                 try:
                     return redirect(request.referrer or url_for("lands.add_land"))
                 except Exception:

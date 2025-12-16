@@ -70,8 +70,30 @@
   {% endwith %}
 
   {% if not is_approved %}
-    <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-3 rounded-xl mb-4 text-sm">
-      در حال بررسی توسط ادمین؛ پس از تأیید دسترسی کامل فعال می‌شود.
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-4 rounded-xl mb-4">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-200 dark:bg-amber-800 flex items-center justify-center mt-0.5">
+          <i class="fas fa-clock text-xs text-amber-700 dark:text-amber-300"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">در حال بررسی درخواست</p>
+          <p class="text-xs text-amber-700 dark:text-amber-300">درخواست همکاری شما در حال بررسی است. پس از تأیید، دسترسی کامل به پنل فعال می‌شود.</p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if expired_count and expired_count > 0 %}
+    <div class="bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:text-red-200 dark:border-red-800/50 p-4 rounded-xl mb-4">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center mt-0.5">
+          <i class="fas fa-exclamation-circle text-xs text-red-700 dark:text-red-300"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-red-900 dark:text-red-100 mb-1">اعتبار {{ expired_count }} فایل به پایان رسیده</p>
+          <p class="text-xs text-red-700 dark:text-red-300">برخی از فایل‌های ارسالی منقضی شده‌اند. لطفاً با پشتیبانی تماس بگیرید.</p>
+        </div>
+      </div>
     </div>
   {% endif %}
 
@@ -89,7 +111,17 @@
 
   <!-- Assigned lands -->
   {% if assigned_lands|length == 0 %}
-    <div class="mt-2 bg-white border rounded-2xl p-6 text-center text-gray-600">هنوز ملکی برای شما ارسال نشده است.</div>
+    <div class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+          <i class="fas fa-inbox text-2xl text-gray-400 dark:text-gray-500"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">هنوز فایلی برای شما ارسال نشده</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">پس از ارسال فایل‌ها توسط ادمین، در اینجا نمایش داده می‌شوند.</p>
+        </div>
+      </div>
+    </div>
   {% endif %}
 
   <div class="mt-2 -mx-3 relative">
@@ -126,7 +158,13 @@
           {% endif %}
           
           <!-- Status Badge - ساده و تمیز -->
-          <div class="absolute top-2 left-2">
+          <div class="absolute top-2 left-2 flex flex-col gap-1">
+            {% if land._is_expired %}
+              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-red-600 text-white">
+                <i class="fas fa-exclamation-circle text-[9px] ml-1"></i>
+                منقضی شده
+              </span>
+            {% endif %}
             {% if _st == 'sold' %}
               <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-green-600 text-white">
                 فروخته شد

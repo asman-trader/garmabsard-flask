@@ -155,7 +155,7 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
                         pending=True,
                         waiting=True
                     )
-                flash('ابتدا درخواست همکاری خود را ثبت و تکمیل کنید.', 'warning')
+                flash('برای ورود به پنل، لطفاً ابتدا درخواست همکاری خود را ثبت و تکمیل کنید.', 'warning')
                 return redirect(url_for('express_partner.apply_step1'))
 
             g.express_partner_profile = profile
@@ -163,6 +163,34 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
         return wrapper
     return decorator
 
+
+# به‌روزرسانی خودکار timestamp همکاران آنلاین در تمام route‌های express_partner
+@express_partner_bp.before_request
+def track_online_partner():
+    """به‌روزرسانی timestamp آخرین فعالیت همکار در تمام route‌های express_partner"""
+    if session.get("user_phone"):
+        try:
+            phone = (session.get("user_phone") or "").strip()
+            if phone:
+                # دریافت نام همکار از profile
+                try:
+                    partners = load_express_partners() or []
+                    profile = next((p for p in partners if str(p.get("phone") or "").strip() == phone), None)
+                    name = profile.get('name') if profile else None
+                except Exception:
+                    name = None
+                
+                # به‌روزرسانی در admin routes (lazy import برای جلوگیری از circular import)
+                try:
+                    # استفاده از lazy import
+                    import admin.routes as admin_routes_module
+                    if hasattr(admin_routes_module, '_update_online_partner'):
+                        ip = request.remote_addr or 'نامشخص'
+                        admin_routes_module._update_online_partner(phone, name, ip)
+                except Exception:
+                    pass  # اگر admin routes در دسترس نبود، خطا نده
+        except Exception:
+            pass  # در صورت خطا، ادامه بده
 
 @express_partner_bp.app_context_processor
 def inject_role_flags():
@@ -288,7 +316,7 @@ def apply_step1():
         name = (request.form.get('name') or '').strip()
         city = (request.form.get('city') or '').strip()
         if not name or not city:
-            flash('نام و شهر الزامی است.', 'error')
+            flash('لطفاً نام و شهر را وارد کنید.', 'error')
             return render_template('express_partner/apply_step1.html', name=name, city=city)
         session['apply_data'] = {**(session.get('apply_data') or {}), 'name': name, 'city': city}
         return redirect(url_for('express_partner.apply_step2'))
@@ -497,7 +525,7 @@ def apply_cancel():
             continue
     if updated:
         save_express_partner_apps(apps)
-        flash('درخواست شما لغو شد. در هر زمان می‌توانید دوباره درخواست ثبت کنید.', 'info')
+        flash('درخواست شما با موفقیت لغو شد. هر زمان می‌توانید دوباره درخواست همکاری ثبت کنید.', 'info')
     # اگر درخواستی پیدا نشود (مثلاً قبلاً تأیید/رد یا حذف شده)، بدون خطا فقط به مرحله ۱ برگرد
     return redirect(url_for('express_partner.apply_step1'))
 
@@ -525,14 +553,26 @@ def dashboard():
     lands_all = load_ads_cached() or []
     code_to_land = {str(l.get('code')): l for l in lands_all}
     assigned_lands = []
+    expired_count = 0
+    
+    # بررسی اعتبار فایل‌ها
+    from ..utils.dates import is_ad_expired
+    
     for a in my_assignments:
         land = code_to_land.get(str(a.get('land_code')))
         if not land:
             continue
+        
+        # بررسی انقضای فایل
+        is_expired = is_ad_expired(land)
+        if is_expired:
+            expired_count += 1
+        
         item = dict(land)
         item['_assignment_id'] = a.get('id')
         item['_assignment_status'] = a.get('status','active')
         item['_commission_pct'] = a.get('commission_pct')
+        item['_is_expired'] = is_expired
         # محاسبه مبلغ پورسانت همکار از روی price_total (اگر موجود) و درصد کمیسیون
         try:
             total_price_str = str(item.get('price_total') or item.get('price') or '0').replace(',', '').strip()
@@ -582,6 +622,7 @@ def dashboard():
         total_commission=total_commission,
         pending_commission=pending_commission,
         sold_count=sold_count,
+        expired_count=expired_count,
         hide_header=True,
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
@@ -759,7 +800,7 @@ def login():
         phone_raw = request.form.get('phone', '')
         phone = _normalize_phone(phone_raw)
         if not phone or len(phone) != 11:
-            flash('شماره موبایل معتبر نیست.', 'error')
+            flash('لطفاً یک شماره موبایل ۱۱ رقمی معتبر وارد کنید.', 'error')
             return redirect(url_for('express_partner.login'))
 
         code = f"{random.randint(10000, 99999)}"
@@ -786,7 +827,7 @@ def verify():
     code = (request.form.get('otp_code') or '').strip()
     phone = _normalize_phone(request.form.get('phone') or '')
     if not code or not phone:
-        flash('اطلاعات ناقص است.', 'error')
+        flash('لطفاً همه فیلدها را به‌درستی تکمیل کنید.', 'error')
         return redirect(url_for('express_partner.login'))
 
     if session.get('otp_code') == code and session.get('otp_phone') == phone:
@@ -803,10 +844,10 @@ def verify():
                 save_users(users)
         except Exception:
             pass
-        flash('✅ ورود موفقیت‌آمیز بود.', 'success')
+        flash('ورود شما با موفقیت انجام شد.', 'success')
         return redirect(session.pop('next', None) or url_for('express_partner.dashboard'))
 
-    flash('❌ کد واردشده نادرست است.', 'error')
+    flash('کد تأیید نادرست است. لطفاً دوباره تلاش کنید.', 'error')
     return redirect(url_for('express_partner.login'))
 
 
@@ -852,14 +893,14 @@ def mark_in_transaction(code: str):
                 break
         
         if my_assignment is None:
-            flash('❌ ملک یافت نشد یا دسترسی ندارید.', 'error')
+            flash('فایل موردنظر پیدا نشد یا دسترسی شما به آن محدود است.', 'error')
             return redirect(url_for('express_partner.dashboard'))
         
         current_status = my_assignment.get('status', 'active')
         
         # اگر فایل فروخته شده، امکان تغییر وضعیت نیست
         if current_status == 'sold':
-            flash('❌ این فایل فروخته شده و امکان تغییر وضعیت وجود ندارد.', 'error')
+            flash('این فایل قبلاً فروخته شده و امکان تغییر وضعیت آن وجود ندارد.', 'error')
             return redirect(url_for('express_partner.dashboard'))
         
         # بررسی آیا فایل توسط همکاری در حال معامله است (چک کردن transaction_holder)
@@ -873,7 +914,7 @@ def mark_in_transaction(code: str):
         if holder_phone:
             # فقط همان همکار می‌تواند رفع معامله کند
             if holder_phone != me_phone:
-                flash('❌ این فایل توسط همکار دیگری در حال معامله است. فقط او می‌تواند رفع معامله کند.', 'error')
+                flash('این فایل در حال حاضر توسط همکار دیگری در حال معامله است و فقط همان همکار می‌تواند وضعیت را تغییر دهد.', 'error')
                 return redirect(url_for('express_partner.dashboard'))
             # همکار صاحب معامله می‌خواهد رفع معامله کند
             new_status = 'active'
@@ -884,7 +925,7 @@ def mark_in_transaction(code: str):
                 if a.get('transaction_holder') == me_phone
             )
             if my_transaction_count >= 2:
-                flash('❌ شما حداکثر ۲ فایل را می‌توانید همزمان در حال معامله داشته باشید.', 'error')
+                flash('شما هم‌زمان فقط می‌توانید روی ۲ فایل در حال معامله باشید.', 'error')
                 return redirect(url_for('express_partner.dashboard'))
             # هیچ‌کس معامله نکرده، این همکار می‌تواند معامله کند
             new_status = 'in_transaction'
@@ -918,7 +959,7 @@ def mark_in_transaction(code: str):
                     
                     if not land:
                         current_app.logger.warning(f"Land {code} not found in cache")
-                        flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد. (اطلاعات فایل یافت نشد)', 'success')
+                        flash('ملک به عنوان «در حال معامله» برای تمامی همکاران علامت‌گذاری شد. (اطلاعات کامل فایل در دسترس نیست)', 'success')
                     else:
                         # بارگذاری کمیسیون‌های موجود
                         commissions = load_express_commissions() or []
@@ -991,16 +1032,16 @@ def mark_in_transaction(code: str):
                         
                         if created_count > 0:
                             save_express_commissions(commissions)
-                            flash(f'✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد و پورسانت شما به لیست انتظار اضافه شد.', 'success')
+                            flash(f'ملک به عنوان «در حال معامله» علامت‌گذاری شد و پورسانت شما به لیست انتظار اضافه شد.', 'success')
                         else:
                             if skipped_count > 0:
-                                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد. (پورسانت قبلاً ثبت شده بود)', 'success')
+                                flash('ملک به عنوان «در حال معامله» علامت‌گذاری شد. (پورسانت شما قبلاً ثبت شده بود)', 'success')
                             else:
-                                flash('✅ ملک به عنوان "در حال معامله" علامت‌گذاری شد.', 'success')
+                                flash('ملک به عنوان «در حال معامله» علامت‌گذاری شد.', 'success')
                 except Exception as e:
                     current_app.logger.error(f"Error creating commission records: {e}", exc_info=True)
                     # خطا را لاگ می‌کنیم اما فرآیند را متوقف نمی‌کنیم
-                    flash('✅ ملک به عنوان "در حال معامله" برای تمامی همکاران علامت‌گذاری شد. (خطا در ایجاد پورسانت)', 'warning')
+                    flash('ملک به عنوان «در حال معامله» برای تمامی همکاران علامت‌گذاری شد، اما در ثبت پورسانت خطایی رخ داد.', 'warning')
             else:
                 # اگر وضعیت از "در حال معامله" به "فعال" برگشت، پورسانت‌های pending مربوط به این فایل را حذف کن
                 try:
@@ -1020,17 +1061,17 @@ def mark_in_transaction(code: str):
                     
                     if removed_count > 0:
                         save_express_commissions(commissions_to_keep)
-                        flash(f'✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت و {removed_count} پورسانت در انتظار حذف شد.', 'success')
+                        flash(f'وضعیت ملک به «فعال» برای تمامی همکاران تغییر کرد و {removed_count} پورسانت در انتظار حذف شد.', 'success')
                     else:
-                        flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
+                        flash('وضعیت ملک به «فعال» برای تمامی همکاران تغییر کرد.', 'success')
                 except Exception as e:
                     current_app.logger.error(f"Error removing commission records: {e}")
-                    flash('✅ وضعیت ملک به "فعال" برای تمامی همکاران تغییر یافت.', 'success')
+                    flash('وضعیت ملک به «فعال» برای تمامی همکاران تغییر کرد.', 'success')
         else:
-            flash('❌ خطا در بروزرسانی وضعیت.', 'error')
+            flash('در بروزرسانی وضعیت فایل خطایی رخ داد. لطفاً چند لحظه دیگر دوباره تلاش کنید.', 'error')
     except Exception as e:
         current_app.logger.error(f"Error toggling land transaction status: {e}")
-        flash('❌ خطا در بروزرسانی وضعیت.', 'error')
+        flash('در بروزرسانی وضعیت فایل خطایی رخ داد. لطفاً چند لحظه دیگر دوباره تلاش کنید.', 'error')
     
     return redirect(url_for('express_partner.dashboard'))
 
@@ -1386,7 +1427,7 @@ def land_detail(code: str):
     land = next((l for l in lands if l.get('code') == code and l.get('is_express')), None)
 
     if not land:
-        flash('آگهی اکسپرس یافت نشد.', 'warning')
+        flash('این آگهی اکسپرس پیدا نشد یا دیگر در دسترس نیست.', 'warning')
         return redirect(url_for('express_partner.dashboard'))
 
     partners = load_express_partners() or []

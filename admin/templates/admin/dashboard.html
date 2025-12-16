@@ -6,7 +6,7 @@
 <div class="space-y-6">
   
   <!-- Stats Cards - فقط همکاران -->
-  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
     
     <!-- همکاران تایید شده -->
     <a href="{{ url_for('admin.express_partners') }}" 
@@ -74,6 +74,20 @@
         <div class="flex-1 min-w-0">
           <p class="text-xs text-gray-500 dark:text-gray-400">کاربران آنلاین</p>
           <p class="text-xl font-semibold text-gray-900 dark:text-white">{{ online_users_count or 0 }}</p>
+        </div>
+      </div>
+    </a>
+
+    <!-- همکاران آنلاین -->
+    <a href="{{ url_for('admin.online_partners') }}"
+       class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition focusable">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-user-check text-blue-500 dark:text-blue-400 text-lg"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-gray-500 dark:text-gray-400">همکاران آنلاین</p>
+          <p class="text-xl font-semibold text-gray-900 dark:text-white">{{ online_partners_count or 0 }}</p>
         </div>
       </div>
     </a>

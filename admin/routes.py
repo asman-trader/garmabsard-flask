@@ -295,6 +295,63 @@ def _get_online_users_list() -> List[Dict[str, Any]]:
     return online_list
 
 # -----------------------------------------------------------------------------
+# ردیابی همکاران آنلاین (Express Partners)
+# -----------------------------------------------------------------------------
+# Dict برای ذخیره اطلاعات همکاران آنلاین
+# {phone: {'timestamp': float, 'name': str, 'ip': str, 'last_activity': str}}
+_online_partners = {}
+
+def _update_online_partner(phone: str, name: str = None, ip: str = None):
+    """به‌روزرسانی timestamp آخرین فعالیت همکار"""
+    if phone:
+        now = datetime.utcnow()
+        _online_partners[phone] = {
+            'timestamp': now.timestamp(),
+            'name': name or 'همکار',
+            'ip': ip or 'نامشخص',
+            'last_activity': now.strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+def _get_online_partners_count() -> int:
+    """شمارش همکاران آنلاین (فعال در 5 دقیقه گذشته)"""
+    now = datetime.utcnow().timestamp()
+    timeout = 5 * 60  # 5 دقیقه
+    online = 0
+    # پاک‌سازی همکاران منقضی شده
+    expired = [phone for phone, data in _online_partners.items() if isinstance(data, dict) and (now - data.get('timestamp', 0)) > timeout]
+    for phone in expired:
+        _online_partners.pop(phone, None)
+    # شمارش همکاران آنلاین
+    for phone, data in _online_partners.items():
+        if isinstance(data, dict) and (now - data.get('timestamp', 0)) <= timeout:
+            online += 1
+    return online
+
+
+def _get_online_partners_list() -> List[Dict[str, Any]]:
+    """دریافت لیست همکاران آنلاین با اطلاعات کامل"""
+    now = datetime.utcnow().timestamp()
+    timeout = 5 * 60  # 5 دقیقه
+    online_list: List[Dict[str, Any]] = []
+    # پاک‌سازی همکاران منقضی شده
+    expired = [phone for phone, data in _online_partners.items() if isinstance(data, dict) and (now - data.get('timestamp', 0)) > timeout]
+    for phone in expired:
+        _online_partners.pop(phone, None)
+    # جمع‌آوری همکاران آنلاین
+    for phone, data in _online_partners.items():
+        if isinstance(data, dict) and (now - data.get('timestamp', 0)) <= timeout:
+            online_list.append({
+                'phone': phone,
+                'name': data.get('name', 'همکار'),
+                'ip': data.get('ip', 'نامشخص'),
+                'last_activity': data.get('last_activity', ''),
+                'timestamp': data.get('timestamp', 0),
+            })
+    # مرتب‌سازی بر اساس timestamp (جدیدترین اول)
+    online_list.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+    return online_list
+
+# -----------------------------------------------------------------------------
 # مسیرهای فایل‌ها (instance/data با fallback)
 # -----------------------------------------------------------------------------
 def _settings_path() -> str:
@@ -673,13 +730,17 @@ def dashboard():
     # شمارش کاربران آنلاین
     online_users_count = _get_online_users_count()
     
+    # شمارش همکاران آنلاین
+    online_partners_count = _get_online_partners_count()
+    
     return render_template(
         'admin/dashboard.html',
         partners_count=len(partners) if isinstance(partners, list) else 0,
         applications_count=len(pending_apps),
         assignments_count=len(assignments) if isinstance(assignments, list) else 0,
         commissions_count=len(commissions) if isinstance(commissions, list) else 0,
-        online_users_count=online_users_count
+        online_users_count=online_users_count,
+        online_partners_count=online_partners_count
     )
 
 @admin_bp.route('/online-users', endpoint='online_users')
@@ -691,6 +752,18 @@ def online_users_page():
         'admin/online_users.html',
         online_users=online_users,
         online_users_count=len(online_users)
+    )
+
+
+@admin_bp.route('/online-partners', endpoint='online_partners')
+@login_required
+def online_partners_page():
+    """صفحه لیست همکاران آنلاین"""
+    online_partners = _get_online_partners_list()
+    return render_template(
+        'admin/online_partners.html',
+        online_partners=online_partners,
+        online_partners_count=len(online_partners)
     )
 
 @admin_bp.route('/users')
