@@ -940,35 +940,25 @@ def notifications_colleagues():
         'subs_count': len(subs_for_diag or []),
     }
     
-    # واکشی همکاران تایید شده
+    # واکشی همکاران
     try:
         partners = load_express_partners() or []
     except Exception:
         partners = []
     
-    # فیلتر همکاران تایید شده و normalize کردن شماره تلفن
-    APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
+    # همه همکاران را (به‌جز مواردی که شماره ندارند) فعال در نظر بگیر
     approved_partners = []
     for p in partners if isinstance(partners, list) else []:
         if not isinstance(p, dict):
             continue
-        status = p.get('status')
-        is_approved = False
-        if status is True:
-            is_approved = True
-        elif isinstance(status, str):
-            if status.lower() in APPROVED_PARTNER_STATUSES:
-                is_approved = True
-        
-        if is_approved:
-            phone_raw = str(p.get('phone') or '').strip()
-            if phone_raw:
-                phone_normalized = _normalize_phone(phone_raw)
-                if phone_normalized and len(phone_normalized) == 11:
-                    approved_partners.append({
-                        'phone': phone_normalized,
-                        'name': p.get('name') or p.get('full_name') or phone_normalized
-                    })
+        phone_raw = str(p.get('phone') or '').strip()
+        if phone_raw:
+            phone_normalized = _normalize_phone(phone_raw)
+            if phone_normalized and len(phone_normalized) == 11:
+                approved_partners.append({
+                    'phone': phone_normalized,
+                    'name': p.get('name') or p.get('full_name') or phone_normalized
+                })
     
     if request.method == 'POST':
         title = (request.form.get('title') or '').strip()
@@ -978,7 +968,7 @@ def notifications_colleagues():
         if not title or not body:
             error = 'عنوان و متن اعلان الزامی است.'
         elif not approved_partners:
-            error = 'هیچ همکار تایید شده‌ای یافت نشد.'
+            error = 'هیچ همکاری یافت نشد.'
         else:
             sent = 0
             failed = 0
@@ -1158,41 +1148,31 @@ def sms_colleagues():
     message = None
     error = None
     
-    # واکشی همکاران تایید شده
+    # واکشی همکاران
     try:
         partners = load_express_partners() or []
     except Exception:
         partners = []
     
-    # فیلتر همکاران تایید شده و normalize کردن شماره تلفن
-    APPROVED_PARTNER_STATUSES = {"approved", "active", "enabled", "ok", "true", "1"}
+    # همه همکاران را (به‌جز مواردی که شماره ندارند) فعال در نظر بگیر
     approved_partners = []
     for p in partners if isinstance(partners, list) else []:
         if not isinstance(p, dict):
             continue
-        status = p.get('status')
-        is_approved = False
-        if status is True:
-            is_approved = True
-        elif isinstance(status, str):
-            if status.lower() in APPROVED_PARTNER_STATUSES:
-                is_approved = True
-        
-        if is_approved:
-            phone_raw = str(p.get('phone') or '').strip()
-            if phone_raw:
-                phone_normalized = _normalize_for_sms_ir(phone_raw)
-                if phone_normalized and len(phone_normalized) == 11:
-                    approved_partners.append({
-                        'phone': phone_normalized,
-                        'name': p.get('name') or p.get('full_name') or phone_normalized
-                    })
+        phone_raw = str(p.get('phone') or '').strip()
+        if phone_raw:
+            phone_normalized = _normalize_for_sms_ir(phone_raw)
+            if phone_normalized and len(phone_normalized) == 11:
+                approved_partners.append({
+                    'phone': phone_normalized,
+                    'name': p.get('name') or p.get('full_name') or phone_normalized
+                })
     
     if request.method == 'POST':
         send_mode = request.form.get('send_mode', 'template')  # 'template' or 'direct'
         
         if not approved_partners:
-            error = 'هیچ همکار تایید شده‌ای یافت نشد.'
+            error = 'هیچ همکاری یافت نشد.'
         else:
             sent = 0
             failed = 0
