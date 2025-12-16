@@ -17,9 +17,53 @@
     </div>
   </header>
 
-<div class="max-w-5xl mx-auto pt-0 px-4 pb-16" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
+<div class="max-w-5xl mx-auto pt-0 px-4 pb-16">
+  
+  <!-- Push Prompt Component -->
+  <div x-data="pushPromptComponent()" x-init="checkSubscription()" class="mt-4">
 
-  <div class="mt-4">
+    <!-- کارت درخواست اجازه Push Notifications -->
+    <div x-show="showPrompt" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 transform scale-95"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-95"
+         class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+    <div class="flex items-start gap-3">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+        <i class="fas fa-bell text-blue-600 dark:text-blue-400 text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">فعال‌سازی اعلان‌های فوری</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">برای دریافت اعلان‌های فوری از طریق مرورگر، لطفاً اجازه ارسال اعلان را فعال کنید.</p>
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  @click="enablePush()"
+                  :disabled="loading"
+                  class="px-4 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+            <span x-text="loading ? 'در حال فعال‌سازی...' : 'فعال‌سازی اعلان‌ها'"></span>
+          </button>
+          <button type="button"
+                  @click="dismiss()"
+                  class="px-3 py-2 rounded-lg text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+            بعداً
+          </button>
+        </div>
+      </div>
+      <button type="button"
+              @click="dismiss()"
+              class="flex-shrink-0 w-6 h-6 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 transition">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="mt-4" x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})">
     <template x-if="loading">
       <div class="space-y-3">
         <div class="h-20 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
@@ -92,5 +136,182 @@
   {% set bottom_nav_active = 'notifications' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
 </div>
+
+<script>
+  (function() {
+    // VAPID Public Key از base template
+    const VAPID_PUBLIC_KEY = "{{ VAPID_PUBLIC_KEY|default('', true) }}";
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+      return outputArray;
+    }
+
+    async function getServiceWorkerRegistration() {
+      if (!('serviceWorker' in navigator)) return null;
+      let reg = await navigator.serviceWorker.getRegistration('{{ url_for("express_partner.service_worker") }}');
+      if (!reg) {
+        reg = await navigator.serviceWorker.register('{{ url_for("express_partner.service_worker") }}', { scope: '/express/partner/' }).catch(() => null);
+      }
+      return reg;
+    }
+
+    // تعریف Alpine component برای push prompt
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('pushPromptComponent', () => ({
+        showPrompt: false,
+        loading: false,
+        async checkSubscription() {
+          try {
+            // بررسی اینکه آیا مرورگر از notifications پشتیبانی می‌کند
+            if (!('Notification' in window) || !('serviceWorker' in navigator) || !VAPID_PUBLIC_KEY) {
+              this.showPrompt = false;
+              return;
+            }
+
+            // بررسی permission
+            const permission = Notification.permission;
+            if (permission === 'denied') {
+              this.showPrompt = false;
+              return;
+            }
+
+            // بررسی subscription موجود
+            const reg = await getServiceWorkerRegistration();
+            if (!reg) {
+              const dismissed = localStorage.getItem('vinor_express_push_prompt_dismissed');
+              if (dismissed !== '1') {
+                this.showPrompt = true;
+              }
+              return;
+            }
+
+            const subscription = await reg.pushManager.getSubscription().catch(() => null);
+            if (subscription) {
+              // اگر subscription وجود دارد، آن را در سرور ثبت کن (اگر قبلاً ثبت نشده)
+              try {
+                const subObj = subscription.toJSON();
+                await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  body: JSON.stringify(subObj)
+                });
+              } catch(_) {}
+              this.showPrompt = false;
+            } else {
+              // اگر subscription وجود ندارد، prompt را نمایش بده
+              const dismissed = localStorage.getItem('vinor_express_push_prompt_dismissed');
+              if (dismissed !== '1') {
+                this.showPrompt = true;
+              }
+            }
+          } catch(err) {
+            console.debug('Error checking push subscription:', err);
+            this.showPrompt = false;
+          }
+        },
+        async enablePush() {
+          this.loading = true;
+
+          try {
+            // درخواست permission
+            if (!('Notification' in window)) {
+              alert('مرورگر شما از اعلان پشتیبانی نمی‌کند.');
+              this.loading = false;
+              return;
+            }
+
+            let permission = Notification.permission;
+            if (permission === 'default') {
+              permission = await Notification.requestPermission();
+            }
+
+            if (permission !== 'granted') {
+              alert('برای دریافت اعلان‌ها، لطفاً اجازه ارسال اعلان را فعال کنید.');
+              this.loading = false;
+              this.showPrompt = false;
+              return;
+            }
+
+            // دریافت service worker registration
+            const reg = await getServiceWorkerRegistration();
+            if (!reg) {
+              alert('خطا در ثبت Service Worker. لطفاً صفحه را رفرش کنید.');
+              this.loading = false;
+              return;
+            }
+
+            // بررسی subscription موجود
+            let subscription = await reg.pushManager.getSubscription().catch(() => null);
+            if (subscription) {
+              // اگر subscription وجود دارد، آن را در سرور ثبت کن
+              try {
+                const subObj = subscription.toJSON();
+                const res = await fetch('/api/push/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  body: JSON.stringify(subObj)
+                });
+                if (res.ok) {
+                  this.showPrompt = false;
+                  localStorage.setItem('vinor_express_notifications_auto_enabled', '1');
+                  localStorage.removeItem('vinor_express_push_prompt_dismissed');
+                }
+              } catch(_) {}
+              this.loading = false;
+              return;
+            }
+
+            // ایجاد subscription جدید
+            if (!VAPID_PUBLIC_KEY) {
+              alert('خطا در تنظیمات اعلان‌ها. لطفاً با پشتیبانی تماس بگیرید.');
+              this.loading = false;
+              return;
+            }
+
+            const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+            subscription = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: appServerKey
+            });
+
+            // ثبت subscription در سرور
+            const subObj = subscription.toJSON();
+            const res = await fetch('/api/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify(subObj)
+            });
+
+            if (res.ok) {
+              this.showPrompt = false;
+              localStorage.setItem('vinor_express_notifications_auto_enabled', '1');
+              localStorage.removeItem('vinor_express_push_prompt_dismissed');
+            } else {
+              throw new Error('خطا در ثبت اشتراک');
+            }
+          } catch(err) {
+            console.error('Error enabling push notifications:', err);
+            alert('خطا در فعال‌سازی اعلان‌ها. لطفاً دوباره تلاش کنید.');
+          } finally {
+            this.loading = false;
+          }
+        },
+        dismiss() {
+          this.showPrompt = false;
+          localStorage.setItem('vinor_express_push_prompt_dismissed', '1');
+        }
+      }));
+    });
+  })();
+</script>
+
 {% endblock %}
 
