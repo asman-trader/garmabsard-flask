@@ -288,6 +288,13 @@ def create_app() -> Flask:
             except Exception:
                 pass
 
+        # Push API از CSRF مستثنا است (برای /api/push/subscribe و ...)
+        if push_api_bp is not None:
+            try:
+                csrf.exempt(push_api_bp)
+            except Exception:
+                pass
+
 
 
         @app.after_request
