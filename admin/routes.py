@@ -2419,15 +2419,18 @@ def add_express_listing():
                         })
                         existing.add(key)
                     try:
-                        add_notification(
-                            user_id=phone,
-                            title='فایل جدید اکسپرس',
-                            body=f"کد فایل: {new_code} - {title}",
-                            ntype='info',
-                            ad_id=new_code,
-                            action_url=url_for('main.land_detail', code=new_code)
-                        )
-                    except Exception:
+                        phone_normalized = _normalize_phone(phone)
+                        if phone_normalized and len(phone_normalized) == 11:
+                            add_notification(
+                                user_id=phone_normalized,
+                                title='فایل جدید اکسپرس',
+                                body=f"کد فایل: {new_code} - {title}",
+                                ntype='info',
+                                ad_id=new_code,
+                                action_url=url_for('main.express_detail', code=new_code, _external=True)
+                            )
+                    except Exception as e:
+                        current_app.logger.error(f"Error sending file assignment notification to {phone}: {e}", exc_info=True)
                         continue
                 save_express_assignments(items)
             except Exception:
@@ -3194,18 +3197,20 @@ def express_partner_application_approve(aid: int):
     except Exception as e:
         current_app.logger.error(f"Error auto-assigning lands to partner: {e}")
 
-    # اعلان به کاربر
+    # اعلان به کاربر (با normalize کردن شماره تلفن)
     try:
         if phone:
-            add_notification(
-                user_id=phone,
-                title='تأیید همکاری وینور اکسپرس',
-                body='درخواست شما تأیید شد. اکنون می‌توانید از پنل همکاری استفاده کنید.',
-                ntype='success',
-                action_url=url_for('express_partner.dashboard')
-            )
-    except Exception:
-        pass
+            phone_normalized = _normalize_phone(phone)
+            if phone_normalized and len(phone_normalized) == 11:
+                add_notification(
+                    user_id=phone_normalized,
+                    title='تأیید همکاری وینور اکسپرس',
+                    body='درخواست شما تأیید شد. اکنون می‌توانید از پنل همکاری استفاده کنید.',
+                    ntype='success',
+                    action_url=url_for('express_partner.dashboard', _external=True)
+                )
+    except Exception as e:
+        current_app.logger.error(f"Error sending approval notification: {e}", exc_info=True)
 
     # ارسال پیامک تایید همکاری
     try:
@@ -3289,19 +3294,21 @@ def express_partner_application_reject(aid: int):
         apps = [a for a in apps if a is not target]
     save_express_partner_apps(apps)
 
-    # اعلان به کاربر
+    # اعلان به کاربر (با normalize کردن شماره تلفن)
     try:
         phone = str(target.get('phone') or '')
         if phone:
-            add_notification(
-                user_id=phone,
-                title='رد درخواست همکاری وینور اکسپرس',
-                body='درخواست شما در حال حاضر تأیید نشد.',
-                ntype='warning',
-                action_url=url_for('express_partner.apply')
-            )
-    except Exception:
-        pass
+            phone_normalized = _normalize_phone(phone)
+            if phone_normalized and len(phone_normalized) == 11:
+                add_notification(
+                    user_id=phone_normalized,
+                    title='رد درخواست همکاری وینور اکسپرس',
+                    body='درخواست شما در حال حاضر تأیید نشد.',
+                    ntype='warning',
+                    action_url=url_for('express_partner.apply', _external=True)
+                )
+    except Exception as e:
+        current_app.logger.error(f"Error sending rejection notification: {e}", exc_info=True)
 
     if (request.headers.get('Accept') or '').lower().find('application/json') >= 0:
         return jsonify({ 'ok': True, 'id': int(aid), 'status': 'rejected' })

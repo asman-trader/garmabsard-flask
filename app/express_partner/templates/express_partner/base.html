@@ -376,7 +376,7 @@
     window.VINOR_NOTIFY_CFG = {
       enabled: {{ 'true' if session.get('user_phone') else 'false' }},
       endpoints: {
-        list: "{{ url_for('express_partner.get_notifications') }}",
+        list: "/express/partner/api/notifications",
         unread: "{{ url_for('express_partner.get_unread_count') }}",
         markAll: "{{ url_for('express_partner.mark_all_notifications_read') }}",
         markOneTemplate: "{{ url_for('express_partner.mark_notification_read', notif_id='__ID__') }}"
