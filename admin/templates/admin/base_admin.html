@@ -139,11 +139,11 @@
         <i class="fa-solid fa-plus text-lg"></i>
         <span class="text-xs">ثبت آگهی</span>
       </a>
-      <a href="{{ url_for('admin.express_partner_applications') }}" 
+      <a href="{{ url_for('admin.express_listings') }}" 
          class="flex flex-col items-center gap-1 p-2 rounded-lg focusable
-                {% if request.endpoint == 'admin.express_partner_applications' %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
-        <i class="fa-solid fa-file-circle-check text-lg"></i>
-        <span class="text-xs">درخواست‌ها</span>
+                {% if request.endpoint in ['admin.express_listings', 'admin.edit_express_listing'] %}text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+        <i class="fa-solid fa-layer-group text-lg"></i>
+        <span class="text-xs">آگهی اکسپرس</span>
       </a>
       <button @click="menuOpen = !menuOpen" 
               class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-600 dark:text-gray-400">
