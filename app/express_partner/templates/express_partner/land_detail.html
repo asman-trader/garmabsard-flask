@@ -30,24 +30,46 @@
     </div>
   </header>
 
-  <!-- گالری بالای صفحه - سبک دیوار (اسلایدر ساده مانند دیوار) -->
-  <div data-tour="land-image" class="relative mb-4 bg-black/5 dark:bg-black/20">
+  <!-- گالری بالای صفحه - سبک دیوار (تمام‌عرض) -->
+  <div data-tour="land-image" class="relative mb-4 bg-black/5 dark:bg-black/20 w-full">
     {% set images = land.images or [] %}
     {% set video = land.video %}
     {% set has_video = video and video.strip() %}
     {% set total_items = (1 if has_video else 0) + images|length %}
     {% set primary_image = images[0] if images else None %}
 
-    <div class="max-w-4xl mx-auto px-4 pt-2 pb-4">
+    <div class="w-full pt-0 pb-4">
       {% if has_video or primary_image %}
-        {% set video_src = url_for('static', filename=video) if video and video.startswith('uploads/') else video %}
+        {# uploads/* باید از /uploads/ سرو شود (نه /static/) #}
+        {% if video and ("://" in (video|string)) %}
+          {% set video_src = video %}
+        {% elif video and (video|string).startswith('/uploads/') %}
+          {% set video_src = video %}
+        {% elif video and (video|string).startswith('uploads/') %}
+          {% set video_src = '/uploads/' + (video|string)[8:] %}
+        {% elif video and not (video|string).startswith('/') %}
+          {# مسیرهای تاریخ‌محور مثل 2025/08/... هم از /uploads/ سرو می‌شوند #}
+          {% set video_src = '/uploads/' + (video|string) %}
+        {% else %}
+          {% set video_src = video %}
+        {% endif %}
         <div id="landGallery"
-             class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-xl select-none">
+             class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none">
+
+          <!-- Loading overlay -->
+          <div id="landMediaLoading"
+               class="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[1px] text-white transition-opacity duration-200 opacity-0 pointer-events-none"
+               aria-hidden="true">
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
+              <div class="text-xs font-medium drop-shadow">در حال بارگذاری…</div>
+            </div>
+          </div>
           
           {# اگر ویدیو وجود دارد، اولین اسلاید ویدیو است #}
           {% if has_video %}
           <video id="landVideo"
-                 class="w-full h-full object-cover {% if not primary_image %}block{% else %}hidden{% endif %}"
+                 class="w-full h-full object-cover block"
                  controls
                  onclick="event.stopPropagation()">
             <source src="{{ video_src }}" type="video/mp4">
@@ -57,7 +79,17 @@
 
           {# تصویر اصلی (اگر ویدیو وجود دارد، دومین اسلاید است) #}
           {% if primary_image %}
-            {% set image_src = url_for('static', filename=primary_image) if primary_image.startswith('uploads/') else primary_image %}
+            {% if "://" in (primary_image|string) %}
+              {% set image_src = primary_image %}
+            {% elif (primary_image|string).startswith('/uploads/') %}
+              {% set image_src = primary_image %}
+            {% elif (primary_image|string).startswith('uploads/') %}
+              {% set image_src = '/uploads/' + (primary_image|string)[8:] %}
+            {% elif not (primary_image|string).startswith('/') %}
+              {% set image_src = '/uploads/' + (primary_image|string) %}
+            {% else %}
+              {% set image_src = primary_image %}
+            {% endif %}
             <img id="landMainImage"
                  src="{{ image_src }}"
                  alt="{{ land.title }}"
@@ -69,17 +101,17 @@
           {% if total_items > 1 %}
           <button type="button"
                   id="landPrev"
-                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-10">
+                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
             <i class="fas fa-chevron-right drop-shadow"></i>
           </button>
           <button type="button"
                   id="landNext"
-                  class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-10">
+                  class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
             <i class="fas fa-chevron-left drop-shadow"></i>
           </button>
 
           <!-- نقطه‌های وضعیت اسلاید -->
-          <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-10">
+          <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-30">
             {% if has_video %}
             <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 active"></span>
             {% endif %}
@@ -170,6 +202,25 @@
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">جزئیات</h3>
       <div class="space-y-2">
+        {% if land.payment_method %}
+        <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+          <span class="text-sm text-gray-600 dark:text-gray-400">نحوه پرداخت</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.payment_method }}</span>
+        </div>
+        {% if land.payment_method == 'اقساطی' and land.payment_terms and land.payment_terms|length > 0 %}
+        <div class="py-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400 block mb-2">جزئیات اقساط</span>
+          <div class="space-y-2">
+            {% for t in land.payment_terms %}
+              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ (t.months or 0) }} ماهه</span>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ (t.amount or 0)|toman }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endif %}
         {% if land.rooms %}
         <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
           <span class="text-sm text-gray-600 dark:text-gray-400">اتاق</span>
@@ -496,16 +547,17 @@
       if (!galleryEl) return;
       const mainImg = document.getElementById('landMainImage');
       const mainVideo = document.getElementById('landVideo');
+      const loadingEl = document.getElementById('landMediaLoading');
       const hasVideo = !!mainVideo;
       
       const images = [
         {% for img in images %}
-          "{{ url_for('static', filename=img) if img.startswith('uploads/') else img }}"{% if not loop.last %},{% endif %}
+          "{% if '://' in (img|string) %}{{ img }}{% elif (img|string).startswith('/uploads/') %}{{ img }}{% elif (img|string).startswith('uploads/') %}/uploads/{{ (img|string)[8:] }}{% elif not (img|string).startswith('/') %}/uploads/{{ img }}{% else %}{{ img }}{% endif %}"{% if not loop.last %},{% endif %}
         {% endfor %}
       ];
       
       {% if video %}
-      const videoSrc = "{{ url_for('static', filename=video) if video.startswith('uploads/') else video }}";
+      const videoSrc = "{% if '://' in (video|string) %}{{ video }}{% elif (video|string).startswith('/uploads/') %}{{ video }}{% elif (video|string).startswith('uploads/') %}/uploads/{{ (video|string)[8:] }}{% elif video and not (video|string).startswith('/') %}/uploads/{{ video }}{% else %}{{ video }}{% endif %}";
       {% else %}
       const videoSrc = null;
       {% endif %}
@@ -517,6 +569,51 @@
       const dots = Array.from(document.querySelectorAll('.land-dot'));
       const prevBtn = document.getElementById('landPrev');
       const nextBtn = document.getElementById('landNext');
+      let loadingFallbackTimer = null;
+
+      function setLoading(isLoading) {
+        if (!loadingEl) return;
+        if (loadingFallbackTimer) {
+          clearTimeout(loadingFallbackTimer);
+          loadingFallbackTimer = null;
+        }
+        if (isLoading) {
+          loadingEl.classList.remove('opacity-0', 'pointer-events-none');
+          loadingEl.classList.add('opacity-100');
+          loadingEl.setAttribute('aria-hidden', 'false');
+          // Fail-safe: اگر load/canplay به هر دلیل نیامد، لودینگ گیر نکند
+          loadingFallbackTimer = setTimeout(() => {
+            setLoading(false);
+          }, 5000);
+        } else {
+          loadingEl.classList.add('opacity-0', 'pointer-events-none');
+          loadingEl.classList.remove('opacity-100');
+          loadingEl.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function waitForImageLoad() {
+        if (!mainImg) return setLoading(false);
+        // اگر از کش لود شده بود
+        if (mainImg.complete && mainImg.naturalWidth > 0) {
+          return setLoading(false);
+        }
+        const done = () => setLoading(false);
+        mainImg.addEventListener('load', done, { once: true });
+        mainImg.addEventListener('error', done, { once: true });
+      }
+
+      function waitForVideoLoad() {
+        if (!mainVideo) return setLoading(false);
+        // readyState >= 2 یعنی اطلاعات کافی برای پخش وجود دارد
+        if (mainVideo.readyState >= 2) {
+          return setLoading(false);
+        }
+        const done = () => setLoading(false);
+        mainVideo.addEventListener('loadeddata', done, { once: true });
+        mainVideo.addEventListener('canplay', done, { once: true });
+        mainVideo.addEventListener('error', done, { once: true });
+      }
 
       function updateDots() {
         if (!dots.length) return;
@@ -535,6 +632,7 @@
 
       function showItem(idx) {
         currentIndex = (idx + totalItems) % totalItems;
+        setLoading(true);
         
         if (hasVideo && currentIndex === 0) {
           // نمایش ویدیو
@@ -546,6 +644,7 @@
             mainImg.classList.add('hidden');
             mainImg.classList.remove('block');
           }
+          waitForVideoLoad();
         } else {
           // نمایش تصویر
           const imgIndex = hasVideo ? currentIndex - 1 : currentIndex;
@@ -559,6 +658,7 @@
             mainVideo.classList.remove('block');
             mainVideo.pause();
           }
+          waitForImageLoad();
         }
         updateDots();
       }
@@ -572,42 +672,97 @@
         showItem(currentIndex + 1);
       }, { passive: false });
 
-      // لمس برای اسلاید (موبایل)
+      // لمس/درگ برای اسلاید (موبایل + دسکتاپ)
+      // نکته: روی بعضی مرورگرها touchmove همیشه fire نمی‌شود؛ بنابراین در touchend هم changedTouches را می‌خوانیم.
       let touchStartX = null;
       let touchEndX = null;
+      let isPointerDown = false;
       const SWIPE_THRESHOLD = 40;
 
-      galleryEl.addEventListener('touchstart', function(e){
-        const t = e.touches && e.touches[0];
-        if (!t) return;
-        touchStartX = t.clientX;
-        touchEndX = null;
-      }, { passive: true });
-
-      galleryEl.addEventListener('touchmove', function(e){
-        const t = e.touches && e.touches[0];
-        if (!t || touchStartX === null) return;
-        touchEndX = t.clientX;
-      }, { passive: true });
-
-      galleryEl.addEventListener('touchend', function(){
-        if (touchStartX === null || touchEndX === null) return;
-        const dx = touchEndX - touchStartX;
-        if (Math.abs(dx) > SWIPE_THRESHOLD) {
-          if (dx < 0) {
-            // کشیدن به چپ → بعدی
-            showItem(currentIndex + 1);
-          } else {
-            // کشیدن به راست → قبلی
-            showItem(currentIndex - 1);
-          }
+      function handleSwipe(dx) {
+        if (Math.abs(dx) <= SWIPE_THRESHOLD) return;
+        if (dx < 0) {
+          // کشیدن به چپ → بعدی
+          showItem(currentIndex + 1);
+        } else {
+          // کشیدن به راست → قبلی
+          showItem(currentIndex - 1);
         }
-        touchStartX = null;
-        touchEndX = null;
-      }, { passive: true });
+      }
+
+      function bindSwipeListeners(el) {
+        if (!el) return;
+
+        // Touch (mobile)
+        el.addEventListener('touchstart', function(e){
+          const t = e.touches && e.touches[0];
+          if (!t) return;
+          touchStartX = t.clientX;
+          touchEndX = null;
+        }, { passive: true });
+
+        el.addEventListener('touchmove', function(e){
+          const t = e.touches && e.touches[0];
+          if (!t || touchStartX === null) return;
+          touchEndX = t.clientX;
+        }, { passive: true });
+
+        el.addEventListener('touchend', function(e){
+          if (touchStartX === null) return;
+          const t = (e.changedTouches && e.changedTouches[0]) || null;
+          const endX = (touchEndX !== null) ? touchEndX : (t ? t.clientX : null);
+          if (endX === null) return;
+          const dx = endX - touchStartX;
+          handleSwipe(dx);
+          touchStartX = null;
+          touchEndX = null;
+        }, { passive: true });
+
+        // Pointer (desktop drag)
+        el.addEventListener('pointerdown', function(e){
+          // فقط دکمه چپ موس
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          isPointerDown = true;
+          touchStartX = e.clientX;
+          touchEndX = null;
+          try { el.setPointerCapture(e.pointerId); } catch(_) {}
+        });
+        el.addEventListener('pointermove', function(e){
+          if (!isPointerDown || touchStartX === null) return;
+          touchEndX = e.clientX;
+        });
+        el.addEventListener('pointerup', function(e){
+          if (!isPointerDown || touchStartX === null) return;
+          isPointerDown = false;
+          const endX = (touchEndX !== null) ? touchEndX : e.clientX;
+          const dx = endX - touchStartX;
+          handleSwipe(dx);
+          touchStartX = null;
+          touchEndX = null;
+          try { el.releasePointerCapture(e.pointerId); } catch(_) {}
+        });
+        el.addEventListener('pointercancel', function(){
+          isPointerDown = false;
+          touchStartX = null;
+          touchEndX = null;
+        });
+      }
+
+      // روی کانتینر + خود مدیا هم bind کن (برای مرورگرهایی که event را bubble نمی‌کنند)
+      bindSwipeListeners(galleryEl);
+      bindSwipeListeners(mainImg);
+      bindSwipeListeners(mainVideo);
 
       // وضعیت اولیه نقطه‌ها
       updateDots();
+
+      // لودینگ اولیه (آیتم اول)
+      setLoading(true);
+      if (hasVideo && currentIndex === 0) {
+        waitForVideoLoad();
+      } else {
+        waitForImageLoad();
+      }
     })();
     });
 

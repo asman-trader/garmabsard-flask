@@ -14,6 +14,7 @@ from datetime import timedelta, datetime
 from flask import (
     Flask, request, redirect, url_for, session, current_app, send_from_directory
 )
+from werkzeug.exceptions import RequestEntityTooLarge
 from .utils.storage import load_settings
 
 # CSRF (Flask-WTF)
@@ -167,7 +168,8 @@ def create_app() -> Flask:
         TEMPLATES_AUTO_RELOAD=True,
         JSON_AS_ASCII=False,
         UPLOAD_FOLDER=os.environ.get("UPLOAD_FOLDER", default_upload_folder),
-        MAX_CONTENT_LENGTH=20 * 1024 * 1024,  # 20MB
+        # Upload limit (برای ویدئو هم استفاده می‌شود)
+        MAX_CONTENT_LENGTH=getattr(Config, "MAX_CONTENT_LENGTH", 200 * 1024 * 1024),
         VAPID_PUBLIC_KEY=vapid_public,
         VAPID_PRIVATE_KEY=vapid_private,
         # هر دو کلید برای سازگاری: dict و زیرکلید متنی
@@ -184,6 +186,20 @@ def create_app() -> Flask:
     _ensure_instance_folder(app)
     _setup_logging(app)
     _register_jinja_filters(app)
+
+    # ---------- Upload too large (413) ----------
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_upload_too_large(e):
+        from flask import flash
+        try:
+            max_mb = int(app.config.get("MAX_CONTENT_LENGTH", 0) / (1024 * 1024))
+        except Exception:
+            max_mb = 0
+        msg = "حجم فایل زیاد است."
+        if max_mb:
+            msg = f"حجم فایل زیاد است. حداکثر حجم مجاز: {max_mb}MB"
+        flash(msg, "warning")
+        return redirect(request.referrer or url_for("admin.add_express_listing"))
 
     @app.context_processor
     def inject_vinor_globals():

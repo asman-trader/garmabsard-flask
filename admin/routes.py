@@ -537,6 +537,27 @@ def _delete_ad_images(ad: Dict[str, Any]):
             except Exception:
                 pass
 
+    # حذف ویدئو (اگر وجود داشته باشد)
+    try:
+        video = ad.get("video")
+        if isinstance(video, str) and video:
+            candidates = []
+            if os.path.isabs(video):
+                candidates.append(video)
+            else:
+                candidates.append(os.path.join(_uploads_root(), video))
+                candidates.append(os.path.join(_uploads_root(), os.path.basename(video)))
+            for c in candidates:
+                try:
+                    abs_c = os.path.abspath(c)
+                    uploads_root = os.path.abspath(_uploads_root())
+                    if abs_c.startswith(uploads_root):
+                        _safe_unlink(abs_c)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
 def cleanup_expired_ads() -> None:
     """حذف کامل آگهی‌های منقضی‌شده از JSON و حذف تصاویرشان."""
     try:
@@ -2339,7 +2360,36 @@ def add_express_listing():
         except (ValueError, TypeError):
             pass  # اگر مقدار نامعتبر بود، None می‌ماند
 
+        # ویدئو (اختیاری)
+        video_path = None
+        try:
+            video_path = _save_video_from_form(files)
+        except Exception:
+            video_path = None
+
         # ایجاد آگهی اکسپرس
+        payment_method = (form.get('payment_method') or '').strip()
+        payment_terms = []
+        try:
+            if payment_method == 'اقساطی':
+                months_list = request.form.getlist('installment_months[]')
+                amounts_list = request.form.getlist('installment_amounts[]')
+                for i in range(max(len(months_list), len(amounts_list))):
+                    m_raw = (months_list[i] if i < len(months_list) else '') or ''
+                    a_raw = (amounts_list[i] if i < len(amounts_list) else '') or ''
+                    try:
+                        m = int(re.sub(r'[^\d]', '', str(m_raw))) if m_raw else 0
+                    except Exception:
+                        m = 0
+                    try:
+                        a = int(re.sub(r'[^\d]', '', str(a_raw))) if a_raw else 0
+                    except Exception:
+                        a = 0
+                    if m > 0 and a > 0:
+                        payment_terms.append({'months': m, 'amount': a})
+        except Exception:
+            payment_terms = []
+
         new_express_land = {
             'code': new_code,
             'title': title,
@@ -2354,6 +2404,8 @@ def add_express_listing():
             'status': 'approved',  # آگهی‌های اکسپرس مستقیماً تأیید می‌شوند
             'ad_type': 'express',
             'category': form.get('category', ''),
+            'payment_method': payment_method,
+            'payment_terms': payment_terms,
             'is_express': True,
             'express_status': 'approved',
             'express_documents': documents,
@@ -2363,6 +2415,9 @@ def add_express_listing():
                 'express_commission_amount': express_commission_amount,
             }
         }
+
+        if video_path:
+            new_express_land['video'] = video_path
         
         # افزودن مختصات جغرافیایی در صورت وجود
         if latitude is not None:
@@ -2451,6 +2506,31 @@ def edit_express_listing(code):
         land['price_per_meter'] = int(form.get('price_per_meter', 0) or 0)
         land['description'] = form.get('description', '').strip()
         land['vinor_contact'] = form.get('vinor_contact', '09121234567')
+        land['payment_method'] = (form.get('payment_method') or '').strip()
+        # جزئیات اقساط (اگر اقساطی باشد)
+        try:
+            if land.get('payment_method') == 'اقساطی':
+                payment_terms = []
+                months_list = request.form.getlist('installment_months[]')
+                amounts_list = request.form.getlist('installment_amounts[]')
+                for i in range(max(len(months_list), len(amounts_list))):
+                    m_raw = (months_list[i] if i < len(months_list) else '') or ''
+                    a_raw = (amounts_list[i] if i < len(amounts_list) else '') or ''
+                    try:
+                        m = int(re.sub(r'[^\d]', '', str(m_raw))) if m_raw else 0
+                    except Exception:
+                        m = 0
+                    try:
+                        a = int(re.sub(r'[^\d]', '', str(a_raw))) if a_raw else 0
+                    except Exception:
+                        a = 0
+                    if m > 0 and a > 0:
+                        payment_terms.append({'months': m, 'amount': a})
+                land['payment_terms'] = payment_terms
+            else:
+                land.pop('payment_terms', None)
+        except Exception:
+            pass
         
         # به‌روزرسانی مختصات جغرافیایی
         try:
@@ -2484,6 +2564,44 @@ def edit_express_listing(code):
                 doc_filename = _save_express_document(file, code)
                 if doc_filename:
                     land.setdefault('express_documents', []).append(doc_filename)
+
+        # حذف/تغییر ویدئو (اختیاری)
+        try:
+            if (form.get('remove_video') or '').strip():
+                old_video = land.get('video')
+                if old_video and isinstance(old_video, str):
+                    # حذف فایل ویدئوی قبلی (در uploads)
+                    try:
+                        candidates = [
+                            os.path.join(_uploads_root(), old_video),
+                            os.path.join(_uploads_root(), os.path.basename(old_video)),
+                        ]
+                        for c in candidates:
+                            _safe_unlink(c)
+                    except Exception:
+                        pass
+                land.pop('video', None)
+        except Exception:
+            pass
+
+        try:
+            new_video = _save_video_from_form(files)
+            if new_video:
+                # حذف ویدئوی قبلی
+                old_video = land.get('video')
+                if old_video and isinstance(old_video, str) and old_video != new_video:
+                    try:
+                        candidates = [
+                            os.path.join(_uploads_root(), old_video),
+                            os.path.join(_uploads_root(), os.path.basename(old_video)),
+                        ]
+                        for c in candidates:
+                            _safe_unlink(c)
+                    except Exception:
+                        pass
+                land['video'] = new_video
+        except Exception:
+            pass
         
         # ذخیره تغییرات
         save_json(_lands_path(), lands_list)

@@ -45,16 +45,26 @@
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step2-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">2</span>
-        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">تصاویر</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">نحوه پرداخت</span>
       </div>
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step3-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">3</span>
-        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">مدارک</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">تصاویر</span>
       </div>
       <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
       <div class="flex items-center gap-2">
         <span id="step4-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">4</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">ویدئو</span>
+      </div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+      <div class="flex items-center gap-2">
+        <span id="step5-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">5</span>
+        <span class="hidden sm:inline text-gray-700 dark:text-gray-300">مدارک</span>
+      </div>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+      <div class="flex items-center gap-2">
+        <span id="step6-indicator" class="w-6 h-6 grid place-items-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">6</span>
         <span class="hidden sm:inline text-gray-700 dark:text-gray-300">بررسی</span>
       </div>
     </div>
@@ -216,8 +226,63 @@
       </div>
     </div>
 
-    <!-- مرحله 2: تصاویر -->
+    <!-- مرحله 2: نحوه پرداخت -->
     <div id="step2" class="step-content hidden">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+          نحوه پرداخت
+        </h2>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            نحوه پرداخت <span class="text-red-500">*</span>
+          </label>
+          <select name="payment_method" id="payment_method" required
+                  class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">انتخاب کنید</option>
+            <option value="نقدی">نقدی</option>
+            <option value="اقساطی">اقساطی</option>
+            <option value="معاوضه">معاوضه</option>
+            <option value="توافقی">توافقی</option>
+          </select>
+          <p class="text-xs text-gray-500 dark:text-gray-400">این مورد در صفحه جزئیات فایل همکار نمایش داده می‌شود.</p>
+        </div>
+
+        <!-- جزئیات اقساط (فقط اگر اقساطی باشد) - سبک دیوار -->
+        <div id="installmentsBox" class="hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <div class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات اقساط</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">برای هر قسط، «تعداد ماه» و «مبلغ» را وارد کنید.</div>
+            </div>
+            <button type="button" id="addInstallmentRow"
+                    class="px-3 py-2 rounded-lg text-xs font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition">
+              <i class="fa-solid fa-plus text-[10px] ml-1"></i>
+              افزودن قسط
+            </button>
+          </div>
+
+          <div id="installmentsRows" class="space-y-2"></div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">مثال: 12 ماهه / 50,000,000 تومان</p>
+        </div>
+
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
+          <button type="button" onclick="prevStep()"
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+            <span>قبلی</span>
+          </button>
+          <button type="button" onclick="nextStep()"
+                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <span>ادامه</span>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- مرحله 3: تصاویر -->
+    <div id="step3" class="step-content hidden">
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           تصاویر ملک
@@ -247,8 +312,41 @@
       </div>
     </div>
 
-    <!-- مرحله 3: مدارک -->
-    <div id="step3" class="step-content hidden">
+    <!-- مرحله 4: ویدئو -->
+    <div id="step4" class="step-content hidden">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+          ویدئو ملک (اختیاری)
+        </h2>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            آپلود ویدئو
+          </label>
+          <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
+                 class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            فرمت‌های مجاز: MP4 / WEBM / MOV / AVI / MKV
+          </p>
+        </div>
+
+        <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+          <button type="button" onclick="prevStep()"
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+            <span>قبلی</span>
+          </button>
+          <button type="button" onclick="nextStep()"
+                  class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <span>ادامه</span>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- مرحله 5: مدارک -->
+    <div id="step5" class="step-content hidden">
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           مدارک و تماس
@@ -296,8 +394,8 @@
       </div>
     </div>
 
-    <!-- مرحله 4: بررسی و انتشار -->
-    <div id="step4" class="step-content hidden">
+    <!-- مرحله 6: بررسی و انتشار -->
+    <div id="step6" class="step-content hidden">
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
           بررسی نهایی
@@ -320,6 +418,17 @@
           <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <div class="font-medium mb-2">تصاویر</div>
             <div id="summaryImages" class="text-gray-600 dark:text-gray-400">-</div>
+          </div>
+
+          <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+            <div class="font-medium mb-2">نحوه پرداخت</div>
+            <div id="summaryPayment" class="text-gray-600 dark:text-gray-400">-</div>
+            <div id="summaryInstallments" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+          </div>
+
+          <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+            <div class="font-medium mb-2">ویدئو</div>
+            <div id="summaryVideo" class="text-gray-600 dark:text-gray-400">-</div>
           </div>
           
           <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
@@ -349,7 +458,7 @@
 
 <script>
 let currentStep = 1;
-const totalSteps = 4;
+const totalSteps = 6;
 let selectedImages = [];
 
 function showStep(step) {
@@ -357,7 +466,7 @@ function showStep(step) {
   document.getElementById(`step${step}`).classList.remove('hidden');
   
   // Update indicators
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const indicator = document.getElementById(`step${i}-indicator`);
     if (i <= step) {
       indicator.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-400');
@@ -369,7 +478,7 @@ function showStep(step) {
   }
   
   currentStep = step;
-  if (step === 4) updateSummary();
+  if (step === 6) updateSummary();
 }
 
 function nextStep() {
@@ -467,6 +576,29 @@ function updateSummary() {
   }
   
   document.getElementById('summaryImages').textContent = selectedImages.length > 0 ? `${selectedImages.length} تصویر` : 'تصویری انتخاب نشده';
+  const pm = document.querySelector('select[name="payment_method"]')?.value || '';
+  const pmEl = document.getElementById('summaryPayment');
+  if (pmEl) pmEl.textContent = pm ? pm : 'مشخص نشده';
+  const summaryInst = document.getElementById('summaryInstallments');
+  if (summaryInst) {
+    if (pm === 'اقساطی') {
+      const rows = Array.from(document.querySelectorAll('.installment-row'));
+      const items = rows.map(r => {
+        const m = r.querySelector('input[name="installment_months[]"]')?.value || '';
+        const a = r.querySelector('input[name="installment_amounts[]"]')?.value || '';
+        const mNum = parseInt((m || '').replace(/[^\d]/g, ''), 10) || 0;
+        const aNum = parseInt((a || '').replace(/[^\d]/g, ''), 10) || 0;
+        if (mNum > 0 && aNum > 0) return `${mNum} ماهه / ${aNum.toLocaleString('fa-IR')} تومان`;
+        return null;
+      }).filter(Boolean);
+      summaryInst.textContent = items.length ? items.join(' | ') : 'اقساط وارد نشده';
+    } else {
+      summaryInst.textContent = '';
+    }
+  }
+
+  const video = document.querySelector('input[name="video"]')?.files?.[0];
+  document.getElementById('summaryVideo').textContent = (video && video.name) ? video.name : 'ویدئویی آپلود نشده';
   
   const doc1 = document.querySelector('input[name="document_1"]')?.files?.[0];
   const doc2 = document.querySelector('input[name="document_2"]')?.files?.[0];
@@ -532,6 +664,29 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
     alert('لطفاً فیلدهای اجباری را پر کنید');
     return;
   }
+
+  // پرداخت
+  const paymentMethod = (document.getElementById('payment_method')?.value || '').trim();
+  if (!paymentMethod) {
+    e.preventDefault();
+    alert('لطفاً نحوه پرداخت را انتخاب کنید');
+    return;
+  }
+  if (paymentMethod === 'اقساطی') {
+    const rows = Array.from(document.querySelectorAll('.installment-row'));
+    const hasValid = rows.some(r => {
+      const m = r.querySelector('input[name="installment_months[]"]')?.value || '';
+      const a = r.querySelector('input[name="installment_amounts[]"]')?.value || '';
+      const mNum = parseInt((m || '').replace(/[^\d]/g, ''), 10) || 0;
+      const aNum = parseInt((a || '').replace(/[^\d]/g, ''), 10) || 0;
+      return mNum > 0 && aNum > 0;
+    });
+    if (!hasValid) {
+      e.preventDefault();
+      alert('برای پرداخت اقساطی، حداقل یک قسط معتبر (تعداد ماه و مبلغ) وارد کنید');
+      return;
+    }
+  }
   
   const sizeNum = parseInt(sizeRaw, 10) || 0;
   const priceNum = parseInt(priceRaw, 10) || 0;
@@ -570,6 +725,71 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
     }
   }
 });
+
+// Payment method behavior
+(function(){
+  const pm = document.getElementById('payment_method');
+  const box = document.getElementById('installmentsBox');
+  const rowsEl = document.getElementById('installmentsRows');
+  const addBtn = document.getElementById('addInstallmentRow');
+  if (!pm || !box || !rowsEl || !addBtn) return;
+
+  function rowTemplate(months = '', amount = '') {
+    return `
+      <div class="installment-row bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+        <div class="grid grid-cols-12 gap-2 items-end">
+          <div class="col-span-5">
+            <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">تعداد ماه</label>
+            <input type="number" min="1" name="installment_months[]" value="${months}"
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   placeholder="مثلاً 12">
+          </div>
+          <div class="col-span-6">
+            <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">مبلغ (تومان)</label>
+            <input type="text" inputmode="numeric" name="installment_amounts[]" value="${amount}"
+                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   placeholder="مثلاً 50000000">
+          </div>
+          <div class="col-span-1 flex justify-end">
+            <button type="button" class="remove-installment w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-600 dark:text-gray-300 transition">
+              <i class="fa-solid fa-trash text-xs text-red-600 dark:text-red-400"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function ensureOneRow() {
+    if (!rowsEl.querySelector('.installment-row')) {
+      rowsEl.insertAdjacentHTML('beforeend', rowTemplate('', ''));
+    }
+  }
+
+  function toggle() {
+    const v = (pm.value || '').trim();
+    if (v === 'اقساطی') {
+      box.classList.remove('hidden');
+      ensureOneRow();
+    } else {
+      box.classList.add('hidden');
+    }
+  }
+
+  addBtn.addEventListener('click', () => {
+    rowsEl.insertAdjacentHTML('beforeend', rowTemplate('', ''));
+  });
+
+  rowsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.remove-installment');
+    if (!btn) return;
+    const row = btn.closest('.installment-row');
+    if (row) row.remove();
+  });
+
+  pm.addEventListener('change', toggle);
+  toggle();
+})();
 
 // Initialize
 showStep(1);

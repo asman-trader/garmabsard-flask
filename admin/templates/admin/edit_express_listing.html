@@ -79,6 +79,86 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            نحوه پرداخت
+          </label>
+          <select name="payment_method"
+                  id="payment_method"
+                  class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+            {% set pm = (land.payment_method or '') %}
+            <option value="" {% if not pm %}selected{% endif %}>انتخاب کنید</option>
+            <option value="نقدی" {% if pm == 'نقدی' %}selected{% endif %}>نقدی</option>
+            <option value="اقساطی" {% if pm == 'اقساطی' %}selected{% endif %}>اقساطی</option>
+            <option value="معاوضه" {% if pm == 'معاوضه' %}selected{% endif %}>معاوضه</option>
+            <option value="توافقی" {% if pm == 'توافقی' %}selected{% endif %}>توافقی</option>
+          </select>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">این مورد در صفحه جزئیات فایل همکار نمایش داده می‌شود.</p>
+        </div>
+      </div>
+
+      <!-- جزئیات اقساط (فقط اگر اقساطی باشد) -->
+      <div id="installmentsBox" class="{% if pm != 'اقساطی' %}hidden{% endif %} mt-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">جزئیات اقساط</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">برای هر قسط، «تعداد ماه» و «مبلغ» را وارد کنید.</div>
+          </div>
+          <button type="button" id="addInstallmentRow"
+                  class="px-3 py-2 rounded-lg text-xs font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition">
+            <i class="fa-solid fa-plus text-[10px] ml-1"></i>
+            افزودن قسط
+          </button>
+        </div>
+
+        <div id="installmentsRows" class="space-y-2">
+          {% if land.payment_terms and land.payment_terms|length > 0 %}
+            {% for t in land.payment_terms %}
+              <div class="installment-row bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <div class="grid grid-cols-12 gap-2 items-end">
+                  <div class="col-span-5">
+                    <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">تعداد ماه</label>
+                    <input type="number" min="1" name="installment_months[]" value="{{ t.months or '' }}"
+                           class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  </div>
+                  <div class="col-span-6">
+                    <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">مبلغ (تومان)</label>
+                    <input type="text" inputmode="numeric" name="installment_amounts[]" value="{{ t.amount or '' }}"
+                           class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  </div>
+                  <div class="col-span-1 flex justify-end">
+                    <button type="button" class="remove-installment w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-600 dark:text-gray-300 transition">
+                      <i class="fa-solid fa-trash text-xs text-red-600 dark:text-red-400"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="installment-row bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+              <div class="grid grid-cols-12 gap-2 items-end">
+                <div class="col-span-5">
+                  <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">تعداد ماه</label>
+                  <input type="number" min="1" name="installment_months[]" value=""
+                         class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="col-span-6">
+                  <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">مبلغ (تومان)</label>
+                  <input type="text" inputmode="numeric" name="installment_amounts[]" value=""
+                         class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="col-span-1 flex justify-end">
+                  <button type="button" class="remove-installment w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fa-solid fa-trash text-xs text-red-600 dark:text-red-400"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
       <div class="mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <div class="flex items-center justify-between mb-3">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -227,6 +307,40 @@
       </div>
     </div>
 
+    <!-- ویدئو - سبک دیوار -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
+        ویدئو (اختیاری)
+      </h2>
+
+      {% if land.video %}
+        <div class="mb-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-sm text-gray-700 dark:text-gray-300 truncate">
+              ویدئوی فعلی: <span class="font-mono text-xs">{{ land.video }}</span>
+            </div>
+            <a href="/{{ land.video.lstrip('/') }}" target="_blank"
+               class="text-blue-600 hover:text-blue-700 text-sm font-medium whitespace-nowrap">
+              <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i> مشاهده
+            </a>
+          </div>
+          <label class="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="checkbox" name="remove_video" value="1" class="w-4 h-4">
+            حذف ویدئوی فعلی
+          </label>
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          آپلود ویدئوی جدید
+        </label>
+        <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
+               class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">فرمت‌های مجاز: MP4 / WEBM / MOV / AVI / MKV</p>
+      </div>
+    </div>
+
     <!-- مدارک موجود - سبک دیوار -->
     {% if land.express_documents and land.express_documents|length > 0 %}
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -316,6 +430,70 @@
   </form>
 
 </div>
+
+<script>
+  (function(){
+    const pm = document.getElementById('payment_method');
+    const box = document.getElementById('installmentsBox');
+    const rowsEl = document.getElementById('installmentsRows');
+    const addBtn = document.getElementById('addInstallmentRow');
+    if (!pm || !box || !rowsEl || !addBtn) return;
+
+    function rowTemplate(months = '', amount = '') {
+      return `
+        <div class="installment-row bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+          <div class="grid grid-cols-12 gap-2 items-end">
+            <div class="col-span-5">
+              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">تعداد ماه</label>
+              <input type="number" min="1" name="installment_months[]" value="${months}"
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="col-span-6">
+              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">مبلغ (تومان)</label>
+              <input type="text" inputmode="numeric" name="installment_amounts[]" value="${amount}"
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="col-span-1 flex justify-end">
+              <button type="button" class="remove-installment w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-600 dark:text-gray-300 transition">
+                <i class="fa-solid fa-trash text-xs text-red-600 dark:text-red-400"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function ensureOneRow() {
+      if (!rowsEl.querySelector('.installment-row')) {
+        rowsEl.insertAdjacentHTML('beforeend', rowTemplate('', ''));
+      }
+    }
+
+    function toggle() {
+      const v = (pm.value || '').trim();
+      if (v === 'اقساطی') {
+        box.classList.remove('hidden');
+        ensureOneRow();
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    addBtn.addEventListener('click', () => {
+      rowsEl.insertAdjacentHTML('beforeend', rowTemplate('', ''));
+    });
+
+    rowsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.remove-installment');
+      if (!btn) return;
+      const row = btn.closest('.installment-row');
+      if (row) row.remove();
+    });
+
+    pm.addEventListener('change', toggle);
+    toggle();
+  })();
+</script>
 
 <script>
 // نقشه تعاملی برای انتخاب موقعیت

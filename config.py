@@ -34,7 +34,13 @@ class Config:
     SETTINGS_FILE= _abs(DATA_DIR, "settings.json")
 
     # --- محدودیت آپلود ---
-    MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20MB
+    # برای ویدئو، 20MB کافی نیست. پیش‌فرض را 200MB گذاشتیم.
+    # در صورت نیاز می‌توانید با env این را تغییر دهید:
+    # VINOR_MAX_CONTENT_LENGTH_MB=300
+    try:
+        MAX_CONTENT_LENGTH = int(os.environ.get("VINOR_MAX_CONTENT_LENGTH_MB", "200")) * 1024 * 1024
+    except Exception:
+        MAX_CONTENT_LENGTH = 200 * 1024 * 1024  # 200MB
 
     # --- VAPID Keys برای Web Push Notifications ---
     # کلیدهای ثابت برای تست و توسعه (در پروداکشن باید از environment variables استفاده شود)
