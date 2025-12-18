@@ -198,7 +198,7 @@
     {% endif %}
 
     <!-- جزئیات فایل - سبک دیوار -->
-    {% if land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
+    {% if land.payment_method or (land.payment_terms and land.payment_terms|length > 0) or land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">جزئیات</h3>
       <div class="space-y-2">
