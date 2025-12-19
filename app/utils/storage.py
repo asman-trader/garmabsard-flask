@@ -184,3 +184,7 @@ def save_express_commissions(items, app=None): return _save(ensure_file('EXPRESS
 # SMS History
 def load_sms_history(app=None):    return _load(ensure_file('SMS_HISTORY_FILE','sms_history.json',[],app))
 def save_sms_history(items, app=None): return _save(ensure_file('SMS_HISTORY_FILE','sms_history.json',[],app), items)
+
+# Landing Page Views Statistics
+def load_landing_views(app=None):    return _load(ensure_file('LANDING_VIEWS_FILE','landing_views.json',[],app))
+def save_landing_views(items, app=None): return _save(ensure_file('LANDING_VIEWS_FILE','landing_views.json',[],app), items)

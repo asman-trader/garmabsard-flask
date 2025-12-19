@@ -66,6 +66,7 @@ from app.utils.storage import (
     save_active_cities,
     load_sms_history,
     save_sms_history,
+    load_landing_views,
 )
 from app.services.notifications import add_notification
 
@@ -754,6 +755,33 @@ def dashboard():
     # شمارش همکاران آنلاین
     online_partners_count = _get_online_partners_count()
     
+    # آمار بازدید لندینگ
+    landing_views_count = 0
+    landing_views_today = 0
+    landing_views_7d = 0
+    try:
+        views = load_landing_views() or []
+        if isinstance(views, list):
+            landing_views_count = len(views)
+            now = datetime.utcnow()
+            today_start = datetime(now.year, now.month, now.day)
+            week_ago = now - timedelta(days=7)
+            for v in views:
+                try:
+                    ts_str = v.get('timestamp', '')
+                    if ts_str:
+                        view_dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                        if view_dt.tzinfo:
+                            view_dt = view_dt.replace(tzinfo=None)
+                        if view_dt >= today_start:
+                            landing_views_today += 1
+                        if view_dt >= week_ago:
+                            landing_views_7d += 1
+                except Exception:
+                    pass
+    except Exception as e:
+        current_app.logger.error(f"Error loading landing views: {e}", exc_info=True)
+    
     return render_template(
         'admin/dashboard.html',
         partners_count=len(partners) if isinstance(partners, list) else 0,
@@ -761,7 +789,10 @@ def dashboard():
         assignments_count=len(assignments) if isinstance(assignments, list) else 0,
         commissions_count=len(commissions) if isinstance(commissions, list) else 0,
         online_users_count=online_users_count,
-        online_partners_count=online_partners_count
+        online_partners_count=online_partners_count,
+        landing_views_count=landing_views_count,
+        landing_views_today=landing_views_today,
+        landing_views_7d=landing_views_7d
     )
 
 @admin_bp.route('/online-users', endpoint='online_users')

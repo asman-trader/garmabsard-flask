@@ -8,8 +8,9 @@ from flask import (
 
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads_cached
-from ..utils.storage import load_express_partners
+from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
 from ..utils.share_tokens import decode_partner_ref
+from datetime import datetime
 
 # ثابت‌ها
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
@@ -59,6 +60,24 @@ def index():
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
         return redirect(url_for("express_partner.dashboard"))
+    
+    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین)
+    try:
+        views = load_landing_views() or []
+        if not isinstance(views, list):
+            views = []
+        views.append({
+            'timestamp': datetime.utcnow().isoformat(),
+            'ip': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent', '')[:200]
+        })
+        # نگه داشتن فقط 10000 بازدید اخیر (برای جلوگیری از رشد بی‌حد فایل)
+        if len(views) > 10000:
+            views = views[-10000:]
+        save_landing_views(views)
+    except Exception as e:
+        current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
+    
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/partners", endpoint="partners")
@@ -72,6 +91,24 @@ def partners():
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
         return redirect(url_for("express_partner.dashboard"))
+    
+    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین)
+    try:
+        views = load_landing_views() or []
+        if not isinstance(views, list):
+            views = []
+        views.append({
+            'timestamp': datetime.utcnow().isoformat(),
+            'ip': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent', '')[:200]
+        })
+        # نگه داشتن فقط 10000 بازدید اخیر
+        if len(views) > 10000:
+            views = views[-10000:]
+        save_landing_views(views)
+    except Exception as e:
+        current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
+    
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
 @main_bp.route("/start", endpoint="start")
