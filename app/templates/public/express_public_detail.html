@@ -14,26 +14,24 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   {% set images = land.images or [] %}
+  {% set video = land.video %}
+  {% set has_video = video and video.strip() %}
+  {% set total_items = (1 if has_video else 0) + images|length %}
   {% set primary_image = images[0] if images else None %}
-  {% if primary_image and primary_image.startswith('uploads/') %}
-    {% set hero_image = url_for('main.uploaded_file', filename=primary_image) %}
-  {% else %}
-    {% set hero_image = primary_image %}
-  {% endif %}
 
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
     <!-- هدر ثابت - سبک دیوار -->
-    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur">
-      <div class="max-w-4xl mx-auto h-14 px-3 sm:px-4 flex items-center justify-between">
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
+      <div class="w-full px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
         <button type="button"
                 onclick="history.back()"
                 class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
                 aria-label="بازگشت">
           <i class="fas fa-arrow-right text-sm"></i>
         </button>
-        <div class="flex flex-col items-center gap-0.5">
+        <div class="flex flex-col items-center flex-1 min-w-0">
           <span class="text-[11px] text-gray-500 dark:text-gray-400">فایل اکسپرس وینور</span>
-          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1">{{ land.title or 'فایل اکسپرس' }}</h1>
+          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1 truncate max-w-full">{{ land.title or 'فایل اکسپرس' }}</h1>
         </div>
         <button type="button"
                 class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 copy-public-link"
@@ -44,27 +42,108 @@
       </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-3 pb-24 space-y-3">
-      <!-- گالری تصویر - شبیه دیوار -->
-      <section>
-        <div class="relative bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden aspect-[4/3] sm:aspect-video">
-          {% if hero_image %}
-            <img src="{{ hero_image }}" alt="{{ land.title }}" class="w-full h-full object-cover">
+    <!-- گالری بالای صفحه - سبک دیوار (تمام‌عرض) -->
+    <div class="relative mb-4 bg-black/5 dark:bg-black/20 w-full">
+      <div class="w-full pt-0 pb-4">
+        {% if has_video or primary_image %}
+          {# uploads/* باید از /uploads/ سرو شود (نه /static/) #}
+          {% if video and ("://" in (video|string)) %}
+            {% set video_src = video %}
+          {% elif video and (video|string).startswith('/uploads/') %}
+            {% set video_src = video %}
+          {% elif video and (video|string).startswith('uploads/') %}
+            {% set video_src = '/uploads/' + (video|string)[8:] %}
+          {% elif video and not (video|string).startswith('/') %}
+            {# مسیرهای تاریخ‌محور مثل 2025/08/... هم از /uploads/ سرو می‌شوند #}
+            {% set video_src = '/uploads/' + (video|string) %}
           {% else %}
-            <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">
-              <i class="fas fa-image text-4xl"></i>
+            {% set video_src = video %}
+          {% endif %}
+          <div id="landGallery"
+               class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none">
+
+            <!-- Loading overlay -->
+            <div id="landMediaLoading"
+                 class="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[1px] text-white transition-opacity duration-200 opacity-0 pointer-events-none"
+                 aria-hidden="true">
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
+                <div class="text-xs font-medium drop-shadow">در حال بارگذاری…</div>
+              </div>
             </div>
-          {% endif %}
+            
+            {# اگر ویدیو وجود دارد، اولین اسلاید ویدیو است #}
+            {% if has_video %}
+            <video id="landVideo"
+                   class="w-full h-full object-cover block"
+                   controls
+                   onclick="event.stopPropagation()">
+              <source src="{{ video_src }}" type="video/mp4">
+              مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+            </video>
+            {% endif %}
 
-          {% if land._assignment_status == 'in_transaction' %}
-          <span class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white text-[11px] font-medium shadow">
-            <i class="fas fa-handshake text-[10px]"></i>
-            در حال معامله
-          </span>
-          {% endif %}
-        </div>
-      </section>
+            {# تصویر اصلی (اگر ویدیو وجود دارد، دومین اسلاید است) #}
+            {% if primary_image %}
+              {% if "://" in (primary_image|string) %}
+                {% set image_src = primary_image %}
+              {% elif (primary_image|string).startswith('/uploads/') %}
+                {% set image_src = primary_image %}
+              {% elif (primary_image|string).startswith('uploads/') %}
+                {% set image_src = '/uploads/' + (primary_image|string)[8:] %}
+              {% elif not (primary_image|string).startswith('/') %}
+                {% set image_src = '/uploads/' + (primary_image|string) %}
+              {% else %}
+                {% set image_src = primary_image %}
+              {% endif %}
+              <img id="landMainImage"
+                   src="{{ image_src }}"
+                   alt="{{ land.title }}"
+                   class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %}"
+                   onclick="openLightbox(this.src)">
+            {% endif %}
 
+            {# دکمه‌های قبلی/بعدی فقط اگر بیش از یک آیتم وجود داشته باشد #}
+            {% if total_items > 1 %}
+            <button type="button"
+                    id="landPrev"
+                    class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
+              <i class="fas fa-chevron-right drop-shadow"></i>
+            </button>
+            <button type="button"
+                    id="landNext"
+                    class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
+              <i class="fas fa-chevron-left drop-shadow"></i>
+            </button>
+
+            <!-- نقطه‌های وضعیت اسلاید -->
+            <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-30">
+              {% if has_video %}
+              <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 active"></span>
+              {% endif %}
+              {% for _ in images %}
+              <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 {% if not has_video and loop.first %}active{% endif %}"></span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
+            <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
+          </div>
+        {% endif %}
+      </div>
+      
+      {% if land._assignment_status == 'in_transaction' %}
+      <div class="absolute top-3 left-5">
+        <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-orange-500 text-white shadow-sm">
+          در حال معامله
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <main class="max-w-4xl mx-auto px-3 sm:px-4 space-y-3">
       <!-- کارت عنوان و قیمت - دیوار استایل -->
       <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-3">
         <div class="flex items-start justify-between gap-3">
@@ -110,22 +189,70 @@
         </div>
       </section>
 
+      <!-- جزئیات فایل - سبک دیوار -->
+      {% if land.payment_method or (land.payment_terms and land.payment_terms|length > 0) or land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
+      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-2">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">جزئیات</h3>
+        <div class="space-y-2">
+          {% if land.payment_method %}
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">نحوه پرداخت</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.payment_method }}</span>
+          </div>
+          {% if land.payment_method == 'اقساطی' and land.payment_terms and land.payment_terms|length > 0 %}
+          <div class="py-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400 block mb-2">جزئیات اقساط</span>
+            <div class="space-y-2">
+              {% for t in land.payment_terms %}
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                  <span class="text-sm text-gray-700 dark:text-gray-300">{{ (t.months or 0) }} ماهه</span>
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ (t.amount or 0)|toman }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% if land.rooms %}
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">اتاق</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.rooms }}</span>
+          </div>
+          {% endif %}
+          {% if land.floor %}
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">طبقه</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.floor }}</span>
+          </div>
+          {% endif %}
+          {% if land.year_built %}
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">سال ساخت</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.year_built }}</span>
+          </div>
+          {% endif %}
+          {% if land.docs_status %}
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">وضعیت سند</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.docs_status }}</span>
+          </div>
+          {% endif %}
+          {% if land.features %}
+          <div class="py-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400 block mb-2">ویژگی‌ها</span>
+            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ land.features }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
       <!-- توضیحات -->
       {% if land.description %}
       <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-2">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50">توضیحات</h3>
         <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line">
           {{ land.description }}
-        </p>
-      </section>
-      {% endif %}
-
-      <!-- ویژگی‌ها -->
-      {% if land.features %}
-      <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-2">
-        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50">ویژگی‌ها</h3>
-        <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-line">
-          {{ land.features }}
         </p>
       </section>
       {% endif %}
@@ -217,6 +344,12 @@
     </div>
   </div>
 
+  <!-- Lightbox برای تصاویر -->
+  <div id="lightbox" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="" class="max-w-full max-h-full object-contain" onclick="event.stopPropagation()">
+    <button onclick="closeLightbox()" class="absolute top-4 left-4 text-white text-2xl hover:text-gray-300">×</button>
+  </div>
+
   <script>
     // فعال‌سازی تم تیره براساس تنظیم سیستم (مانند دیوار)
     (function() {
@@ -237,23 +370,247 @@
       } catch (_) {}
     })();
 
+    // Lightbox
+    function openLightbox(src) {
+      const lb = document.getElementById('lightbox');
+      const img = document.getElementById('lightboxImg');
+      if (lb && img) {
+        img.src = src;
+        lb.classList.remove('hidden');
+        lb.classList.add('flex');
+      }
+    }
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      if (lb) {
+        lb.classList.add('hidden');
+        lb.classList.remove('flex');
+      }
+    }
+
+    // کپی لینک
     document.querySelectorAll('.copy-public-link').forEach(function(btn) {
       btn.addEventListener('click', async function () {
         const url = btn.dataset.url || window.location.href;
         try {
           await navigator.clipboard.writeText(url);
-          btn.classList.add('bg-emerald-50','text-emerald-700');
-          btn.innerHTML = '<i class="fas fa-check ml-1"></i> لینک کپی شد';
-          setTimeout(() => {
-            btn.classList.remove('bg-emerald-50','text-emerald-700');
-            btn.innerHTML = '<i class="fas fa-share-nodes text-sm"></i>';
-          }, 2000);
+          const icon = btn.querySelector('i');
+          if (icon) {
+            icon.className = 'fas fa-check text-emerald-600';
+            setTimeout(() => {
+              icon.className = 'fas fa-share-nodes text-sm';
+            }, 2000);
+          }
         } catch (error) {
           console.error(error);
           alert('امکان کپی لینک وجود ندارد');
         }
       }, { passive: true });
     });
+
+    // اسلایدر تصاویر بالای صفحه به سبک دیوار
+    (function(){
+      const galleryEl = document.getElementById('landGallery');
+      if (!galleryEl) return;
+      const mainImg = document.getElementById('landMainImage');
+      const mainVideo = document.getElementById('landVideo');
+      const loadingEl = document.getElementById('landMediaLoading');
+      const hasVideo = !!mainVideo;
+      
+      const images = [
+        {% for img in images %}
+          "{% if '://' in (img|string) %}{{ img }}{% elif (img|string).startswith('/uploads/') %}{{ img }}{% elif (img|string).startswith('uploads/') %}/uploads/{{ (img|string)[8:] }}{% elif not (img|string).startswith('/') %}/uploads/{{ img }}{% else %}{{ img }}{% endif %}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ];
+      
+      {% if video %}
+      const videoSrc = "{% if '://' in (video|string) %}{{ video }}{% elif (video|string).startswith('/uploads/') %}{{ video }}{% elif (video|string).startswith('uploads/') %}/uploads/{{ (video|string)[8:] }}{% elif video and not (video|string).startswith('/') %}/uploads/{{ video }}{% else %}{{ video }}{% endif %}";
+      {% else %}
+      const videoSrc = null;
+      {% endif %}
+      
+      const totalItems = (hasVideo ? 1 : 0) + images.length;
+      if (totalItems <= 1) return;
+
+      let currentIndex = 0;
+      const dots = Array.from(document.querySelectorAll('.land-dot'));
+      const prevBtn = document.getElementById('landPrev');
+      const nextBtn = document.getElementById('landNext');
+      let loadingFallbackTimer = null;
+
+      function setLoading(isLoading) {
+        if (!loadingEl) return;
+        if (loadingFallbackTimer) {
+          clearTimeout(loadingFallbackTimer);
+          loadingFallbackTimer = null;
+        }
+        if (isLoading) {
+          loadingEl.classList.remove('opacity-0', 'pointer-events-none');
+          loadingEl.classList.add('opacity-100');
+          loadingEl.setAttribute('aria-hidden', 'false');
+          loadingFallbackTimer = setTimeout(() => {
+            setLoading(false);
+          }, 5000);
+        } else {
+          loadingEl.classList.add('opacity-0', 'pointer-events-none');
+          loadingEl.classList.remove('opacity-100');
+          loadingEl.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function waitForImageLoad() {
+        if (!mainImg) return setLoading(false);
+        if (mainImg.complete && mainImg.naturalWidth > 0) {
+          return setLoading(false);
+        }
+        const done = () => setLoading(false);
+        mainImg.addEventListener('load', done, { once: true });
+        mainImg.addEventListener('error', done, { once: true });
+      }
+
+      function waitForVideoLoad() {
+        if (!mainVideo) return setLoading(false);
+        if (mainVideo.readyState >= 2) {
+          return setLoading(false);
+        }
+        const done = () => setLoading(false);
+        mainVideo.addEventListener('loadeddata', done, { once: true });
+        mainVideo.addEventListener('canplay', done, { once: true });
+        mainVideo.addEventListener('error', done, { once: true });
+      }
+
+      function updateDots() {
+        if (!dots.length) return;
+        dots.forEach((d, idx) => {
+          if (idx === currentIndex) {
+            d.classList.remove('bg-white/40');
+            d.classList.add('bg-white');
+            d.classList.add('active');
+          } else {
+            d.classList.remove('bg-white');
+            d.classList.remove('active');
+            d.classList.add('bg-white/40');
+          }
+        });
+      }
+
+      function showItem(idx) {
+        currentIndex = (idx + totalItems) % totalItems;
+        setLoading(true);
+        
+        if (hasVideo && currentIndex === 0) {
+          if (mainVideo) {
+            mainVideo.classList.remove('hidden');
+            mainVideo.classList.add('block');
+          }
+          if (mainImg) {
+            mainImg.classList.add('hidden');
+            mainImg.classList.remove('block');
+          }
+          waitForVideoLoad();
+        } else {
+          const imgIndex = hasVideo ? currentIndex - 1 : currentIndex;
+          if (mainImg && images[imgIndex]) {
+            mainImg.src = images[imgIndex];
+            mainImg.classList.remove('hidden');
+            mainImg.classList.add('block');
+          }
+          if (mainVideo) {
+            mainVideo.classList.add('hidden');
+            mainVideo.classList.remove('block');
+            mainVideo.pause();
+          }
+          waitForImageLoad();
+        }
+        updateDots();
+      }
+
+      prevBtn && prevBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        showItem(currentIndex - 1);
+      }, { passive: false });
+      nextBtn && nextBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        showItem(currentIndex + 1);
+      }, { passive: false });
+
+      let touchStartX = null;
+      let touchEndX = null;
+      let isPointerDown = false;
+      const SWIPE_THRESHOLD = 40;
+
+      function handleSwipe(dx) {
+        if (Math.abs(dx) <= SWIPE_THRESHOLD) return;
+        if (dx < 0) {
+          showItem(currentIndex + 1);
+        } else {
+          showItem(currentIndex - 1);
+        }
+      }
+
+      function bindSwipeListeners(el) {
+        if (!el) return;
+        el.addEventListener('touchstart', function(e){
+          const t = e.touches && e.touches[0];
+          if (!t) return;
+          touchStartX = t.clientX;
+          touchEndX = null;
+        }, { passive: true });
+        el.addEventListener('touchmove', function(e){
+          const t = e.touches && e.touches[0];
+          if (!t || touchStartX === null) return;
+          touchEndX = t.clientX;
+        }, { passive: true });
+        el.addEventListener('touchend', function(e){
+          if (touchStartX === null) return;
+          const t = (e.changedTouches && e.changedTouches[0]) || null;
+          const endX = (touchEndX !== null) ? touchEndX : (t ? t.clientX : null);
+          if (endX === null) return;
+          const dx = endX - touchStartX;
+          handleSwipe(dx);
+          touchStartX = null;
+          touchEndX = null;
+        }, { passive: true });
+        el.addEventListener('pointerdown', function(e){
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          isPointerDown = true;
+          touchStartX = e.clientX;
+          touchEndX = null;
+          try { el.setPointerCapture(e.pointerId); } catch(_) {}
+        });
+        el.addEventListener('pointermove', function(e){
+          if (!isPointerDown || touchStartX === null) return;
+          touchEndX = e.clientX;
+        });
+        el.addEventListener('pointerup', function(e){
+          if (!isPointerDown || touchStartX === null) return;
+          isPointerDown = false;
+          const endX = (touchEndX !== null) ? touchEndX : e.clientX;
+          const dx = endX - touchStartX;
+          handleSwipe(dx);
+          touchStartX = null;
+          touchEndX = null;
+          try { el.releasePointerCapture(e.pointerId); } catch(_) {}
+        });
+        el.addEventListener('pointercancel', function(){
+          isPointerDown = false;
+          touchStartX = null;
+          touchEndX = null;
+        });
+      }
+
+      bindSwipeListeners(galleryEl);
+      bindSwipeListeners(mainImg);
+      bindSwipeListeners(mainVideo);
+
+      updateDots();
+      setLoading(true);
+      if (hasVideo && currentIndex === 0) {
+        waitForVideoLoad();
+      } else {
+        waitForImageLoad();
+      }
+    })();
   </script>
 </body>
 </html>
