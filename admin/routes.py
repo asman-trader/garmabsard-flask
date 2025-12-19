@@ -67,6 +67,8 @@ from app.utils.storage import (
     load_sms_history,
     save_sms_history,
     load_landing_views,
+    load_express_views,
+    load_express_partner_views,
 )
 from app.services.notifications import add_notification
 
@@ -2206,6 +2208,43 @@ def express_listings():
     
     # فیلتر آگهی‌های اکسپرس
     express_lands = [land for land in lands_list if land.get('is_express', False)]
+    
+    # محاسبه تعداد بازدید هر فایل (عمومی + همکاران)
+    # بازدیدهای عمومی
+    public_views_data = load_express_views() or []
+    if not isinstance(public_views_data, list):
+        public_views_data = []
+    
+    # بازدیدهای همکاران
+    partner_views_data = load_express_partner_views() or []
+    if not isinstance(partner_views_data, list):
+        partner_views_data = []
+    
+    # شمارش بازدیدهای عمومی بر اساس code
+    public_views_count_by_code = {}
+    for v in public_views_data:
+        try:
+            v_code = v.get('code', '')
+            if v_code:
+                public_views_count_by_code[v_code] = public_views_count_by_code.get(v_code, 0) + 1
+        except Exception:
+            pass
+    
+    # شمارش بازدیدهای همکاران بر اساس code
+    partner_views_count_by_code = {}
+    for v in partner_views_data:
+        try:
+            v_code = v.get('code', '')
+            if v_code:
+                partner_views_count_by_code[v_code] = partner_views_count_by_code.get(v_code, 0) + 1
+        except Exception:
+            pass
+    
+    # اضافه کردن تعداد بازدید به هر فایل
+    for land in express_lands:
+        land_code = land.get('code', '')
+        land['_public_views_count'] = public_views_count_by_code.get(land_code, 0)
+        land['_partner_views_count'] = partner_views_count_by_code.get(land_code, 0)
     
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", PER_PAGE_DEFAULT))

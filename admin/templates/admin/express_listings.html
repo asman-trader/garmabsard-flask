@@ -201,7 +201,23 @@
             <!-- اطلاعات اضافی - سبک دیوار -->
             <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
               <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                <span>کد: {{ land.code }}</span>
+                <div class="flex items-center gap-3">
+                  <span>کد: {{ land.code }}</span>
+                  <div class="flex items-center gap-2">
+                    {% if land._public_views_count is defined %}
+                    <div class="flex items-center gap-1 text-blue-600 dark:text-blue-400" title="بازدید عمومی">
+                      <i class="fa-solid fa-globe text-xs"></i>
+                      <span class="font-medium">{{ land._public_views_count or 0 }}</span>
+                    </div>
+                    {% endif %}
+                    {% if land._partner_views_count is defined %}
+                    <div class="flex items-center gap-1 text-green-600 dark:text-green-400" title="بازدید همکاران">
+                      <i class="fa-solid fa-users text-xs"></i>
+                      <span class="font-medium">{{ land._partner_views_count or 0 }}</span>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
                 <span class="jalali-dt" data-dt="{{ land.created_at or '' }}"></span>
               </div>
             </div>

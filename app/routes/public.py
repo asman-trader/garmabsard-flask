@@ -9,6 +9,7 @@ from flask import (
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_ads_cached
 from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
+from ..utils.storage import load_express_views, save_express_views
 from ..utils.share_tokens import decode_partner_ref
 from datetime import datetime
 
@@ -208,6 +209,49 @@ def express_detail(code):
     if not land:
         flash('آگهی اکسپرس یافت نشد.', 'warning')
         return redirect(url_for('main.index'))
+
+    # ثبت بازدید فایل اکسپرس (هر IP در هر روز فقط یک بازدید)
+    try:
+        views = load_express_views() or []
+        if not isinstance(views, list):
+            views = []
+        
+        visitor_ip = request.remote_addr or ''
+        now = datetime.utcnow()
+        today_str = now.strftime('%Y-%m-%d')
+        
+        # بررسی اینکه آیا این IP در امروز برای این فایل قبلاً بازدید داشته یا نه
+        already_viewed_today = False
+        for v in views:
+            try:
+                v_ip = v.get('ip', '')
+                v_code = v.get('code', '')
+                v_ts_str = v.get('timestamp', '')
+                if v_ip == visitor_ip and v_code == code and v_ts_str:
+                    v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
+                    if v_dt.tzinfo:
+                        v_dt = v_dt.replace(tzinfo=None)
+                    v_date_str = v_dt.strftime('%Y-%m-%d')
+                    if v_date_str == today_str:
+                        already_viewed_today = True
+                        break
+            except Exception:
+                continue
+        
+        # اگر این IP امروز برای این فایل بازدید نداشته، ثبت کن
+        if not already_viewed_today and visitor_ip and code:
+            views.append({
+                'timestamp': now.isoformat(),
+                'code': code,
+                'ip': visitor_ip,
+                'user_agent': request.headers.get('User-Agent', '')[:200]
+            })
+            # نگه داشتن فقط 50000 بازدید اخیر
+            if len(views) > 50000:
+                views = views[-50000:]
+            save_express_views(views)
+    except Exception as e:
+        current_app.logger.error(f"Error tracking express listing view: {e}", exc_info=True)
 
     ref_token = request.args.get('ref', '').strip()
     ref_phone = decode_partner_ref(ref_token)

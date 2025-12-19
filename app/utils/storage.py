@@ -188,3 +188,11 @@ def save_sms_history(items, app=None): return _save(ensure_file('SMS_HISTORY_FIL
 # Landing Page Views Statistics
 def load_landing_views(app=None):    return _load(ensure_file('LANDING_VIEWS_FILE','landing_views.json',[],app))
 def save_landing_views(items, app=None): return _save(ensure_file('LANDING_VIEWS_FILE','landing_views.json',[],app), items)
+
+# Express Listing Views Statistics (tracking views per listing code)
+# Public views: بازدیدهای صفحه عمومی
+def load_express_views(app=None):    return _load(ensure_file('EXPRESS_VIEWS_FILE','express_views.json',[],app))
+def save_express_views(items, app=None): return _save(ensure_file('EXPRESS_VIEWS_FILE','express_views.json',[],app), items)
+# Partner views: بازدیدهای صفحه همکاران
+def load_express_partner_views(app=None):    return _load(ensure_file('EXPRESS_PARTNER_VIEWS_FILE','express_partner_views.json',[],app))
+def save_express_partner_views(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_VIEWS_FILE','express_partner_views.json',[],app), items)
