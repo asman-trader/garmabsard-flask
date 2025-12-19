@@ -473,74 +473,6 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // کپی لینک
-    document.querySelectorAll('.copy-btn, .copy-btn-secondary').forEach(function(btn) {
-      btn.addEventListener('click', async function () {
-        const url = btn.getAttribute('data-url') || btn.dataset.url || window.location.href;
-        try {
-          await navigator.clipboard.writeText(url);
-          const icon = btn.querySelector('i');
-          if (icon) {
-            const originalClass = icon.className;
-            icon.className = 'fas fa-check text-green-500';
-            setTimeout(() => {
-              icon.className = originalClass;
-            }, 1500);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    });
-    
-    // کپی متن (عنوان و توضیحات)
-    document.querySelectorAll('.copy-text-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function () {
-        const text = btn.getAttribute('data-text') || '';
-        try {
-          await navigator.clipboard.writeText(text);
-          const icon = btn.querySelector('i');
-          if (icon) {
-            const originalClass = icon.className;
-            icon.className = 'fas fa-check text-green-500';
-            setTimeout(() => {
-              icon.className = originalClass;
-            }, 1500);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    });
-    
-    // اشتراک
-    document.querySelectorAll('.share-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function () {
-        const url = btn.dataset.url || window.location.href;
-        try {
-          if (navigator.share) {
-            await navigator.share({ 
-              title: document.title, 
-              url: url
-            });
-          } else {
-            await navigator.clipboard.writeText(url);
-            const icon = btn.querySelector('i');
-            if (icon) {
-              const originalClass = icon.className;
-              icon.className = 'fas fa-check text-green-500';
-              setTimeout(() => {
-                icon.className = originalClass;
-              }, 1500);
-            }
-          }
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            console.error(err);
-          }
-        }
-    });
-
     // اسلایدر تصاویر بالای صفحه به سبک دیوار
     (function(){
       const galleryEl = document.getElementById('landGallery');
@@ -764,6 +696,73 @@
         waitForImageLoad();
       }
     })();
+    // کپی لینک
+    document.querySelectorAll('.copy-btn, .copy-btn-secondary').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const url = btn.getAttribute('data-url') || btn.dataset.url || window.location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          const icon = btn.querySelector('i');
+          if (icon) {
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check text-green-500';
+            setTimeout(() => {
+              icon.className = originalClass;
+            }, 1500);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+    
+    // کپی متن (عنوان و توضیحات)
+    document.querySelectorAll('.copy-text-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const text = btn.getAttribute('data-text') || '';
+        try {
+          await navigator.clipboard.writeText(text);
+          const icon = btn.querySelector('i');
+          if (icon) {
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check text-green-500';
+            setTimeout(() => {
+              icon.className = originalClass;
+            }, 1500);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+    
+    // اشتراک
+    document.querySelectorAll('.share-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function () {
+        const url = btn.dataset.url || window.location.href;
+        try {
+          if (navigator.share) {
+            await navigator.share({ 
+              title: document.title, 
+              url: url
+            });
+          } else {
+            await navigator.clipboard.writeText(url);
+            const icon = btn.querySelector('i');
+            if (icon) {
+              const originalClass = icon.className;
+              icon.className = 'fas fa-check text-green-500';
+              setTimeout(() => {
+                icon.className = originalClass;
+              }, 1500);
+            }
+          }
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.error(err);
+          }
+        }
+    });
   });
   
   // مودال تماس
