@@ -55,28 +55,65 @@ def index():
     لندینگ همکاران وینور – معرفی فرصت‌های همکاری
     اگر کاربر وارد شده باشد، مستقیم به داشبورد همکاران می‌رود.
     """
-    if session.get("user_phone") or session.get("user_id"):
+    # بررسی اینکه آیا کاربر در پنل ادمین است یا نه
+    referer = request.headers.get('Referer', '') or ''
+    is_admin = (
+        session.get('logged_in') or 
+        request.path.startswith('/admin') or
+        '/admin' in referer
+    )
+    
+    if session.get("user_phone") or session.get("user_id") or is_admin:
         nxt = request.args.get('next')
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
+        if is_admin:
+            return redirect(url_for("admin.dashboard"))
         return redirect(url_for("express_partner.dashboard"))
     
-    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین)
-    try:
-        views = load_landing_views() or []
-        if not isinstance(views, list):
-            views = []
-        views.append({
-            'timestamp': datetime.utcnow().isoformat(),
-            'ip': request.remote_addr,
-            'user_agent': request.headers.get('User-Agent', '')[:200]
-        })
-        # نگه داشتن فقط 10000 بازدید اخیر (برای جلوگیری از رشد بی‌حد فایل)
-        if len(views) > 10000:
-            views = views[-10000:]
-        save_landing_views(views)
-    except Exception as e:
-        current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
+    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین و درخواست‌های مستقیم)
+    # اگر referer از admin یا express/partner باشد، tracking نمی‌کنیم
+    if '/admin' not in referer and '/express/partner' not in referer:
+        try:
+            views = load_landing_views() or []
+            if not isinstance(views, list):
+                views = []
+            
+            # بررسی اینکه آیا این IP در امروز قبلاً بازدید داشته یا نه
+            visitor_ip = request.remote_addr or ''
+            now = datetime.utcnow()
+            today_str = now.strftime('%Y-%m-%d')
+            
+            # بررسی بازدیدهای امروز برای این IP
+            already_viewed_today = False
+            for v in views:
+                try:
+                    v_ip = v.get('ip', '')
+                    v_ts_str = v.get('timestamp', '')
+                    if v_ip == visitor_ip and v_ts_str:
+                        v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
+                        if v_dt.tzinfo:
+                            v_dt = v_dt.replace(tzinfo=None)
+                        v_date_str = v_dt.strftime('%Y-%m-%d')
+                        if v_date_str == today_str:
+                            already_viewed_today = True
+                            break
+                except Exception:
+                    continue
+            
+            # اگر این IP امروز بازدید نداشته، ثبت کن
+            if not already_viewed_today and visitor_ip:
+                views.append({
+                    'timestamp': now.isoformat(),
+                    'ip': visitor_ip,
+                    'user_agent': request.headers.get('User-Agent', '')[:200]
+                })
+                # نگه داشتن فقط 10000 بازدید اخیر (برای جلوگیری از رشد بی‌حد فایل)
+                if len(views) > 10000:
+                    views = views[-10000:]
+                save_landing_views(views)
+        except Exception as e:
+            current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
@@ -86,28 +123,65 @@ def partners():
     لندینگ همکاران وینور – معرفی فرصت‌های همکاری
     اگر کاربر وارد شده باشد، مستقیم به داشبورد می‌رود.
     """
-    if session.get("user_phone") or session.get("user_id"):
+    # بررسی اینکه آیا کاربر در پنل ادمین است یا نه
+    referer = request.headers.get('Referer', '') or ''
+    is_admin = (
+        session.get('logged_in') or 
+        request.path.startswith('/admin') or
+        '/admin' in referer
+    )
+    
+    if session.get("user_phone") or session.get("user_id") or is_admin:
         nxt = request.args.get('next')
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
+        if is_admin:
+            return redirect(url_for("admin.dashboard"))
         return redirect(url_for("express_partner.dashboard"))
     
-    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین)
-    try:
-        views = load_landing_views() or []
-        if not isinstance(views, list):
-            views = []
-        views.append({
-            'timestamp': datetime.utcnow().isoformat(),
-            'ip': request.remote_addr,
-            'user_agent': request.headers.get('User-Agent', '')[:200]
-        })
-        # نگه داشتن فقط 10000 بازدید اخیر
-        if len(views) > 10000:
-            views = views[-10000:]
-        save_landing_views(views)
-    except Exception as e:
-        current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
+    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین و درخواست‌های مستقیم)
+    # اگر referer از admin یا express/partner باشد، tracking نمی‌کنیم
+    if '/admin' not in referer and '/express/partner' not in referer:
+        try:
+            views = load_landing_views() or []
+            if not isinstance(views, list):
+                views = []
+            
+            # بررسی اینکه آیا این IP در امروز قبلاً بازدید داشته یا نه
+            visitor_ip = request.remote_addr or ''
+            now = datetime.utcnow()
+            today_str = now.strftime('%Y-%m-%d')
+            
+            # بررسی بازدیدهای امروز برای این IP
+            already_viewed_today = False
+            for v in views:
+                try:
+                    v_ip = v.get('ip', '')
+                    v_ts_str = v.get('timestamp', '')
+                    if v_ip == visitor_ip and v_ts_str:
+                        v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
+                        if v_dt.tzinfo:
+                            v_dt = v_dt.replace(tzinfo=None)
+                        v_date_str = v_dt.strftime('%Y-%m-%d')
+                        if v_date_str == today_str:
+                            already_viewed_today = True
+                            break
+                except Exception:
+                    continue
+            
+            # اگر این IP امروز بازدید نداشته، ثبت کن
+            if not already_viewed_today and visitor_ip:
+                views.append({
+                    'timestamp': now.isoformat(),
+                    'ip': visitor_ip,
+                    'user_agent': request.headers.get('User-Agent', '')[:200]
+                })
+                # نگه داشتن فقط 10000 بازدید اخیر
+                if len(views) > 10000:
+                    views = views[-10000:]
+                save_landing_views(views)
+        except Exception as e:
+            current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
     return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
 
