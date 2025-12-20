@@ -1,9 +1,43 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" itemscope itemtype="https://schema.org/Product">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ land.title or 'فایل اکسپرس' }}</title>
+  
+  {# SEO Meta Tags #}
+  <title>{{ seo.title if seo else (land.title or 'فایل اکسپرس') }}</title>
+  <meta name="description" content="{{ seo.description if seo else (land.title or 'فایل اکسپرس') }}">
+  <meta name="keywords" content="{{ seo.keywords if seo else 'فایل اکسپرس, خرید ملک, فروش ملک, وینور' }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="وینور | vinor.ir">
+  <meta name="language" content="fa">
+  <link rel="canonical" href="{{ seo.canonical if seo else request.url }}">
+  
+  {# Open Graph / Facebook #}
+  <meta property="og:type" content="{{ seo.og_type if seo else 'product' }}">
+  <meta property="og:url" content="{{ seo.canonical if seo else request.url }}">
+  <meta property="og:title" content="{{ seo.title if seo else (land.title or 'فایل اکسپرس') }}">
+  <meta property="og:description" content="{{ seo.description if seo else (land.title or 'فایل اکسپرس') }}">
+  <meta property="og:image" content="{{ seo.og_image if seo else request.url_root + 'static/icons/icon-512.png' }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:site_name" content="وینور | vinor.ir">
+  {% if seo and seo.price %}
+  <meta property="product:price:amount" content="{{ seo.price }}">
+  <meta property="product:price:currency" content="{{ seo.currency or 'IRR' }}">
+  {% endif %}
+  
+  {# Twitter Card #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ seo.title if seo else (land.title or 'فایل اکسپرس') }}">
+  <meta name="twitter:description" content="{{ seo.description if seo else (land.title or 'فایل اکسپرس') }}">
+  <meta name="twitter:image" content="{{ seo.og_image if seo else request.url_root + 'static/icons/icon-512.png' }}">
+  
+  {# Favicon #}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjkM7yC4GdZ7+6puj8m0yP0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
@@ -41,6 +75,30 @@
         </button>
       </div>
     </header>
+
+    {# Breadcrumbs Schema #}
+    <nav aria-label="breadcrumb" class="sticky top-12 z-20 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full px-3 sm:px-4 py-2">
+      <ol class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 max-w-7xl mx-auto" itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="{{ url_for('main.index') }}" itemprop="item" class="hover:text-gray-900 dark:hover:text-gray-100">
+            <span itemprop="name">خانه</span>
+          </a>
+          <meta itemprop="position" content="1">
+        </li>
+        <li class="text-gray-400">/</li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="{{ url_for('main.express_public_list') }}" itemprop="item" class="hover:text-gray-900 dark:hover:text-gray-100">
+            <span itemprop="name">فایل‌های اکسپرس</span>
+          </a>
+          <meta itemprop="position" content="2">
+        </li>
+        <li class="text-gray-400">/</li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" class="text-gray-900 dark:text-gray-100">
+          <span itemprop="name">{{ land.title or 'جزئیات فایل' }}</span>
+          <meta itemprop="position" content="3">
+        </li>
+      </ol>
+    </nav>
 
     <!-- گالری بالای صفحه - سبک دیوار (تمام‌عرض) -->
     <div class="relative mb-4 bg-black/5 dark:bg-black/20 w-full">
@@ -98,7 +156,9 @@
               {% endif %}
               <img id="landMainImage"
                    src="{{ image_src }}"
-                   alt="{{ land.title }}"
+                   alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}"
+                   itemprop="image"
+                   alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}"
                    class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %}"
                    onclick="openLightbox(this.src)">
             {% endif %}
@@ -612,5 +672,71 @@
       }
     })();
   </script>
+
+  {# Structured Data (JSON-LD) - Product Schema #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ land.title or 'فایل اکسپرس' }}",
+    "description": "{{ seo.description if seo else (land.title or 'فایل اکسپرس') }}",
+    "url": "{{ seo.canonical if seo else request.url }}",
+    {% if land.images and land.images|length > 0 %}
+    "image": [
+      {% for img in (land.images if land.images is iterable else [land.images]) %}
+      {% if "://" in (img|string) %}
+      "{{ img }}"{% if not loop.last %},{% endif %}
+      {% elif (img|string).startswith('/uploads/') %}
+      "{{ request.url_root.rstrip('/') }}{{ img }}"{% if not loop.last %},{% endif %}
+      {% else %}
+      "{{ request.url_root.rstrip('/') }}/uploads/{{ img }}"{% if not loop.last %},{% endif %}
+      {% endif %}
+      {% endfor %}
+    ],
+    {% endif %}
+    {% if land.price_total %}
+    "offers": {
+      "@type": "Offer",
+      "price": "{{ land.price_total }}",
+      "priceCurrency": "IRR",
+      "availability": "https://schema.org/InStock",
+      "url": "{{ seo.canonical if seo else request.url }}"
+    },
+    {% endif %}
+    "brand": {
+      "@type": "Organization",
+      "name": "وینور",
+      "url": "{{ request.url_root.rstrip('/') }}"
+    },
+    "category": "{{ land.category or 'املاک' }}",
+    {% if land.location %}
+    "areaServed": {
+      "@type": "City",
+      "name": "{{ land.location }}"
+    },
+    {% endif %}
+    "seller": {
+      "@type": "Organization",
+      "name": "وینور",
+      "url": "{{ request.url_root.rstrip('/') }}"
+    }
+  }
+  </script>
+
+  {# RealEstate Schema (Additional) #}
+  {% if land.size or land.location %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "وینور",
+    "url": "{{ request.url_root.rstrip('/') }}",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IR"
+    }
+  }
+  </script>
+  {% endif %}
 </body>
 </html>

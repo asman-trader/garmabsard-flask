@@ -198,6 +198,61 @@ def start():
     session.permanent = True
     return resp
 
+@main_bp.route("/public", endpoint="express_public_list")
+def express_public_list():
+    """
+    صفحه عمومی لیست فایل‌های اکسپرس - سبک دیوار
+    """
+    try:
+        lands = load_ads_cached() or []
+        # فیلتر فایل‌های اکسپرس (فقط approved)
+        express_lands = [
+            l for l in lands 
+            if l.get('is_express', False) and l.get('express_status') != 'sold'
+        ]
+        
+        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
+        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # صفحه‌بندی ساده
+        page = int(request.args.get('page', 1) or 1)
+        per_page = 20
+        total = len(express_lands)
+        pages = max(1, (total + per_page - 1) // per_page)
+        page = max(1, min(page, pages))
+        
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_lands = express_lands[start_idx:end_idx]
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading express listings: {e}", exc_info=True)
+        express_lands = []
+        paginated_lands = []
+        page = 1
+        pages = 1
+        total = 0
+    
+    # آماده‌سازی داده‌های SEO
+    base_url = request.url_root.rstrip('/')
+    canonical_url = f"{base_url}/public"
+    if page > 1:
+        canonical_url += f"?page={page}"
+    
+    return render_template(
+        'public/express_list.html',
+        lands=paginated_lands,
+        pagination={'page': page, 'pages': pages, 'total': total},
+        seo={
+            'title': 'فایل‌های اکسپرس وینور | خرید و فروش ملک',
+            'description': f'لیست کامل فایل‌های اکسپرس وینور. {total} فایل معتبر برای خرید و فروش ملک. مشاهده قیمت، موقعیت و جزئیات کامل.',
+            'keywords': 'فایل اکسپرس, خرید ملک, فروش ملک, زمین, ویلایی, آپارتمان, وینور, vinor',
+            'canonical': canonical_url,
+            'og_type': 'website',
+            'og_image': f"{base_url}/static/icons/icon-512.png"
+        }
+    )
+
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):
     """
@@ -260,11 +315,59 @@ def express_detail(code):
         partners = load_express_partners() or []
         ref_partner = next((p for p in partners if str(p.get('phone')) == ref_phone), None)
 
+    # آماده‌سازی داده‌های SEO
+    base_url = request.url_root.rstrip('/')
+    canonical_url = f"{base_url}/express/{land.get('code', '')}"
+    
+    # تصویر اصلی برای OG
+    images = land.get('images', [])
+    og_image = None
+    if images:
+        if isinstance(images, list) and len(images) > 0:
+            img = images[0]
+        elif isinstance(images, str):
+            img = images
+        else:
+            img = None
+        
+        if img:
+            if "://" in str(img):
+                og_image = str(img)
+            elif str(img).startswith('/uploads/'):
+                og_image = f"{base_url}{img}"
+            elif str(img).startswith('uploads/'):
+                og_image = f"{base_url}/uploads/{str(img)[8:]}"
+            else:
+                og_image = f"{base_url}/uploads/{img}"
+    
+    if not og_image:
+        og_image = f"{base_url}/static/icons/icon-512.png"
+    
+    # ساخت description از اطلاعات فایل
+    desc_parts = []
+    if land.get('location'):
+        desc_parts.append(f"موقعیت: {land.get('location')}")
+    if land.get('size'):
+        desc_parts.append(f"متراژ: {land.get('size')} متر")
+    if land.get('price_total'):
+        desc_parts.append(f"قیمت: {land.get('price_total'):,} تومان")
+    description = f"{land.get('title', 'فایل اکسپرس')} - {' | '.join(desc_parts)}" if desc_parts else f"{land.get('title', 'فایل اکسپرس')} - خرید و فروش ملک در وینور"
+    
     return render_template(
         "public/express_public_detail.html",
         land=land,
         ref_partner=ref_partner,
         ref_token=ref_token,
+        seo={
+            'title': f"{land.get('title', 'فایل اکسپرس')} | وینور",
+            'description': description,
+            'keywords': f"فایل اکسپرس, {land.get('location', '')}, {land.get('category', '')}, خرید ملک, فروش ملک, وینور",
+            'canonical': canonical_url,
+            'og_type': 'product',
+            'og_image': og_image,
+            'price': land.get('price_total'),
+            'currency': 'IRR'
+        }
     )
 
 @main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" itemscope itemtype="https://schema.org/CollectionPage">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  {# SEO Meta Tags #}
+  <title>{{ seo.title if seo else 'فایل‌های اکسپرس وینور' }}</title>
+  <meta name="description" content="{{ seo.description if seo else 'لیست کامل فایل‌های اکسپرس وینور. مشاهده قیمت، موقعیت و جزئیات کامل فایل‌های معتبر برای خرید و فروش ملک.' }}">
+  <meta name="keywords" content="{{ seo.keywords if seo else 'فایل اکسپرس, خرید ملک, فروش ملک, زمین, ویلایی, آپارتمان, وینور' }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="وینور | vinor.ir">
+  <meta name="language" content="fa">
+  <link rel="canonical" href="{{ seo.canonical if seo else request.url }}">
+  
+  {# Open Graph / Facebook #}
+  <meta property="og:type" content="{{ seo.og_type if seo else 'website' }}">
+  <meta property="og:url" content="{{ seo.canonical if seo else request.url }}">
+  <meta property="og:title" content="{{ seo.title if seo else 'فایل‌های اکسپرس وینور' }}">
+  <meta property="og:description" content="{{ seo.description if seo else 'لیست کامل فایل‌های اکسپرس وینور' }}">
+  <meta property="og:image" content="{{ seo.og_image if seo else request.url_root + 'static/icons/icon-512.png' }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:site_name" content="وینور | vinor.ir">
+  
+  {# Twitter Card #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ seo.title if seo else 'فایل‌های اکسپرس وینور' }}">
+  <meta name="twitter:description" content="{{ seo.description if seo else 'لیست کامل فایل‌های اکسپرس وینور' }}">
+  <meta name="twitter:image" content="{{ seo.og_image if seo else request.url_root + 'static/icons/icon-512.png' }}">
+  
+  {# Favicon #}
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjkM7yC4GdZ7+6puj8m0yP0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body { font-family: 'Vazirmatn', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <!-- هدر ثابت - سبک دیوار -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
+      <div class="w-full px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
+        <a href="{{ url_for('main.index') }}"
+           class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
+           aria-label="بازگشت">
+          <i class="fas fa-arrow-right text-sm"></i>
+        </a>
+        <div class="flex flex-col items-center flex-1 min-w-0">
+          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1 truncate max-w-full">فایل‌های اکسپرس</h1>
+        </div>
+        <div class="w-9 h-9"></div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
+      {% if lands and lands|length > 0 %}
+        <!-- کارت‌های فایل اکسپرس - سبک دیوار -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for land in lands %}
+            {# نرمال‌سازی تصویر کاور #}
+            {% set _imgs = [] %}
+            {% if land.images %}
+              {% if land.images is string %}
+                {% set _imgs = [land.images] %}
+              {% elif land.images is iterable %}
+                {% set _imgs = land.images %}
+              {% endif %}
+            {% endif %}
+            {% set cover = (_imgs[0] if _imgs and _imgs|length > 0 else None) %}
+
+            <a href="{{ url_for('main.express_detail', code=land.code) }}"
+               class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-gray-300 dark:hover:border-gray-600 transition-colors block">
+              
+              <!-- تصویر کاور - سبک دیوار -->
+              {% if cover %}
+                <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  {% if "://" in (cover|string) %}
+                    <img src="{{ cover }}" class="w-full h-full object-cover" alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}" loading="lazy">
+                  {% elif (cover|string).startswith('/uploads/') %}
+                    <img src="{{ cover }}" class="w-full h-full object-cover" alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}" loading="lazy">
+                  {% elif (cover|string).startswith('uploads/') %}
+                    <img src="/uploads/{{ (cover|string)[8:] }}" class="w-full h-full object-cover" alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}" loading="lazy">
+                  {% else %}
+                    <img src="/uploads/{{ cover }}" class="w-full h-full object-cover" alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}" loading="lazy">
+                  {% endif %}
+                  
+                  <!-- برچسب اکسپرس - سبک دیوار -->
+                  <div class="absolute top-2 left-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-600 text-white">
+                      <i class="fa-solid fa-star text-[10px] ml-1"></i>
+                      اکسپرس
+                    </span>
+                  </div>
+                </div>
+              {% else %}
+                <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <i class="fa-solid fa-image text-3xl text-gray-300 dark:text-gray-700"></i>
+                </div>
+              {% endif %}
+
+              <!-- محتوای کارت - سبک دیوار -->
+              <div class="p-4 space-y-3">
+                <!-- عنوان -->
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
+                  {{ land.title or 'بدون عنوان' }}
+                </h3>
+                
+                <!-- اطلاعات اصلی -->
+                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  {% if land.location %}
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot text-xs"></i>
+                    <span class="truncate">{{ land.location }}</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if land.size %}
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-ruler-combined text-xs"></i>
+                    <span>{{ "{:,}".format(land.size | int) }} متر</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if land.category %}
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-tag text-xs"></i>
+                    <span>{{ land.category }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <!-- قیمت - سبک دیوار -->
+                <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">قیمت کل</span>
+                    <span class="text-base font-semibold text-gray-900 dark:text-white">
+                      {{ "{:,}".format(land.price_total | int) if land.price_total else "نامشخص" }} تومان
+                    </span>
+                  </div>
+                  {% if land.price_per_meter %}
+                  <div class="flex items-center justify-between mt-1">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">قیمت در متر</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                      {{ "{:,}".format(land.price_per_meter | int) }} تومان
+                    </span>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        <!-- صفحه‌بندی - سبک دیوار -->
+        {% if pagination.pages > 1 %}
+          <div class="flex justify-center pt-6">
+            <nav class="flex items-center gap-2">
+              {% if pagination.page > 1 %}
+                <a href="?page={{ pagination.page - 1 }}" 
+                   class="px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 text-sm transition focusable">
+                  قبلی
+                </a>
+              {% endif %}
+              
+              <span class="px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm font-medium">
+                {{ pagination.page }} از {{ pagination.pages }}
+              </span>
+              
+              {% if pagination.page < pagination.pages %}
+                <a href="?page={{ pagination.page + 1 }}" 
+                   class="px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 text-sm transition focusable">
+                  بعدی
+                </a>
+              {% endif %}
+            </nav>
+          </div>
+        {% endif %}
+
+      {% else %}
+        <!-- حالت خالی - سبک دیوار -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-star text-2xl text-gray-400 dark:text-gray-600"></i>
+          </div>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">هنوز فایل اکسپرس ثبت نشده</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">به زودی فایل‌های جدید اضافه می‌شوند</p>
+        </div>
+      {% endif %}
+    </main>
+  </div>
+
+  {# Structured Data (JSON-LD) - CollectionPage #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "فایل‌های اکسپرس وینور",
+    "description": "{{ seo.description if seo else 'لیست کامل فایل‌های اکسپرس وینور' }}",
+    "url": "{{ seo.canonical if seo else request.url }}",
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": {{ pagination.total if pagination else 0 }},
+      "itemListElement": [
+        {% for land in lands %}
+        {
+          "@type": "ListItem",
+          "position": {{ loop.index }},
+          "item": {
+            "@type": "Product",
+            "name": "{{ land.title or 'فایل اکسپرس' }}",
+            "description": "{{ land.location or '' }} - {{ land.size or '' }} متر",
+            "url": "{{ request.url_root }}express/{{ land.code }}",
+            {% if land.price_total %}
+            "offers": {
+              "@type": "Offer",
+              "price": "{{ land.price_total }}",
+              "priceCurrency": "IRR"
+            },
+            {% endif %}
+            {% if land.images and land.images|length > 0 %}
+            {% set first_img = land.images[0] if land.images is iterable else land.images %}
+            {% if "://" in (first_img|string) %}
+            "image": "{{ first_img }}"
+            {% elif (first_img|string).startswith('/uploads/') %}
+            "image": "{{ request.url_root.rstrip('/') }}{{ first_img }}"
+            {% else %}
+            "image": "{{ request.url_root.rstrip('/') }}/uploads/{{ first_img }}"
+            {% endif %}
+            {% endif %}
+          }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "وینور",
+      "url": "{{ request.url_root.rstrip('/') }}"
+    }
+  }
+  </script>
+
+  <script>
+    // فعال‌سازی تم تیره براساس تنظیم سیستم (مانند دیوار)
+    (function() {
+      try {
+        const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq && mq.matches) {
+          document.documentElement.classList.add('dark');
+        }
+        if (mq) {
+          mq.addEventListener('change', (e) => {
+            if (e.matches) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+          });
+        }
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>
