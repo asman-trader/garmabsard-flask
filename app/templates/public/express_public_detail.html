@@ -53,7 +53,7 @@
   {% set total_items = (1 if has_video else 0) + images|length %}
   {% set primary_image = images[0] if images else None %}
 
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20" data-current-code="{{ land.code }}" data-current-index="{{ current_index }}">
     <!-- هدر ثابت - سبک دیوار -->
     <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
       <div class="w-full px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
@@ -118,7 +118,9 @@
             {% set video_src = video %}
           {% endif %}
           <div id="landGallery"
-               class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none">
+               class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none"
+               data-next-code="{{ next_land.code if next_land else '' }}"
+               data-prev-code="{{ prev_land.code if prev_land else '' }}">
 
             <!-- Loading overlay -->
             <div id="landMediaLoading"
@@ -669,6 +671,88 @@
         waitForVideoLoad();
       } else {
         waitForImageLoad();
+      }
+    })();
+
+    // Infinite Scroll - اسکرول بی‌نهایت بین فایل‌ها
+    (function() {
+      const galleryEl = document.getElementById('landGallery');
+      const container = document.querySelector('.min-h-screen');
+      if (!galleryEl || !container) return;
+
+      const nextCode = galleryEl.getAttribute('data-next-code');
+      const prevCode = galleryEl.getAttribute('data-prev-code');
+      const allLands = {{ all_lands | tojson if all_lands else '[]' }};
+      const currentIndex = {{ current_index if current_index is defined else -1 }};
+
+      let verticalSwipeStartY = null;
+      let verticalSwipeEndY = null;
+      const VERTICAL_SWIPE_THRESHOLD = 100;
+
+      // Swipe عمودی برای تغییر فایل
+      function handleVerticalSwipe(dy) {
+        if (Math.abs(dy) < VERTICAL_SWIPE_THRESHOLD) return;
+        
+        if (dy < 0 && nextCode) {
+          // Swipe به بالا = فایل بعدی
+          window.location.href = '/express/' + nextCode;
+        } else if (dy > 0 && prevCode) {
+          // Swipe به پایین = فایل قبلی
+          window.location.href = '/express/' + prevCode;
+        }
+      }
+
+      // Event listeners برای swipe عمودی
+      let verticalTouchStartY = null;
+      let verticalTouchEndY = null;
+
+      container.addEventListener('touchstart', function(e) {
+        verticalTouchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', function(e) {
+        verticalTouchEndY = e.touches[0].clientY;
+      }, { passive: true });
+
+      container.addEventListener('touchend', function(e) {
+        if (verticalTouchStartY !== null && verticalTouchEndY !== null) {
+          const dy = verticalTouchEndY - verticalTouchStartY;
+          handleVerticalSwipe(dy);
+        }
+        verticalTouchStartY = null;
+        verticalTouchEndY = null;
+      }, { passive: true });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowUp' && nextCode) {
+          e.preventDefault();
+          window.location.href = '/express/' + nextCode;
+        } else if (e.key === 'ArrowDown' && prevCode) {
+          e.preventDefault();
+          window.location.href = '/express/' + prevCode;
+        }
+      });
+
+      // Intersection Observer برای auto-load فایل بعدی
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && nextCode) {
+            // وقتی به انتهای صفحه رسید، فایل بعدی را preload کن
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = '/express/' + nextCode;
+            document.head.appendChild(link);
+          }
+        });
+      }, {
+        rootMargin: '200px'
+      });
+
+      // مشاهده انتهای صفحه
+      const footer = document.querySelector('.fixed.inset-x-0.bottom-0');
+      if (footer) {
+        observer.observe(footer);
       }
     })();
   </script>

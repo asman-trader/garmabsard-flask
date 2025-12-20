@@ -73,6 +73,66 @@ def express_search():
             'error': 'خطا در جستجو'
         }), 500
 
+@express_api_bp.route('/express-list')
+def express_list():
+    """API برای infinite scroll - لیست فایل‌های اکسپرس با صفحه‌بندی"""
+    try:
+        page = int(request.args.get('page', 1) or 1)
+        per_page = int(request.args.get('per_page', 30) or 30)
+        search_query = request.args.get('q', '').strip().lower()
+        
+        lands = load_ads_cached() or []
+        
+        # فیلتر فایل‌های اکسپرس
+        express_lands = [
+            l for l in lands 
+            if l.get('is_express', False) and l.get('express_status') != 'sold'
+        ]
+        
+        # جستجو
+        if search_query:
+            def _matches(land):
+                title = str(land.get('title', '')).lower()
+                location = str(land.get('location', '')).lower()
+                category = str(land.get('category', '')).lower()
+                description = str(land.get('description', '')).lower()
+                return (search_query in title or 
+                        search_query in location or 
+                        search_query in category or
+                        search_query in description)
+            express_lands = [l for l in express_lands if _matches(l)]
+        
+        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
+        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # صفحه‌بندی
+        total = len(express_lands)
+        pages = max(1, (total + per_page - 1) // per_page)
+        page = max(1, min(page, pages))
+        
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_lands = express_lands[start_idx:end_idx]
+        
+        return jsonify({
+            'success': True,
+            'lands': paginated_lands,
+            'pagination': {
+                'page': page,
+                'pages': pages,
+                'total': total,
+                'per_page': per_page,
+                'has_next': page < pages,
+                'has_prev': page > 1
+            }
+        })
+    except Exception as e:
+        current_app.logger.error(f"Error in express list API: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': 'خطا در بارگذاری فایل‌ها'
+        }), 500
+
 @express_api_bp.route('/express/<string:code>')
 def get_express_detail(code):
     """Get express listing detail"""

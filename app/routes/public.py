@@ -273,6 +273,60 @@ def express_public_list():
         }
     )
 
+@main_bp.route("/public/cards", endpoint="express_public_cards")
+def express_public_cards():
+    """
+    صفحه لیست کارت‌های اکسپرس - سبک dashboard همکاران
+    """
+    try:
+        lands = load_ads_cached() or []
+        # فیلتر فایل‌های اکسپرس (فقط approved)
+        express_lands = [
+            l for l in lands 
+            if l.get('is_express', False) and l.get('express_status') != 'sold'
+        ]
+        
+        # جستجو
+        search_query = request.args.get('q', '').strip().lower()
+        if search_query:
+            def _matches(land):
+                title = str(land.get('title', '')).lower()
+                location = str(land.get('location', '')).lower()
+                category = str(land.get('category', '')).lower()
+                description = str(land.get('description', '')).lower()
+                return (search_query in title or 
+                        search_query in location or 
+                        search_query in category or
+                        search_query in description)
+            express_lands = [l for l in express_lands if _matches(l)]
+        
+        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
+        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading express cards: {e}", exc_info=True)
+        express_lands = []
+        search_query = ''
+    
+    # آماده‌سازی داده‌های SEO
+    base_url = request.url_root.rstrip('/')
+    canonical_url = f"{base_url}/public/cards"
+    
+    return render_template(
+        'public/express_cards.html',
+        lands=express_lands,
+        show_back_button=True,
+        search_query=search_query,
+        seo={
+            'title': 'فایل‌های اکسپرس وینور | لیست کارت‌ها',
+            'description': f'لیست کامل فایل‌های اکسپرس وینور. {len(express_lands)} فایل معتبر برای خرید و فروش ملک.',
+            'keywords': 'فایل اکسپرس, خرید ملک, فروش ملک, زمین, ویلایی, آپارتمان, وینور, vinor',
+            'canonical': canonical_url,
+            'og_type': 'website',
+            'og_image': f"{base_url}/static/icons/icon-512.png"
+        }
+    )
+
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):
     """
@@ -377,12 +431,27 @@ def express_detail(code):
         desc_parts.append(f"قیمت: {land.get('price_total'):,} تومان")
     description = f"{land.get('title', 'فایل اکسپرس')} - {' | '.join(desc_parts)}" if desc_parts else f"{land.get('title', 'فایل اکسپرس')} - خرید و فروش ملک در وینور"
     
+    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll
+    express_lands = [
+        l for l in lands 
+        if l.get('is_express', False) and l.get('express_status') != 'sold'
+    ]
+    express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    
+    current_index = next((i for i, l in enumerate(express_lands) if l.get('code') == code), -1)
+    next_land = express_lands[current_index + 1] if current_index >= 0 and current_index + 1 < len(express_lands) else None
+    prev_land = express_lands[current_index - 1] if current_index > 0 else None
+    
     return render_template(
         "public/express_public_detail.html",
         land=land,
         ref_partner=ref_partner,
         ref_token=ref_token,
         show_back_button=show_back_button,
+        next_land=next_land,
+        prev_land=prev_land,
+        all_lands=express_lands,  # برای infinite scroll
+        current_index=current_index,
         seo={
             'title': f"{land.get('title', 'فایل اکسپرس')} | وینور",
             'description': description,
