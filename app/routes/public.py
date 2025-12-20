@@ -466,3 +466,19 @@ def serve_express_document(filename):
     except Exception as e:
         current_app.logger.error(f"Error serving express document {filename}: {e}")
         abort(404)
+
+@main_bp.route("/help", endpoint="help")
+def help_page():
+    """صفحه راهنمای عمومی"""
+    base_url = request.url_root.rstrip('/')
+    return render_template(
+        'public/help.html',
+        seo={
+            'title': 'راهنما | وینور',
+            'description': 'راهنمای استفاده از پلتفرم وینور، سوالات پرتکرار، راهنمای خرید امن و اطلاعات تماس پشتیبانی',
+            'keywords': 'راهنما, سوالات پرتکرار, خرید امن, پشتیبانی, وینور',
+            'canonical': f"{base_url}/help",
+            'og_type': 'website',
+            'og_image': f"{base_url}/static/icons/icon-512.png"
+        }
+    )
