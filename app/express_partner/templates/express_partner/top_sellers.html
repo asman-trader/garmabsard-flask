@@ -1,0 +1,93 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}فروشنده‌های برتر{% endblock %}
+{% block content %}
+
+  <!-- Header - سبک دیوار (تمام‌عرض) -->
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
+    <div class="w-full px-4 h-14 flex items-center justify-between">
+      <a href="{{ url_for('express_partner.profile') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+      </a>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">فروشنده‌های برتر</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+<div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
+
+  {% if top_sellers and top_sellers|length > 0 %}
+    <!-- لیست فروشنده‌های برتر - سبک دیوار -->
+    <div class="mt-4 space-y-3">
+      {% for seller in top_sellers %}
+        {% set partner = seller.partner %}
+        {% set rank = loop.index %}
+        {% set total_income = seller.total_income or seller.total_commission or 0 %}
+        {% set sales_count = seller.sales_count or seller.approved_sales_count or 0 %}
+        {% set partner_name = partner.get('name') or 'همکار وینور' %}
+        {% set partner_phone = partner.get('phone') or '' %}
+        {% set phone_display = partner_phone[-4:] if partner_phone else '****' %}
+        
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+          <div class="flex items-center gap-3">
+            <!-- رتبه -->
+            <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-bold text-base
+              {% if rank == 1 %}bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400
+              {% elif rank == 2 %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400
+              {% elif rank == 3 %}bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400
+              {% else %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% endif %}">
+              {% if rank == 1 %}
+                <i class="fas fa-trophy text-lg"></i>
+              {% elif rank == 2 %}
+                <i class="fas fa-medal text-lg"></i>
+              {% elif rank == 3 %}
+                <i class="fas fa-award text-lg"></i>
+              {% else %}
+                {{ rank }}
+              {% endif %}
+            </div>
+            
+            <!-- اطلاعات همکار -->
+            <div class="flex-1 min-w-0">
+              <div class="text-base font-semibold text-gray-900 dark:text-white truncate">
+                {{ partner_name }}
+              </div>
+              <div class="mt-1 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                <span class="flex items-center gap-1">
+                  <i class="fas fa-phone text-[10px]"></i>
+                  {{ phone_display }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <i class="fas fa-chart-line text-[10px]"></i>
+                  {{ sales_count }} فروش
+                </span>
+              </div>
+            </div>
+            
+            <!-- درآمد کل -->
+            <div class="flex-shrink-0 text-left">
+              <div class="text-sm font-bold text-gray-900 dark:text-white">
+                {{ "{:,}".format(total_income) }} تومان
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">کل درآمد</div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <!-- حالت خالی -->
+    <div class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+      <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-trophy text-2xl text-gray-400 dark:text-gray-600"></i>
+      </div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">هنوز فروشنده برتری ثبت نشده</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400">با انجام معاملات موفق، در این لیست قرار بگیرید</p>
+    </div>
+  {% endif %}
+
+  {% set bottom_nav_active = 'profile' %}
+  {% include 'express_partner/partials/bottom_nav.html' %}
+
+</div>
+{% endblock %}

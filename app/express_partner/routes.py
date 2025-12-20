@@ -1121,6 +1121,62 @@ def profile_page():
     return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name)
 
 
+@express_partner_bp.route('/top-sellers', methods=['GET'], endpoint='top_sellers')
+@require_partner_access()
+def top_sellers_page():
+    """صفحه فروشنده‌های برتر"""
+    try:
+        partners = load_express_partners() or []
+        
+        # محاسبه آمار برای هر همکار
+        def _i(v):
+            try:
+                return int(str(v).replace(',', '').strip() or '0')
+            except Exception:
+                return 0
+        
+        # محاسبه مجموع پورسانت‌های تایید شده برای هر همکار
+        comms = load_express_commissions() or []
+        partner_stats = {}
+        
+        for partner in partners:
+            partner_phone = str(partner.get('phone', '')).strip()
+            if not partner_phone:
+                continue
+            
+            # پورسانت‌های تایید شده و پرداخت شده
+            my_comms = [c for c in comms if str(c.get('partner_phone', '')).strip() == partner_phone]
+            total_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+            sales_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+            
+            partner_stats[partner_phone] = {
+                'partner': partner,
+                'total_commission': total_commission,
+                'sales_count': sales_count,
+                'total_income': _i(partner.get('total_income', 0)),
+                'approved_sales_count': _i(partner.get('approved_sales_count', 0))
+            }
+        
+        # مرتب‌سازی بر اساس مجموع درآمد (total_income یا total_commission)
+        top_sellers = sorted(
+            partner_stats.values(),
+            key=lambda x: max(x['total_income'], x['total_commission']),
+            reverse=True
+        )
+        
+        # فقط همکارانی که حداقل یک فروش داشته‌اند
+        top_sellers = [s for s in top_sellers if s['sales_count'] > 0 or s['approved_sales_count'] > 0]
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading top sellers: {e}", exc_info=True)
+        top_sellers = []
+    
+    return render_template(
+        'express_partner/top_sellers.html',
+        top_sellers=top_sellers
+    )
+
+
 @express_partner_bp.post('/files/<int:fid>/delete')
 @require_partner_access()
 def delete_file(fid: int):

@@ -48,6 +48,21 @@
       </div>
     </a>
 
+    <!-- فروشنده‌های برتر -->
+    <a href="{{ url_for('express_partner.top_sellers') }}" 
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <i class="fas fa-trophy text-amber-600 dark:text-amber-400"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">فروشنده‌های برتر</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">رتبه‌بندی همکاران</div>
+        </div>
+        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+      </div>
+    </a>
+
     <!-- تماس با پشتیبانی -->
     <a href="{{ url_for('express_partner.support') }}" 
        data-tour="support-link"
