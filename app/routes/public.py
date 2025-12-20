@@ -211,6 +211,20 @@ def express_public_list():
             if l.get('is_express', False) and l.get('express_status') != 'sold'
         ]
         
+        # جستجو
+        search_query = request.args.get('q', '').strip().lower()
+        if search_query:
+            def _matches(land):
+                title = str(land.get('title', '')).lower()
+                location = str(land.get('location', '')).lower()
+                category = str(land.get('category', '')).lower()
+                description = str(land.get('description', '')).lower()
+                return (search_query in title or 
+                        search_query in location or 
+                        search_query in category or
+                        search_query in description)
+            express_lands = [l for l in express_lands if _matches(l)]
+        
         # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
         express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
@@ -248,6 +262,7 @@ def express_public_list():
         lands=paginated_lands,
         pagination={'page': page, 'pages': pages, 'total': total},
         show_back_button=show_back_button,
+        search_query=search_query,
         seo={
             'title': 'فایل‌های اکسپرس وینور | خرید و فروش ملک',
             'description': f'لیست کامل فایل‌های اکسپرس وینور. {total} فایل معتبر برای خرید و فروش ملک. مشاهده قیمت، موقعیت و جزئیات کامل.',
