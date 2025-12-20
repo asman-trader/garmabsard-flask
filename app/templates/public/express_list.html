@@ -105,13 +105,27 @@
   </style>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-  <div class="min-h-screen bg-white dark:bg-gray-900 pb-16">
+  <div class="min-h-screen bg-white dark:bg-gray-900">
     <!-- Header - سبک دیوار (تمام‌عرض) -->
     <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-100 dark:border-gray-800 w-full">
-      <div class="w-full px-4 h-14 flex items-center justify-center">
+      <div class="w-full px-4 h-14 flex items-center justify-between">
+        {% if show_back_button or session.get('user_phone') %}
+        <a href="{{ url_for('express_partner.dashboard') }}" 
+           class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors"
+           aria-label="بازگشت">
+          <i class="fas fa-arrow-right text-sm"></i>
+        </a>
+        {% else %}
+        <a href="{{ url_for('main.index') }}" 
+           class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors"
+           aria-label="بازگشت">
+          <i class="fas fa-arrow-right text-sm"></i>
+        </a>
+        {% endif %}
         <h1 class="text-sm font-bold text-gray-900 dark:text-white">
           اکسپلور
         </h1>
+        <div class="w-9"></div>
       </div>
     </header>
 
@@ -492,51 +506,5 @@
     })();
   </script>
 
-  <!-- فوتر ناوبری - سبک دیوار -->
-  <nav class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 safe-area-bottom">
-    <div class="max-w-md mx-auto">
-      <div class="grid grid-cols-4 gap-0">
-        {% set current_path = request.path %}
-        {% set nav_items = [
-          {
-            'key': 'home',
-            'url': url_for('main.index'),
-            'icon': 'fa-home',
-            'label': 'خانه',
-            'is_active': (current_path == '/' or current_path == url_for('main.index'))
-          },
-          {
-            'key': 'explore',
-            'url': url_for('main.express_public_list'),
-            'icon': 'fa-magnifying-glass',
-            'label': 'اکسپلور',
-            'is_active': (current_path.startswith('/public') or current_path.startswith('/express/'))
-          },
-          {
-            'key': 'partners',
-            'url': url_for('main.partners'),
-            'icon': 'fa-users',
-            'label': 'همکاران',
-            'is_active': (current_path == url_for('main.partners'))
-          },
-          {
-            'key': 'help',
-            'url': url_for('main.help'),
-            'icon': 'fa-question-circle',
-            'label': 'راهنما',
-            'is_active': (current_path == url_for('main.help') or current_path.startswith('/help'))
-          }
-        ] %}
-        {% for item in nav_items %}
-          <a href="{{ item.url }}"
-             class="flex flex-col items-center justify-center gap-0.5 py-3 px-2 transition-all duration-200 {{ 'text-gray-900 dark:text-white' if item.is_active else 'text-gray-500 dark:text-gray-400' }} hover:text-gray-900 dark:hover:text-white active:scale-95"
-             aria-current="{{ 'page' if item.is_active else 'false' }}">
-            <i class="fas {{ item.icon }} {{ 'text-xl' if item.is_active else 'text-lg' }} transition-all duration-200"></i>
-            <span class="text-[10px] font-medium leading-tight mt-0.5">{{ item.label }}</span>
-          </a>
-        {% endfor %}
-      </div>
-    </div>
-  </nav>
 </body>
 </html>
