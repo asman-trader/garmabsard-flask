@@ -58,28 +58,33 @@
       </div>
     </header>
 
-    <!-- نوار جستجو - سبک دیوار باز -->
+    <!-- نوار جستجو - سبک دیوار و ریل -->
     <div class="sticky top-12 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 w-full">
-      <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4">
-        <form method="GET" action="{{ url_for('main.express_public_list') }}" class="w-full">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <form method="GET" action="{{ url_for('main.express_public_list') }}" class="w-full" id="searchForm">
           <div class="relative w-full">
-            <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20 dark:focus-within:ring-blue-400/20 transition-all">
-              <button type="submit"
-                      class="flex-shrink-0 px-4 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">
-                <i class="fas fa-magnifying-glass text-base"></i>
-              </button>
+            <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
               <input type="text"
                      name="q"
+                     id="searchInput"
                      value="{{ search_query or '' }}"
-                     placeholder="جستجو در فایل‌ها، موقعیت، دسته‌بندی..."
-                     class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 py-3 pr-2">
-              {% if search_query %}
-              <a href="{{ url_for('main.express_public_list') }}"
-                 class="flex-shrink-0 px-3 py-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
-                 aria-label="پاک کردن جستجو">
-                <i class="fas fa-times text-sm"></i>
-              </a>
-              {% endif %}
+                     placeholder="جستجو در فایل‌ها..."
+                     autocomplete="off"
+                     class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-3 px-4 min-w-0">
+              <div class="flex items-center gap-1 pr-2">
+                {% if search_query %}
+                <a href="{{ url_for('main.express_public_list') }}"
+                   class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                   aria-label="پاک کردن جستجو">
+                  <i class="fas fa-times text-xs"></i>
+                </a>
+                {% endif %}
+                <button type="submit"
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                        aria-label="جستجو">
+                  <i class="fas fa-magnifying-glass text-sm"></i>
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -87,9 +92,9 @@
     </div>
 
     <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
-      {% if lands and lands|length > 0 %}
-        <!-- کارت‌های فایل اکسپرس - سبک دیوار -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- کارت‌های فایل اکسپرس - سبک دیوار -->
+      <div id="landsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% if lands and lands|length > 0 %}
           {% for land in lands %}
             {# نرمال‌سازی تصویر کاور #}
             {% set _imgs = [] %}
@@ -183,9 +188,11 @@
               </div>
             </a>
           {% endfor %}
-        </div>
+        {% endif %}
+      </div>
 
-        <!-- صفحه‌بندی - سبک دیوار -->
+      <!-- صفحه‌بندی - سبک دیوار -->
+      <div id="paginationContainer">
         {% if pagination.pages > 1 %}
           <div class="flex justify-center pt-6">
             <nav class="flex items-center gap-2">
@@ -209,17 +216,16 @@
             </nav>
           </div>
         {% endif %}
+      </div>
 
-      {% else %}
-        <!-- حالت خالی - سبک دیوار -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
-          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-star text-2xl text-gray-400 dark:text-gray-600"></i>
-          </div>
-          <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">هنوز فایل اکسپرس ثبت نشده</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400">به زودی فایل‌های جدید اضافه می‌شوند</p>
+      <!-- حالت خالی - سبک دیوار -->
+      <div id="emptyState" class="{% if lands and lands|length > 0 %}hidden{% endif %} bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <i class="fa-solid fa-star text-2xl text-gray-400 dark:text-gray-600"></i>
         </div>
-      {% endif %}
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">هنوز فایل اکسپرس ثبت نشده</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">به زودی فایل‌های جدید اضافه می‌شوند</p>
+      </div>
     </main>
   </div>
 
@@ -292,6 +298,146 @@
           });
         }
       } catch (_) {}
+    })();
+
+    // جستجوی زنده
+    (function() {
+      const searchInput = document.getElementById('searchInput');
+      const landsContainer = document.getElementById('landsContainer');
+      const paginationContainer = document.getElementById('paginationContainer');
+      const emptyState = document.getElementById('emptyState');
+      const baseUrl = '{{ request.url_root.rstrip("/") }}';
+      
+      if (!searchInput || !landsContainer) return;
+
+      let searchTimeout = null;
+      let isSearching = false;
+
+      // تابع debounce
+      function debounce(func, wait) {
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(searchTimeout);
+            func(...args);
+          };
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(later, wait);
+        };
+      }
+
+      // تابع برای ساخت URL تصویر
+      function getImageUrl(img) {
+        if (!img) return '';
+        const imgStr = String(img);
+        if (imgStr.includes('://')) return imgStr;
+        if (imgStr.startsWith('/uploads/')) return imgStr;
+        if (imgStr.startsWith('uploads/')) return '/uploads/' + imgStr.substring(8);
+        return '/uploads/' + imgStr;
+      }
+
+      // تابع برای render کردن یک کارت
+      function renderLandCard(land) {
+        const images = Array.isArray(land.images) ? land.images : (land.images ? [land.images] : []);
+        const cover = images[0] || null;
+        const coverUrl = cover ? getImageUrl(cover) : '';
+        
+        const title = land.title || 'بدون عنوان';
+        const location = land.location || '';
+        const size = land.size ? Number(land.size).toLocaleString('fa-IR') + ' متر' : '';
+        const category = land.category || '';
+        const priceTotal = land.price_total ? Number(land.price_total).toLocaleString('fa-IR') : 'نامشخص';
+        const pricePerMeter = land.price_per_meter ? Number(land.price_per_meter).toLocaleString('fa-IR') : '';
+        const detailUrl = baseUrl + '/express/' + (land.code || '');
+
+        return `
+          <a href="${detailUrl}"
+             class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-gray-300 dark:hover:border-gray-600 transition-colors block">
+            ${coverUrl ? `
+            <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+              <img src="${coverUrl}" class="w-full h-full object-cover" alt="${title} - ${location}" loading="lazy">
+              <div class="absolute top-2 left-2">
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-600 text-white">
+                  <i class="fa-solid fa-star text-[10px] ml-1"></i>
+                  اکسپرس
+                </span>
+              </div>
+            </div>
+            ` : `
+            <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <i class="fa-solid fa-image text-3xl text-gray-300 dark:text-gray-700"></i>
+            </div>
+            `}
+            <div class="p-4 space-y-3">
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">${title}</h3>
+              <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                ${location ? `<div class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-xs"></i><span class="truncate">${location}</span></div>` : ''}
+                ${size ? `<div class="flex items-center gap-2"><i class="fa-solid fa-ruler-combined text-xs"></i><span>${size}</span></div>` : ''}
+                ${category ? `<div class="flex items-center gap-2"><i class="fa-solid fa-tag text-xs"></i><span>${category}</span></div>` : ''}
+              </div>
+              <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">قیمت کل</span>
+                  <span class="text-base font-semibold text-gray-900 dark:text-white">${priceTotal} تومان</span>
+                </div>
+                ${pricePerMeter ? `<div class="flex items-center justify-between mt-1"><span class="text-xs text-gray-500 dark:text-gray-400">قیمت در متر</span><span class="text-sm text-gray-700 dark:text-gray-300">${pricePerMeter} تومان</span></div>` : ''}
+              </div>
+            </div>
+          </a>
+        `;
+      }
+
+      // تابع برای جستجو
+      async function performSearch(query) {
+        if (isSearching) return;
+        
+        isSearching = true;
+        landsContainer.innerHTML = '<div class="col-span-full flex justify-center py-8"><div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>';
+        paginationContainer.innerHTML = '';
+        emptyState.classList.add('hidden');
+
+        try {
+          const response = await fetch(`/api/express-search?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+          
+          if (data.success && data.lands && data.lands.length > 0) {
+            landsContainer.innerHTML = data.lands.map(renderLandCard).join('');
+            emptyState.classList.add('hidden');
+          } else {
+            landsContainer.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            emptyState.querySelector('h3').textContent = 'نتیجه‌ای یافت نشد';
+            emptyState.querySelector('p').textContent = 'لطفاً کلمه جستجوی دیگری را امتحان کنید';
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          landsContainer.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          emptyState.querySelector('h3').textContent = 'خطا در جستجو';
+          emptyState.querySelector('p').textContent = 'لطفاً دوباره تلاش کنید';
+        } finally {
+          isSearching = false;
+        }
+      }
+
+      // Event listener برای input
+      searchInput.addEventListener('input', debounce(function(e) {
+        const query = e.target.value.trim();
+        if (query.length >= 2) {
+          performSearch(query);
+        } else if (query.length === 0) {
+          // اگر خالی شد، صفحه را reload کن
+          window.location.href = '{{ url_for("main.express_public_list") }}';
+        }
+      }, 300));
+
+      // جلوگیری از submit فرم هنگام Enter (برای جستجوی زنده)
+      document.getElementById('searchForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (query.length >= 2) {
+          performSearch(query);
+        }
+      });
     })();
   </script>
 </body>

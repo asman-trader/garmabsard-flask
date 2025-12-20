@@ -32,6 +32,47 @@ def get_express_listings():
             'error': 'خطا در بارگذاری آگهی‌های اکسپرس'
         }), 500
 
+@express_api_bp.route('/express-search')
+def express_search():
+    """جستجوی زنده در فایل‌های اکسپرس"""
+    try:
+        query = request.args.get('q', '').strip().lower()
+        lands = load_ads_cached() or []
+        
+        # فیلتر فایل‌های اکسپرس (فقط approved)
+        express_lands = [
+            l for l in lands 
+            if l.get('is_express', False) and l.get('express_status') != 'sold'
+        ]
+        
+        # جستجو
+        if query:
+            def _matches(land):
+                title = str(land.get('title', '')).lower()
+                location = str(land.get('location', '')).lower()
+                category = str(land.get('category', '')).lower()
+                description = str(land.get('description', '')).lower()
+                return (query in title or 
+                        query in location or 
+                        query in category or
+                        query in description)
+            express_lands = [l for l in express_lands if _matches(l)]
+        
+        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
+        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'lands': express_lands,
+            'count': len(express_lands)
+        })
+    except Exception as e:
+        current_app.logger.error(f"Error in express search: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': 'خطا در جستجو'
+        }), 500
+
 @express_api_bp.route('/express/<string:code>')
 def get_express_detail(code):
     """Get express listing detail"""
