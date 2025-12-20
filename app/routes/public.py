@@ -239,10 +239,15 @@ def express_public_list():
     if page > 1:
         canonical_url += f"?page={page}"
     
+    # بررسی اینکه آیا کاربر از پنل همکاران آمده یا نه
+    referer = request.headers.get('Referer', '')
+    show_back_button = '/express/partner/' in referer or session.get('user_phone')
+    
     return render_template(
         'public/express_list.html',
         lands=paginated_lands,
         pagination={'page': page, 'pages': pages, 'total': total},
+        show_back_button=show_back_button,
         seo={
             'title': 'فایل‌های اکسپرس وینور | خرید و فروش ملک',
             'description': f'لیست کامل فایل‌های اکسپرس وینور. {total} فایل معتبر برای خرید و فروش ملک. مشاهده قیمت، موقعیت و جزئیات کامل.',
@@ -315,6 +320,10 @@ def express_detail(code):
         partners = load_express_partners() or []
         ref_partner = next((p for p in partners if str(p.get('phone')) == ref_phone), None)
 
+    # بررسی اینکه آیا کاربر از پنل همکاران آمده یا نه
+    referer = request.headers.get('Referer', '')
+    show_back_button = '/express/partner/' in referer or session.get('user_phone')
+
     # آماده‌سازی داده‌های SEO
     base_url = request.url_root.rstrip('/')
     canonical_url = f"{base_url}/express/{land.get('code', '')}"
@@ -358,6 +367,7 @@ def express_detail(code):
         land=land,
         ref_partner=ref_partner,
         ref_token=ref_token,
+        show_back_button=show_back_button,
         seo={
             'title': f"{land.get('title', 'فایل اکسپرس')} | وینور",
             'description': description,
