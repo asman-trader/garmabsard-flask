@@ -166,7 +166,7 @@
         {% for land in lands %}
           {% set img = (land.images[0] if land.images and land.images[0] else None) %}
           {% set video = land.video %}
-          <a href="{{ url_for('main.express_public_cards') }}" 
+          <a href="{{ url_for('main.express_detail', code=land.code) }}" 
              class="instagram-item"
              data-code="{{ land.code }}">
             {% if video %}
@@ -361,7 +361,7 @@
         }
 
         return `
-          <a href="/public/cards" 
+          <a href="/express/${land.code || ''}" 
              class="instagram-item"
              data-code="${land.code || ''}">
             ${mediaHtml}

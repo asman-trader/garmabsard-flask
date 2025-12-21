@@ -870,6 +870,13 @@ def support():
     return render_template('express_partner/support.html', hide_header=True)
 
 
+@express_partner_bp.route('/help', methods=['GET'], endpoint='help')
+@require_partner_access()
+def help():
+    """صفحه راهنمای داخلی برای Express Partner"""
+    return render_template('express_partner/help.html')
+
+
 @express_partner_bp.route('/training', methods=['GET'], endpoint='training')
 @require_partner_access()
 def training():

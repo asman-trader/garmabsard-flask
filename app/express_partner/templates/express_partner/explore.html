@@ -1,0 +1,380 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}اکسپلور | وینور اکسپرس{% endblock %}
+{% block content %}
+
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
+    <div class="w-full px-4 h-14 flex items-center justify-between">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+      </a>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">اکسپلور</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+<div class="max-w-5xl mx-auto pt-0 px-4 pb-16">
+  
+  <!-- نوار جستجو -->
+  <div class="mt-2 mb-2">
+    <form method="GET" action="{{ url_for('main.express_public_list') }}" class="w-full" id="searchForm">
+      <div class="relative w-full">
+        <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
+          <input type="text"
+                 name="q"
+                 id="searchInput"
+                 value="{{ search_query or '' }}"
+                 placeholder="جستجو در فایل‌ها..."
+                 autocomplete="off"
+                 class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-2.5 px-4 min-w-0">
+          <div class="flex items-center gap-1 pr-2">
+            {% if search_query %}
+            <a href="{{ url_for('main.express_public_list') }}"
+               class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+               aria-label="پاک کردن جستجو">
+              <i class="fas fa-times text-xs"></i>
+            </a>
+            {% endif %}
+            <button type="submit"
+                    class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    aria-label="جستجو">
+              <i class="fas fa-magnifying-glass text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Grid اینستاگرام - 3 ستون -->
+  <div id="instagramGrid" class="instagram-grid mb-4">
+    {% for land in lands %}
+      {% set img = (land.images[0] if land.images and land.images[0] else None) %}
+      {% set video = land.video %}
+      <a href="{{ url_for('main.express_detail', code=land.code) }}" 
+         class="instagram-item"
+         data-code="{{ land.code }}">
+        {% if video %}
+          {% if "://" in (video|string) %}
+            {% set video_src = video %}
+          {% elif (video|string).startswith('/uploads/') %}
+            {% set video_src = video %}
+          {% elif (video|string).startswith('uploads/') %}
+            {% set video_src = '/uploads/' + (video|string)[8:] %}
+          {% elif not (video|string).startswith('/') %}
+            {% set video_src = '/uploads/' + (video|string) %}
+          {% else %}
+            {% set video_src = video %}
+          {% endif %}
+          <video class="w-full h-full object-cover" autoplay muted loop playsinline>
+            <source src="{{ video_src }}" type="video/mp4">
+            {% if img %}
+              {% if "://" in (img|string) %}
+                {% set img_src = img %}
+              {% elif (img|string).startswith('/uploads/') %}
+                {% set img_src = img %}
+              {% elif (img|string).startswith('uploads/') %}
+                {% set img_src = '/uploads/' + (img|string)[8:] %}
+              {% elif not (img|string).startswith('/') %}
+                {% set img_src = '/uploads/' + (img|string) %}
+              {% else %}
+                {% set img_src = img %}
+              {% endif %}
+              <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy">
+            {% endif %}
+          </video>
+        {% elif img %}
+          {% if "://" in (img|string) %}
+            {% set img_src = img %}
+          {% elif (img|string).startswith('/uploads/') %}
+            {% set img_src = img %}
+          {% elif (img|string).startswith('uploads/') %}
+            {% set img_src = '/uploads/' + (img|string)[8:] %}
+          {% elif not (img|string).startswith('/') %}
+            {% set img_src = '/uploads/' + (img|string) %}
+          {% else %}
+            {% set img_src = img %}
+          {% endif %}
+          <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy">
+        {% else %}
+          <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+            <i class="fas fa-image text-2xl text-gray-400 dark:text-gray-500"></i>
+          </div>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Loading indicator برای infinite scroll -->
+  <div id="loadingIndicator" class="loading-spinner hidden">
+    <div></div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="emptyState" class="{% if lands and lands|length > 0 %}hidden{% endif %} bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center mt-4">
+    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
+      <i class="fa-solid fa-star text-2xl text-gray-400 dark:text-gray-600"></i>
+    </div>
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">هنوز فایل اکسپرس ثبت نشده</h3>
+    <p class="text-sm text-gray-600 dark:text-gray-400">به زودی فایل‌های جدید اضافه می‌شوند</p>
+  </div>
+
+  {% set bottom_nav_active = 'express' %}
+  {% include 'express_partner/partials/bottom_nav.html' %}
+</div>
+
+<style>
+  /* Instagram-style grid */
+  .instagram-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+  @media (max-width: 640px) {
+    .instagram-grid {
+      gap: 1px;
+    }
+  }
+  .instagram-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+  }
+  .instagram-item img,
+  .instagram-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .instagram-item:hover img,
+  .instagram-item:hover video {
+    transform: scale(1.05);
+  }
+  .instagram-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.2s ease;
+  }
+  .instagram-item:hover::after {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  .loading-spinner div {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+  // Infinite Scroll - سبک اینستاگرام
+  (function() {
+    const grid = document.getElementById('instagramGrid');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const searchInput = document.getElementById('searchInput');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (!grid) return;
+
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+    let searchQuery = '{{ search_query or '' }}';
+
+    // تابع برای ساخت URL تصویر/ویدئو
+    function getMediaUrl(media) {
+      if (!media) return '';
+      const mediaStr = String(media);
+      if (mediaStr.includes('://')) return mediaStr;
+      if (mediaStr.startsWith('/uploads/')) return mediaStr;
+      if (mediaStr.startsWith('uploads/')) return '/uploads/' + mediaStr.substring(8);
+      return '/uploads/' + mediaStr;
+    }
+
+    // تابع برای render کردن یک آیتم
+    function renderItem(land) {
+      const images = Array.isArray(land.images) ? land.images : (land.images ? [land.images] : []);
+      const cover = images[0] || null;
+      const video = land.video;
+      const coverUrl = cover ? getMediaUrl(cover) : '';
+      const videoUrl = video ? getMediaUrl(video) : '';
+      const detailUrl = '/express/' + (land.code || '');
+      const title = land.title || '';
+
+      let mediaHtml = '';
+      if (videoUrl) {
+        mediaHtml = `
+          <video class="w-full h-full object-cover" autoplay muted loop playsinline>
+            <source src="${videoUrl}" type="video/mp4">
+            ${coverUrl ? `<img src="${coverUrl}" alt="${title}" loading="lazy">` : ''}
+          </video>
+        `;
+      } else if (coverUrl) {
+        mediaHtml = `<img src="${coverUrl}" alt="${title}" loading="lazy">`;
+      } else {
+        mediaHtml = `
+          <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+            <i class="fas fa-image text-2xl text-gray-400 dark:text-gray-500"></i>
+          </div>
+        `;
+      }
+
+      return `
+        <a href="/express/${land.code || ''}" 
+           class="instagram-item"
+           data-code="${land.code || ''}">
+          ${mediaHtml}
+        </a>
+      `;
+    }
+
+    // تابع برای بارگذاری صفحه بعد
+    async function loadNextPage() {
+      if (isLoading || !hasMore) return;
+
+      isLoading = true;
+      loadingIndicator.classList.remove('hidden');
+      currentPage++;
+
+      try {
+        const url = `/api/express-list?page=${currentPage}&per_page=30${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success && data.lands && data.lands.length > 0) {
+          const gridItemsHtml = data.lands.map(renderItem).join('');
+          grid.insertAdjacentHTML('beforeend', gridItemsHtml);
+          
+          hasMore = data.pagination.has_next;
+          if (!hasMore) {
+            loadingIndicator.classList.add('hidden');
+          }
+        } else {
+          hasMore = false;
+          loadingIndicator.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Error loading next page:', error);
+        hasMore = false;
+        loadingIndicator.classList.add('hidden');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Intersection Observer برای infinite scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasMore && !isLoading) {
+          loadNextPage();
+        }
+      });
+    }, {
+      rootMargin: '200px'
+    });
+
+    // مشاهده loading indicator
+    if (loadingIndicator) {
+      observer.observe(loadingIndicator);
+    }
+
+    // جستجوی زنده
+    if (searchInput) {
+      let searchTimeout = null;
+
+      function debounce(func, wait) {
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(searchTimeout);
+            func(...args);
+          };
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(later, wait);
+        };
+      }
+
+      async function performSearch(query) {
+        searchQuery = query;
+        currentPage = 1;
+        hasMore = true;
+        isLoading = true;
+        
+        grid.innerHTML = '';
+        loadingIndicator.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        try {
+          const url = `/api/express-list?page=1&per_page=30${query ? '&q=' + encodeURIComponent(query) : ''}`;
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.success && data.lands && data.lands.length > 0) {
+            const gridItemsHtml = data.lands.map(renderItem).join('');
+            grid.innerHTML = gridItemsHtml;
+            emptyState.classList.add('hidden');
+            hasMore = data.pagination.has_next;
+            if (!hasMore) {
+              loadingIndicator.classList.add('hidden');
+            }
+          } else {
+            grid.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+            hasMore = false;
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          grid.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          loadingIndicator.classList.add('hidden');
+          hasMore = false;
+        } finally {
+          isLoading = false;
+        }
+      }
+
+      searchInput.addEventListener('input', debounce(function(e) {
+        const query = e.target.value.trim();
+        if (query.length >= 2) {
+          performSearch(query);
+        } else if (query.length === 0) {
+          window.location.href = '{{ url_for("main.express_public_list") }}';
+        }
+      }, 300));
+
+      document.getElementById('searchForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (query.length >= 2) {
+          performSearch(query);
+        }
+      });
+    }
+
+    // Initialize - بررسی اینکه آیا صفحه بعدی وجود دارد
+    {% if pagination and pagination.pages > pagination.page %}
+      hasMore = true;
+    {% else %}
+      hasMore = false;
+      loadingIndicator.classList.add('hidden');
+    {% endif %}
+  })();
+</script>
+
+{% endblock %}
+
