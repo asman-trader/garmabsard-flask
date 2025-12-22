@@ -87,6 +87,7 @@ def _save(path, data):
 
 # فایل‌های دامنه
 _ADS_CACHE = {"path": None, "mtime": None, "size": None, "data": None}
+_EXPRESS_LANDS_CACHE = {"path": None, "mtime": None, "size": None, "data": None}
 
 def load_ads(app=None):        return _load(ensure_file('LANDS_FILE','lands.json',[],app))
 
@@ -108,7 +109,37 @@ def load_ads_cached(app=None):
 
     data = _load(path)
     _ADS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": data})
+    # پاک کردن کش اکسپرس هنگام تغییر فایل اصلی
+    _EXPRESS_LANDS_CACHE.update({"path": None, "mtime": None, "size": None, "data": None})
     return data
+
+def load_express_lands_cached(app=None):
+    """لود فایل‌های اکسپرس فیلتر شده با کش جداگانه برای سرعت بیشتر."""
+    app = app or current_app
+    path = ensure_file('LANDS_FILE','lands.json',[],app)
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+
+    c = _EXPRESS_LANDS_CACHE
+    if c["path"] == path and c["mtime"] == mtime and c["size"] == size and c["data"] is not None:
+        return c["data"]
+
+    # بارگذاری و فیلتر کردن فایل‌های اکسپرس
+    all_lands = load_ads_cached(app)
+    express_lands = [
+        l for l in all_lands 
+        if l.get('is_express', False) and l.get('express_status') != 'sold'
+    ]
+    # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
+    express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    
+    _EXPRESS_LANDS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": express_lands})
+    return express_lands
 
 def _update_ads_cache_after_save(path, items):
     try:
@@ -119,6 +150,13 @@ def _update_ads_cache_after_save(path, items):
         mtime = None
         size = None
     _ADS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": items})
+    # به‌روزرسانی کش اکسپرس
+    express_lands = [
+        l for l in items 
+        if l.get('is_express', False) and l.get('express_status') != 'sold'
+    ]
+    express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    _EXPRESS_LANDS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": express_lands})
 
 def save_ads(items, app=None):
     path = ensure_file('LANDS_FILE','lands.json',[],app)

@@ -123,11 +123,13 @@
 </div>
 
 <style>
-  /* Instagram-style grid */
+  /* Instagram-style grid (بهینه شده برای رندر سریع) */
   .instagram-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2px;
+    contain: layout style paint; /* بهینه‌سازی رندر */
+    will-change: contents; /* بهینه‌سازی برای تغییرات آینده */
   }
   @media (max-width: 640px) {
     .instagram-grid {
@@ -140,13 +142,15 @@
     overflow: hidden;
     background: #000;
     cursor: pointer;
+    contain: layout style paint; /* بهینه‌سازی رندر */
   }
   .instagram-item img,
   .instagram-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease; /* کاهش زمان transition */
+    will-change: transform; /* بهینه‌سازی انیمیشن */
   }
   .instagram-item:hover img,
   .instagram-item:hover video {
@@ -157,7 +161,7 @@
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0);
-    transition: background 0.2s ease;
+    transition: background 0.15s ease; /* کاهش زمان transition */
   }
   .instagram-item:hover::after {
     background: rgba(0, 0, 0, 0.1);
@@ -167,6 +171,7 @@
     justify-content: center;
     align-items: center;
     padding: 2rem;
+    contain: layout style; /* بهینه‌سازی رندر */
   }
   .loading-spinner div {
     width: 2rem;
@@ -175,9 +180,16 @@
     border-top-color: #3b82f6;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+    will-change: transform; /* بهینه‌سازی انیمیشن */
   }
   @keyframes spin {
     to { transform: rotate(360deg); }
+  }
+  
+  /* بهینه‌سازی برای تصاویر */
+  .instagram-item img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 </style>
 
@@ -243,7 +255,7 @@
       `;
     }
 
-    // تابع برای بارگذاری صفحه بعد
+    // تابع برای بارگذاری صفحه بعد (بهینه شده)
     async function loadNextPage() {
       if (isLoading || !hasMore) return;
 
@@ -253,12 +265,31 @@
 
       try {
         const url = `/api/express-list?page=${currentPage}&per_page=30${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
         const data = await response.json();
 
         if (data.success && data.lands && data.lands.length > 0) {
-          const gridItemsHtml = data.lands.map(renderItem).join('');
-          grid.insertAdjacentHTML('beforeend', gridItemsHtml);
+          // استفاده از requestAnimationFrame برای رندر نرم
+          requestAnimationFrame(() => {
+            const gridItemsHtml = data.lands.map(renderItem).join('');
+            grid.insertAdjacentHTML('beforeend', gridItemsHtml);
+            
+            // Lazy load images بعد از اضافه شدن به DOM
+            const newImages = grid.querySelectorAll('img[loading="lazy"]');
+            if ('loading' in HTMLImageElement.prototype) {
+              newImages.forEach(img => {
+                if (img.dataset.src) {
+                  img.src = img.dataset.src;
+                  delete img.dataset.src;
+                }
+              });
+            }
+          });
           
           hasMore = data.pagination.has_next;
           if (!hasMore) {
@@ -277,15 +308,20 @@
       }
     }
 
-    // Intersection Observer برای infinite scroll
+    // Intersection Observer برای infinite scroll (بهینه شده)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && hasMore && !isLoading) {
-          loadNextPage();
+          // استفاده از requestIdleCallback برای بارگذاری در زمان بیکاری
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => loadNextPage(), { timeout: 1000 });
+          } else {
+            setTimeout(() => loadNextPage(), 0);
+          }
         }
       });
     }, {
-      rootMargin: '200px'
+      rootMargin: '300px'  // افزایش برای prefetch زودتر
     });
 
     // مشاهده loading indicator
@@ -314,32 +350,57 @@
         hasMore = true;
         isLoading = true;
         
-        grid.innerHTML = '';
+        // استفاده از requestAnimationFrame برای رندر نرم
+        requestAnimationFrame(() => {
+          grid.innerHTML = '';
+        });
         loadingIndicator.classList.remove('hidden');
         emptyState.classList.add('hidden');
 
         try {
           const url = `/api/express-list?page=1&per_page=30${query ? '&q=' + encodeURIComponent(query) : ''}`;
-          const response = await fetch(url);
+          const response = await fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          });
           const data = await response.json();
 
           if (data.success && data.lands && data.lands.length > 0) {
-            const gridItemsHtml = data.lands.map(renderItem).join('');
-            grid.innerHTML = gridItemsHtml;
+            requestAnimationFrame(() => {
+              const gridItemsHtml = data.lands.map(renderItem).join('');
+              grid.innerHTML = gridItemsHtml;
+              
+              // Lazy load images
+              const images = grid.querySelectorAll('img[loading="lazy"]');
+              if ('loading' in HTMLImageElement.prototype) {
+                images.forEach(img => {
+                  if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    delete img.dataset.src;
+                  }
+                });
+              }
+            });
             emptyState.classList.add('hidden');
             hasMore = data.pagination.has_next;
             if (!hasMore) {
               loadingIndicator.classList.add('hidden');
             }
           } else {
-            grid.innerHTML = '';
+            requestAnimationFrame(() => {
+              grid.innerHTML = '';
+            });
             emptyState.classList.remove('hidden');
             loadingIndicator.classList.add('hidden');
             hasMore = false;
           }
         } catch (error) {
           console.error('Search error:', error);
-          grid.innerHTML = '';
+          requestAnimationFrame(() => {
+            grid.innerHTML = '';
+          });
           emptyState.classList.remove('hidden');
           loadingIndicator.classList.add('hidden');
           hasMore = false;
@@ -353,9 +414,10 @@
         if (query.length >= 2) {
           performSearch(query);
         } else if (query.length === 0) {
-          window.location.href = '{{ url_for("main.express_public_list") }}';
+          // استفاده از replace برای جلوگیری از اضافه شدن به history
+          window.location.replace('{{ url_for("main.express_public_list") }}');
         }
-      }, 300));
+      }, 250));  // کاهش delay برای پاسخ سریع‌تر
 
       document.getElementById('searchForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -369,6 +431,16 @@
     // Initialize - بررسی اینکه آیا صفحه بعدی وجود دارد
     {% if pagination and pagination.pages > pagination.page %}
       hasMore = true;
+      // Prefetch صفحه بعدی برای سرعت بیشتر
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          const searchParam = '{{ search_query or '' }}';
+          const nextPageUrl = `/api/express-list?page=2&per_page=30${searchParam ? '&q=' + encodeURIComponent(searchParam) : ''}`;
+          fetch(nextPageUrl, { method: 'GET', headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .catch(() => {}); // نادیده گرفتن خطا در prefetch
+        }, { timeout: 2000 });
+      }
     {% else %}
       hasMore = false;
       loadingIndicator.classList.add('hidden');

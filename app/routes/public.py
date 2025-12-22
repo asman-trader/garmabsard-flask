@@ -7,7 +7,7 @@ from flask import (
 )
 
 from . import main_bp
-from ..utils.storage import data_dir, legacy_dir, load_ads_cached
+from ..utils.storage import data_dir, legacy_dir, load_express_lands_cached
 from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
 from ..utils.storage import load_express_views, save_express_views
 from ..utils.share_tokens import decode_partner_ref
@@ -201,32 +201,25 @@ def start():
 @main_bp.route("/public", endpoint="express_public_list")
 def express_public_list():
     """
-    صفحه عمومی لیست فایل‌های اکسپرس - سبک دیوار
+    صفحه عمومی لیست فایل‌های اکسپرس - سبک دیوار (بهینه شده برای سرعت)
     """
     try:
-        lands = load_ads_cached() or []
-        # فیلتر فایل‌های اکسپرس (فقط approved)
-        express_lands = [
-            l for l in lands 
-            if l.get('is_express', False) and l.get('express_status') != 'sold'
-        ]
+        # استفاده از کش بهینه شده
+        express_lands = load_express_lands_cached() or []
         
-        # جستجو
+        # جستجو (فقط در صورت نیاز)
         search_query = request.args.get('q', '').strip().lower()
         if search_query:
+            search_terms = search_query.split()
             def _matches(land):
-                title = str(land.get('title', '')).lower()
-                location = str(land.get('location', '')).lower()
-                category = str(land.get('category', '')).lower()
-                description = str(land.get('description', '')).lower()
-                return (search_query in title or 
-                        search_query in location or 
-                        search_query in category or
-                        search_query in description)
+                search_text = ' '.join([
+                    str(land.get('title', '')),
+                    str(land.get('location', '')),
+                    str(land.get('category', '')),
+                    str(land.get('description', ''))
+                ]).lower()
+                return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
-        
-        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
-        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
         # صفحه‌بندی ساده
         page = int(request.args.get('page', 1) or 1)
@@ -294,10 +287,10 @@ def express_public_list():
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):
     """
-    صفحهٔ جزئیات آگهی اکسپرس
+    صفحهٔ جزئیات آگهی اکسپرس (بهینه شده)
     """
-    lands = load_ads_cached()
-    land = next((l for l in lands if l.get('code') == code and l.get('is_express', False)), None)
+    express_lands = load_express_lands_cached()
+    land = next((l for l in express_lands if l.get('code') == code), None)
 
     if not land:
         flash('آگهی اکسپرس یافت نشد.', 'warning')
@@ -395,12 +388,7 @@ def express_detail(code):
         desc_parts.append(f"قیمت: {land.get('price_total'):,} تومان")
     description = f"{land.get('title', 'فایل اکسپرس')} - {' | '.join(desc_parts)}" if desc_parts else f"{land.get('title', 'فایل اکسپرس')} - خرید و فروش ملک در وینور"
     
-    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll
-    express_lands = [
-        l for l in lands 
-        if l.get('is_express', False) and l.get('express_status') != 'sold'
-    ]
-    express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll (از کش استفاده می‌شود)
     
     current_index = next((i for i, l in enumerate(express_lands) if l.get('code') == code), -1)
     next_land = express_lands[current_index + 1] if current_index >= 0 and current_index + 1 < len(express_lands) else None

@@ -4,27 +4,27 @@
 Express Listings API endpoints for Vinor Express feature
 """
 
-from flask import Blueprint, jsonify, request, current_app
-from app.utils.storage import load_ads_cached
+from flask import Blueprint, jsonify, request, current_app, make_response
+from app.utils.storage import load_express_lands_cached
 from app.services.notifications import add_notification
 
 express_api_bp = Blueprint('express_api', __name__, url_prefix='/api')
 
 @express_api_bp.route('/express-listings')
 def get_express_listings():
-    """Get all express listings"""
+    """Get all express listings (بهینه شده)"""
     try:
-        lands = load_ads_cached()
-        express_lands = [land for land in lands if land.get('is_express', False) and land.get('express_status') == 'approved']
+        express_lands = load_express_lands_cached()
+        # فیلتر فقط approved
+        express_lands = [l for l in express_lands if l.get('express_status') == 'approved']
         
-        # Sort by creation date (newest first)
-        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-        
-        return jsonify({
+        response = make_response(jsonify({
             'success': True,
             'lands': express_lands,
             'count': len(express_lands)
-        })
+        }))
+        response.headers['Cache-Control'] = 'public, max-age=60, s-maxage=60'
+        return response
     except Exception as e:
         current_app.logger.error(f"Error loading express listings: {e}")
         return jsonify({
@@ -34,38 +34,44 @@ def get_express_listings():
 
 @express_api_bp.route('/express-search')
 def express_search():
-    """جستجوی زنده در فایل‌های اکسپرس"""
+    """جستجوی زنده در فایل‌های اکسپرس (بهینه شده)"""
     try:
         query = request.args.get('q', '').strip().lower()
-        lands = load_ads_cached() or []
         
-        # فیلتر فایل‌های اکسپرس (فقط approved)
-        express_lands = [
-            l for l in lands 
-            if l.get('is_express', False) and l.get('express_status') != 'sold'
-        ]
+        # استفاده از کش بهینه شده
+        express_lands = load_express_lands_cached() or []
         
-        # جستجو
+        # جستجو (بهینه شده)
         if query:
+            search_terms = query.split()
             def _matches(land):
-                title = str(land.get('title', '')).lower()
-                location = str(land.get('location', '')).lower()
-                category = str(land.get('category', '')).lower()
-                description = str(land.get('description', '')).lower()
-                return (query in title or 
-                        query in location or 
-                        query in category or
-                        query in description)
+                search_text = ' '.join([
+                    str(land.get('title', '')),
+                    str(land.get('location', '')),
+                    str(land.get('category', '')),
+                    str(land.get('description', ''))
+                ]).lower()
+                return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
         
-        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
-        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        # کاهش حجم داده
+        minimal_lands = []
+        for land in express_lands[:50]:  # محدود کردن به 50 نتیجه اول
+            minimal_lands.append({
+                'code': land.get('code'),
+                'title': land.get('title'),
+                'location': land.get('location'),
+                'images': land.get('images', [])[:1],
+                'video': land.get('video')
+            })
         
-        return jsonify({
+        response = make_response(jsonify({
             'success': True,
-            'lands': express_lands,
+            'lands': minimal_lands,
             'count': len(express_lands)
-        })
+        }))
+        response.headers['Cache-Control'] = 'public, max-age=30, s-maxage=30'
+        return response
     except Exception as e:
         current_app.logger.error(f"Error in express search: {e}", exc_info=True)
         return jsonify({
@@ -75,35 +81,29 @@ def express_search():
 
 @express_api_bp.route('/express-list')
 def express_list():
-    """API برای infinite scroll - لیست فایل‌های اکسپرس با صفحه‌بندی"""
+    """API برای infinite scroll - لیست فایل‌های اکسپرس با صفحه‌بندی (بهینه شده برای سرعت)"""
     try:
         page = int(request.args.get('page', 1) or 1)
         per_page = int(request.args.get('per_page', 30) or 30)
         search_query = request.args.get('q', '').strip().lower()
         
-        lands = load_ads_cached() or []
+        # استفاده از کش بهینه شده برای فایل‌های اکسپرس
+        express_lands = load_express_lands_cached() or []
         
-        # فیلتر فایل‌های اکسپرس
-        express_lands = [
-            l for l in lands 
-            if l.get('is_express', False) and l.get('express_status') != 'sold'
-        ]
-        
-        # جستجو
+        # جستجو (فقط در صورت نیاز)
         if search_query:
+            # بهینه‌سازی: استفاده از list comprehension سریع‌تر
+            search_terms = search_query.split()
             def _matches(land):
-                title = str(land.get('title', '')).lower()
-                location = str(land.get('location', '')).lower()
-                category = str(land.get('category', '')).lower()
-                description = str(land.get('description', '')).lower()
-                return (search_query in title or 
-                        search_query in location or 
-                        search_query in category or
-                        search_query in description)
+                # ساخت یک رشته واحد برای جستجوی سریع‌تر
+                search_text = ' '.join([
+                    str(land.get('title', '')),
+                    str(land.get('location', '')),
+                    str(land.get('category', '')),
+                    str(land.get('description', ''))
+                ]).lower()
+                return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
-        
-        # مرتب‌سازی بر اساس تاریخ ایجاد (جدیدترین اول)
-        express_lands.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
         # صفحه‌بندی
         total = len(express_lands)
@@ -114,9 +114,23 @@ def express_list():
         end_idx = start_idx + per_page
         paginated_lands = express_lands[start_idx:end_idx]
         
-        return jsonify({
+        # کاهش حجم داده: فقط فیلدهای ضروری
+        minimal_lands = []
+        for land in paginated_lands:
+            minimal_lands.append({
+                'code': land.get('code'),
+                'title': land.get('title'),
+                'location': land.get('location'),
+                'category': land.get('category'),
+                'images': land.get('images', [])[:1],  # فقط اولین تصویر
+                'video': land.get('video'),
+                'price_total': land.get('price_total'),
+                'created_at': land.get('created_at')
+            })
+        
+        response = make_response(jsonify({
             'success': True,
-            'lands': paginated_lands,
+            'lands': minimal_lands,
             'pagination': {
                 'page': page,
                 'pages': pages,
@@ -125,7 +139,13 @@ def express_list():
                 'has_next': page < pages,
                 'has_prev': page > 1
             }
-        })
+        }))
+        
+        # اضافه کردن cache headers برای سرعت بیشتر
+        response.headers['Cache-Control'] = 'public, max-age=60, s-maxage=60'
+        response.headers['Vary'] = 'Accept-Encoding'
+        
+        return response
     except Exception as e:
         current_app.logger.error(f"Error in express list API: {e}", exc_info=True)
         return jsonify({
@@ -135,10 +155,10 @@ def express_list():
 
 @express_api_bp.route('/express/<string:code>')
 def get_express_detail(code):
-    """Get express listing detail"""
+    """Get express listing detail (بهینه شده)"""
     try:
-        lands = load_ads_cached()
-        express_land = next((land for land in lands if land.get('code') == code and land.get('is_express', False)), None)
+        express_lands = load_express_lands_cached()
+        express_land = next((land for land in express_lands if land.get('code') == code), None)
         
         if not express_land:
             return jsonify({
@@ -146,10 +166,12 @@ def get_express_detail(code):
                 'error': 'آگهی اکسپرس یافت نشد'
             }), 404
         
-        return jsonify({
+        response = make_response(jsonify({
             'success': True,
             'land': express_land
-        })
+        }))
+        response.headers['Cache-Control'] = 'public, max-age=300, s-maxage=300'
+        return response
     except Exception as e:
         current_app.logger.error(f"Error loading express detail: {e}")
         return jsonify({
@@ -172,9 +194,9 @@ def express_contact_request(code):
                 'error': 'نام و شماره تماس الزامی است'
             }), 400
         
-        # Get express land details
-        lands = load_ads_cached()
-        express_land = next((land for land in lands if land.get('code') == code and land.get('is_express', False)), None)
+        # Get express land details (بهینه شده)
+        express_lands = load_express_lands_cached()
+        express_land = next((land for land in express_lands if land.get('code') == code), None)
         
         if not express_land:
             return jsonify({
