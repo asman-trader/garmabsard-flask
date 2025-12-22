@@ -1,0 +1,24 @@
+{% set bottom_nav_active = bottom_nav_active|default('') %}
+<nav class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+  <div class="max-w-md mx-auto">
+    <div class="grid grid-cols-5 gap-0">
+      {% set nav_items = [
+        {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
+        {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+        {'key': 'about', 'url': '/about', 'icon': 'fa-info-circle', 'label': 'درباره'},
+        {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
+        {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}
+      ] %}
+      {% for item in nav_items %}
+        {% set is_active = (bottom_nav_active == item.key) %}
+        <a href="{{ item.url }}"
+           class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 transition-colors duration-150 {{ 'text-blue-600 dark:text-blue-400' if is_active else 'text-gray-600 dark:text-gray-400' }} hover:text-gray-900 dark:hover:text-gray-100"
+           aria-current="{{ 'page' if is_active else 'false' }}">
+          <i class="fas {{ item.icon }} text-lg"></i>
+          <span class="text-[11px] font-medium leading-tight">{{ item.label }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</nav>
+

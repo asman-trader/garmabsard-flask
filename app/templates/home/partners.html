@@ -176,6 +176,22 @@
     </div>
 
   </div>
+
+  {# Spacer for bottom nav #}
+  <div class="h-16"></div>
+{% endblock %}
+
+{% block footer %}
+  {# Bottom Navigation - مانند اکسپلور #}
+  {% set bottom_nav_active = 'home' %}
+  {% include 'partials/landing_bottom_nav.html' %}
+  
+  {# Footer اصلی #}
+  <div class="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 py-4 mt-16">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
+      <p>&copy; ۱۴۰۳ VINOR. تمامی حقوق محفوظ است.</p>
+    </div>
+  </div>
 {% endblock %}
 
 {% block scripts %}
