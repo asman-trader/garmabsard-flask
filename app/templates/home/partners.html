@@ -19,20 +19,17 @@
 {% endblock %}
 
 {% block content %}
-  {# Header مخصوص لندینگ - سبک Divar #}
-  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 mb-6">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 focusable" title="VINOR">
-        <span class="text-blue-600 dark:text-blue-400 font-bold text-lg">وینور</span>
-      </a>
-      <button id="darkToggle" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" aria-label="تغییر تم">
-        <i class="fa-solid fa-moon text-sm"></i>
-      </button>
+  {# Header مخصوص لندینگ - مانند اکسپلور #}
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
+    <div class="w-full px-4 h-14 flex items-center justify-between">
+      <div class="w-9"></div>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">وینور</h1>
+      <div class="w-9"></div>
     </div>
   </header>
 
   {# محتوای اصلی لندینگ #}
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div class="max-w-5xl mx-auto pt-0 px-4 pb-16 space-y-6">
     
     <!-- Title Section -->
     <div class="text-center space-y-2">
