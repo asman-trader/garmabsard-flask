@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>همکاری با وینور | VINOR</title>
+{% extends 'base.html' %}
+
+{% block title %}همکاری با وینور | VINOR{% endblock %}
+
+{% block head %}
   <meta name="description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک" />
   <meta name="theme-color" content="#2563EB">
-
-  <!-- Favicon / Manifest -->
-  <link rel="icon" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}">
 
   <!-- Open Graph / Twitter -->
@@ -18,21 +13,14 @@
   <meta property="og:description" content="همکاری با وینور در زمینه ملک - فرصت همکاری برای مشاوران املاک">
   <meta property="og:url" content="{{ request.url }}">
 
-  <!-- Tailwind & Icons -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" onerror="this.parentNode.removeChild(this)">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
-
   <style>
-    html,body{font-family:'Vazirmatn',system-ui,Segoe UI,Roboto,sans-serif}
     .focusable:focus{outline:2px solid #2563EB;outline-offset:2px}
   </style>
-</head>
-<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+{% endblock %}
 
-  <!-- Header - Divar Style -->
-  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+{% block content %}
+  {# Header مخصوص لندینگ - سبک Divar #}
+  <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 mb-6">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 focusable" title="VINOR">
         <span class="text-blue-600 dark:text-blue-400 font-bold text-lg">وینور</span>
@@ -43,161 +31,154 @@
     </div>
   </header>
 
-  <!-- Main Content - Divar Style -->
-  <main class="flex-1 py-8 px-4">
-    <div class="max-w-2xl mx-auto space-y-6">
-      
-      <!-- Title Section -->
-      <div class="text-center space-y-2">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-          پنل همکار اکسپرس
-        </h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          همکاری با وینور در زمینه ملک و املاک
-        </p>
-      </div>
+  {# محتوای اصلی لندینگ #}
+  <div class="max-w-2xl mx-auto space-y-6">
+    
+    <!-- Title Section -->
+    <div class="text-center space-y-2">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+        پنل همکار اکسپرس
+      </h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        همکاری با وینور در زمینه ملک و املاک
+      </p>
+    </div>
 
-      <!-- Install Card - Divar Style -->
-      <div id="expressPartnerInstallHero" class="hidden">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
-              <i class="fa-solid fa-download text-gray-600 dark:text-gray-400"></i>
-            </div>
-            <div>
-              <h2 class="font-semibold text-sm text-gray-900 dark:text-white">نصب پنل همکاران</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400">برای دسترسی سریع‌تر</p>
-            </div>
-          </div>
-          <button id="expressPartnerInstallHeroBtn" class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-medium rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-download text-sm"></i>
-            <span>نصب اپلیکیشن</span>
-          </button>
-          <!-- Mobile Install Instructions -->
-          <div id="mobileInstallInstructions" class="hidden mt-4 space-y-3 text-xs text-gray-600 dark:text-gray-400">
-            <div id="iosInstructions" class="hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 space-y-2">
-              <div class="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
-                <i class="fa-brands fa-apple"></i>
-                <span>نصب در iOS (سافاری):</span>
-              </div>
-              <ol class="list-decimal list-inside space-y-1 pr-2">
-                <li>روی دکمه <i class="fa-solid fa-share"></i> در پایین صفحه ضربه بزنید</li>
-                <li>گزینه «به صفحه اصلی اضافه کن» را انتخاب کنید</li>
-                <li>روی «اضافه کردن» ضربه بزنید</li>
-              </ol>
-            </div>
-            <div id="androidInstructions" class="hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 space-y-2">
-              <div class="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
-                <i class="fa-brands fa-android"></i>
-                <span>نصب در اندروید:</span>
-              </div>
-              <ol class="list-decimal list-inside space-y-1 pr-2">
-                <li>روی منوی سه نقطه <i class="fa-solid fa-ellipsis-vertical"></i> در مرورگر ضربه بزنید</li>
-                <li>گزینه «نصب اپ» یا «Add to Home screen» را انتخاب کنید</li>
-                <li>روی «نصب» یا «Install» ضربه بزنید</li>
-              </ol>
-            </div>
-          </div>
-          <p id="expressPartnerInstallHint" class="hidden text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 mt-4">
-            مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر گزینه «Add to Home Screen» را انتخاب کنید.
-          </p>
-        </div>
-      </div>
-
-      <!-- Login Card - Divar Style -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
-        <div class="text-center space-y-1">
-          <h2 class="font-semibold text-base text-gray-900 dark:text-white">ورود به پنل</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            اگر همکار اکسپرس هستید، وارد شوید
-          </p>
-        </div>
-        
-        <div>
-          <a href="{{ url_for('express_partner.login') }}" class="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focusable inline-flex items-center justify-center gap-2">
-            <i class="fa-solid fa-right-to-bracket text-sm"></i>
-            <span>ورود به پنل</span>
-          </a>
-        </div>
-
-        <!-- PWA Install Button (Alternative) -->
-        <div id="expressPartnerInstallLanding" class="hidden">
-          <button id="expressPartnerInstallLandingBtn" class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-900 dark:text-white font-medium rounded-lg transition-colors focusable inline-flex items-center justify-center gap-2">
-            <i class="fa-solid fa-download text-sm"></i>
-            <span>نصب اپلیکیشن</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- About Cooperation Section - Divar Style -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
-        <div class="flex items-center gap-3">
+    <!-- Install Card - Divar Style -->
+    <div id="expressPartnerInstallHero" class="hidden">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div class="flex items-center gap-3 mb-4">
           <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-handshake text-gray-600 dark:text-gray-400"></i>
+            <i class="fa-solid fa-download text-gray-600 dark:text-gray-400"></i>
           </div>
-          <h2 class="font-semibold text-base text-gray-900 dark:text-white">درباره همکاری</h2>
-        </div>
-        <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-          <p>
-            وینور در حال حاضر فقط در زمینه <strong class="text-gray-900 dark:text-white">ملک و املاک</strong> همکار می‌پذیرد. 
-            اگر مشاور املاک، بنگاه‌دار، یا فعال در حوزه خرید و فروش ملک هستید، می‌توانید با ما همکاری کنید.
-          </p>
-          <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-            <p class="font-medium text-gray-900 dark:text-white">نوع همکاری:</p>
-            <p>
-              همکاری به صورت <strong class="text-gray-900 dark:text-white">مشاور املاک اکسپرس</strong> که در آن شما آگهی‌های ملک را دریافت می‌کنید و 
-              در صورت فروش موفق، کمیسیون دریافت می‌کنید.
-            </p>
-          </div>
-          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <p class="font-medium text-gray-900 dark:text-white mb-2">چه کسانی می‌توانند همکاری کنند؟</p>
-            <ul class="space-y-1.5">
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-                <span>مشاوران املاک و بنگاه‌داران</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-                <span>فعالان حوزه خرید و فروش ملک</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-                <span>کسانی که تجربه در زمینه املاک دارند</span>
-              </li>
-            </ul>
+          <div>
+            <h2 class="font-semibold text-sm text-gray-900 dark:text-white">نصب پنل همکاران</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400">برای دسترسی سریع‌تر</p>
           </div>
         </div>
-      </div>
-
-      <!-- Apply Link - Divar Style -->
-      <div class="text-center">
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-          هنوز همکار اکسپرس نیستید؟
+        <button id="expressPartnerInstallHeroBtn" class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-medium rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download text-sm"></i>
+          <span>نصب اپلیکیشن</span>
+        </button>
+        <!-- Mobile Install Instructions -->
+        <div id="mobileInstallInstructions" class="hidden mt-4 space-y-3 text-xs text-gray-600 dark:text-gray-400">
+          <div id="iosInstructions" class="hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 space-y-2">
+            <div class="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
+              <i class="fa-brands fa-apple"></i>
+              <span>نصب در iOS (سافاری):</span>
+            </div>
+            <ol class="list-decimal list-inside space-y-1 pr-2">
+              <li>روی دکمه <i class="fa-solid fa-share"></i> در پایین صفحه ضربه بزنید</li>
+              <li>گزینه «به صفحه اصلی اضافه کن» را انتخاب کنید</li>
+              <li>روی «اضافه کردن» ضربه بزنید</li>
+            </ol>
+          </div>
+          <div id="androidInstructions" class="hidden bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 space-y-2">
+            <div class="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
+              <i class="fa-brands fa-android"></i>
+              <span>نصب در اندروید:</span>
+            </div>
+            <ol class="list-decimal list-inside space-y-1 pr-2">
+              <li>روی منوی سه نقطه <i class="fa-solid fa-ellipsis-vertical"></i> در مرورگر ضربه بزنید</li>
+              <li>گزینه «نصب اپ» یا «Add to Home screen» را انتخاب کنید</li>
+              <li>روی «نصب» یا «Install» ضربه بزنید</li>
+            </ol>
+          </div>
+        </div>
+        <p id="expressPartnerInstallHint" class="hidden text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 mt-4">
+          مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر گزینه «Add to Home Screen» را انتخاب کنید.
         </p>
-        <a href="{{ url_for('express_partner.apply') }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium focusable text-sm transition">
-          <span>درخواست همکاری</span>
-          <i class="fa-solid fa-arrow-left text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Login Card - Divar Style -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <div class="text-center space-y-1">
+        <h2 class="font-semibold text-base text-gray-900 dark:text-white">ورود به پنل</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          اگر همکار اکسپرس هستید، وارد شوید
+        </p>
+      </div>
+      
+      <div>
+        <a href="{{ url_for('express_partner.login') }}" class="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focusable inline-flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket text-sm"></i>
+          <span>ورود به پنل</span>
         </a>
       </div>
 
-      <!-- Info Badge - Divar Style -->
-      <div class="text-center">
-        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
-          <i class="fa-solid fa-info-circle"></i>
-          <span>همکاری فقط در زمینه ملک فعال است</span>
-        </span>
+      <!-- PWA Install Button (Alternative) -->
+      <div id="expressPartnerInstallLanding" class="hidden">
+        <button id="expressPartnerInstallLandingBtn" class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-900 dark:text-white font-medium rounded-lg transition-colors focusable inline-flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download text-sm"></i>
+          <span>نصب اپلیکیشن</span>
+        </button>
       </div>
-
     </div>
-  </main>
 
-  <!-- Footer - Divar Style -->
-  <footer class="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 py-4">
-    <div class="max-w-4xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-gray-400">
-      <p>&copy; ۱۴۰۳ VINOR. تمامی حقوق محفوظ است.</p>
+    <!-- About Cooperation Section - Divar Style -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-handshake text-gray-600 dark:text-gray-400"></i>
+        </div>
+        <h2 class="font-semibold text-base text-gray-900 dark:text-white">درباره همکاری</h2>
+      </div>
+      <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+        <p>
+          وینور در حال حاضر فقط در زمینه <strong class="text-gray-900 dark:text-white">ملک و املاک</strong> همکار می‌پذیرد. 
+          اگر مشاور املاک، بنگاه‌دار، یا فعال در حوزه خرید و فروش ملک هستید، می‌توانید با ما همکاری کنید.
+        </p>
+        <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <p class="font-medium text-gray-900 dark:text-white">نوع همکاری:</p>
+          <p>
+            همکاری به صورت <strong class="text-gray-900 dark:text-white">مشاور املاک اکسپرس</strong> که در آن شما آگهی‌های ملک را دریافت می‌کنید و 
+            در صورت فروش موفق، کمیسیون دریافت می‌کنید.
+          </p>
+        </div>
+        <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <p class="font-medium text-gray-900 dark:text-white mb-2">چه کسانی می‌توانند همکاری کنند؟</p>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
+              <span>مشاوران املاک و بنگاه‌داران</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
+              <span>فعالان حوزه خرید و فروش ملک</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
+              <span>کسانی که تجربه در زمینه املاک دارند</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-  </footer>
 
+    <!-- Apply Link - Divar Style -->
+    <div class="text-center">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        هنوز همکار اکسپرس نیستید؟
+      </p>
+      <a href="{{ url_for('express_partner.apply') }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium focusable text-sm transition">
+        <span>درخواست همکاری</span>
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+    </div>
+
+    <!-- Info Badge - Divar Style -->
+    <div class="text-center">
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
+        <i class="fa-solid fa-info-circle"></i>
+        <span>همکاری فقط در زمینه ملک فعال است</span>
+      </span>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block scripts %}
   <script>
     // --- Dark Mode ---
     const root = document.documentElement;
@@ -361,5 +342,4 @@
       }
     });
   </script>
-</body>
-</html>
+{% endblock %}

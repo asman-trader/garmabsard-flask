@@ -113,7 +113,7 @@
 
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col">
 
-  {% if not hide_header %}
+  {% if not hide_header and not request.endpoint in ['main.index', 'main.partners'] %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
       <a href="{{ url_for('main.index') }}" class="flex items-center gap-3" aria-label="وینور | صفحه اصلی">
@@ -138,6 +138,11 @@
   <main class="flex-1 py-6 px-4 transition-all duration-300">
     {% block content %}{% endblock %}
   </main>
+
+  {# Footer #}
+  {% block footer %}
+    {% include 'partials/footer.html' %}
+  {% endblock %}
 
   <!-- PWA First-run Welcome (mobile only; standalone only; once) -->
   <div id="pwaWelcome" class="pwa-welcome hidden" role="dialog" aria-modal="true" aria-label="خوش‌آمدید">
