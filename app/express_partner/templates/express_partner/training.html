@@ -1,5 +1,5 @@
 {% extends 'express_partner/base.html' %}
-{% block title %}آموزش - وینور اکسپرس{% endblock %}
+{% block title %}آموزش و دستورالعمل‌ها | روتین ۳ مرحله‌ای{% endblock %}
 {% block content %}
 
   <!-- Header - سبک دیوار (تمام‌عرض) -->
@@ -15,190 +15,61 @@
 
 <div class="max-w-4xl mx-auto pt-0 px-3 sm:px-4 pb-16">
 
-  <!-- Main Content -->
+  <!-- Intro badge -->
+  <div class="mt-4">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200 text-xs font-semibold border border-emerald-100 dark:border-emerald-800">
+      <i class="fa-solid fa-bolt"></i>
+      روتین سریع و عملی برای همکاران
+    </div>
+  </div>
+
+  <!-- Main Content: روتین ۳ مرحله‌ای -->
   <div class="mt-4 space-y-4">
-    
-    <!-- Introduction Card - سبک دیوار -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
       <div class="flex items-start gap-3">
-        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
-          <i class="fas fa-graduation-cap text-white text-lg"></i>
+        <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/50 dark:to-green-800/40 text-emerald-700 dark:text-emerald-200 grid place-items-center">
+          <i class="fa-solid fa-list-check text-base"></i>
         </div>
-        <div class="flex-1">
-          <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-1">آموزش سریع همکاران وینور اکسپرس</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            در این صفحه، مسیر کامل شما از لحظه دریافت فایل تا انجام معامله و دریافت پورسانت، در ۷ گام ساده و کاربردی توضیح داده شده است.
+        <div>
+          <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">آموزش روتین کاری مشاور املاک (۳ مرحله اصلی)</h2>
+          <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+            روتین ساده برای جذب مشتری واقعی، مدیریت بازدید حرفه‌ای و بستن قرارداد.
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
+        <div class="rounded-xl border border-emerald-100 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-900/20 p-3 sm:p-4 shadow-[0_8px_24px_-18px_rgba(16,185,129,0.6)]">
+          <div class="flex items-start gap-2">
+            <span class="mt-0.5 text-emerald-600 dark:text-emerald-300 font-bold">۱️⃣ بازاریابی</span>
+          </div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
+            وظیفه مشاور این است که فایل را به‌صورت کامل و دقیق مطالعه کرده و آن را به‌صورت تلفنی و شفاف به مشتری معرفی کند تا مشتری واقعی جذب شود.
+            این مرحله شامل مطالعه کامل فایل، انتشار آگهی و پاسخ‌گویی سریع به مشتریان است.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-amber-100 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-900/20 p-3 sm:p-4 shadow-[0_8px_24px_-18px_rgba(251,191,36,0.6)]">
+          <div class="flex items-start gap-2">
+            <span class="mt-0.5 text-amber-600 dark:text-amber-300 font-bold">۲️⃣ بازدید</span>
+          </div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
+            در این مرحله مشاور باید با ناظر معامله هماهنگی‌های لازم را به‌صورت تلفنی انجام دهد و بازدید را حرفه‌ای مدیریت کند تا مشتری به تصمیم نزدیک شود.
+            هدف بازدید فقط دیدن ملک نیست، بلکه سنجش میزان علاقه و ثبت نتیجه بازدید است.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-indigo-100 dark:border-indigo-800/60 bg-indigo-50/60 dark:bg-indigo-900/20 p-3 sm:p-4 shadow-[0_8px_24px_-18px_rgba(99,102,241,0.6)]">
+          <div class="flex items-start gap-2">
+            <span class="mt-0.5 text-indigo-600 dark:text-indigo-300 font-bold">۳️⃣ معامله 💰</span>
+          </div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
+            پس از بازدید، مشاور با پیگیری مؤثر و مذاکره اصولی، معامله را به قرارداد تبدیل می‌کند.
+            نتیجه این مرحله بستن قرارداد و دریافت پورسانت است.
           </p>
         </div>
       </div>
     </div>
-
-    <!-- چک‌لیست خلاصه مشاور - نسخه اپلیکیشن -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-      <h2 class="text-base font-bold text-gray-900 dark:text-white mb-4">چک‌لیست خلاصه مشاور – نسخه اپلیکیشن</h2>
-      
-      <div class="space-y-4">
-        
-        <!-- مرحله ۱: انتخاب فایل -->
-        <div class="border-r-2 border-violet-500 dark:border-violet-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-xs font-bold text-violet-600 dark:text-violet-400">۱</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">انتخاب فایل</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400"></span>
-              <span>انتخاب فایل</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400"></span>
-              <span>بررسی اطلاعات</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400"></span>
-              <span>افزودن به لیست بازاریابی</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۲: بازاریابی -->
-        <div class="border-r-2 border-blue-500 dark:border-blue-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">۲</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">بازاریابی</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-              <span>انتشار آگهی</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-              <span>پاسخ به پیام‌ها</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-              <span>ثبت مشتری</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۳: هماهنگی بازدید -->
-        <div class="border-r-2 border-emerald-500 dark:border-emerald-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400">۳</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">هماهنگی بازدید</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-              <span>تعیین زمان</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-              <span>هماهنگی مالک</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-              <span>ثبت بازدید</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۴: بازدید حضوری -->
-        <div class="border-r-2 border-amber-500 dark:border-amber-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs font-bold text-amber-600 dark:text-amber-400">۴</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">بازدید حضوری</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
-              <span>انجام بازدید</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
-              <span>ثبت نتیجه (پسند / عدم پسند)</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۵: شروع معامله -->
-        <div class="border-r-2 border-red-500 dark:border-red-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-xs font-bold text-red-600 dark:text-red-400">۵</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">شروع معامله</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400"></span>
-              <span>ارسال مشتری به ناظر</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400"></span>
-              <span>تغییر وضعیت فایل → معامله</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۶: پیگیری -->
-        <div class="border-r-2 border-purple-500 dark:border-purple-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-xs font-bold text-purple-600 dark:text-purple-400">۶</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">پیگیری</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400"></span>
-              <span>پاسخ‌گویی به مشتری</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400"></span>
-              <span>هماهنگی جلسه قرارداد</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- مرحله ۷: دریافت پورسانت -->
-        <div class="border-r-2 border-indigo-500 dark:border-indigo-400 pr-3">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400">۷</span>
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">دریافت پورسانت</h3>
-          </div>
-          <ul class="space-y-1.5 mr-8 text-sm text-gray-700 dark:text-gray-300">
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
-              <span>تایید پورسانت</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
-              <span>تسویه</span>
-            </li>
-          </ul>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Support Link - سبک دیوار -->
-    <div class="pt-2">
-      <a href="{{ url_for('express_partner.support') }}" 
-         class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 dark:hover:border-blue-600 transition-colors">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 flex-1 min-w-0">
-            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-              <i class="fas fa-headset text-blue-600 dark:text-blue-400 text-lg"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">نیاز به کمک دارید؟</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">تماس با پشتیبانی</p>
-            </div>
-          </div>
-          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm flex-shrink-0"></i>
-        </div>
-      </a>
-    </div>
-
   </div>
 
   {% set bottom_nav_active = 'training' %}
@@ -206,3 +77,4 @@
 
 </div>
 {% endblock %}
+
