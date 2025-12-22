@@ -23,6 +23,33 @@
     </div>
   </div>
 
+  <!-- Progress / Checkable steps -->
+  <div class="mt-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <span>پیشرفت روتین</span>
+        <span id="routineProgressText">۰ / ۳</span>
+      </div>
+      <div class="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+        <div id="routineProgressBar" class="h-2 bg-emerald-500 rounded-full w-0 transition-[width] duration-200"></div>
+      </div>
+      <div class="pt-2 space-y-2">
+        <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-100">
+          <input type="checkbox" class="routine-step accent-emerald-500 w-4 h-4" data-step="1">
+          <span class="flex-1">۱️⃣ بازاریابی را کامل مطالعه و شروع کن</span>
+        </label>
+        <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-100">
+          <input type="checkbox" class="routine-step accent-amber-500 w-4 h-4" data-step="2">
+          <span class="flex-1">۲️⃣ بازدید را هماهنگ و نتیجه را ثبت کن</span>
+        </label>
+        <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-100">
+          <input type="checkbox" class="routine-step accent-indigo-500 w-4 h-4" data-step="3">
+          <span class="flex-1">۳️⃣ معامله را پیگیری و قرارداد را ببند</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Content: روتین ۳ مرحله‌ای -->
   <div class="mt-4 space-y-4">
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
@@ -76,5 +103,49 @@
   {% include 'express_partner/partials/bottom_nav.html' %}
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const steps = Array.from(document.querySelectorAll('.routine-step'));
+    const progressBar = document.getElementById('routineProgressBar');
+    const progressText = document.getElementById('routineProgressText');
+    const storageKey = 'vinor_routine_steps_v1';
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        steps.forEach(cb => {
+          cb.checked = saved.includes(cb.dataset.step);
+        });
+      } catch (_) {}
+    }
+
+    function saveState() {
+      const checked = steps.filter(cb => cb.checked).map(cb => cb.dataset.step);
+      try { localStorage.setItem(storageKey, JSON.stringify(checked)); } catch (_) {}
+    }
+
+    function syncProgress() {
+      const total = steps.length || 1;
+      const done = steps.filter(cb => cb.checked).length;
+      const percent = Math.round((done / total) * 100);
+      if (progressBar) progressBar.style.width = percent + '%';
+      if (progressText) progressText.textContent = `${done} / ${total}`;
+    }
+
+    loadState();
+    syncProgress();
+
+    steps.forEach(cb => {
+      cb.addEventListener('change', () => {
+        saveState();
+        syncProgress();
+      });
+    });
+  });
+</script>
 {% endblock %}
 
