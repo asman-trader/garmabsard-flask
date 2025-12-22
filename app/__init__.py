@@ -417,6 +417,7 @@ def create_app() -> Flask:
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
             # Express listings (public)
             "/express",
+            "/public",  # صفحه اکسپلور عمومی - بدون نیاز به ورود
         }
         # Public dynamic paths (prefix-based)
         public_prefixes = ("/express/", "/uploads/")

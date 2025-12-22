@@ -88,6 +88,23 @@
       </div>
     </div>
 
+    <!-- Explore Card - دسترسی به اکسپلور بدون ورود -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <div class="text-center space-y-1">
+        <h2 class="font-semibold text-base text-gray-900 dark:text-white">اکسپلور فایل‌های اکسپرس</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          مشاهده فایل‌های اکسپرس بدون نیاز به ورود
+        </p>
+      </div>
+      
+      <div>
+        <a href="{{ url_for('main.express_public_list') }}" class="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors focusable inline-flex items-center justify-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+          <span>مشاهده اکسپلور</span>
+        </a>
+      </div>
+    </div>
+
     <!-- Login Card - Divar Style -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
       <div class="text-center space-y-1">
