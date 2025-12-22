@@ -1,10 +1,11 @@
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 <nav class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
   <div class="max-w-md mx-auto">
-    <div class="grid grid-cols-5 gap-0">
+    <div class="grid grid-cols-6 gap-0">
       {% set nav_items = [
         {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
         {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+        {'key': 'routine', 'url': '/routine', 'icon': 'fa-list-check', 'label': 'روتین'},
         {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
         {'key': 'about', 'url': '/', 'icon': 'fa-info-circle', 'label': 'درباره'},
         {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}

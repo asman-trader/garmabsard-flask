@@ -503,3 +503,20 @@ def help_page():
             'og_image': f"{base_url}/static/icons/icon-512.png"
         }
     )
+
+
+@main_bp.route("/routine", endpoint="routine")
+def routine_page():
+    """صفحه روتین ۳ مرحله‌ای همکاری (بازاریابی، بازدید، معامله)"""
+    base_url = request.url_root.rstrip('/')
+    return render_template(
+        'public/routine.html',
+        seo={
+            'title': 'روتین ۳ مرحله‌ای همکاری | وینور',
+            'description': 'روتین مینیمال و جذاب: بازاریابی، بازدید، معامله برای موفقیت سریع‌تر در همکاری با وینور.',
+            'keywords': 'روتین همکاری, بازاریابی, بازدید, معامله, وینور',
+            'canonical': f"{base_url}/routine",
+            'og_type': 'website',
+            'og_image': f"{base_url}/static/icons/icon-512.png"
+        }
+    )

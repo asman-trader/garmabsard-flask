@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <title>{{ seo.title if seo else 'روتین ۳ مرحله‌ای همکاری | وینور' }}</title>
+  <meta name="description" content="{{ seo.description if seo else 'روتین ۳ مرحله‌ای همکاری با وینور' }}">
+  <meta name="keywords" content="{{ seo.keywords if seo else 'روتین همکاری, بازاریابی, بازدید, معامله, وینور' }}">
+  <link rel="canonical" href="{{ seo.canonical if seo else request.url }}">
+
+  <meta property="og:type" content="{{ seo.og_type if seo else 'website' }}">
+  <meta property="og:url" content="{{ seo.canonical if seo else request.url }}">
+  <meta property="og:title" content="{{ seo.title if seo else 'روتین ۳ مرحله‌ای همکاری | وینور' }}">
+  <meta property="og:description" content="{{ seo.description if seo else 'روتین ۳ مرحله‌ای همکاری با وینور' }}">
+  <meta property="og:image" content="{{ seo.og_image if seo else request.url_root + 'static/icons/icon-512.png' }}">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjkM7yC4GdZ7+6puj8m0yP0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body { font-family: 'Vazirmatn', sans-serif; }
+    .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+    @media (max-width: 640px) {
+      nav[class*="fixed"] { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
+      <div class="w-full px-3 sm:px-4 py-2">
+        <div class="flex items-center justify-between">
+          <button type="button"
+                  onclick="history.back()"
+                  class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  aria-label="بازگشت">
+            <i class="fas fa-arrow-right text-sm"></i>
+          </button>
+          <h1 class="text-sm font-bold text-gray-900 dark:text-white">روتین ۳ مرحله‌ای همکاری</h1>
+          <span class="w-9"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="max-w-md mx-auto px-3 sm:px-4 py-4 space-y-5">
+
+      <!-- Progress bar -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-gray-600 dark:text-gray-300 mb-3">
+          <span>بازاریابی</span>
+          <span>بازدید</span>
+          <span>معامله</span>
+        </div>
+        <div class="relative h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div class="absolute inset-0 grid grid-cols-3">
+            <div class="bg-gradient-to-r from-emerald-400 to-emerald-500"></div>
+            <div class="bg-gradient-to-r from-emerald-500 to-amber-400"></div>
+            <div class="bg-gradient-to-r from-amber-400 to-indigo-500"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <section class="space-y-3">
+        <article class="bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-800/70 rounded-2xl p-4 shadow-[0_12px_30px_-20px_rgba(16,185,129,0.55)]">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 grid place-items-center text-sm font-bold">۱</div>
+            <div class="space-y-1">
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">بازاریابی</h2>
+              <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                فایل را کامل و دقیق بخوان و شفاف به مشتری معرفی کن تا مشتری واقعی جذب شود.
+                این مرحله شامل مطالعه کامل فایل، انتشار آگهی و پاسخ‌گویی سریع به مشتریان است.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="bg-white dark:bg-gray-900 border border-amber-100 dark:border-amber-800/70 rounded-2xl p-4 shadow-[0_12px_30px_-20px_rgba(251,191,36,0.55)]">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300 grid place-items-center text-sm font-bold">۲</div>
+            <div class="space-y-1">
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">بازدید</h2>
+              <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                با ناظر معامله هماهنگ کن و بازدید را حرفه‌ای مدیریت کن تا مشتری به تصمیم نزدیک شود.
+                هدف فقط دیدن ملک نیست؛ سنجش علاقه و ثبت نتیجه بازدید است.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-indigo-800/70 rounded-2xl p-4 shadow-[0_12px_30px_-20px_rgba(99,102,241,0.55)]">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 grid place-items-center text-sm font-bold">۳</div>
+            <div class="space-y-1">
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">معامله 💰</h2>
+              <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                بعد از بازدید، با پیگیری مؤثر و مذاکره اصولی معامله را به قرارداد تبدیل کن.
+                نتیجه این مرحله بستن قرارداد و دریافت پورسانت است.
+              </p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- CTA -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 text-center shadow-sm">
+        <div class="text-sm font-semibold text-gray-900 dark:text-white mb-2">آماده‌ای اجرا کنی؟</div>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">از روتین ۳ مرحله‌ای شروع کن و نتیجه را در معاملات ببین.</p>
+        <a href="/express/partner/login" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition">
+          <i class="fa-solid fa-play text-xs"></i>
+          شروع همکاری
+        </a>
+      </div>
+
+      <!-- Spacer for bottom nav -->
+      <div class="h-16 safe-area-bottom"></div>
+    </main>
+
+    {% set bottom_nav_active = 'routine' %}
+    {% include 'partials/landing_bottom_nav.html' %}
+  </div>
+</body>
+</html>
+
