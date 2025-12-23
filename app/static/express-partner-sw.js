@@ -23,7 +23,6 @@ async function trimCache(name, maxEntries) {
 }
 
 // URLs برای precache در نصب (مختص Express Partner)
-const OFFLINE_URL = '/express/partner/offline';
 const PRECACHE_URLS = [
   '/express/partner/login',
   '/express/partner/dashboard',
@@ -32,7 +31,6 @@ const PRECACHE_URLS = [
   '/express/partner/notes',
   '/express/partner/apply',
   '/express/partner/thanks',
-  '/express/partner/offline',
   // Manifest
   '/express/partner/manifest.webmanifest',
   // Icons (استفاده از آیکون‌های مشترک)
@@ -129,10 +127,7 @@ self.addEventListener('fetch', (event) => {
             try {
               return await fetch(request);
             } catch (_) {
-              // Fallback: offline response
-              const pc = await caches.open(PRECACHE);
-              const off = await pc.match(OFFLINE_URL);
-              return off || new Response(JSON.stringify({ error: 'Offline', message: 'شما آفلاین هستید' }), { 
+              return new Response(JSON.stringify({ error: 'Offline', message: 'شما آفلاین هستید' }), { 
                 status: 503, 
                 headers: { 'Content-Type': 'application/json' } 
               });
@@ -146,9 +141,7 @@ self.addEventListener('fetch', (event) => {
             try {
               return await fetch(request);
             } catch (_) {
-              const pc = await caches.open(PRECACHE);
-              const off = await pc.match(OFFLINE_URL);
-              return off || new Response('Offline', { status: 503 });
+              return new Response('Offline', { status: 503 });
             }
           })());
           return;
@@ -178,8 +171,8 @@ self.addEventListener('fetch', (event) => {
         // Fallback به dashboard shell
         const dashboardShell = await cache.match('/express/partner/dashboard');
         if (dashboardShell) return dashboardShell;
-        // آخرین fallback: offline page
-        return await cache.match(OFFLINE_URL) || new Response('Offline', { status: 503 });
+        // بدون صفحه آفلاین: خطای شبکه
+        return new Response('Offline', { status: 503 });
       }
     })());
     return;
