@@ -892,6 +892,13 @@ def training():
                          training_video_url=training_video_url)
 
 
+@express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')
+@require_partner_access()
+def routine():
+    """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
+    return render_template('express_partner/routine.html', hide_header=True)
+
+
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
 @require_partner_access()
 def mark_in_transaction(code: str):
