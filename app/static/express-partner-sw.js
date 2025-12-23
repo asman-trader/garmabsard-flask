@@ -4,7 +4,7 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.0-2025-01-15';
+const VERSION = 'v1.0.1-2025-12-23';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
