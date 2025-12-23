@@ -3,7 +3,7 @@
   Scope: '/'
 */
 
-const VERSION = 'v1.2.0-2025-11-03';
+const VERSION = 'v1.2.1-2025-12-23';
 const PRECACHE = `vinor-precache-${VERSION}`;
 const RUNTIME = `vinor-runtime-${VERSION}`;
 const API_CACHE = `vinor-api-${VERSION}`;
