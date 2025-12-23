@@ -20,7 +20,6 @@ async function trimCache(name, maxEntries) {
 }
 
 // URLs to precache at install
-const OFFLINE_URL = '/static/offline.html';
 const PRECACHE_URLS = [
   '/',
   '/start',
@@ -51,9 +50,8 @@ const PRECACHE_URLS = [
   '/lands/add',
   '/lands/add/details',
   '/lands/add/step3',
-  // manifests and offline fallback
+  // manifests
   '/manifest.webmanifest',
-  OFFLINE_URL,
   // Icons/sounds (best-effort if exist)
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
@@ -188,7 +186,7 @@ self.addEventListener('fetch', (event) => {
     } catch(_) {}
   }
 
-  // Navigation requests: App Shell network-first → offline fallback
+  // Navigation requests: App Shell network-first → cache fallback (بدون صفحه آفلاین)
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
@@ -206,7 +204,8 @@ self.addEventListener('fetch', (event) => {
         if (cached) return cached;
         const appShell = await cache.match('/app');
         if (appShell) return appShell;
-        return await cache.match(OFFLINE_URL);
+        // بدون صفحه آفلاین: اجازه می‌دهیم مرورگر خطای شبکه نمایش دهد
+        return new Response('Offline', { status: 503 });
       }
     })());
     return;
@@ -288,13 +287,6 @@ self.addEventListener('fetch', (event) => {
       } catch (_) {
         const cached = await cache.match(request);
         if (cached) return cached;
-        // As a last resort for same-origin HTML, show offline page
-        const url = new URL(request.url);
-        if (isSameOrigin(url.href) && (request.headers.get('accept') || '').includes('text/html')) {
-          const pc = await caches.open(PRECACHE);
-          const off = await pc.match(OFFLINE_URL);
-          if (off) return off;
-        }
         return new Response('Offline', { status: 503 });
       }
     })());

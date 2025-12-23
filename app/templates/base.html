@@ -120,7 +120,7 @@
         <span class="bg-green-600 hover:bg-green-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
           <i class="fas fa-seedling animate-pulse"></i>
         </span>
-        <span class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
+        <span id="brandTitle" class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
       </a>
       <div class="flex items-center gap-4">
         <div class="relative">
@@ -285,7 +285,18 @@
         const bar = document.getElementById('offlineBar');
         const txt = document.getElementById('offlineText');
         const btn = document.getElementById('offlineRefresh');
-        function show(on,msg){ if (!bar) return; if (msg && txt) txt.textContent = msg; bar.style.display = on ? '' : 'none'; }
+        const brand = document.getElementById('brandTitle');
+        const BRAND_ONLINE = 'وینور';
+        const BRAND_OFFLINE = 'اتصال برقرار نیست';
+        function show(on,msg){
+          if (!bar) return;
+          if (msg && txt) txt.textContent = msg;
+          bar.style.display = on ? '' : 'none';
+        }
+        function setBrand(isOnline){
+          if (!brand) return;
+          brand.textContent = isOnline ? BRAND_ONLINE : BRAND_OFFLINE;
+        }
         async function warmup(){
           try{
             const reg = await navigator.serviceWorker?.getRegistration('/');
@@ -297,16 +308,21 @@
         function update(){
           if (navigator.onLine){
             show(true,'آنلاین شدید؛ در حال بروزرسانی کش...');
+            setBrand(true);
             warmup();
             setTimeout(()=>{ try { location.reload(); } catch(_){ show(false); } }, 1200);
           } else {
             show(true,'شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.');
+            setBrand(false);
           }
         }
         window.addEventListener('online', update);
         window.addEventListener('offline', update);
         btn?.addEventListener('click', update);
-        if (!navigator.onLine) show(true,'شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.');
+        if (!navigator.onLine){
+          show(true,'شما آفلاین هستید. برخی محتوا از کش نمایش داده می‌شود.');
+          setBrand(false);
+        }
       })();
       document.getElementById("closeMenu")?.addEventListener("click", closeMenu);
       menuBackdrop?.addEventListener('click', (e)=>{ e.preventDefault(); closeMenu(); });
