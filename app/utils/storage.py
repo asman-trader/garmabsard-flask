@@ -234,3 +234,7 @@ def save_express_views(items, app=None): return _save(ensure_file('EXPRESS_VIEWS
 # Partner views: بازدیدهای صفحه همکاران
 def load_express_partner_views(app=None):    return _load(ensure_file('EXPRESS_PARTNER_VIEWS_FILE','express_partner_views.json',[],app))
 def save_express_partner_views(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_VIEWS_FILE','express_partner_views.json',[],app), items)
+
+# Express Partner: Routine tracking (days done per partner)
+def load_partner_routines(app=None):       return _load(ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app))
+def save_partner_routines(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app), items)

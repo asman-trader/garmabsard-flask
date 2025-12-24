@@ -48,7 +48,7 @@
         </label>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400">
-        این داده‌ها فقط روی دستگاه شما ذخیره می‌شود و برای آمار شخصی است.
+        تیک‌ها محلی‌اند؛ اما انجام امروز در سرور ذخیره می‌شود تا تقویم ماه کامل نمایش داده شود.
       </p>
       <div class="flex items-center justify-between gap-2 text-xs">
         <button id="routineReset" class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700">پاک‌سازی امروز</button>
@@ -57,9 +57,37 @@
     </div>
   </div>
 
-  <!-- Note about local stats -->
+  <!-- Monthly calendar -->
+  <div class="mt-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">تقویم انجام روتین (ماه جاری)</div>
+          <div id="routineMonthLabel" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="routineCompleteBtn" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+            ثبت انجام امروز
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-7 gap-1 text-[11px] sm:text-xs text-center text-gray-600 dark:text-gray-300">
+        <div class="py-1 font-semibold">ش</div>
+        <div class="py-1 font-semibold">ی</div>
+        <div class="py-1 font-semibold">د</div>
+        <div class="py-1 font-semibold">س</div>
+        <div class="py-1 font-semibold">چ</div>
+        <div class="py-1 font-semibold">پ</div>
+        <div class="py-1 font-semibold">ج</div>
+      </div>
+      <div id="routineCalendar" class="grid grid-cols-7 gap-1 sm:gap-1.5"></div>
+      <p id="routineStatus" class="text-xs text-gray-500 dark:text-gray-400"></p>
+    </div>
+  </div>
+
+  <!-- Note about stats -->
   <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-    برای ثبت آمار رسمی و گزارش‌گیری، بخش‌های داشبورد و بازدید/معامله را تکمیل کنید. این روتین صرفاً چک‌لیست شخصی است.
+    برای ثبت آمار رسمی و گزارش‌گیری، بخش‌های داشبورد و بازدید/معامله را تکمیل کنید. این روتین صرفاً چک‌لیست شخصی و تقویم حضور شماست.
   </div>
 
   {% set bottom_nav_active = 'routine' %}
@@ -76,7 +104,17 @@
     const progressBar = document.getElementById('routineProgressBar');
     const progressText = document.getElementById('routineProgressText');
     const resetBtn = document.getElementById('routineReset');
+    const completeBtn = document.getElementById('routineCompleteBtn');
+    const calendarEl = document.getElementById('routineCalendar');
+    const statusEl = document.getElementById('routineStatus');
+    const monthLabelEl = document.getElementById('routineMonthLabel');
     const storageKey = 'vinor_routine_steps_v1';
+    const csrfToken = "{{ csrf_token() }}";
+
+    const today = new Date();
+    const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    let monthDaysDone = [];
+    let autoMarkedToday = false;
 
     function loadState() {
       try {
@@ -98,6 +136,7 @@
       const percent = Math.round((done / total) * 100);
       if (progressBar) progressBar.style.width = percent + '%';
       if (progressText) progressText.textContent = `${done} / ${total}`;
+      maybeAutoMark(done, total);
     }
 
     function resetAll(){
@@ -106,8 +145,115 @@
       syncProgress();
     }
 
+    function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
+
+    function renderCalendar(daysList){
+      if (!calendarEl) return;
+      calendarEl.innerHTML = '';
+      const [y, m] = monthKey.split('-').map(Number);
+      const totalDays = daysInMonth(y, m);
+      const firstDay = new Date(y, m - 1, 1).getDay(); // 0=Sun
+      const weekStartsOnSaturday = true;
+
+      // Map JS day (0=Sun) to columns (start Saturday)
+      const mapDay = (d) => (d + 1) % 7; // Sun->1, Mon->2 ... Fri->0? Wait; but we want Sat index 0
+      const startOffset = (firstDay === 6) ? 0 : (firstDay + 1);
+
+      for (let i = 0; i < startOffset; i++) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'aspect-square rounded-xl';
+        calendarEl.appendChild(placeholder);
+      }
+
+      const doneSet = new Set(daysList || []);
+      for (let d = 1; d <= totalDays; d++) {
+        const dateKey = `${monthKey}-${String(d).padStart(2, '0')}`;
+        const isDone = doneSet.has(dateKey);
+        const isToday = d === today.getDate();
+        const div = document.createElement('div');
+        div.className = [
+          'aspect-square rounded-xl border text-center flex items-center justify-center text-xs sm:text-sm transition',
+          isDone ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-semibold' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200',
+          isToday ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''
+        ].join(' ');
+        div.textContent = d;
+        calendarEl.appendChild(div);
+      }
+
+      if (monthLabelEl) {
+        const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long' });
+        monthLabelEl.textContent = formatter.format(today);
+      }
+    }
+
+    function setStatus(msg, tone = 'muted') {
+      if (!statusEl) return;
+      const toneClass = tone === 'success'
+        ? 'text-emerald-600 dark:text-emerald-300'
+        : tone === 'error'
+          ? 'text-rose-600 dark:text-rose-300'
+          : 'text-gray-500 dark:text-gray-400';
+      statusEl.className = `text-xs ${toneClass}`;
+      statusEl.textContent = msg || '';
+    }
+
+    async function fetchMonthDays(){
+      try {
+        const res = await fetch(`/express/partner/routine/data?month=${monthKey}`, { credentials: 'same-origin' });
+        const data = await res.json();
+        if (data?.success) {
+          monthDaysDone = data.days || [];
+          autoMarkedToday = monthDaysDone.includes(today.toISOString().slice(0,10));
+          renderCalendar(monthDaysDone);
+          setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
+        } else {
+          renderCalendar([]);
+          setStatus('عدم موفقیت در دریافت داده تقویم.', 'error');
+        }
+      } catch (err) {
+        renderCalendar([]);
+        setStatus('خطا در ارتباط با سرور برای دریافت تقویم.', 'error');
+      }
+    }
+
+    async function completeToday(manual = false){
+      try {
+        const res = await fetch('/express/partner/routine/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data?.success) {
+          monthDaysDone = data.days || monthDaysDone;
+          autoMarkedToday = true;
+          renderCalendar(monthDaysDone);
+          setStatus(manual ? 'امروز ثبت شد.' : 'اتمام همه مراحل؛ امروز در تقویم ثبت شد.', 'success');
+        } else {
+          setStatus('ثبت انجام امروز ناموفق بود.', 'error');
+        }
+      } catch (err) {
+        setStatus('خطا در ارتباط با سرور برای ثبت انجام.', 'error');
+      }
+    }
+
+    function maybeAutoMark(done, total){
+      if (done === total && !autoMarkedToday) {
+        autoMarkedToday = true;
+        completeToday(false);
+      }
+      if (done < total && !monthDaysDone.includes(today.toISOString().slice(0,10))) {
+        autoMarkedToday = false;
+      }
+    }
+
     loadState();
     syncProgress();
+    fetchMonthDays();
 
     steps.forEach(cb => {
       cb.addEventListener('change', () => {
@@ -119,6 +265,11 @@
     resetBtn?.addEventListener('click', (e) => {
       e.preventDefault();
       resetAll();
+    });
+
+    completeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      completeToday(true);
     });
   });
 </script>

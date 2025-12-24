@@ -22,6 +22,7 @@ from ..utils.storage import (
     load_sms_history, save_sms_history,
     load_settings,
     load_express_partner_views, save_express_partner_views,
+    load_partner_routines, save_partner_routines,
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
@@ -897,6 +898,51 @@ def training():
 def routine():
     """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
     return render_template('express_partner/routine.html', hide_header=True)
+
+
+@express_partner_bp.route('/routine/data', methods=['GET'], endpoint='routine_data')
+@require_partner_access()
+def routine_data():
+    """
+    برگرداندن روزهای انجام‌شده روتین در ماه خواسته‌شده برای کاربر جاری.
+    پارامتر month به شکل YYYY-MM. اگر خالی باشد، ماه جاری.
+    """
+    phone = (session.get("user_phone") or "").strip()
+    month = (request.args.get('month') or '').strip()
+    if not month or len(month) != 7:
+        month = datetime.now().strftime('%Y-%m')
+
+    records = load_partner_routines()
+    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+    days = []
+    if rec and isinstance(rec.get('days'), list):
+        days = [d for d in rec.get('days') if isinstance(d, str) and d.startswith(month + '-')]
+
+    return jsonify({"success": True, "month": month, "days": days})
+
+
+@express_partner_bp.route('/routine/complete', methods=['POST'], endpoint='routine_complete')
+@require_partner_access()
+def routine_complete():
+    """
+    ثبت انجام روتین برای امروز (با ذخیره در فایل سمت سرور).
+    """
+    phone = (session.get("user_phone") or "").strip()
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    records = load_partner_routines()
+    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+    if not rec:
+        rec = {"phone": phone, "days": [], "updated_at": None}
+        records.append(rec)
+
+    if today not in rec.get('days', []):
+        rec.setdefault('days', []).append(today)
+        rec['days'] = sorted(set(rec['days']))
+    rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+
+    save_partner_routines(records)
+    return jsonify({"success": True, "date": today, "days": rec.get('days', [])})
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
