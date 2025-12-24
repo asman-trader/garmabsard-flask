@@ -190,7 +190,23 @@ def track_online_partner():
                         ip = request.remote_addr or 'نامشخص'
                         admin_routes_module._update_online_partner(phone, name, ip)
                 except Exception:
-                    pass  # اگر admin routes در دسترس نبود، خطا نده
+                    pass  # در صورت خطا در به‌روزرسانی آنلاین، ادامه بده
+
+                # ثبت خودکار روتین امروز (در صورت آنلاین شدن)
+                try:
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    records = load_partner_routines()
+                    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+                    if not rec:
+                        rec = {"phone": phone, "days": [], "updated_at": None}
+                        records.append(rec)
+                    if today not in rec.get('days', []):
+                        rec.setdefault('days', []).append(today)
+                        rec['days'] = sorted(set(rec['days']))
+                        rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+                        save_partner_routines(records)
+                except Exception:
+                    pass  # اگر ثبت روتین خطا داد، سکوت کن
         except Exception:
             pass  # در صورت خطا، ادامه بده
 

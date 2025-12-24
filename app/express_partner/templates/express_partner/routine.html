@@ -65,11 +65,6 @@
           <div class="text-sm font-semibold text-gray-900 dark:text-white">تقویم انجام روتین (ماه جاری)</div>
           <div id="routineMonthLabel" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="routineCompleteBtn" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
-            ثبت انجام امروز
-          </button>
-        </div>
       </div>
       <div class="grid grid-cols-7 gap-1 text-[11px] sm:text-xs text-center text-gray-600 dark:text-gray-300">
         <div class="py-1 font-semibold">ش</div>
@@ -104,7 +99,6 @@
     const progressBar = document.getElementById('routineProgressBar');
     const progressText = document.getElementById('routineProgressText');
     const resetBtn = document.getElementById('routineReset');
-    const completeBtn = document.getElementById('routineCompleteBtn');
     const calendarEl = document.getElementById('routineCalendar');
     const statusEl = document.getElementById('routineStatus');
     const monthLabelEl = document.getElementById('routineMonthLabel');
@@ -216,35 +210,11 @@
       }
     }
 
-    async function completeToday(manual = false){
-      try {
-        const res = await fetch('/express/partner/routine/complete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({})
-        });
-        const data = await res.json();
-        if (data?.success) {
-          monthDaysDone = data.days || monthDaysDone;
-          autoMarkedToday = true;
-          renderCalendar(monthDaysDone);
-          setStatus(manual ? 'امروز ثبت شد.' : 'اتمام همه مراحل؛ امروز در تقویم ثبت شد.', 'success');
-        } else {
-          setStatus('ثبت انجام امروز ناموفق بود.', 'error');
-        }
-      } catch (err) {
-        setStatus('خطا در ارتباط با سرور برای ثبت انجام.', 'error');
-      }
-    }
-
     function maybeAutoMark(done, total){
       if (done === total && !autoMarkedToday) {
         autoMarkedToday = true;
-        completeToday(false);
+        // فقط وضعیت محلی؛ ثبت سمت سرور اکنون در before_request انجام می‌شود.
+        setStatus('امروز ثبت شد (خودکار).', 'success');
       }
       if (done < total && !monthDaysDone.includes(today.toISOString().slice(0,10))) {
         autoMarkedToday = false;
@@ -267,10 +237,6 @@
       resetAll();
     });
 
-    completeBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      completeToday(true);
-    });
   });
 </script>
 {% endblock %}
