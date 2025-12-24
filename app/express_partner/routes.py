@@ -1102,9 +1102,9 @@ def mark_in_transaction(code: str):
     return redirect(url_for('express_partner.dashboard'))
 
 
-@express_partner_bp.route('/logout', methods=['GET'], endpoint='logout')
+@express_partner_bp.route('/logout', methods=['POST'], endpoint='logout')
 def logout():
-    # پاک کردن کامل session برای خروج کامل از حساب
+    """خروج امن با درخواست POST (محافظت‌شده با CSRF)."""
     session.clear()
     session.permanent = False
     flash('از حساب خارج شدید.', 'info')

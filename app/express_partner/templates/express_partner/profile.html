@@ -27,7 +27,14 @@
         </div>
         <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
       </div>
-      <a href="{{ url_for('express_partner.logout') }}" class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">خروج</a>
+      <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="button"
+                onclick="showLogoutConfirm('logoutProfileForm')"
+                class="px-3 py-1.5 rounded text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          خروج
+        </button>
+      </form>
     </div>
   </section>
 
@@ -131,6 +138,67 @@
   {% include 'express_partner/partials/bottom_nav.html' %}
 
 </div>
+
+<!-- Logout Confirm Modal -->
+<div id="logoutConfirmModal"
+     class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideLogoutConfirm()"></div>
+  <div class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden">
+    <div class="p-4 sm:p-5">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 grid place-items-center">
+          <i class="fas fa-sign-out-alt text-lg"></i>
+        </div>
+        <div>
+          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">خروج از حساب</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">آیا از خروج اطمینان دارید؟</p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button type="button"
+                class="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                onclick="hideLogoutConfirm()">
+          انصراف
+        </button>
+        <button type="button"
+                class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition"
+                onclick="confirmLogout()">
+          خروج
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const modal = document.getElementById('logoutConfirmModal');
+    function disableScroll() { document.documentElement.classList.add('overflow-hidden'); document.body.classList.add('overflow-hidden'); }
+    function enableScroll() { document.documentElement.classList.remove('overflow-hidden'); document.body.classList.remove('overflow-hidden'); }
+    window.showLogoutConfirm = function(formId) {
+      if (!modal) return;
+      modal.dataset.targetForm = formId || '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      disableScroll();
+    };
+    window.hideLogoutConfirm = function() {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      enableScroll();
+    };
+    window.confirmLogout = function() {
+      if (!modal) return;
+      const formId = modal.dataset.targetForm;
+      const form = formId ? document.getElementById(formId) : null;
+      if (form) form.submit();
+      hideLogoutConfirm();
+    };
+  })();
+</script>
+
 {% endblock %}
 
 
