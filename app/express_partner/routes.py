@@ -221,13 +221,16 @@ def track_online_partner():
                     records = load_partner_routines()
                     rec = next((r for r in records if str(r.get('phone')) == phone), None)
                     if not rec:
-                        rec = {"phone": phone, "days": [], "updated_at": None}
+                        rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
                         records.append(rec)
-                    if today not in rec.get('days', []):
-                        rec.setdefault('days', []).append(today)
+                    rec.setdefault('days', [])
+                    rec.setdefault('steps', {})
+                    if today not in rec['days']:
+                        rec['days'].append(today)
                         rec['days'] = sorted(set(rec['days']))
-                        rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
-                        save_partner_routines(records)
+                    rec['steps'].setdefault(today, 0)
+                    rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+                    save_partner_routines(records)
                     session['routine_marked_date'] = today
                 except Exception:
                     pass  # اگر ثبت روتین خطا داد، سکوت کن
@@ -955,10 +958,13 @@ def routine_data():
     records = load_partner_routines()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     days = []
+    steps = {}
     if rec and isinstance(rec.get('days'), list):
         days = [d for d in rec.get('days') if isinstance(d, str) and d.startswith(month + '-')]
+    if rec and isinstance(rec.get('steps'), dict):
+        steps = {k: int(v) for k, v in rec.get('steps', {}).items() if isinstance(k, str) and k.startswith(month + '-') and isinstance(v, (int, float))}
 
-    return jsonify({"success": True, "month": month, "days": days})
+    return jsonify({"success": True, "month": month, "days": days, "steps": steps})
 
 
 @express_partner_bp.route('/routine/complete', methods=['POST'], endpoint='routine_complete')
@@ -973,16 +979,48 @@ def routine_complete():
     records = load_partner_routines()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     if not rec:
-        rec = {"phone": phone, "days": [], "updated_at": None}
+        rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
         records.append(rec)
 
     if today not in rec.get('days', []):
         rec.setdefault('days', []).append(today)
         rec['days'] = sorted(set(rec['days']))
+    rec.setdefault('steps', {})
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
 
     save_partner_routines(records)
-    return jsonify({"success": True, "date": today, "days": rec.get('days', [])})
+    return jsonify({"success": True, "date": today, "days": rec.get('days', []), "steps": rec.get('steps', {})})
+
+
+@express_partner_bp.route('/routine/steps', methods=['POST'], endpoint='routine_steps')
+@require_partner_access()
+def routine_steps():
+    """ثبت تعداد مراحل تیک‌خورده امروز برای نمایش در تقویم."""
+    phone = (session.get("user_phone") or "").strip()
+    payload = request.get_json(silent=True) or {}
+    count = int(payload.get('count') or 0)
+    if count < 0:
+        count = 0
+    if count > 10:
+        count = 10  # سقف معقول
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    records = load_partner_routines()
+    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+    if not rec:
+        rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
+        records.append(rec)
+
+    rec.setdefault('days', [])
+    rec.setdefault('steps', {})
+    if today not in rec['days']:
+        rec['days'].append(today)
+        rec['days'] = sorted(set(rec['days']))
+    rec['steps'][today] = count
+    rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+
+    save_partner_routines(records)
+    return jsonify({"success": True, "date": today, "count": count})
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')

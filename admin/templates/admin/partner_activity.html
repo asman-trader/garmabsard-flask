@@ -52,6 +52,17 @@
         </div>
       </div>
     </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 grid place-items-center">
+          <i class="fa-solid fa-list-check text-emerald-600 dark:text-emerald-300"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400">مجموع تیک‌های روتین (ماه)</p>
+          <p class="text-xl font-semibold text-gray-900 dark:text-white">{{ routines_step_total or 0 }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- List -->
@@ -102,8 +113,16 @@
             <div class="flex flex-wrap gap-1.5">
               {% if it.routine_days and it.routine_days|length > 0 %}
                 {% for d in it.routine_days %}
-                  <span class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200 text-[11px] font-semibold">
+                  {% set dots = it.routine_steps.get(d) if it.routine_steps else 0 %}
+                  <span class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200 text-[11px] font-semibold inline-flex items-center gap-1">
                     {{ d.split('-')[-1] }}
+                    {% if dots %}
+                      <span class="flex items-center gap-[3px]">
+                        {% for i in range(0, (dots if dots < 4 else 3)) %}
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        {% endfor %}
+                      </span>
+                    {% endif %}
                   </span>
                 {% endfor %}
               {% else %}

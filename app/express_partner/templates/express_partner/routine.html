@@ -108,6 +108,7 @@
     const today = new Date();
     const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     let monthDaysDone = [];
+    let monthSteps = {};
     let autoMarkedToday = false;
 
     function loadState() {
@@ -164,13 +165,27 @@
         const dateKey = `${monthKey}-${String(d).padStart(2, '0')}`;
         const isDone = doneSet.has(dateKey);
         const isToday = d === today.getDate();
+        const stepCount = monthSteps[dateKey] || 0;
         const div = document.createElement('div');
         div.className = [
-          'aspect-square rounded-xl border text-center flex items-center justify-center text-xs sm:text-sm transition',
+          'aspect-square rounded-xl border text-center flex flex-col items-center justify-center text-xs sm:text-sm transition',
           isDone ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-semibold' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200',
           isToday ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''
         ].join(' ');
-        div.textContent = d;
+        const dayLabel = document.createElement('div');
+        dayLabel.textContent = d;
+        div.appendChild(dayLabel);
+        if (stepCount > 0) {
+          const dots = document.createElement('div');
+          dots.className = 'flex items-center justify-center gap-[3px] mt-1';
+          const maxDots = Math.min(stepCount, 3);
+          for (let i = 0; i < maxDots; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-300';
+            dots.appendChild(dot);
+          }
+          div.appendChild(dots);
+        }
         calendarEl.appendChild(div);
       }
 
@@ -197,9 +212,17 @@
         const data = await res.json();
         if (data?.success) {
           monthDaysDone = data.days || [];
+          monthSteps = data.steps || {};
           autoMarkedToday = monthDaysDone.includes(today.toISOString().slice(0,10));
           renderCalendar(monthDaysDone);
           setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
+          // اگر امروز ثبت شده، تیک‌های کارت پیشرفت را هم خودکار بزن
+          if (autoMarkedToday) {
+            steps.forEach(cb => cb.checked = true);
+            saveState();
+            syncProgress();
+            setStatus('امروز قبلاً ثبت شده و تیک‌ها همگام شد.', 'success');
+          }
         } else {
           renderCalendar([]);
           setStatus('عدم موفقیت در دریافت داده تقویم.', 'error');
@@ -210,15 +233,36 @@
       }
     }
 
+    async function sendStepCount(count){
+      try{
+        await fetch('/express/partner/routine/steps', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ count })
+        });
+      }catch(_){}
+    }
+
+    let stepDebounce;
     function maybeAutoMark(done, total){
       if (done === total && !autoMarkedToday) {
         autoMarkedToday = true;
-        // فقط وضعیت محلی؛ ثبت سمت سرور اکنون در before_request انجام می‌شود.
         setStatus('امروز ثبت شد (خودکار).', 'success');
       }
       if (done < total && !monthDaysDone.includes(today.toISOString().slice(0,10))) {
         autoMarkedToday = false;
       }
+      // همواره تعداد تیک‌ها را به سرور بفرست تا روی تقویم نقطه بگیرد
+      clearTimeout(stepDebounce);
+      stepDebounce = setTimeout(() => {
+        monthSteps[today.toISOString().slice(0,10)] = done;
+        renderCalendar(monthDaysDone);
+        sendStepCount(done);
+      }, 300);
     }
 
     loadState();

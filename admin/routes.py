@@ -852,10 +852,14 @@ def partners_activity():
     except Exception:
         routines = []
 
-    routines_map = {
-        str(r.get('phone')): r.get('days', [])
-        for r in routines if isinstance(r, dict)
-    }
+    routines_map = {}
+    for r in routines:
+        if not isinstance(r, dict):
+            continue
+        phone_key = str(r.get('phone'))
+        days = r.get('days') or []
+        steps = r.get('steps') or {}
+        routines_map[phone_key] = {"days": days, "steps": steps}
 
     online_list = _get_online_partners_list()
     online_map = {str(o.get('phone')): o for o in online_list}
@@ -867,7 +871,11 @@ def partners_activity():
         phone = str(p.get('phone') or '')
         name = p.get('name') or (phone[-4:] if phone else 'همکار')
         city = p.get('city') or ''
-        days = [d for d in routines_map.get(phone, []) if isinstance(d, str) and d.startswith(current_month + '-')]
+        rdata = routines_map.get(phone, {}) or {}
+        days_all = rdata.get('days') or []
+        steps_all = rdata.get('steps') or {}
+        days = [d for d in days_all if isinstance(d, str) and d.startswith(current_month + '-')]
+        steps = {k: int(v) for k, v in steps_all.items() if isinstance(k, str) and k.startswith(current_month + '-') and isinstance(v, (int, float))}
         online = online_map.get(phone)
         items.append({
             "phone": phone,
@@ -875,6 +883,8 @@ def partners_activity():
             "city": city,
             "routine_days": days,
             "routine_count": len(days),
+            "routine_steps": steps,
+            "routine_step_total": sum(steps.values()) if steps else 0,
             "last_activity": online.get('last_activity') if online else '',
             "online": bool(online),
             "ip": online.get('ip') if online else '',
@@ -884,22 +894,29 @@ def partners_activity():
     for phone, online in online_map.items():
         if any(it["phone"] == phone for it in items):
             continue
-        days = [d for d in routines_map.get(phone, []) if isinstance(d, str) and d.startswith(current_month + '-')]
+        rdata = routines_map.get(phone, {}) or {}
+        days_all = rdata.get('days') or []
+        steps_all = rdata.get('steps') or {}
+        days = [d for d in days_all if isinstance(d, str) and d.startswith(current_month + '-')]
+        steps = {k: int(v) for k, v in steps_all.items() if isinstance(k, str) and k.startswith(current_month + '-') and isinstance(v, (int, float))}
         items.append({
             "phone": phone,
             "name": online.get('name') or (phone[-4:] if phone else 'همکار'),
             "city": '',
             "routine_days": days,
             "routine_count": len(days),
+            "routine_steps": steps,
+            "routine_step_total": sum(steps.values()) if steps else 0,
             "last_activity": online.get('last_activity') or '',
             "online": True,
             "ip": online.get('ip') or '',
         })
 
-    # مرتب‌سازی: آنلاین‌ها اول، سپس بر اساس تعداد روتین، بعد نام
+    # مرتب‌سازی: آنلاین‌ها اول، سپس بر اساس تعداد روتین (و جمع تیک‌ها)، بعد نام
     items.sort(key=lambda x: (
         0 if x.get('online') else 1,
         -int(x.get('routine_count') or 0),
+        -int(x.get('routine_step_total') or 0),
         x.get('name') or ''
     ))
 
@@ -909,7 +926,8 @@ def partners_activity():
         month_label=current_month,
         total=len(items),
         online_count=len(online_map),
-        routines_count=sum(it.get('routine_count', 0) for it in items)
+        routines_count=sum(it.get('routine_count', 0) for it in items),
+        routines_step_total=sum(it.get('routine_step_total', 0) for it in items)
     )
 
 @admin_bp.route('/users')
