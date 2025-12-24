@@ -234,7 +234,7 @@
 
     async function sendStepCount(count){
       try{
-        await fetch('/express/partner/routine/steps', {
+        const res = await fetch('/express/partner/routine/steps', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -243,10 +243,14 @@
           credentials: 'same-origin',
           body: JSON.stringify({ count })
         });
+        const data = await res.json().catch(()=>null);
+        if (data?.success && data.date) {
+          monthSteps[data.date] = count;
+          renderCalendar(monthDaysDone);
+        }
       }catch(_){}
     }
 
-    let stepDebounce;
     function maybeAutoMark(done, total){
       if (done === total && !autoMarkedToday) {
         autoMarkedToday = true;
@@ -255,13 +259,11 @@
       if (done < total && !monthDaysDone.includes(today.toISOString().slice(0,10))) {
         autoMarkedToday = false;
       }
-      // همواره تعداد تیک‌ها را به سرور بفرست تا روی تقویم نقطه بگیرد
-      clearTimeout(stepDebounce);
-      stepDebounce = setTimeout(() => {
-        monthSteps[today.toISOString().slice(0,10)] = done;
-        renderCalendar(monthDaysDone);
-        sendStepCount(done);
-      }, 300);
+      // همواره تعداد تیک‌ها را به سرور بفرست تا روی تقویم نقطه بگیرد (بلادرنگ)
+      const todayKey = today.toISOString().slice(0,10);
+      monthSteps[todayKey] = done;
+      renderCalendar(monthDaysDone);
+      sendStepCount(done);
     }
 
     loadState();
