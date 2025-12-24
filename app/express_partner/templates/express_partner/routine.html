@@ -245,8 +245,10 @@
         });
         const data = await res.json().catch(()=>null);
         if (data?.success && data.date) {
-          monthSteps[data.date] = count;
+          monthSteps = data.steps || monthSteps;
+          monthDaysDone = Array.isArray(data.days) ? data.days : monthDaysDone;
           renderCalendar(monthDaysDone);
+          setStatus('پیشرفت ثبت شد.', 'success');
         }
       }catch(_){}
     }

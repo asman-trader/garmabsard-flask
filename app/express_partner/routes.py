@@ -1018,9 +1018,10 @@ def routine_steps():
         rec['days'] = sorted(set(rec['days']))
     rec['steps'][today] = count
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+    session['routine_marked_date'] = today  # ثبت شده برای امروز
 
     save_partner_routines(records)
-    return jsonify({"success": True, "date": today, "count": count})
+    return jsonify({"success": True, "date": today, "count": count, "days": rec.get('days', []), "steps": rec.get('steps', {})})
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
