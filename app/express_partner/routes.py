@@ -47,6 +47,25 @@ def _normalize_phone(phone: str) -> str:
     return p[:11]
 
 
+def _mark_routine_today(phone: str) -> bool:
+    """ثبت روز جاری برای روتین همکار (بازگشت True در صورت تغییر)."""
+    if not phone:
+        return False
+    today = datetime.now().strftime('%Y-%m-%d')
+    records = load_partner_routines()
+    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+    if not rec:
+        rec = {"phone": phone, "days": [], "updated_at": None}
+        records.append(rec)
+    if today in rec.get('days', []):
+        return False
+    rec.setdefault('days', []).append(today)
+    rec['days'] = sorted(set(rec['days']))
+    rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+    save_partner_routines(records)
+    return True
+
+
 def _auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> None:
     """رفع خودکار معاملات بعد از ۵ روز بدون تأیید پشتیبان"""
     from datetime import datetime, timedelta
