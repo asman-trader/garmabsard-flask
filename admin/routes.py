@@ -69,6 +69,7 @@ from app.utils.storage import (
     load_landing_views,
     load_express_views,
     load_express_partner_views,
+    load_partner_routines,
 )
 from app.services.notifications import add_notification
 
@@ -756,6 +757,21 @@ def dashboard():
     
     # شمارش همکاران آنلاین
     online_partners_count = _get_online_partners_count()
+
+    # جمع روزهای روتین همکاران در ماه جاری
+    try:
+        routines = load_partner_routines() or []
+        current_month = datetime.now().strftime('%Y-%m')
+        routines_count_month = sum(
+            1
+            for r in routines
+            if isinstance(r, dict)
+            for d in (r.get('days') or [])
+            if isinstance(d, str) and d.startswith(current_month + '-')
+        )
+    except Exception:
+        routines = []
+        routines_count_month = 0
     
     # آمار بازدید لندینگ
     landing_views_count = 0
@@ -794,7 +810,8 @@ def dashboard():
         online_partners_count=online_partners_count,
         landing_views_count=landing_views_count,
         landing_views_today=landing_views_today,
-        landing_views_7d=landing_views_7d
+        landing_views_7d=landing_views_7d,
+        routines_count_month=routines_count_month
     )
 
 @admin_bp.route('/online-users', endpoint='online_users')
@@ -818,6 +835,81 @@ def online_partners_page():
         'admin/online_partners.html',
         online_partners=online_partners,
         online_partners_count=len(online_partners)
+    )
+
+
+@admin_bp.route('/partners/activity', methods=['GET'], endpoint='partners_activity')
+@login_required
+def partners_activity():
+    """گزارش فعالیت همکاران: وضعیت آنلاین + روزهای روتین ماه جاری."""
+    try:
+        partners = load_express_partners() or []
+    except Exception:
+        partners = []
+
+    try:
+        routines = load_partner_routines() or []
+    except Exception:
+        routines = []
+
+    routines_map = {
+        str(r.get('phone')): r.get('days', [])
+        for r in routines if isinstance(r, dict)
+    }
+
+    online_list = _get_online_partners_list()
+    online_map = {str(o.get('phone')): o for o in online_list}
+
+    current_month = datetime.now().strftime('%Y-%m')
+    items = []
+
+    for p in partners:
+        phone = str(p.get('phone') or '')
+        name = p.get('name') or (phone[-4:] if phone else 'همکار')
+        city = p.get('city') or ''
+        days = [d for d in routines_map.get(phone, []) if isinstance(d, str) and d.startswith(current_month + '-')]
+        online = online_map.get(phone)
+        items.append({
+            "phone": phone,
+            "name": name,
+            "city": city,
+            "routine_days": days,
+            "routine_count": len(days),
+            "last_activity": online.get('last_activity') if online else '',
+            "online": bool(online),
+            "ip": online.get('ip') if online else '',
+        })
+
+    # همکارانی که در لیست ثبت نشده‌اند ولی آنلاین هستند را هم اضافه کن
+    for phone, online in online_map.items():
+        if any(it["phone"] == phone for it in items):
+            continue
+        days = [d for d in routines_map.get(phone, []) if isinstance(d, str) and d.startswith(current_month + '-')]
+        items.append({
+            "phone": phone,
+            "name": online.get('name') or (phone[-4:] if phone else 'همکار'),
+            "city": '',
+            "routine_days": days,
+            "routine_count": len(days),
+            "last_activity": online.get('last_activity') or '',
+            "online": True,
+            "ip": online.get('ip') or '',
+        })
+
+    # مرتب‌سازی: آنلاین‌ها اول، سپس بر اساس تعداد روتین، بعد نام
+    items.sort(key=lambda x: (
+        0 if x.get('online') else 1,
+        -int(x.get('routine_count') or 0),
+        x.get('name') or ''
+    ))
+
+    return render_template(
+        'admin/partner_activity.html',
+        items=items,
+        month_label=current_month,
+        total=len(items),
+        online_count=len(online_map),
+        routines_count=sum(it.get('routine_count', 0) for it in items)
     )
 
 @admin_bp.route('/users')
