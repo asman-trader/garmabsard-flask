@@ -211,9 +211,13 @@ def track_online_partner():
                 except Exception:
                     pass  # در صورت خطا در به‌روزرسانی آنلاین، ادامه بده
 
-                # ثبت خودکار روتین امروز (در صورت آنلاین شدن)
+                # ثبت خودکار روتین امروز (در صورت آنلاین شدن) - یک‌بار در روز
                 try:
                     today = datetime.now().strftime('%Y-%m-%d')
+                    last_mark = session.get('routine_marked_date')
+                    if last_mark == today:
+                        raise Exception("already_marked_today")
+
                     records = load_partner_routines()
                     rec = next((r for r in records if str(r.get('phone')) == phone), None)
                     if not rec:
@@ -224,6 +228,7 @@ def track_online_partner():
                         rec['days'] = sorted(set(rec['days']))
                         rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
                         save_partner_routines(records)
+                    session['routine_marked_date'] = today
                 except Exception:
                     pass  # اگر ثبت روتین خطا داد، سکوت کن
         except Exception:
