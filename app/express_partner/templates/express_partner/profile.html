@@ -26,6 +26,7 @@
           {{ me_name or 'همکار وینور' }}
         </div>
         <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
+        <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-500">نقش: همکار</div>
       </div>
       <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
