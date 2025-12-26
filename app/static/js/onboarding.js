@@ -13,7 +13,19 @@ class OnboardingTour {
     this.tourData = [];
   }
 
+  // Avoid showing the tour on authentication pages (login/OTP)
+  isAuthPage() {
+    const path = window.location.pathname || '';
+    return (
+      path.includes('/login') ||
+      path.includes('/verify') ||
+      path.includes('/auth/')
+    );
+  }
+
   init() {
+    if (this.isAuthPage()) return;
+
     // بررسی اینکه آیا تور از sessionStorage باید ادامه یابد
     const tourStep = sessionStorage.getItem('vinor_tour_step');
     const tourData = sessionStorage.getItem('vinor_tour_data');
