@@ -144,7 +144,10 @@
         {% set _st = (land._assignment_status|default('active')) %}
         
         <!-- Image/Video Section - دیوار استایل -->
-        <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+        <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden" data-img-wrap>
+          <div class="card-img-loading absolute inset-0 z-10 flex items-center justify-center bg-black/10 dark:bg-black/30 transition-opacity">
+            <div class="w-8 h-8 rounded-full border-2 border-white/50 border-t-transparent animate-spin"></div>
+          </div>
           {% set video = land.video %}
           {% if video %}
             {% if "://" in (video|string) %}
@@ -187,7 +190,7 @@
             {% else %}
               {% set img_src = img %}
             {% endif %}
-            <img src="{{ img_src }}" alt="{{ land.title }}" class="w-full h-full object-cover">
+            <img src="{{ img_src }}" alt="{{ land.title }}" loading="lazy" class="w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
           {% else %}
             <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">
               <i class="fas fa-image text-3xl"></i>
@@ -315,6 +318,43 @@
     });
   });
   
+  // Image/video loading for cards (show loader only while loading)
+  (function(){
+    document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
+      const img = wrap.querySelector('[data-card-img]');
+      const vid = wrap.querySelector('video');
+      const loader = wrap.querySelector('.card-img-loading');
+      function hideLoader(){
+        if (loader){
+          loader.classList.add('opacity-0','pointer-events-none');
+          setTimeout(()=>loader.remove(),250);
+        }
+      }
+      function showMedia(el){
+        if (el) el.classList.remove('opacity-0');
+        hideLoader();
+      }
+
+      if (img){
+        if (img.complete && img.naturalWidth > 0) showMedia(img);
+        else {
+          img.addEventListener('load', ()=>showMedia(img), { once:true });
+          img.addEventListener('error', hideLoader, { once:true });
+        }
+      }
+      if (vid){
+        const ready = () => showMedia(vid);
+        if (vid.readyState >= 2) ready();
+        else {
+          vid.addEventListener('loadeddata', ready, { once:true });
+          vid.addEventListener('error', hideLoader, { once:true });
+        }
+      }
+      // fail-safe to avoid stuck loader
+      setTimeout(hideLoader, 3000);
+    });
+  })();
+
   // Share and copy buttons
   (function(){
     function toast(msg){
