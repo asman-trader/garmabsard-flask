@@ -54,7 +54,7 @@ class OnboardingTour {
       sessionStorage.removeItem('vinor_start_full_tour');
       setTimeout(() => {
         this.startTour(true);
-      }, 1000);
+      }, 2000);
       return;
     }
 
@@ -64,7 +64,7 @@ class OnboardingTour {
       // تاخیر کوتاه برای اطمینان از لود شدن صفحه
       setTimeout(() => {
         this.startTour();
-      }, 1000);
+      }, 2000);
     }
   }
 
@@ -754,12 +754,10 @@ class OnboardingTour {
 // ایجاد instance جهانی
 window.onboardingTour = new OnboardingTour();
 
-// شروع خودکار تور بعد از لود شدن صفحه
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.onboardingTour.init();
-  });
-} else {
+// شروع خودکار تور فقط پس از لود کامل صفحه
+if (document.readyState === 'complete') {
   window.onboardingTour.init();
+} else {
+  window.addEventListener('load', () => window.onboardingTour.init(), { once: true });
 }
 
