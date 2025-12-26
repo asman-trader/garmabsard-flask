@@ -427,12 +427,14 @@
     function createRefreshElement() {
       const el = document.createElement('div');
       el.id = 'pull-refresh-indicator';
-      el.className = 'fixed top-0 left-0 right-0 z-[100] bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transform -translate-y-full transition-transform duration-300';
+      el.className = 'fixed top-0 left-0 right-0 z-[100] bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800 transform -translate-y-full transition-transform duration-300';
       el.innerHTML = `
-        <div class="flex items-center justify-center py-4">
-          <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-            <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-emerald-500 rounded-full animate-spin"></div>
-            <span class="text-sm font-medium">در حال بروزرسانی...</span>
+        <div class="max-w-5xl mx-auto px-3 py-3">
+          <div class="refresh-box mx-auto w-fit flex items-center gap-2 px-3 py-2 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-200 dark:border-gray-700 transition-colors">
+            <div class="refresh-arrow w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-xs transition-transform duration-200">
+              <i class="fas fa-arrow-down"></i>
+            </div>
+            <span class="text-xs sm:text-sm font-medium refresh-label text-gray-800 dark:text-gray-100">کشیده و رها کنید</span>
           </div>
         </div>
       `;
@@ -448,12 +450,19 @@
       refreshElement.style.transform = `translateY(${translateY - pullThreshold}px)`;
 
       // Change icon based on progress
+      const textEl = refreshElement.querySelector('.refresh-text');
+      const label = refreshElement.querySelector('.refresh-label');
+      const arrow = refreshElement.querySelector('.refresh-arrow');
+      if (arrow) {
+        const deg = Math.min(180, Math.max(0, (progress / pullThreshold) * 180));
+        arrow.style.transform = `rotate(${deg}deg)`;
+      }
       if (progress >= pullThreshold) {
-        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
-        refreshElement.querySelector('span').textContent = 'رها کنید برای بروزرسانی';
+        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+        if (label) label.textContent = 'رها کنید برای بروزرسانی';
       } else {
-        refreshElement.querySelector('.text-gray-600').className = 'flex items-center gap-3 text-gray-600 dark:text-gray-400';
-        refreshElement.querySelector('span').textContent = 'کشیده و رها کنید';
+        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-gray-600 dark:text-gray-400';
+        if (label) label.textContent = 'کشیده و رها کنید';
       }
     }
 
@@ -471,8 +480,12 @@
 
     function triggerRefresh() {
       if (refreshElement) {
-        refreshElement.querySelector('.text-emerald-600').className = 'flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
-        refreshElement.querySelector('span').textContent = 'در حال بروزرسانی...';
+        const textEl = refreshElement.querySelector('.refresh-text');
+        const label = refreshElement.querySelector('.refresh-label');
+        const arrow = refreshElement.querySelector('.refresh-arrow');
+        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
+        if (label) label.textContent = 'در حال بروزرسانی...';
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
         refreshElement.style.transform = 'translateY(0)';
       }
 
