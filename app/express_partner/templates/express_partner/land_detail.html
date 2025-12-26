@@ -450,17 +450,14 @@
         <div class="text-sm text-gray-500 dark:text-gray-400">{{ contact_phone }}</div>
       </div>
     </a>
-    {% set whatsapp_phone = contact_phone[1:] if contact_phone and contact_phone.startswith('0') else (contact_phone or '') %}
-    {% set whatsapp_text = 'سلام، در مورد آگهی ' ~ (land.title or land.code or '') ~ ' سوال داشتم.' %}
-    <a href="https://wa.me/98{{ whatsapp_phone }}?text={{ whatsapp_text | urlencode }}" 
-       target="_blank" rel="noopener"
+    <a href="sms:{{ contact_phone }}"
        class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-      <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-        <i class="fab fa-whatsapp text-green-600 dark:text-green-400 text-xl"></i>
+      <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+        <i class="fas fa-sms text-blue-600 dark:text-blue-300 text-xl"></i>
       </div>
       <div class="flex-1">
-        <div class="font-semibold text-gray-900 dark:text-white">واتس‌اپ</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">ارسال پیام در واتس‌اپ</div>
+        <div class="font-semibold text-gray-900 dark:text-white">پیامک</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">ارسال پیام متنی</div>
       </div>
       <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500"></i>
     </a>
