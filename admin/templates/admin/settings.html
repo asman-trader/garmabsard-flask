@@ -27,6 +27,7 @@
   <form method="post"
         action="{{ url_for('admin.settings') }}"
         class="bg-white dark:bg-gray-800 shadow rounded-xl border border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-5 space-y-5"
+        enctype="multipart/form-data"
         autocomplete="off">
     <!-- CSRF -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -156,8 +157,14 @@
           {{ settings.android_apk_url }}
         </a>
       </div>
-      <div class="text-xs text-gray-500 dark:text-gray-400">
-        آخرین بروزرسانی: {{ settings.android_apk_updated_at or '—' }}
+      <div class="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+        <div>آخرین بروزرسانی: {{ settings.android_apk_updated_at or '—' }}</div>
+        {% if settings.android_apk_size_bytes %}
+        <div>حجم فایل: {{ (settings.android_apk_size_bytes|string) ~ ' بایت' }}</div>
+        {% endif %}
+        {% if settings.android_apk_sha256 %}
+        <div class="break-all">SHA256: <code>{{ settings.android_apk_sha256 }}</code></div>
+        {% endif %}
       </div>
       {% endif %}
     </div>

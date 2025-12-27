@@ -1772,14 +1772,39 @@ def settings():
         android_apk_version = (request.form.get('android_apk_version') or '').strip()
         android_apk_url = None
         f = request.files.get('android_apk')
+        android_apk_size_bytes = None
+        android_apk_sha256 = None
         if f and f.filename:
             try:
+                # Validate extension and (approx) size
+                fname_lower = f.filename.lower()
+                if not fname_lower.endswith('.apk'):
+                    raise Exception('BAD_EXT')
+                # Max 200MB
+                max_bytes = 200 * 1024 * 1024
+                content_len = getattr(f, 'content_length', None)
+                if content_len and content_len > max_bytes:
+                    raise Exception('FILE_TOO_LARGE')
                 uploads_root = os.path.join(current_app.instance_path, 'uploads', 'apk')
                 os.makedirs(uploads_root, exist_ok=True)
                 ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                 safe_name = secure_filename(f"vinor_{ts}.apk")
                 dest = os.path.join(uploads_root, safe_name)
                 f.save(dest)
+                # Post-save validations and metadata
+                try:
+                    android_apk_size_bytes = os.path.getsize(dest)
+                except Exception:
+                    android_apk_size_bytes = None
+                try:
+                    import hashlib
+                    h = hashlib.sha256()
+                    with open(dest, 'rb') as _fp:
+                        for chunk in iter(lambda: _fp.read(8192), b''):
+                            h.update(chunk)
+                    android_apk_sha256 = h.hexdigest()
+                except Exception:
+                    android_apk_sha256 = None
                 # public URL via /uploads/ path
                 android_apk_url = f"/uploads/apk/{safe_name}"
             except Exception as e:
@@ -1807,6 +1832,8 @@ def settings():
             'android_apk_url': android_apk_url,
             'android_apk_version': android_apk_version,
             'android_apk_updated_at': android_apk_updated_at,
+            'android_apk_size_bytes': android_apk_size_bytes if android_apk_size_bytes is not None else current.get('android_apk_size_bytes', ''),
+            'android_apk_sha256': android_apk_sha256 if android_apk_sha256 is not None else current.get('android_apk_sha256', ''),
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
