@@ -823,6 +823,22 @@
       content.className = 'relative w-full h-full flex items-center justify-center';
       content.onclick = (e) => e.stopPropagation();
 
+      // Loader overlay for fullscreen
+      const loader = document.createElement('div');
+      loader.className = 'absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition-opacity';
+      loader.innerHTML = '<div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>';
+      function setLoading(v){
+        try{
+          if (v) {
+            loader.style.opacity = '1';
+            loader.style.pointerEvents = 'auto';
+          } else {
+            loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none';
+          }
+        }catch(_){}
+      }
+
       const closeBtn = document.createElement('button');
       closeBtn.className = 'absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl hover:bg-white/20 transition-colors';
       closeBtn.innerHTML = '<i class="fas fa-times"></i>';
@@ -842,6 +858,7 @@
         idx = i;
         const item = mediaItems[idx] || { type: 'image', src };
         mediaBox.innerHTML = '';
+        setLoading(true);
         dlBtn.href = item.src || src || '#';
         if (item.type === 'video') {
           const v = document.createElement('video');
@@ -854,11 +871,17 @@
           source.src = item.src;
           source.type = 'video/mp4';
           v.appendChild(source);
+          const done = () => setLoading(false);
+          v.addEventListener('loadeddata', done, { once: true });
+          v.addEventListener('canplay', done, { once: true });
+          v.addEventListener('error', done, { once: true });
           mediaBox.appendChild(v);
         } else {
-          const img = document.createElement('img');
-          img.src = item.src;
+          const img = new Image();
           img.className = 'max-w-full max-h-full object-contain rounded-lg';
+          img.onload = () => setLoading(false);
+          img.onerror = () => setLoading(false);
+          img.src = item.src;
           mediaBox.appendChild(img);
         }
       }
@@ -883,6 +906,7 @@
       content.addEventListener('pointercancel', onPointerCancel);
 
       content.appendChild(mediaBox);
+      content.appendChild(loader);
       content.appendChild(closeBtn);
       content.appendChild(dlBtn);
       lightbox.appendChild(content);
