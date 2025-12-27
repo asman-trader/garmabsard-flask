@@ -825,11 +825,20 @@
 
       // Loader overlay for fullscreen
       const loader = document.createElement('div');
-      loader.className = 'absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition-opacity';
-      loader.innerHTML = '<div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>';
+      loader.className = 'absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition-opacity duration-200 opacity-0 pointer-events-none';
+      loader.setAttribute('role', 'status');
+      loader.setAttribute('aria-live', 'polite');
+      loader.innerHTML = '<div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-label="در حال بارگذاری"></div>';
+      let loaderTimer = null;
       function setLoading(v){
         try{
+          if (loaderTimer) { clearTimeout(loaderTimer); loaderTimer = null; }
           if (v) {
+            // Fail-safe: هرگز بیش از 6 ثانیه نماند
+            loaderTimer = setTimeout(() => {
+              loader.style.opacity = '0';
+              loader.style.pointerEvents = 'none';
+            }, 6000);
             loader.style.opacity = '1';
             loader.style.pointerEvents = 'auto';
           } else {
@@ -876,6 +885,8 @@
           v.addEventListener('canplay', done, { once: true });
           v.addEventListener('error', done, { once: true });
           mediaBox.appendChild(v);
+          // اگر از قبل آماده باشد
+          try { if (v.readyState >= 2) setLoading(false); } catch(_){}
         } else {
           const img = new Image();
           img.className = 'max-w-full max-h-full object-contain rounded-lg';
@@ -883,6 +894,8 @@
           img.onerror = () => setLoading(false);
           img.src = item.src;
           mediaBox.appendChild(img);
+          // اگر در کش مرورگر بود
+          try { if (img.complete && img.naturalWidth > 0) setLoading(false); } catch(_){}
         }
       }
 
@@ -913,6 +926,19 @@
       document.body.appendChild(lightbox);
 
       render(idx);
+
+      // Keyboard navigation
+      function onKey(e){
+        try{
+          if (e.key === 'Escape') { lightbox.remove(); }
+          else if (e.key === 'ArrowLeft') { render(idx + 1); }
+          else if (e.key === 'ArrowRight') { render(idx - 1); }
+        }catch(_){}
+      }
+      document.addEventListener('keydown', onKey);
+      // Cleanup key listener when closed
+      const origClose = lightbox.onclick;
+      lightbox.onclick = () => { try { document.removeEventListener('keydown', onKey); } catch(_){ } origClose(); };
     } catch(_){
       // fallback ساده
       const lightbox = document.createElement('div');
