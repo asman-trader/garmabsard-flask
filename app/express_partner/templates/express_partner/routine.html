@@ -352,6 +352,15 @@
       if (done < total && !monthDaysDone.includes(toLocalISODate(today))) {
         autoMarkedToday = false;
       }
+      // به‌روزرسانی فوری UI تقویم بر اساس تعداد تیک‌ها
+      if (done > 0) {
+        if (!monthDaysDone.includes(todayISO)) {
+          monthDaysDone.push(todayISO);
+        }
+      } else {
+        monthDaysDone = monthDaysDone.filter(d => d !== todayISO);
+      }
+
       // همواره تعداد تیک‌ها را به سرور بفرست تا روی تقویم نقطه بگیرد (بلادرنگ)
       const todayKey = toLocalISODate(today);
       monthSteps[todayKey] = done;
