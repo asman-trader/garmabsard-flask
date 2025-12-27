@@ -45,16 +45,83 @@
 
   {# محتوای اصلی لندینگ #}
   <div class="max-w-5xl mx-auto pt-16 px-4 pb-16 space-y-6">
-    
-    <!-- Title Section -->
-    <div class="text-center space-y-2">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        پنل همکار اکسپرس
-      </h1>
-      <p class="text-sm text-gray-600 dark:text-gray-400">
-        همکاری با وینور در زمینه ملک و املاک
-      </p>
-    </div>
+
+    <!-- Hero - سبک دیوار، مینیمال -->
+    <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5">
+      <div class="flex items-start sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">وینور</h1>
+          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            وینور، پلتفرم ساده و سریع برای معرفی و معامله ملک؛
+            با تمرکز بر شفافیت، سرعت و تجربه‌ای شبیه دیوار اما اختصاصی حوزه املاک.
+          </p>
+        </div>
+        {% if android_apk_url %}
+        <a href="{{ android_apk_url }}" download rel="noopener"
+           class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
+          <i class="fa-solid fa-download"></i>
+          دانلود اندروید
+        </a>
+        {% endif %}
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+          <i class="fa-solid fa-bolt"></i> سریع و سبک
+        </span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+          <i class="fa-solid fa-shield-halved"></i> شفاف و امن
+        </span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+          <i class="fa-solid fa-mobile-screen"></i> نصب به‌صورت PWA
+        </span>
+      </div>
+      {% if android_apk_url %}
+      <div class="mt-3 sm:hidden">
+        <a href="{{ android_apk_url }}" download rel="noopener"
+           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
+          <i class="fa-solid fa-download"></i>
+          دانلود اندروید
+        </a>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Features - سبک دیوار -->
+    <section class="grid sm:grid-cols-3 gap-3">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 grid place-items-center">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">فایل‌های تأییدشده</div>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">مشاهده و همکاری روی فایل‌هایی که بررسی اولیه شده‌اند.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 grid place-items-center">
+            <i class="fa-solid fa-money-bill-trend-up"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">پورسانت شفاف</div>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">ثبت و پیگیری پورسانت‌ها به‌صورت درون‌برنامه‌ای.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 grid place-items-center">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">تجربه سریع</div>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">رابط کاربری سبک با الگوی دیوار برای کار روزمره.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Install Card - Divar Style -->
     <div id="expressPartnerInstallHero" class="hidden">
@@ -149,45 +216,38 @@
       </div>
     </div>
 
-    <!-- About Cooperation Section - Divar Style -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
-      <div class="flex items-center gap-3">
+    <!-- About (Compact) - Divar Style -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div class="flex items-start gap-3">
         <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
           <i class="fa-solid fa-handshake text-gray-600 dark:text-gray-400"></i>
         </div>
-        <h2 class="font-semibold text-base text-gray-900 dark:text-white">درباره همکاری</h2>
-      </div>
-      <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-        <p>
-          وینور در حال حاضر فقط در زمینه <strong class="text-gray-900 dark:text-white">ملک و املاک</strong> همکار می‌پذیرد. 
-          اگر مشاور املاک، بنگاه‌دار، یا فعال در حوزه خرید و فروش ملک هستید، می‌توانید با ما همکاری کنید.
+        <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          وینور با استانداردهای تجربه‌کاربری دیوار، فرآیند معرفی و معامله ملک را ساده می‌کند.
+          اگر فعال حوزه املاک هستید، با «همکاری اکسپرس» فایل‌های تأییدشده دریافت می‌کنید و
+          پس از فروش، کمیسیون شفاف و قابل‌پیگیری دریافت می‌کنید.
         </p>
-        <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p class="font-medium text-gray-900 dark:text-white">نوع همکاری:</p>
-          <p>
-            همکاری به صورت <strong class="text-gray-900 dark:text-white">مشاور املاک اکسپرس</strong> که در آن شما آگهی‌های ملک را دریافت می‌کنید و 
-            در صورت فروش موفق، کمیسیون دریافت می‌کنید.
-          </p>
-        </div>
-        <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p class="font-medium text-gray-900 dark:text-white mb-2">چه کسانی می‌توانند همکاری کنند؟</p>
-          <ul class="space-y-1.5">
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-              <span>مشاوران املاک و بنگاه‌داران</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-              <span>فعالان حوزه خرید و فروش ملک</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
-              <span>کسانی که تجربه در زمینه املاک دارند</span>
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
+
+    <!-- FAQ - سبک دیوار -->
+    <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 space-y-2">
+      <h2 class="text-sm font-bold text-gray-900 dark:text-white mb-1">سوالات پرتکرار</h2>
+      <details class="group border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="text-sm text-gray-800 dark:text-gray-100">چطور همکار اکسپرس شوم؟</span>
+          <i class="fa-solid fa-chevron-left text-gray-400 group-open:rotate-90 transition-transform"></i>
+        </summary>
+        <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">از بخش «درخواست همکاری» ثبت‌نام کنید و پس از تأیید وارد پنل شوید.</div>
+      </details>
+      <details class="group border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="text-sm text-gray-800 dark:text-gray-100">پورسانت‌ها چگونه محاسبه می‌شود؟</span>
+          <i class="fa-solid fa-chevron-left text-gray-400 group-open:rotate-90 transition-transform"></i>
+        </summary>
+        <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">پس از ثبت معامله و تأیید پشتیبانی، پورسانت طبق درصد تعیین‌شده قابل مشاهده است.</div>
+      </details>
+    </section>
 
     <!-- Apply Link - Divar Style -->
     <div class="text-center">
