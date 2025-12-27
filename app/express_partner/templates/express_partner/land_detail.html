@@ -76,7 +76,7 @@
           <video id="landVideo"
                  class="w-full h-full object-cover block"
                  controls
-                 onclick="event.stopPropagation()">
+                 onclick="openLightbox('{{ video_src }}')">
             <source src="{{ video_src }}" type="video/mp4">
             مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
           </video>
@@ -492,6 +492,15 @@
       {% endif %}
       
       const totalItems = (hasVideo ? 1 : 0) + images.length;
+
+      // ساخت آرایه مدیا برای استفاده در لایت‌باکس (حتی اگر یک آیتم باشد)
+      try {
+        const mediaItems = [];
+        if (hasVideo && videoSrc) mediaItems.push({ type: 'video', src: videoSrc });
+        images.forEach(src => mediaItems.push({ type: 'image', src }));
+        window.__landMediaItems = mediaItems;
+      } catch(_) {}
+
       if (totalItems <= 1) return;
 
       let currentIndex = 0;
@@ -801,20 +810,98 @@
 
   // لایت‌باکس تصویر
   function openLightbox(src) {
-    const lightbox = document.createElement('div');
-    lightbox.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4';
-    lightbox.onclick = () => lightbox.remove();
-    lightbox.innerHTML = `
-      <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl hover:bg-white/20 transition-colors" onclick="this.parentElement.remove()">
-        <i class="fas fa-times"></i>
-      </button>
-      <img src="${src}" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
-      <a href="${src}" download class="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2" onclick="event.stopPropagation()">
-        <i class="fas fa-download"></i>
-        دانلود تصویر
-      </a>
-    `;
-    document.body.appendChild(lightbox);
+    try {
+      const mediaItems = Array.isArray(window.__landMediaItems) ? window.__landMediaItems : [{ type: 'image', src }];
+      let idx = Math.max(0, mediaItems.findIndex(m => String(m.src || '') === String(src || '')));
+
+      const lightbox = document.createElement('div');
+      lightbox.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4';
+      lightbox.style.touchAction = 'pan-y';
+      lightbox.onclick = () => lightbox.remove();
+
+      const content = document.createElement('div');
+      content.className = 'relative w-full h-full flex items-center justify-center';
+      content.onclick = (e) => e.stopPropagation();
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl hover:bg-white/20 transition-colors';
+      closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+      closeBtn.onclick = (e) => { e.stopPropagation(); lightbox.remove(); };
+
+      const dlBtn = document.createElement('a');
+      dlBtn.className = 'absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2';
+      dlBtn.innerHTML = '<i class="fas fa-download"></i>دانلود';
+      dlBtn.setAttribute('download', '');
+      dlBtn.onclick = (e) => e.stopPropagation();
+
+      const mediaBox = document.createElement('div');
+      mediaBox.className = 'max-w-full max-h-full w-full h-full grid place-items-center';
+
+      function render(i) {
+        i = (i + mediaItems.length) % mediaItems.length;
+        idx = i;
+        const item = mediaItems[idx] || { type: 'image', src };
+        mediaBox.innerHTML = '';
+        dlBtn.href = item.src || src || '#';
+        if (item.type === 'video') {
+          const v = document.createElement('video');
+          v.controls = true;
+          v.autoplay = true;
+          v.playsInline = true;
+          v.muted = true;
+          v.className = 'max-w-full max-h-full object-contain rounded-lg';
+          const source = document.createElement('source');
+          source.src = item.src;
+          source.type = 'video/mp4';
+          v.appendChild(source);
+          mediaBox.appendChild(v);
+        } else {
+          const img = document.createElement('img');
+          img.src = item.src;
+          img.className = 'max-w-full max-h-full object-contain rounded-lg';
+          mediaBox.appendChild(img);
+        }
+      }
+
+      // Swipe handling
+      let startX = null, lastX = null, isDown = false;
+      const TH = 20;
+      function onTouchStart(e){ const t = e.touches && e.touches[0]; if (!t) return; startX = t.clientX; lastX = null; }
+      function onTouchMove(e){ const t = e.touches && e.touches[0]; if (!t || startX === null) return; lastX = t.clientX; }
+      function onTouchEnd(){ if (startX === null) return; const endX = (lastX !== null) ? lastX : startX; const dx = endX - startX; if (Math.abs(dx) > TH){ if (dx < 0) render(idx + 1); else render(idx - 1); } startX = null; lastX = null; }
+      function onPointerDown(e){ if (e.pointerType === 'mouse' && e.button !== 0) return; isDown = true; startX = e.clientX; lastX = null; try { content.setPointerCapture(e.pointerId); } catch(_){ } }
+      function onPointerMove(e){ if (!isDown || startX === null) return; lastX = e.clientX; }
+      function onPointerUp(e){ if (!isDown || startX === null) return; isDown = false; const endX = (lastX !== null) ? lastX : e.clientX; const dx = endX - startX; if (Math.abs(dx) > TH){ if (dx < 0) render(idx + 1); else render(idx - 1); } startX = null; lastX = null; try { content.releasePointerCapture(e.pointerId); } catch(_){ } }
+      function onPointerCancel(){ isDown = false; startX = null; lastX = null; }
+
+      content.addEventListener('touchstart', onTouchStart, { passive: true });
+      content.addEventListener('touchmove', onTouchMove, { passive: true });
+      content.addEventListener('touchend', onTouchEnd, { passive: true });
+      content.addEventListener('pointerdown', onPointerDown);
+      content.addEventListener('pointermove', onPointerMove);
+      content.addEventListener('pointerup', onPointerUp);
+      content.addEventListener('pointercancel', onPointerCancel);
+
+      content.appendChild(mediaBox);
+      content.appendChild(closeBtn);
+      content.appendChild(dlBtn);
+      lightbox.appendChild(content);
+      document.body.appendChild(lightbox);
+
+      render(idx);
+    } catch(_){
+      // fallback ساده
+      const lightbox = document.createElement('div');
+      lightbox.className = 'fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4';
+      lightbox.onclick = () => lightbox.remove();
+      lightbox.innerHTML = `
+        <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl hover:bg-white/20 transition-colors" onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+        <img src="${src}" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
+      `;
+      document.body.appendChild(lightbox);
+    }
   }
 </script>
 {% endblock %}
