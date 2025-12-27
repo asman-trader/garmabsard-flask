@@ -1785,7 +1785,7 @@ def settings():
                 content_len = getattr(f, 'content_length', None)
                 if content_len and content_len > max_bytes:
                     raise Exception('FILE_TOO_LARGE')
-                uploads_root = os.path.join(current_app.instance_path, 'uploads', 'apk')
+                uploads_root = os.path.join(current_app.config.get('UPLOAD_FOLDER') or os.path.join(current_app.root_path, 'data', 'uploads'), 'apk')
                 os.makedirs(uploads_root, exist_ok=True)
                 ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                 safe_name = secure_filename(f"vinor_{ts}.apk")
