@@ -983,14 +983,14 @@ def training():
 
 
 @express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def routine():
     """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
     return render_template('express_partner/routine.html', hide_header=True)
 
 
 @express_partner_bp.route('/routine/data', methods=['GET'], endpoint='routine_data')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def routine_data():
     """
     برگرداندن روزهای انجام‌شده روتین در ماه خواسته‌شده برای کاربر جاری.
@@ -1014,7 +1014,7 @@ def routine_data():
 
 
 @express_partner_bp.route('/routine/complete', methods=['POST'], endpoint='routine_complete')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def routine_complete():
     """
     ثبت انجام روتین برای امروز (با ذخیره در فایل سمت سرور).
@@ -1039,7 +1039,7 @@ def routine_complete():
 
 
 @express_partner_bp.route('/routine/steps', methods=['POST'], endpoint='routine_steps')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def routine_steps():
     """ثبت تعداد مراحل تیک‌خورده امروز برای نمایش در تقویم."""
     phone = (session.get("user_phone") or "").strip()
@@ -1066,12 +1066,17 @@ def routine_steps():
     rec.setdefault('days', [])
     rec.setdefault('steps', {})
     rec.setdefault('steps_detail', {})
-    if today not in rec['days']:
-        rec['days'].append(today)
-        rec['days'] = sorted(set(rec['days']))
+    # فقط وقتی حداقل یک تیک ثبت است، روز را در لیست days نگه داریم؛ در غیر این صورت حذف شود
+    if count > 0:
+        if today not in rec['days']:
+            rec['days'].append(today)
+            rec['days'] = sorted(set(rec['days']))
+    else:
+        if today in rec['days']:
+            rec['days'] = [d for d in rec['days'] if d != today]
     rec['steps'][today] = count
-    if detail:
-        rec['steps_detail'][today] = detail
+    # همواره جزئیات امروز را بازنویسی کن (حتی اگر خالی باشد تا داده قدیمی نماند)
+    rec['steps_detail'][today] = detail or []
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
     session['routine_marked_date'] = today  # ثبت شده برای امروز
 
@@ -1087,7 +1092,7 @@ def routine_steps():
 
 
 @express_partner_bp.get('/routine/steps/detail')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def routine_steps_detail():
     """برگرداندن لیست تیک‌های روز مشخص شده (detail) برای بازگردانی وضعیت."""
     phone = (session.get("user_phone") or "").strip()

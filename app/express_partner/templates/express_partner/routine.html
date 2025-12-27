@@ -349,11 +349,11 @@
         autoMarkedToday = true;
         setStatus('امروز ثبت شد (خودکار).', 'success');
       }
-      if (done < total && !monthDaysDone.includes(today.toISOString().slice(0,10))) {
+      if (done < total && !monthDaysDone.includes(toLocalISODate(today))) {
         autoMarkedToday = false;
       }
       // همواره تعداد تیک‌ها را به سرور بفرست تا روی تقویم نقطه بگیرد (بلادرنگ)
-      const todayKey = today.toISOString().slice(0,10);
+      const todayKey = toLocalISODate(today);
       monthSteps[todayKey] = done;
       renderCalendar(monthDaysDone);
       sendStepCount(done);
