@@ -105,7 +105,7 @@
     const csrfToken = "{{ csrf_token() }}";
 
     const today = new Date();
-    const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const todayISO = today.toISOString().slice(0,10);
     let monthDaysDone = [];
     let monthSteps = {};
     let autoMarkedToday = false;
@@ -139,19 +139,53 @@
       syncProgress();
     }
 
-    function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
+    // --- Jalali (Persian) helpers ---
+    const faPersian = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: 'long', day: 'numeric' });
+    const faPersianYM = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: 'long' });
+    const faPersianDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric' });
+    const faPersianYMParts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: 'numeric' });
+
+    function toLatinDigits(s){
+      return String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    }
+    function getPersianParts(date){
+      // returns { y, m, d } as numbers for the Persian calendar for given Gregorian Date
+      const y = Number(toLatinDigits(faPersianYMParts.formatToParts(date).find(p=>p.type==='year')?.value || '0'));
+      const m = Number(toLatinDigits(faPersianYMParts.formatToParts(date).find(p=>p.type==='month')?.value || '0'));
+      const d = Number(toLatinDigits(faPersianDay.format(date)));
+      return { y, m, d };
+    }
+    function getCurrentPersianMonthRange(baseDate){
+      // Find first and last Gregorian Date that belong to current Persian month of baseDate
+      const base = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+      const { y:py, m:pm } = getPersianParts(base);
+      // find first day
+      let first = new Date(base);
+      for (let i=0; i<40; i++){
+        const parts = getPersianParts(first);
+        if (parts.y === py && parts.m === pm && parts.d === 1) break;
+        first.setDate(first.getDate()-1);
+      }
+      // collect days until month changes
+      const dates = [];
+      let cursor = new Date(first);
+      for (let i=0; i<40; i++){
+        const parts = getPersianParts(cursor);
+        if (parts.y !== py || parts.m !== pm) break;
+        dates.push(new Date(cursor));
+        cursor.setDate(cursor.getDate()+1);
+      }
+      return dates;
+    }
 
     function renderCalendar(daysList){
       if (!calendarEl) return;
       calendarEl.innerHTML = '';
-      const [y, m] = monthKey.split('-').map(Number);
-      const totalDays = daysInMonth(y, m);
-      const firstDay = new Date(y, m - 1, 1).getDay(); // 0=Sun
-      const weekStartsOnSaturday = true;
 
-      // Map JS day (0=Sun) to columns (start Saturday)
-      const mapDay = (d) => (d + 1) % 7; // Sun->1, Mon->2 ... Fri->0? Wait; but we want Sat index 0
-      const startOffset = (firstDay === 6) ? 0 : (firstDay + 1);
+      const monthDates = getCurrentPersianMonthRange(today);
+      if (monthDates.length === 0) return;
+      const firstDay = monthDates[0].getDay(); // 0=Sun ... 6=Sat
+      const startOffset = (firstDay === 6) ? 0 : (firstDay + 1); // Saturday-first grid
 
       for (let i = 0; i < startOffset; i++) {
         const placeholder = document.createElement('div');
@@ -160,11 +194,12 @@
       }
 
       const doneSet = new Set(daysList || []);
-      for (let d = 1; d <= totalDays; d++) {
-        const dateKey = `${monthKey}-${String(d).padStart(2, '0')}`;
-        const isDone = doneSet.has(dateKey);
-        const isToday = d === today.getDate();
-        const stepCount = monthSteps[dateKey] || 0;
+      for (const gd of monthDates) {
+        const iso = gd.toISOString().slice(0,10);
+        const parts = getPersianParts(gd);
+        const isDone = doneSet.has(iso);
+        const isToday = iso === todayISO;
+        const stepCount = monthSteps[iso] || 0;
         const div = document.createElement('div');
         div.className = [
           'aspect-square rounded-xl border text-center flex flex-col items-center justify-center text-xs sm:text-sm transition',
@@ -172,7 +207,7 @@
           isToday ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''
         ].join(' ');
         const dayLabel = document.createElement('div');
-        dayLabel.textContent = d;
+        dayLabel.textContent = faPersianDay.format(gd); // Persian day number
         div.appendChild(dayLabel);
         if (stepCount > 0) {
           const dots = document.createElement('div');
@@ -189,8 +224,7 @@
       }
 
       if (monthLabelEl) {
-        const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long' });
-        monthLabelEl.textContent = formatter.format(today);
+        monthLabelEl.textContent = faPersianYM.format(monthDates[0]);
       }
     }
 
@@ -207,24 +241,37 @@
 
     async function fetchMonthDays(){
       try {
-        const res = await fetch(`/express/partner/routine/data?month=${monthKey}`, { credentials: 'same-origin' });
-        const data = await res.json();
-        if (data?.success) {
-          monthDaysDone = data.days || [];
-          monthSteps = data.steps || {};
-          autoMarkedToday = monthDaysDone.includes(today.toISOString().slice(0,10));
-          renderCalendar(monthDaysDone);
-          setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
-          // اگر امروز ثبت شده، تیک‌های کارت پیشرفت را هم خودکار بزن
-          if (autoMarkedToday) {
-            steps.forEach(cb => cb.checked = true);
-            saveState();
-            syncProgress();
-            setStatus('امروز قبلاً ثبت شده و تیک‌ها همگام شد.', 'success');
+        // Determine Gregorian month(s) covering current Persian month
+        const monthDates = getCurrentPersianMonthRange(today);
+        if (monthDates.length === 0) { renderCalendar([]); return; }
+        const startISO = monthDates[0].toISOString().slice(0,7);
+        const endISO = monthDates[monthDates.length-1].toISOString().slice(0,7);
+        const months = startISO === endISO ? [startISO] : [startISO, endISO];
+
+        // Fetch data for required month(s) and merge
+        const results = await Promise.all(months.map(m => fetch(`/express/partner/routine/data?month=${m}`, { credentials: 'same-origin' }).then(r=>r.json()).catch(()=>null)));
+        monthDaysDone = [];
+        monthSteps = {};
+        for (const d of results) {
+          if (d && d.success) {
+            if (Array.isArray(d.days)) monthDaysDone.push(...d.days);
+            if (d.steps && typeof d.steps === 'object') {
+              Object.entries(d.steps).forEach(([k,v]) => { monthSteps[k] = v; });
+            }
           }
-        } else {
-          renderCalendar([]);
-          setStatus('عدم موفقیت در دریافت داده تقویم.', 'error');
+        }
+        // Keep only days that fall within the current Persian month
+        const monthISOSet = new Set(monthDates.map(d => d.toISOString().slice(0,10)));
+        monthDaysDone = monthDaysDone.filter(x => monthISOSet.has(x));
+
+        autoMarkedToday = monthDaysDone.includes(todayISO);
+        renderCalendar(monthDaysDone);
+        setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
+        if (autoMarkedToday) {
+          steps.forEach(cb => cb.checked = true);
+          saveState();
+          syncProgress();
+          setStatus('امروز قبلاً ثبت شده و تیک‌ها همگام شد.', 'success');
         }
       } catch (err) {
         renderCalendar([]);
