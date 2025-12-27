@@ -406,6 +406,10 @@ def _default_settings() -> Dict[str, Any]:
         'approval_method': 'manual',
         'ad_expiry_days': 30,  # 0 = نامحدود
         'show_submit_button': True,
+        # Android APK info
+        'android_apk_url': '',
+        'android_apk_version': '',
+        'android_apk_updated_at': '',
         # تنظیمات SMS
         'sms_line_number': '300089930616',  # شماره خط اختصاصی SMS
         # پیام درخواست همکاری (برای همکار)
@@ -1764,6 +1768,32 @@ def settings():
                                            '09121471301')
         partner_application_admin_sms_message = request.form.get('partner_application_admin_sms_message', '').strip()
 
+        # Android APK upload/version
+        android_apk_version = (request.form.get('android_apk_version') or '').strip()
+        android_apk_url = None
+        f = request.files.get('android_apk')
+        if f and f.filename:
+            try:
+                uploads_root = os.path.join(current_app.instance_path, 'uploads', 'apk')
+                os.makedirs(uploads_root, exist_ok=True)
+                ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                safe_name = secure_filename(f"vinor_{ts}.apk")
+                dest = os.path.join(uploads_root, safe_name)
+                f.save(dest)
+                # public URL via /uploads/ path
+                android_apk_url = f"/uploads/apk/{safe_name}"
+            except Exception as e:
+                current_app.logger.exception("APK upload failed: %s", e)
+                flash('خطا در بارگذاری فایل APK.', 'error')
+
+        # merge with existing settings to preserve APK url when no new file
+        current = get_settings()
+        if android_apk_url is None:
+            android_apk_url = current.get('android_apk_url', '') or ''
+        android_apk_updated_at = datetime.utcnow().isoformat() + 'Z' if android_apk_url else (current.get('android_apk_updated_at') or '')
+        if not android_apk_version:
+            android_apk_version = current.get('android_apk_version', '') or ''
+
         save_settings({
             'approval_method': approval_method,
             'ad_expiry_days': ad_expiry_days,
@@ -1774,6 +1804,9 @@ def settings():
             'partner_approval_sms_message': partner_approval_sms_message,
             'partner_application_admin_phone': partner_application_admin_phone,
             'partner_application_admin_sms_message': partner_application_admin_sms_message,
+            'android_apk_url': android_apk_url,
+            'android_apk_version': android_apk_version,
+            'android_apk_updated_at': android_apk_updated_at,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))

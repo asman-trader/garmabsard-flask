@@ -120,6 +120,51 @@
     <!-- جداکننده -->
     <div class="border-t border-gray-200 dark:border-gray-700 my-6"></div>
 
+    <!-- تنظیمات اپ اندروید -->
+    <div class="space-y-4">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="fa-brands fa-android"></i>
+        اپلیکیشن اندروید وینور
+      </h2>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="android_apk_version" class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+            نسخه (Version)
+          </label>
+          <input id="android_apk_version" name="android_apk_version" type="text"
+                 value="{{ settings.android_apk_version or '' }}"
+                 class="block w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-vinor-600 focus:border-transparent"
+                 placeholder="مثلاً 1.0.3">
+          <p class="text-xs text-gray-500 dark:text-gray-400">اختیاری اما توصیه‌شده برای نمایش در لندینگ.</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+            فایل APK (آخرین نسخه)
+          </label>
+          <input type="file" name="android_apk" accept=".apk" 
+                 class="block w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-gray-300 dark:file:border-gray-600 file:bg-white dark:file:bg-gray-900 file:text-gray-700 dark:file:text-gray-200">
+          <p class="text-xs text-gray-500 dark:text-gray-400">با انتخاب فایل جدید، لینک دانلود در لندینگ به‌روزرسانی می‌شود.</p>
+        </div>
+      </div>
+
+      {% if settings.android_apk_url %}
+      <div class="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+        <i class="fa-solid fa-link"></i>
+        <span>لینک فعلی: </span>
+        <a class="text-blue-600 dark:text-blue-400 underline break-all" href="{{ settings.android_apk_url }}" target="_blank" rel="noopener">
+          {{ settings.android_apk_url }}
+        </a>
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        آخرین بروزرسانی: {{ settings.android_apk_updated_at or '—' }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- جداکننده -->
+    <div class="border-t border-gray-200 dark:border-gray-700 my-6"></div>
+
     <!-- تنظیمات درخواست همکاری -->
     <div class="space-y-4">
       <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">

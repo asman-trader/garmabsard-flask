@@ -116,7 +116,16 @@ def index():
         except Exception as e:
             current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
-    return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
+    try:
+        from ..utils.storage import load_settings
+        _settings = load_settings()
+    except Exception:
+        _settings = {}
+    return render_template("home/partners.html",
+                           brand="وینور",
+                           domain="vinor.ir",
+                           android_apk_url=_settings.get('android_apk_url') or '',
+                           android_apk_version=_settings.get('android_apk_version') or '')
 
 @main_bp.route("/partners", endpoint="partners")
 def partners():
@@ -184,7 +193,16 @@ def partners():
         except Exception as e:
             current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
-    return render_template("home/partners.html", brand="وینور", domain="vinor.ir")
+    try:
+        from ..utils.storage import load_settings
+        _settings = load_settings()
+    except Exception:
+        _settings = {}
+    return render_template("home/partners.html",
+                           brand="وینور",
+                           domain="vinor.ir",
+                           android_apk_url=_settings.get('android_apk_url') or '',
+                           android_apk_version=_settings.get('android_apk_version') or '')
 
 @main_bp.route("/start", endpoint="start")
 def start():
