@@ -128,9 +128,18 @@
     function loadState() {
       try {
         const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        steps.forEach(cb => {
-          cb.checked = saved.includes(cb.dataset.step);
-        });
+        if (Array.isArray(saved) && saved.length) {
+          steps.forEach(cb => { cb.checked = saved.includes(cb.dataset.step); });
+        } else {
+          fetch(`/express/partner/routine/steps/detail?date=${todayISO}`, { credentials: 'same-origin' })
+            .then(r => r.json()).then(d => {
+              if (d?.success && Array.isArray(d.detail)) {
+                steps.forEach(cb => { cb.checked = d.detail.includes(cb.dataset.step); });
+                saveState();
+                syncProgress();
+              }
+            }).catch(()=>{});
+        }
       } catch (_) {}
     }
 
@@ -323,7 +332,7 @@
             'X-CSRFToken': csrfToken
           },
           credentials: 'same-origin',
-          body: JSON.stringify({ count })
+          body: JSON.stringify({ count, detail: steps.filter(cb => cb.checked).map(cb => cb.dataset.step) })
         });
         const data = await res.json().catch(()=>null);
         if (data?.success && data.date) {

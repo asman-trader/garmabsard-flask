@@ -1044,7 +1044,13 @@ def routine_steps():
     """ثبت تعداد مراحل تیک‌خورده امروز برای نمایش در تقویم."""
     phone = (session.get("user_phone") or "").strip()
     payload = request.get_json(silent=True) or {}
-    count = int(payload.get('count') or 0)
+    # detail: optional list of step ids (strings)
+    detail = payload.get('detail')
+    try:
+        detail = [str(x).strip() for x in (detail or []) if str(x).strip()]
+    except Exception:
+        detail = []
+    count = int(payload.get('count') or (len(detail) if detail else 0))
     if count < 0:
         count = 0
     if count > 10:
@@ -1054,20 +1060,51 @@ def routine_steps():
     records = load_partner_routines()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     if not rec:
-        rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
+        rec = {"phone": phone, "days": [], "steps": {}, "steps_detail": {}, "updated_at": None}
         records.append(rec)
 
     rec.setdefault('days', [])
     rec.setdefault('steps', {})
+    rec.setdefault('steps_detail', {})
     if today not in rec['days']:
         rec['days'].append(today)
         rec['days'] = sorted(set(rec['days']))
     rec['steps'][today] = count
+    if detail:
+        rec['steps_detail'][today] = detail
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
     session['routine_marked_date'] = today  # ثبت شده برای امروز
 
     save_partner_routines(records)
-    return jsonify({"success": True, "date": today, "count": count, "days": rec.get('days', []), "steps": rec.get('steps', {})})
+    return jsonify({
+        "success": True,
+        "date": today,
+        "count": count,
+        "days": rec.get('days', []),
+        "steps": rec.get('steps', {}),
+        "detail": rec.get('steps_detail', {}).get(today, [])
+    })
+
+
+@express_partner_bp.get('/routine/steps/detail')
+@require_partner_access()
+def routine_steps_detail():
+    """برگرداندن لیست تیک‌های روز مشخص شده (detail) برای بازگردانی وضعیت."""
+    phone = (session.get("user_phone") or "").strip()
+    date = (request.args.get('date') or '').strip()
+    if not date:
+        date = datetime.now().strftime('%Y-%m-%d')
+    records = load_partner_routines()
+    rec = next((r for r in records if str(r.get('phone')) == phone), None)
+    detail = []
+    if rec and isinstance(rec.get('steps_detail'), dict):
+        try:
+            d = rec['steps_detail'].get(date)
+            if isinstance(d, list):
+                detail = [str(x) for x in d]
+        except Exception:
+            detail = []
+    return jsonify({"success": True, "date": date, "detail": detail})
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
