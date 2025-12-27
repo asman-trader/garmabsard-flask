@@ -1041,7 +1041,7 @@ def routine_complete():
 @express_partner_bp.route('/routine/steps', methods=['POST'], endpoint='routine_steps')
 @require_partner_access(allow_pending=True)
 def routine_steps():
-    """ثبت تعداد مراحل تیک‌خورده امروز برای نمایش در تقویم."""
+    """ثبت تعداد مراحل تیک‌خورده برای نمایش در تقویم (پیش‌فرض: امروز؛ قابل تعیین با 'date')."""
     phone = (session.get("user_phone") or "").strip()
     payload = request.get_json(silent=True) or {}
     # detail: optional list of step ids (strings)
@@ -1051,12 +1051,19 @@ def routine_steps():
     except Exception:
         detail = []
     count = int(payload.get('count') or (len(detail) if detail else 0))
+    req_date = (payload.get('date') or '').strip()
+    # YYYY-MM-DD ساده؛ اگر نامعتبر، روی today
+    try:
+        if req_date:
+            datetime.strptime(req_date, "%Y-%m-%d")
+    except Exception:
+        req_date = ''
     if count < 0:
         count = 0
     if count > 10:
         count = 10  # سقف معقول
 
-    today = datetime.now().strftime('%Y-%m-%d')
+    target_day = req_date or datetime.now().strftime('%Y-%m-%d')
     records = load_partner_routines()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     if not rec:
@@ -1068,26 +1075,27 @@ def routine_steps():
     rec.setdefault('steps_detail', {})
     # فقط وقتی حداقل یک تیک ثبت است، روز را در لیست days نگه داریم؛ در غیر این صورت حذف شود
     if count > 0:
-        if today not in rec['days']:
-            rec['days'].append(today)
+        if target_day not in rec['days']:
+            rec['days'].append(target_day)
             rec['days'] = sorted(set(rec['days']))
     else:
-        if today in rec['days']:
-            rec['days'] = [d for d in rec['days'] if d != today]
-    rec['steps'][today] = count
+        if target_day in rec['days']:
+            rec['days'] = [d for d in rec['days'] if d != target_day]
+    rec['steps'][target_day] = count
     # همواره جزئیات امروز را بازنویسی کن (حتی اگر خالی باشد تا داده قدیمی نماند)
-    rec['steps_detail'][today] = detail or []
+    rec['steps_detail'][target_day] = detail or []
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
-    session['routine_marked_date'] = today  # ثبت شده برای امروز
+    if not req_date:
+        session['routine_marked_date'] = target_day  # ثبت شده برای امروز
 
     save_partner_routines(records)
     return jsonify({
         "success": True,
-        "date": today,
+        "date": target_day,
         "count": count,
         "days": rec.get('days', []),
         "steps": rec.get('steps', {}),
-        "detail": rec.get('steps_detail', {}).get(today, [])
+        "detail": rec.get('steps_detail', {}).get(target_day, [])
     })
 
 

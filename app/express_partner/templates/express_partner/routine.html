@@ -292,7 +292,13 @@
         renderCalendar(monthDaysDone);
         setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
         if (autoMarkedToday) {
-          steps.forEach(cb => cb.checked = true);
+          try {
+            const dres = await fetch(`/express/partner/routine/steps/detail?date=${todayISO}`, { credentials: 'same-origin' });
+            const ddata = await dres.json().catch(()=>null);
+            if (ddata?.success && Array.isArray(ddata.detail)) {
+              steps.forEach(cb => { cb.checked = ddata.detail.includes(cb.dataset.step); });
+            }
+          } catch(_) {}
           saveState();
           syncProgress();
           setStatus('امروز قبلاً ثبت شده و تیک‌ها همگام شد.', 'success');
@@ -323,26 +329,92 @@
     document.getElementById('routinePrev')?.addEventListener('click', gotoPrevMonth, { passive: true });
     document.getElementById('routineNext')?.addEventListener('click', gotoNextMonth, { passive: true });
 
-    async function sendStepCount(count){
+    // --- Resilient saving (debounce, retry, offline queue) ---
+    const SAVE_DEBOUNCE_MS = 250;
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY_MS = 800;
+    const PENDING_KEY = 'vinor_routine_pending_v1';
+    let saveTimer = null;
+    let inflight = false;
+    let queued = false;
+
+    function getCurrentPayload(){
+      const detail = steps.filter(cb => cb.checked).map(cb => cb.dataset.step);
+      const count = detail.length;
+      return { count, detail, date: todayISO };
+    }
+
+    async function flushPayload(payload, attempt = 0){
+      if (!payload) return false;
+      if (!navigator.onLine) {
+        try { localStorage.setItem(PENDING_KEY, JSON.stringify(payload)); } catch(_){}
+        setStatus('آفلاین هستید؛ بعداً ارسال می‌شود.', 'muted');
+        return false;
+      }
+      inflight = true;
       try{
         const res = await fetch('/express/partner/routine/steps', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-          },
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           credentials: 'same-origin',
-          body: JSON.stringify({ count, detail: steps.filter(cb => cb.checked).map(cb => cb.dataset.step) })
+          body: JSON.stringify(payload)
         });
         const data = await res.json().catch(()=>null);
-        if (data?.success && data.date) {
+        if (data?.success) {
+          try { localStorage.removeItem(PENDING_KEY); } catch(_){}
           monthSteps = data.steps || monthSteps;
           monthDaysDone = Array.isArray(data.days) ? data.days : monthDaysDone;
           renderCalendar(monthDaysDone);
           setStatus('پیشرفت ثبت شد.', 'success');
+          return true;
         }
-      }catch(_){}
+        throw new Error('server_error');
+      }catch(_err){
+        if (attempt < MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          return await flushPayload(payload, attempt + 1);
+        } else {
+          try { localStorage.setItem(PENDING_KEY, JSON.stringify(payload)); } catch(_){}
+          setStatus('ثبت ناموفق؛ بعداً تلاش می‌شود.', 'error');
+          return false;
+        }
+      }finally{
+        inflight = false;
+        if (queued) {
+          queued = false;
+          const nextPayload = getCurrentPayload();
+          flushPayload(nextPayload);
+        }
+      }
     }
+
+    function scheduleSave(){
+      const payload = getCurrentPayload();
+      if (inflight) {
+        queued = true;
+        try { localStorage.setItem(PENDING_KEY, JSON.stringify(payload)); } catch(_){}
+        return;
+      }
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveTimer = null;
+        flushPayload(payload);
+      }, SAVE_DEBOUNCE_MS);
+    }
+
+    // Try to flush pending on load and when back online
+    (function(){
+      try {
+        const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
+        if (pending) { flushPayload(pending); }
+      } catch(_) {}
+      window.addEventListener('online', () => {
+        try {
+          const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
+          if (pending) { flushPayload(pending); }
+        } catch(_) {}
+      }, { passive: true });
+    })();
 
     function maybeAutoMark(done, total){
       if (done === total && !autoMarkedToday) {
@@ -365,7 +437,7 @@
       const todayKey = toLocalISODate(today);
       monthSteps[todayKey] = done;
       renderCalendar(monthDaysDone);
-      sendStepCount(done);
+      scheduleSave();
     }
 
     loadState();
