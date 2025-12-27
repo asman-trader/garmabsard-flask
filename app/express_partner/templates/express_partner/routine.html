@@ -60,9 +60,17 @@
   <div class="mt-4">
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">تقویم انجام روتین (ماه جاری)</div>
-          <div id="routineMonthLabel" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+        <div class="flex items-center gap-2">
+          <button id="routinePrev" type="button" class="w-8 h-8 grid place-items-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+            <i class="fas fa-chevron-right text-gray-600 dark:text-gray-300 text-sm"></i>
+          </button>
+          <div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">تقویم انجام روتین</div>
+            <div id="routineMonthLabel" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+          </div>
+          <button id="routineNext" type="button" class="w-8 h-8 grid place-items-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+            <i class="fas fa-chevron-left text-gray-600 dark:text-gray-300 text-sm"></i>
+          </button>
         </div>
       </div>
       <div class="grid grid-cols-7 gap-1 text-[11px] sm:text-xs text-center text-gray-600 dark:text-gray-300">
@@ -105,7 +113,14 @@
     const csrfToken = "{{ csrf_token() }}";
 
     const today = new Date();
-    const todayISO = today.toISOString().slice(0,10);
+    function toLocalISODate(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+    const todayISO = toLocalISODate(today);
+    let viewDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     let monthDaysDone = [];
     let monthSteps = {};
     let autoMarkedToday = false;
@@ -182,7 +197,7 @@
       if (!calendarEl) return;
       calendarEl.innerHTML = '';
 
-      const monthDates = getCurrentPersianMonthRange(today);
+      const monthDates = getCurrentPersianMonthRange(viewDate);
       if (monthDates.length === 0) return;
       const firstDay = monthDates[0].getDay(); // 0=Sun ... 6=Sat
       const startOffset = (firstDay === 6) ? 0 : (firstDay + 1); // Saturday-first grid
@@ -195,7 +210,7 @@
 
       const doneSet = new Set(daysList || []);
       for (const gd of monthDates) {
-        const iso = gd.toISOString().slice(0,10);
+        const iso = toLocalISODate(gd);
         const parts = getPersianParts(gd);
         const isDone = doneSet.has(iso);
         const isToday = iso === todayISO;
@@ -241,11 +256,11 @@
 
     async function fetchMonthDays(){
       try {
-        // Determine Gregorian month(s) covering current Persian month
-        const monthDates = getCurrentPersianMonthRange(today);
+        // Determine Gregorian month(s) covering current Persian month of the viewDate
+        const monthDates = getCurrentPersianMonthRange(viewDate);
         if (monthDates.length === 0) { renderCalendar([]); return; }
-        const startISO = monthDates[0].toISOString().slice(0,7);
-        const endISO = monthDates[monthDates.length-1].toISOString().slice(0,7);
+        const startISO = toLocalISODate(monthDates[0]).slice(0,7);
+        const endISO = toLocalISODate(monthDates[monthDates.length-1]).slice(0,7);
         const months = startISO === endISO ? [startISO] : [startISO, endISO];
 
         // Fetch data for required month(s) and merge
@@ -261,7 +276,7 @@
           }
         }
         // Keep only days that fall within the current Persian month
-        const monthISOSet = new Set(monthDates.map(d => d.toISOString().slice(0,10)));
+        const monthISOSet = new Set(monthDates.map(d => toLocalISODate(d)));
         monthDaysDone = monthDaysDone.filter(x => monthISOSet.has(x));
 
         autoMarkedToday = monthDaysDone.includes(todayISO);
@@ -278,6 +293,26 @@
         setStatus('خطا در ارتباط با سرور برای دریافت تقویم.', 'error');
       }
     }
+
+    // Month navigation (Persian month prev/next approximated by stepping to first/last then ±1 day)
+    function gotoPrevMonth(){
+      const dates = getCurrentPersianMonthRange(viewDate);
+      if (!dates.length) return;
+      const prevAnchor = new Date(dates[0]); // first day of current Persian month
+      prevAnchor.setDate(prevAnchor.getDate() - 1); // go to previous month
+      viewDate = prevAnchor;
+      fetchMonthDays();
+    }
+    function gotoNextMonth(){
+      const dates = getCurrentPersianMonthRange(viewDate);
+      if (!dates.length) return;
+      const nextAnchor = new Date(dates[dates.length - 1]); // last day of current Persian month
+      nextAnchor.setDate(nextAnchor.getDate() + 1); // go to next month
+      viewDate = nextAnchor;
+      fetchMonthDays();
+    }
+    document.getElementById('routinePrev')?.addEventListener('click', gotoPrevMonth, { passive: true });
+    document.getElementById('routineNext')?.addEventListener('click', gotoNextMonth, { passive: true });
 
     async function sendStepCount(count){
       try{
