@@ -56,6 +56,11 @@
         <div id="landGallery"
              class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none">
 
+          <style>
+            /* بهبود سوایپ: اجازه پن عمودی، جلوگیری از تداخل پن افقی */
+            #landGallery, #landGallery * { touch-action: pan-y; }
+          </style>
+
           <!-- Loading overlay -->
           <div id="landMediaLoading"
                class="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[1px] text-white transition-opacity duration-200 opacity-0 pointer-events-none"
@@ -601,7 +606,7 @@
       let touchStartX = null;
       let touchEndX = null;
       let isPointerDown = false;
-      const SWIPE_THRESHOLD = 40;
+      const SWIPE_THRESHOLD = 20;
 
       function handleSwipe(dx) {
         if (Math.abs(dx) <= SWIPE_THRESHOLD) return;
