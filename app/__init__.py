@@ -272,6 +272,24 @@ def create_app() -> Flask:
     if uploads_bp is not None:
         app.register_blueprint(uploads_bp)
 
+    # ---------- Caching headers ----------
+    @app.after_request
+    def add_cache_headers(resp):
+        try:
+            path = request.path or ""
+            # Long cache for static assets and uploads
+            if path.startswith("/static/") or path.startswith("/uploads/"):
+                resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                return resp
+            # HTML should not be cached aggressively
+            if (resp.mimetype or "").startswith("text/html"):
+                # Allow revalidation while enabling browser re-fetch
+                resp.headers["Cache-Control"] = "no-cache"
+                return resp
+            return resp
+        except Exception:
+            return resp
+
     # Express Partner blueprint
     try:
         from .express_partner import express_partner_bp

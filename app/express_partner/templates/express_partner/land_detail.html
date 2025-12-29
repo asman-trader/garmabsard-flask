@@ -99,6 +99,7 @@
                  src="{{ image_src }}"
                  alt="{{ land.title }}"
                  class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %}"
+                 fetchpriority="high" decoding="async"
                  onclick="openLightbox(this.src)">
           {% endif %}
 

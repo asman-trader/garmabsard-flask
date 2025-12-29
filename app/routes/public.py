@@ -12,7 +12,23 @@ from ..utils.storage import load_express_partners, load_landing_views, save_land
 from ..utils.storage import load_express_views, save_express_views
 from ..utils.share_tokens import decode_partner_ref
 from datetime import datetime
+from time import time as _now
 
+# --- very small in-memory microcache (5-20s) for public pages ---
+_MICROCACHE: dict = {}  # key -> (expires_at, payload)
+def _mc_get(key: str):
+    try:
+        exp, val = _MICROCACHE.get(key, (0, None))
+        if exp and exp > _now():
+            return val
+    except Exception:
+        return None
+    return None
+def _mc_set(key: str, val, ttl: int = 10):
+    try:
+        _MICROCACHE[key] = (_now() + max(1, int(ttl)), val)
+    except Exception:
+        pass
 # ثابت‌ها
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
 
@@ -121,11 +137,27 @@ def index():
         _settings = load_settings()
     except Exception:
         _settings = {}
-    return render_template("home/partners.html",
+    # Microcache only for guests
+    if not (session.get("user_phone") or session.get("user_id") or is_admin):
+        k = f"page:index"
+        cached = _mc_get(k)
+        if cached:
+            resp = make_response(cached)
+            resp.headers["Cache-Control"] = "no-cache"
+            return resp
+    html = render_template("home/partners.html",
                            brand="وینور",
                            domain="vinor.ir",
                            android_apk_url=_settings.get('android_apk_url') or '',
                            android_apk_version=_settings.get('android_apk_version') or '')
+    try:
+        if not (session.get("user_phone") or session.get("user_id") or is_admin):
+            _mc_set("page:index", html, ttl=15)
+    except Exception:
+        pass
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 @main_bp.route("/partners", endpoint="partners")
 def partners():
@@ -198,11 +230,27 @@ def partners():
         _settings = load_settings()
     except Exception:
         _settings = {}
-    return render_template("home/partners.html",
+    # Microcache only for guests
+    if not (session.get("user_phone") or session.get("user_id") or is_admin):
+        k = f"page:partners"
+        cached = _mc_get(k)
+        if cached:
+            resp = make_response(cached)
+            resp.headers["Cache-Control"] = "no-cache"
+            return resp
+    html = render_template("home/partners.html",
                            brand="وینور",
                            domain="vinor.ir",
                            android_apk_url=_settings.get('android_apk_url') or '',
                            android_apk_version=_settings.get('android_apk_version') or '')
+    try:
+        if not (session.get("user_phone") or session.get("user_id") or is_admin):
+            _mc_set("page:partners", html, ttl=15)
+    except Exception:
+        pass
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 @main_bp.route("/start", endpoint="start")
 def start():
@@ -286,7 +334,16 @@ def express_public_list():
     # اگر کاربر همکار است، از قالب express_partner استفاده کن
     template_name = 'express_partner/explore.html' if is_partner else 'public/express_list.html'
     
-    return render_template(
+    # Microcache only for guests (no session, not partner)
+    if not session.get('user_phone'):
+        key = f"page:public:list:{page}:{(search_query or '')}"
+        cached = _mc_get(key)
+        if cached:
+            resp = make_response(cached)
+            resp.headers["Cache-Control"] = "public, max-age=20"
+            return resp
+
+    html = render_template(
         template_name,
         lands=paginated_lands,
         pagination={'page': page, 'pages': pages, 'total': total},
@@ -301,6 +358,14 @@ def express_public_list():
             'og_image': f"{base_url}/static/icons/icon-512.png"
         }
     )
+    try:
+        if not session.get('user_phone'):
+            _mc_set(key, html, ttl=20)
+    except Exception:
+        pass
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "public, max-age=20"
+    return resp
 
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):
@@ -412,7 +477,16 @@ def express_detail(code):
     next_land = express_lands[current_index + 1] if current_index >= 0 and current_index + 1 < len(express_lands) else None
     prev_land = express_lands[current_index - 1] if current_index > 0 else None
     
-    return render_template(
+    # Microcache detail for guests (short TTL)
+    if not session.get('user_phone'):
+        _k = f"page:public:detail:{code}"
+        _c = _mc_get(_k)
+        if _c:
+            r = make_response(_c)
+            r.headers["Cache-Control"] = "public, max-age=10"
+            return r
+
+    html = render_template(
         "public/express_public_detail.html",
         land=land,
         ref_partner=ref_partner,
@@ -433,6 +507,14 @@ def express_detail(code):
             'currency': 'IRR'
         }
     )
+    try:
+        if not session.get('user_phone'):
+            _mc_set(_k, html, ttl=10)
+    except Exception:
+        pass
+    r = make_response(html)
+    r.headers["Cache-Control"] = "public, max-age=10"
+    return r
 
 @main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")
 def uploaded_file(filename):
