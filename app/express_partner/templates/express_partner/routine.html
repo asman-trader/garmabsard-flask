@@ -225,9 +225,15 @@
         const isToday = iso === todayISO;
         const stepCount = monthSteps[iso] || 0;
         const div = document.createElement('div');
+        const isThree = stepCount === 3;
+        const isPartial = stepCount > 0 && stepCount < 3;
         div.className = [
           'aspect-square rounded-xl border text-center flex flex-col items-center justify-center text-xs sm:text-sm transition',
-          isDone ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-semibold' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200',
+          isThree
+            ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-semibold'
+            : (isPartial
+                ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-200 font-semibold'
+                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200'),
           isToday ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''
         ].join(' ');
         const dayLabel = document.createElement('div');
@@ -239,7 +245,9 @@
           const maxDots = Math.min(stepCount, 3);
           for (let i = 0; i < maxDots; i++) {
             const dot = document.createElement('span');
-            dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-300';
+            dot.className = isThree
+              ? 'w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-300'
+              : 'w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-300';
             dots.appendChild(dot);
           }
           div.appendChild(dots);
