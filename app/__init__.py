@@ -158,6 +158,14 @@ def create_app() -> Flask:
     vapid_private = os.environ.get("VAPID_PRIVATE_KEY") or getattr(Config, "VAPID_PRIVATE_KEY", "")
     vapid_sub = os.environ.get("VAPID_SUB") or getattr(Config, "VAPID_SUB", "mailto:admin@vinor.ir")
 
+    # Database URL (env first, then default to SQLite in instance folder)
+    try:
+        from dotenv import load_dotenv  # type: ignore
+        load_dotenv()
+    except Exception:
+        pass
+    db_url = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(app.instance_path, 'vinor.db')}"
+
     app.config.update(
         SESSION_COOKIE_NAME=SESSION_COOKIE_NAME,
         SESSION_COOKIE_SAMESITE="Lax",
@@ -168,6 +176,8 @@ def create_app() -> Flask:
         TEMPLATES_AUTO_RELOAD=True,
         JSON_AS_ASCII=False,
         UPLOAD_FOLDER=os.environ.get("UPLOAD_FOLDER", default_upload_folder),
+        SQLALCHEMY_DATABASE_URI=db_url,
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
         # Upload limit (برای ویدئو هم استفاده می‌شود)
         MAX_CONTENT_LENGTH=getattr(Config, "MAX_CONTENT_LENGTH", 200 * 1024 * 1024),
         VAPID_PUBLIC_KEY=vapid_public,
@@ -186,6 +196,22 @@ def create_app() -> Flask:
     _ensure_instance_folder(app)
     _setup_logging(app)
     _register_jinja_filters(app)
+
+    # Initialize DB (SQLAlchemy)
+    try:
+        from .extensions import db
+        db.init_app(app)
+        with app.app_context():
+            db.create_all()
+    except Exception as e:
+        app.logger.warning(f"DB init/create_all skipped: {e}")
+
+    # Enable CORS for /api/* (mobile app consumption)
+    try:
+        from flask_cors import CORS  # type: ignore
+        CORS(app, resources={r"/api/*": {"origins": "*"}})
+    except Exception as e:
+        app.logger.warning(f"CORS not enabled: {e}")
 
     # ---------- Upload too large (413) ----------
     @app.errorhandler(RequestEntityTooLarge)
@@ -272,6 +298,14 @@ def create_app() -> Flask:
     if uploads_bp is not None:
         app.register_blueprint(uploads_bp)
 
+    # Public REST API v1
+    try:
+        from .api_v1 import api_v1_bp
+        app.register_blueprint(api_v1_bp)
+        app.logger.info("API v1 blueprint registered at /api")
+    except Exception as e:
+        app.logger.error(f"API v1 registration failed: {e}", exc_info=True)
+
     # ---------- Caching headers ----------
     @app.after_request
     def add_cache_headers(resp):
@@ -338,6 +372,13 @@ def create_app() -> Flask:
                 csrf.exempt(push_api_bp)
             except Exception:
                 pass
+
+        # API v1 از CSRF مستثنا است (JSON/REST)
+        try:
+            from .api_v1 import api_v1_bp as _api_v1_bp
+            csrf.exempt(_api_v1_bp)
+        except Exception:
+            pass
 
 
 
