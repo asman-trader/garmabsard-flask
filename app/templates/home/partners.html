@@ -15,6 +15,8 @@
 
   <style>
     .focusable:focus{outline:2px solid #2563EB;outline-offset:2px}
+    /* Hide slide-out menu and its toggles on landing */
+    #menuToggle, #menuBackdrop, #menuOverlay, #sideMenu { display: none !important; }
   </style>
 {% endblock %}
 
@@ -319,6 +321,13 @@
       if (icon) {
         icon.className = root.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
       }
+    });
+
+    // Disable slide-out menu behavior on landing (mobile)
+    try { localStorage.setItem('vinor_show_sidebar','0'); } catch(_){}
+    // Prevent swipe-to-open listeners from base on this page
+    ['touchstart','touchmove','touchend','pointerdown','pointermove','pointerup'].forEach(evt => {
+      window.addEventListener(evt, function(e){ e.stopImmediatePropagation(); }, true);
     });
     // Update icon on load
     if (savedTheme === 'light') {
