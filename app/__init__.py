@@ -298,13 +298,7 @@ def create_app() -> Flask:
     if uploads_bp is not None:
         app.register_blueprint(uploads_bp)
 
-    # Public REST API v1
-    try:
-        from .api_v1 import api_v1_bp
-        app.register_blueprint(api_v1_bp)
-        app.logger.info("API v1 blueprint registered at /api")
-    except Exception as e:
-        app.logger.error(f"API v1 registration failed: {e}", exc_info=True)
+    # Public REST API v1 (removed)
 
     # ---------- Caching headers ----------
     @app.after_request
@@ -373,12 +367,7 @@ def create_app() -> Flask:
             except Exception:
                 pass
 
-        # API v1 از CSRF مستثنا است (JSON/REST)
-        try:
-            from .api_v1 import api_v1_bp as _api_v1_bp
-            csrf.exempt(_api_v1_bp)
-        except Exception:
-            pass
+        # API v1 removed
 
 
 
