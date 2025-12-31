@@ -19,72 +19,103 @@
 {% endblock %}
 
 {% block content %}
-  {# Header مخصوص لندینگ - سبک دیوار #}
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+  {# Header مینیمال #}
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-gray-950/70 backdrop-blur border-b border-transparent">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
       <a href="{{ url_for('main.index') }}" class="flex items-center gap-2" aria-label="وینور">
-        <span class="text-lg font-extrabold text-green-600 dark:text-green-400">وینور</span>
-        <span class="text-[11px] text-gray-500 dark:text-gray-400 hidden xs:inline">
-          همکاری در حوزه ملک
-        </span>
+        <span class="text-lg font-extrabold text-gray-900 dark:text-white">وینور</span>
       </a>
-      <div class="flex items-center gap-2">
+      <nav class="flex items-center gap-2">
         <a href="{{ url_for('main.express_public_list') }}"
            class="flex items-center gap-1 text-xs font-medium text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
           <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
           <span>اکسپلور</span>
         </a>
         <a href="{{ url_for('express_partner.login') }}"
-           class="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition">
+           class="flex items-center gap-1 text-xs font-medium text-white px-3 py-1.5 rounded-full bg-gray-900 dark:bg-white dark:text-gray-900 hover:opacity-90 transition">
           <i class="fa-solid fa-user text-[11px]"></i>
           <span>ورود همکار</span>
         </a>
-      </div>
+      </nav>
     </div>
   </header>
 
   {# محتوای اصلی لندینگ #}
-  <div class="max-w-5xl mx-auto pt-16 px-4 pb-16 space-y-6">
+  <div class="max-w-6xl mx-auto pt-16 px-4 pb-20 space-y-10">
 
-    <!-- Hero - سبک دیوار، مینیمال -->
-    <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5">
-      <div class="flex items-start sm:items-center justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">وینور</h1>
-          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            وینور، پلتفرم ساده و سریع برای معرفی و معامله ملک؛
-            با تمرکز بر شفافیت، سرعت و تجربه کاربری مینیمال و اختصاصی حوزه املاک.
+    <!-- Hero مینیمال -->
+    <section class="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
+      <div class="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+      <div class="relative px-5 sm:px-8 py-10 sm:py-14">
+        <div class="max-w-2xl">
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            وینور — مینیمال، سریع، شفاف
+          </h1>
+          <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            جایی برای معرفی و همکاری روی فایل‌های ملکی تأییدشده؛ با تمرکز روی تجربه کاربری ساده و کم‌اصطکاک.
           </p>
         </div>
-        {% if android_apk_url %}
-        <a href="{{ android_apk_url }}" download rel="noopener"
-           class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
-          <i class="fa-solid fa-download"></i>
-          دانلود اندروید
-        </a>
-        {% endif %}
+        <div class="mt-5 flex flex-wrap items-center gap-2">
+          <a href="{{ url_for('express_partner.login') }}"
+             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-sm font-medium">
+            <i class="fa-solid fa-right-to-bracket text-xs"></i>
+            ورود همکار
+          </a>
+          <a href="{{ url_for('main.express_public_list') }}"
+             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            اکسپلور
+          </a>
+          {% if android_apk_url %}
+          <a href="{{ android_apk_url }}" download rel="noopener"
+             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+            <i class="fa-solid fa-download text-xs"></i>
+            دانلود اندروید ({{ android_apk_version or '—' }})
+          </a>
+          {% endif %}
+          <div id="expressPartnerInstallLanding" class="hidden">
+            <button id="expressPartnerInstallLandingBtn"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium">
+              <i class="fa-solid fa-download text-xs"></i>
+              نصب PWA
+            </button>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+            <i class="fa-solid fa-bolt"></i> سریع و سبک
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+            <i class="fa-solid fa-shield-halved"></i> شفاف و امن
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
+            <i class="fa-solid fa-mobile-screen"></i> نصب به‌صورت PWA
+          </span>
+        </div>
       </div>
-      <div class="mt-3 flex flex-wrap items-center gap-2">
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
-          <i class="fa-solid fa-bolt"></i> سریع و سبک
-        </span>
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
-          <i class="fa-solid fa-shield-halved"></i> شفاف و امن
-        </span>
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-700 dark:text-gray-300">
-          <i class="fa-solid fa-mobile-screen"></i> نصب به‌صورت PWA
-        </span>
-      </div>
-      {% if android_apk_url %}
-      <div class="mt-3 sm:hidden">
+    </section>
+
+    {% if android_apk_url %}
+    <!-- Android Direct Download - Divar Style (standalone) -->
+    <section class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+            <i class="fa-brands fa-android text-green-700 dark:text-green-300"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-gray-900 dark:text-white">دانلود مستقیم اپ اندروید وینور</div>
+            <div class="text-[11px] text-gray-600 dark:text-gray-400">نسخه {{ android_apk_version or '—' }}</div>
+          </div>
+        </div>
         <a href="{{ android_apk_url }}" download rel="noopener"
            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
           <i class="fa-solid fa-download"></i>
-          دانلود اندروید
+          دانلود
         </a>
       </div>
-      {% endif %}
     </section>
+    {% endif %}
 
     <!-- Features - سبک دیوار -->
     <section class="grid sm:grid-cols-3 gap-3">
