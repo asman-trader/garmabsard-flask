@@ -1,5 +1,6 @@
 # app/routes/public.py
 import os
+from urllib.parse import quote
 
 from flask import (
     render_template, send_from_directory, request, abort,
@@ -524,6 +525,33 @@ def uploaded_file(filename):
       2) سپس از instance/data/uploads
       3) سپس از <root>/data/uploads (legacy)
     """
+    def _maybe_set_apk_download_name(resp):
+        try:
+            fn_norm = (filename or '').replace('\\', '/')
+            if fn_norm.lower().endswith('.apk') and fn_norm.startswith('apk/'):
+                try:
+                    from ..utils.storage import load_settings
+                    settings = load_settings()
+                except Exception:
+                    settings = {}
+                wanted_url = str(settings.get('android_apk_url') or '')
+                orig_name = str(settings.get('android_apk_original_name') or '').strip()
+                if wanted_url and orig_name:
+                    # match by basename to ensure we are serving the configured APK
+                    try:
+                        wanted_base = os.path.basename(wanted_url)
+                    except Exception:
+                        wanted_base = ''
+                    if wanted_base and wanted_base == os.path.basename(fn_norm):
+                        # Force download with the original client filename
+                        try:
+                            disp = "attachment; filename*=UTF-8''" + quote(orig_name) + f"; filename=\"{orig_name}\""
+                            resp.headers['Content-Disposition'] = disp
+                        except Exception:
+                            resp.headers['Content-Disposition'] = f'attachment; filename=\"{orig_name}\"'
+        except Exception:
+            pass
+        return resp
     # اول مسیر تنظیم‌شده در کانفیگ
     try:
         base_cfg = current_app.config.get("UPLOAD_FOLDER")
@@ -531,6 +559,7 @@ def uploaded_file(filename):
             fp_cfg = os.path.join(base_cfg, filename)
             if os.path.isfile(fp_cfg):
                 resp = send_from_directory(base_cfg, filename)
+                resp = _maybe_set_apk_download_name(resp)
                 try:
                     resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
                 except Exception:
@@ -548,6 +577,7 @@ def uploaded_file(filename):
         fp = os.path.join(folder, filename)
         if os.path.isfile(fp):
             resp = send_from_directory(folder, filename)
+            resp = _maybe_set_apk_download_name(resp)
             try:
                 resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
             except Exception:
@@ -568,6 +598,7 @@ def uploaded_file(filename):
                 rel_dir = os.path.dirname(os.path.relpath(cand, static_root))
                 fn = os.path.basename(cand)
                 resp = send_from_directory(os.path.join(static_root, rel_dir), fn)
+                resp = _maybe_set_apk_download_name(resp)
                 try:
                     resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
                 except Exception:

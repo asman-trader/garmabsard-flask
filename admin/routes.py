@@ -1774,6 +1774,7 @@ def settings():
         f = request.files.get('android_apk')
         android_apk_size_bytes = None
         android_apk_sha256 = None
+        android_apk_original_name = None
         if f and f.filename:
             try:
                 # Validate extension and (approx) size
@@ -1791,6 +1792,11 @@ def settings():
                 safe_name = secure_filename(f"vinor_{ts}.apk")
                 dest = os.path.join(uploads_root, safe_name)
                 f.save(dest)
+                # keep original client filename (sanitized) for download display
+                try:
+                    android_apk_original_name = secure_filename(f.filename)
+                except Exception:
+                    android_apk_original_name = None
                 # Post-save validations and metadata
                 try:
                     android_apk_size_bytes = os.path.getsize(dest)
@@ -1818,6 +1824,8 @@ def settings():
         android_apk_updated_at = datetime.utcnow().isoformat() + 'Z' if android_apk_url else (current.get('android_apk_updated_at') or '')
         if not android_apk_version:
             android_apk_version = current.get('android_apk_version', '') or ''
+        if android_apk_original_name is None:
+            android_apk_original_name = current.get('android_apk_original_name', '') or ''
 
         save_settings({
             'approval_method': approval_method,
@@ -1834,6 +1842,7 @@ def settings():
             'android_apk_updated_at': android_apk_updated_at,
             'android_apk_size_bytes': android_apk_size_bytes if android_apk_size_bytes is not None else current.get('android_apk_size_bytes', ''),
             'android_apk_sha256': android_apk_sha256 if android_apk_sha256 is not None else current.get('android_apk_sha256', ''),
+            'android_apk_original_name': android_apk_original_name,
         })
         flash('تنظیمات با موفقیت ذخیره شد.', 'success')
         return redirect(url_for('admin.settings'))
