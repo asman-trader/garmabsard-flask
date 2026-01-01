@@ -242,5 +242,42 @@ def load_express_partner_views(app=None):    return _load(ensure_file('EXPRESS_P
 def save_express_partner_views(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_VIEWS_FILE','express_partner_views.json',[],app), items)
 
 # Express Partner: Routine tracking (days done per partner)
-def load_partner_routines(app=None):       return _load(ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app))
-def save_partner_routines(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app), items)
+_ROUTINES_CACHE = {"path": None, "mtime": None, "size": None, "data": None}
+
+def load_partner_routines(app=None):
+    return _load(ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app))
+
+def load_partner_routines_cached(app=None):
+    """Load partner routines with a small in-memory cache based on file mtime/size."""
+    app = app or current_app
+    path = ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app)
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+
+    c = _ROUTINES_CACHE
+    if c["path"] == path and c["mtime"] == mtime and c["size"] == size and c["data"] is not None:
+        return c["data"]
+
+    data = _load(path)
+    _ROUTINES_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": data})
+    return data
+
+def _update_routines_cache_after_save(path, items):
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+    _ROUTINES_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": items})
+
+def save_partner_routines(items, app=None):
+    path = ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app)
+    _save(path, items)
+    _update_routines_cache_after_save(path, items)

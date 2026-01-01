@@ -69,7 +69,7 @@ from app.utils.storage import (
     load_landing_views,
     load_express_views,
     load_express_partner_views,
-    load_partner_routines,
+    load_partner_routines, load_partner_routines_cached,
 )
 from app.services.notifications import add_notification
 
@@ -764,7 +764,7 @@ def dashboard():
 
     # جمع روزهای روتین همکاران در ماه جاری
     try:
-        routines = load_partner_routines() or []
+        routines = load_partner_routines_cached() or []
         current_month = datetime.now().strftime('%Y-%m')
         routines_count_month = sum(
             1
@@ -852,7 +852,7 @@ def partners_activity():
         partners = []
 
     try:
-        routines = load_partner_routines() or []
+        routines = load_partner_routines_cached() or []
     except Exception:
         routines = []
 

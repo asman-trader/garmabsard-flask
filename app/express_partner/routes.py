@@ -22,12 +22,12 @@ from ..utils.storage import (
     load_sms_history, save_sms_history,
     load_settings,
     load_express_partner_views, save_express_partner_views,
-    load_partner_routines, save_partner_routines,
+    load_partner_routines, load_partner_routines_cached, save_partner_routines,
 )
 from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
 from ..services.sms import send_sms_direct
-from flask import jsonify
+from flask import jsonify, make_response
 
 
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -1001,7 +1001,7 @@ def routine_data():
     if not month or len(month) != 7:
         month = datetime.now().strftime('%Y-%m')
 
-    records = load_partner_routines()
+    records = load_partner_routines_cached()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     days = []
     steps = {}
@@ -1010,7 +1010,10 @@ def routine_data():
     if rec and isinstance(rec.get('steps'), dict):
         steps = {k: int(v) for k, v in rec.get('steps', {}).items() if isinstance(k, str) and k.startswith(month + '-') and isinstance(v, (int, float))}
 
-    return jsonify({"success": True, "month": month, "days": days, "steps": steps})
+    resp = make_response(jsonify({"success": True, "month": month, "days": days, "steps": steps}))
+    # Short microcache for faster back-to-back calendar fetches
+    resp.headers["Cache-Control"] = "public, max-age=20, stale-while-revalidate=40"
+    return resp
 
 
 @express_partner_bp.route('/routine/complete', methods=['POST'], endpoint='routine_complete')
@@ -1022,7 +1025,7 @@ def routine_complete():
     phone = (session.get("user_phone") or "").strip()
     today = datetime.now().strftime('%Y-%m-%d')
 
-    records = load_partner_routines()
+    records = load_partner_routines_cached()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     if not rec:
         rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
@@ -1035,7 +1038,10 @@ def routine_complete():
     rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
 
     save_partner_routines(records)
-    return jsonify({"success": True, "date": today, "days": rec.get('days', []), "steps": rec.get('steps', {})})
+    # No-store for mutation responses
+    resp = make_response(jsonify({"success": True, "date": today, "days": rec.get('days', []), "steps": rec.get('steps', {})}))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @express_partner_bp.route('/routine/steps', methods=['POST'], endpoint='routine_steps')
@@ -1064,7 +1070,7 @@ def routine_steps():
         count = 10  # سقف معقول
 
     target_day = req_date or datetime.now().strftime('%Y-%m-%d')
-    records = load_partner_routines()
+    records = load_partner_routines_cached()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     if not rec:
         rec = {"phone": phone, "days": [], "steps": {}, "steps_detail": {}, "updated_at": None}
@@ -1089,14 +1095,16 @@ def routine_steps():
         session['routine_marked_date'] = target_day  # ثبت شده برای امروز
 
     save_partner_routines(records)
-    return jsonify({
+    resp = make_response(jsonify({
         "success": True,
         "date": target_day,
         "count": count,
         "days": rec.get('days', []),
         "steps": rec.get('steps', {}),
         "detail": rec.get('steps_detail', {}).get(target_day, [])
-    })
+    }))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @express_partner_bp.get('/routine/steps/detail')
@@ -1107,7 +1115,7 @@ def routine_steps_detail():
     date = (request.args.get('date') or '').strip()
     if not date:
         date = datetime.now().strftime('%Y-%m-%d')
-    records = load_partner_routines()
+    records = load_partner_routines_cached()
     rec = next((r for r in records if str(r.get('phone')) == phone), None)
     detail = []
     if rec and isinstance(rec.get('steps_detail'), dict):
@@ -1117,7 +1125,9 @@ def routine_steps_detail():
                 detail = [str(x) for x in d]
         except Exception:
             detail = []
-    return jsonify({"success": True, "date": date, "detail": detail})
+    resp = make_response(jsonify({"success": True, "date": date, "detail": detail}))
+    resp.headers["Cache-Control"] = "public, max-age=20, stale-while-revalidate=40"
+    return resp
 
 
 @express_partner_bp.route('/mark-in-transaction/<code>', methods=['POST'], endpoint='mark_in_transaction')
