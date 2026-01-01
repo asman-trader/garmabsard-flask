@@ -44,14 +44,27 @@
     body { font-family: 'Vazirmatn', sans-serif; }
     .glass { backdrop-filter: blur(18px); background: rgba(255, 255, 255, 0.9); }
     .dark .glass { background: rgba(15, 23, 42, 0.9); }
+    .progressive-img {
+      filter: blur(12px);
+      background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      transition: filter 0.25s ease, opacity 0.2s ease;
+    }
+    .dark .progressive-img {
+      background: linear-gradient(90deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+    }
+    .progressive-img.is-loaded {
+      filter: blur(0);
+    }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   {% set images = land.images or [] %}
+  {% set images_v2 = land.images_v2 or [] %}
   {% set video = land.video %}
   {% set has_video = video and video.strip() %}
   {% set total_items = (1 if has_video else 0) + images|length %}
   {% set primary_image = images[0] if images else None %}
+  {% set primary_image_v2 = images_v2[0] if images_v2 else None %}
 
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20" data-current-code="{{ land.code }}" data-current-index="{{ current_index }}">
     <!-- هدر ثابت - سبک دیوار -->
@@ -156,13 +169,15 @@
               {% else %}
                 {% set image_src = primary_image %}
               {% endif %}
+              {% set thumb_src = (primary_image_v2.thumb if primary_image_v2 else None) or image_src %}
+              {% set full_src = (primary_image_v2.full if primary_image_v2 else None) or image_src %}
               <img id="landMainImage"
-                   src="{{ image_src }}"
+                   src="{{ thumb_src }}"
+                   data-full="{{ full_src }}"
                    alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}"
                    itemprop="image"
-                   alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}"
-                   class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %}"
-                   onclick="openLightbox(this.src)">
+                   class="w-full h-full object-cover cursor-pointer progressive-img {% if has_video %}hidden{% else %}block{% endif %}"
+                   onclick="openLightbox(this.dataset.full || this.src)">
             {% endif %}
 
             {# دکمه‌های قبلی/بعدی فقط اگر بیش از یک آیتم وجود داشته باشد #}
@@ -582,8 +597,8 @@
       const hasVideo = !!mainVideo;
       
       const images = [
-        {% for img in images %}
-          "{% if '://' in (img|string) %}{{ img }}{% elif (img|string).startswith('/uploads/') %}{{ img }}{% elif (img|string).startswith('uploads/') %}/uploads/{{ (img|string)[8:] }}{% elif not (img|string).startswith('/') %}/uploads/{{ img }}{% else %}{{ img }}{% endif %}"{% if not loop.last %},{% endif %}
+        {% for img in images_v2 %}
+          {"thumb": "{{ img.thumb }}", "full": "{{ img.full or img.raw }}"}{% if not loop.last %},{% endif %}
         {% endfor %}
       ];
       
@@ -674,8 +689,26 @@
           waitForVideoLoad();
         } else {
           const imgIndex = hasVideo ? currentIndex - 1 : currentIndex;
-          if (mainImg && images[imgIndex]) {
-            mainImg.src = images[imgIndex];
+          const imgObj = images[imgIndex];
+          if (mainImg && imgObj) {
+            const thumb = imgObj.thumb || imgObj.full || imgObj.raw || imgObj;
+            const full = imgObj.full || imgObj.raw || thumb;
+            mainImg.classList.remove('is-loaded');
+            mainImg.src = thumb;
+            mainImg.dataset.full = full;
+            // Progressive upgrade به full
+            if (full && full !== thumb) {
+              const hi = new Image();
+              hi.decoding = 'async';
+              hi.src = full;
+              hi.addEventListener('load', () => {
+                mainImg.src = full;
+                mainImg.classList.add('is-loaded');
+              }, { once: true });
+              hi.addEventListener('error', () => mainImg.classList.add('is-loaded'), { once: true });
+            } else {
+              mainImg.addEventListener('load', () => mainImg.classList.add('is-loaded'), { once: true });
+            }
             mainImg.classList.remove('hidden');
             mainImg.classList.add('block');
           }
@@ -773,6 +806,27 @@
         waitForVideoLoad();
       } else {
         waitForImageLoad();
+      }
+
+      // Progressive upgrade تصویر اولیه به full
+      if (mainImg) {
+        const fullSrc = mainImg.dataset.full || '';
+        if (fullSrc && fullSrc !== mainImg.src) {
+          const hi = new Image();
+          hi.decoding = 'async';
+          hi.src = fullSrc;
+          hi.addEventListener('load', () => {
+            mainImg.src = fullSrc;
+            mainImg.classList.add('is-loaded');
+          }, { once: true });
+          hi.addEventListener('error', () => mainImg.classList.add('is-loaded'), { once: true });
+        } else {
+          if (mainImg.complete) {
+            mainImg.classList.add('is-loaded');
+          } else {
+            mainImg.addEventListener('load', () => mainImg.classList.add('is-loaded'), { once: true });
+          }
+        }
       }
     })();
 

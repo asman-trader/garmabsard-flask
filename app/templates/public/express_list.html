@@ -85,6 +85,20 @@
     .instagram-item:hover::after {
       background: rgba(0, 0, 0, 0.1);
     }
+    .lazy-img {
+      filter: blur(12px);
+      transform: scale(1.05);
+      background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      transition: filter 0.25s ease, transform 0.25s ease, opacity 0.2s ease;
+    }
+    .dark .lazy-img {
+      background: linear-gradient(90deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+    }
+    .lazy-img.is-loaded {
+      filter: blur(0);
+      transform: scale(1);
+      background: transparent;
+    }
     .loading-spinner {
       display: flex;
       justify-content: center;
@@ -166,6 +180,8 @@
         {% for land in lands %}
           {% set img = (land.images[0] if land.images and land.images[0] else None) %}
           {% set video = land.video %}
+          {% set thumb_src = land.image_thumb if land.image_thumb else None %}
+          {% set full_src = land.image_full if land.image_full else None %}
           <a href="{{ url_for('main.express_detail', code=land.code) }}" 
              class="instagram-item"
              data-code="{{ land.code }}">
@@ -195,7 +211,9 @@
                   {% else %}
                     {% set img_src = img %}
                   {% endif %}
-                  <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy">
+                  {% set thumb_src = thumb_src or img_src %}
+                  {% set full_src = full_src or img_src %}
+                  <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="{{ thumb_src or img_src }}" data-full="{{ full_src or img_src }}" alt="{{ land.title or '' }}" loading="lazy" decoding="async" class="lazy-img">
                 {% endif %}
               </video>
             {% elif img %}
@@ -210,7 +228,9 @@
               {% else %}
                 {% set img_src = img %}
               {% endif %}
-              <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy">
+              {% set thumb_src = thumb_src or img_src %}
+              {% set full_src = full_src or img_src %}
+              <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="{{ thumb_src }}" data-full="{{ full_src }}" alt="{{ land.title or '' }}" loading="lazy" decoding="async" class="lazy-img">
             {% else %}
               <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                 <i class="fas fa-image text-2xl text-gray-400 dark:text-gray-500"></i>
@@ -313,6 +333,7 @@
       const grid = document.getElementById('instagramGrid');
       const loadingIndicator = document.getElementById('loadingIndicator');
       const searchInput = document.getElementById('searchInput');
+      const cardsList = document.getElementById('cardsList');
       const emptyState = document.getElementById('emptyState');
       
       if (!grid) return;
@@ -333,13 +354,16 @@
       }
 
       // تابع برای render کردن یک آیتم
+      const PLACEHOLDER_PIXEL = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+
       function renderItem(land) {
         const images = Array.isArray(land.images) ? land.images : (land.images ? [land.images] : []);
         const cover = images[0] || null;
         const video = land.video;
-        const coverUrl = cover ? getMediaUrl(cover) : '';
+        const coverUrlRaw = cover ? getMediaUrl(cover) : '';
+        const coverThumb = land.image_thumb || coverUrlRaw;
+        const coverFull = land.image_full || land.image_raw || coverUrlRaw;
         const videoUrl = video ? getMediaUrl(video) : '';
-        const detailUrl = '/express/' + (land.code || '');
         const title = land.title || '';
 
         let mediaHtml = '';
@@ -347,11 +371,11 @@
           mediaHtml = `
             <video class="w-full h-full object-cover" autoplay muted loop playsinline>
               <source src="${videoUrl}" type="video/mp4">
-              ${coverUrl ? `<img src="${coverUrl}" alt="${title}" loading="lazy">` : ''}
+              ${coverThumb ? `<img src="${PLACEHOLDER_PIXEL}" data-src="${coverThumb}" data-full="${coverFull}" alt="${title}" loading="lazy" decoding="async" class="lazy-img">` : ''}
             </video>
           `;
-        } else if (coverUrl) {
-          mediaHtml = `<img src="${coverUrl}" alt="${title}" loading="lazy">`;
+        } else if (coverThumb) {
+          mediaHtml = `<img src="${PLACEHOLDER_PIXEL}" data-src="${coverThumb}" data-full="${coverFull}" alt="${title}" loading="lazy" decoding="async" class="lazy-img">`;
         } else {
           mediaHtml = `
             <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -368,6 +392,35 @@
           </a>
         `;
       }
+      const renderGridItem = renderItem;
+      const renderCardItem = renderItem;
+
+      // Lazy loading: فقط آیتم‌های داخل viewport دانلود شوند
+      const lazyObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            const src = img.getAttribute('data-src');
+            if (src) {
+              img.src = src;
+              img.removeAttribute('data-src');
+            }
+            img.addEventListener('load', () => img.classList.add('is-loaded'), { once: true });
+            img.addEventListener('error', () => img.classList.add('is-loaded'), { once: true });
+            lazyObserver.unobserve(img);
+          }
+        });
+      }, { rootMargin: '200px 0px', threshold: 0.01 });
+
+      function bindLazyImages(scope = document) {
+        const imgs = scope.querySelectorAll('img.lazy-img');
+        imgs.forEach(img => {
+          if (img.dataset.lazyBound === "1") return;
+          img.dataset.lazyBound = "1";
+          lazyObserver.observe(img);
+        });
+      }
+      bindLazyImages(document);
 
       // تابع برای بارگذاری صفحه بعد
       async function loadNextPage() {
@@ -385,6 +438,7 @@
           if (data.success && data.lands && data.lands.length > 0) {
             const gridItemsHtml = data.lands.map(renderGridItem).join('');
             grid.insertAdjacentHTML('beforeend', gridItemsHtml);
+            bindLazyImages(grid);
             
             hasMore = data.pagination.has_next;
             if (!hasMore) {
@@ -441,7 +495,7 @@
           isLoading = true;
           
           grid.innerHTML = '';
-          cardsList.innerHTML = '';
+          if (cardsList) { cardsList.innerHTML = ''; }
           loadingIndicator.classList.remove('hidden');
           emptyState.classList.add('hidden');
 
@@ -454,7 +508,8 @@
               const gridItemsHtml = data.lands.map(renderGridItem).join('');
               const cardItemsHtml = data.lands.map(renderCardItem).join('');
               grid.innerHTML = gridItemsHtml;
-              cardsList.innerHTML = cardItemsHtml;
+              if (cardsList) { cardsList.innerHTML = cardItemsHtml; }
+              bindLazyImages(grid);
               emptyState.classList.add('hidden');
               hasMore = data.pagination.has_next;
               if (!hasMore) {
@@ -462,7 +517,7 @@
               }
             } else {
               grid.innerHTML = '';
-              cardsList.innerHTML = '';
+              if (cardsList) { cardsList.innerHTML = ''; }
               emptyState.classList.remove('hidden');
               loadingIndicator.classList.add('hidden');
               hasMore = false;

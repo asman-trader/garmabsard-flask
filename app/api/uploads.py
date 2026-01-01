@@ -13,6 +13,14 @@ from datetime import datetime
 from typing import Tuple
 from flask import Blueprint, current_app, request, jsonify, send_from_directory
 from app.utils.storage import legacy_dir
+from app.utils.images import (
+    generate_thumb_and_full,
+    THUMB_WIDTH,
+    THUMB_QUALITY,
+    FULL_WIDTH,
+    FULL_QUALITY,
+    variant_headers_for_width,
+)
 from werkzeug.utils import secure_filename
 from io import BytesIO
 
@@ -142,7 +150,27 @@ def upload_image():
         rel_path = os.path.join(rel_dir, filename).replace("\\", "/")
         url = f"/uploads/{rel_path}"
 
-        return jsonify({"success": True, "ok": True, "id": rel_path, "url": url})
+        # Pre-generate thumb/full variants for faster first paint
+        try:
+            variants = generate_thumb_and_full(base_dir, rel_path)
+            url_thumb = f"/uploads/{variants['thumb_rel']}" if variants.get("thumb_rel") else ""
+            url_full = f"/uploads/{variants['full_rel']}" if variants.get("full_rel") else ""
+        except Exception:
+            url_thumb = ""
+            url_full = ""
+
+        return jsonify({
+            "success": True,
+            "ok": True,
+            "id": rel_path,
+            "url": url,
+            "url_thumb": url_thumb,
+            "url_full": url_full,
+            "meta": {
+                "thumb": {"width": THUMB_WIDTH, "quality": THUMB_QUALITY, "format": "webp"},
+                "full": {"width": FULL_WIDTH, "quality": FULL_QUALITY, "format": "webp"},
+            },
+        })
     except Exception as e:
         current_app.logger.exception("Upload failed")
         return jsonify({"success": False, "ok": False, "error": str(e)}), 400
@@ -151,14 +179,68 @@ def upload_image():
 def serve_uploads(filename: str):
     """
     سرو فایل‌های آپلود شده از UPLOAD_FOLDER.
+    پشتیبانی از پارامترهای واریانت:
+      - w: عرض هدف
+      - q: کیفیت
+      - fmt: فرمت خروجی (webp)
+      - variant: thumb|full (صرفاً برای دیباگ)
     """
+    def _try_variant(root: str, safe_name: str):
+        try:
+            width = int(request.args.get("w", 0) or 0)
+            quality = int(request.args.get("q", 0) or 0) or 80
+            fmt = (request.args.get("fmt") or "webp").lower()
+        except Exception:
+            width = 0
+            quality = 80
+            fmt = "webp"
+
+        if width <= 0:
+            return None
+
+        variant_abs = None
+        try:
+            variant_abs = generate_variant_path(root, safe_name, width, quality, fmt)
+        except Exception:
+            variant_abs = None
+
+        if not variant_abs:
+            return None
+
+        variant_dir, variant_file = os.path.split(variant_abs)
+        resp = send_from_directory(variant_dir, variant_file)
+        resp.headers["Cache-Control"] = variant_headers_for_width(width)
+        resp.headers["Content-Type"] = "image/webp"
+        return resp
+
+    def generate_variant_path(root: str, safe_name: str, width: int, quality: int, fmt: str):
+        # استفاده از همان ساختار __variants__/... برای کش دیسکی
+        from app.utils.images import generate_variant  # محلی برای جلوگیری از چرخه
+
+        variant_rel = generate_variant(root, safe_name, width, quality, f"w{width}_q{quality}", fmt.upper())
+        if not variant_rel:
+            return None
+        abs_path = os.path.join(root, variant_rel)
+        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+        return abs_path
+
     base_dir = current_app.config.get("UPLOAD_FOLDER")
     if base_dir:
         safe_path = os.path.normpath(filename).replace("\\", "/")
         try:
-            return send_from_directory(base_dir, safe_path)
+            # در صورت درخواست واریانت (w/q) سعی کن از کش بسازی/بخوانی
+            variant_resp = _try_variant(base_dir, safe_path)
+            if variant_resp:
+                return variant_resp
+        except Exception:
+            current_app.logger.debug("Variant generation skipped", exc_info=True)
+        try:
+            resp = send_from_directory(base_dir, safe_path)
+            resp.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=86400"
+            return resp
         except Exception:
             pass
+
     # فالبک به مسیر قدیمی کنار کد
     legacy_base = os.path.join(legacy_dir(current_app), "uploads")
     safe_path = os.path.normpath(filename).replace("\\", "/")

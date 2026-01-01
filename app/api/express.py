@@ -6,6 +6,7 @@ Express Listings API endpoints for Vinor Express feature
 
 from flask import Blueprint, jsonify, request, current_app, make_response
 from app.utils.storage import load_express_lands_cached, get_lands_file_stats
+from app.utils.images import prepare_variants_dict
 from app.services.notifications import add_notification
 
 express_api_bp = Blueprint('express_api', __name__, url_prefix='/api')
@@ -77,14 +78,21 @@ def express_search():
                 return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
         
-        # کاهش حجم داده
+        # کاهش حجم داده + افزودن لینک thumb/full برای کاور
         minimal_lands = []
         for land in express_lands[:50]:  # محدود کردن به 50 نتیجه اول
+            images = land.get('images', []) or []
+            cover = images[0] if images else None
+            cover_variants = prepare_variants_dict(cover)
             minimal_lands.append({
                 'code': land.get('code'),
                 'title': land.get('title'),
                 'location': land.get('location'),
-                'images': land.get('images', [])[:1],
+                'images': images[:1],
+                'image_thumb': cover_variants.get('thumb'),
+                'image_full': cover_variants.get('full'),
+                'image_raw': cover_variants.get('raw'),
+                'images_v2': [prepare_variants_dict(i) for i in images],
                 'video': land.get('video')
             })
         
@@ -149,15 +157,22 @@ def express_list():
         end_idx = start_idx + per_page
         paginated_lands = express_lands[start_idx:end_idx]
         
-        # کاهش حجم داده: فقط فیلدهای ضروری
+        # کاهش حجم داده: فقط فیلدهای ضروری + thumb/full
         minimal_lands = []
         for land in paginated_lands:
+            images = land.get('images', []) or []
+            cover = images[0] if images else None
+            cover_variants = prepare_variants_dict(cover)
             minimal_lands.append({
                 'code': land.get('code'),
                 'title': land.get('title'),
                 'location': land.get('location'),
                 'category': land.get('category'),
-                'images': land.get('images', [])[:1],  # فقط اولین تصویر
+                'images': images[:1],  # فقط اولین تصویر
+                'image_thumb': cover_variants.get('thumb'),
+                'image_full': cover_variants.get('full'),
+                'image_raw': cover_variants.get('raw'),
+                'images_v2': [prepare_variants_dict(i) for i in images],
                 'video': land.get('video'),
                 'price_total': land.get('price_total'),
                 'created_at': land.get('created_at')
@@ -212,6 +227,16 @@ def get_express_detail(code):
             resp.headers['ETag'] = etag
             resp.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
             return resp
+
+        images = express_land.get('images') or []
+        cover_variants = prepare_variants_dict(images[0] if images else None)
+        express_land = dict(express_land)
+        express_land.update({
+            'image_thumb': cover_variants.get('thumb'),
+            'image_full': cover_variants.get('full'),
+            'image_raw': cover_variants.get('raw'),
+            'images_v2': [prepare_variants_dict(i) for i in images],
+        })
 
         response = make_response(jsonify({
             'success': True,

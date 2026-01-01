@@ -12,6 +12,10 @@ from ..utils.storage import data_dir, legacy_dir, load_express_lands_cached
 from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
 from ..utils.storage import load_express_views, save_express_views
 from ..utils.share_tokens import decode_partner_ref
+from ..utils.images import (
+    prepare_variants_dict,
+    variant_headers_for_width,
+)
 from datetime import datetime
 from time import time as _now
 
@@ -298,9 +302,17 @@ def express_public_list():
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
         paginated_lands = express_lands[start_idx:end_idx]
-        # کاهش حجم داده برای تمپلیت (کمینه‌سازی)
+
+        def _cover_and_variants(l):
+            imgs = l.get('images') or []
+            cover = imgs[0] if imgs else None
+            variants = prepare_variants_dict(cover)
+            return cover, variants, [prepare_variants_dict(i) for i in imgs]
+
+        # کاهش حجم داده برای تمپلیت (کمینه‌سازی) + واریانت‌ها
         lands_min = []
         for land in paginated_lands:
+            cover_raw, cover_variants, images_v2 = _cover_and_variants(land)
             lands_min.append({
                 'code': land.get('code'),
                 'title': land.get('title'),
@@ -309,6 +321,10 @@ def express_public_list():
                 'price_total': land.get('price_total'),
                 'images': land.get('images', [])[:1],
                 'video': land.get('video'),
+                'image_thumb': cover_variants.get('thumb'),
+                'image_full': cover_variants.get('full'),
+                'image_raw': cover_variants.get('raw'),
+                'images_v2': images_v2,
             })
         
     except Exception as e:
@@ -453,6 +469,18 @@ def express_detail(code):
     except Exception as e:
         current_app.logger.error(f"Error tracking express listing view: {e}", exc_info=True)
 
+    # آماده‌سازی واریانت‌های تصویر (thumb/full)
+    try:
+        imgs = land.get('images') or []
+        images_v2 = [prepare_variants_dict(i) for i in imgs]
+        land['images_v2'] = images_v2
+        if images_v2:
+            land['image_thumb'] = images_v2[0].get('thumb')
+            land['image_full'] = images_v2[0].get('full')
+            land['image_raw'] = images_v2[0].get('raw')
+    except Exception:
+        pass
+
     ref_token = request.args.get('ref', '').strip()
     ref_phone = decode_partner_ref(ref_token)
     ref_partner = None
@@ -555,6 +583,36 @@ def uploaded_file(filename):
       2) سپس از instance/data/uploads
       3) سپس از <root>/data/uploads (legacy)
     """
+    try:
+        width = int(request.args.get("w", 0) or 0)
+        quality = int(request.args.get("q", 0) or 0) or 80
+        fmt = (request.args.get("fmt") or "webp").lower()
+    except Exception:
+        width = 0
+        quality = 80
+        fmt = "webp"
+
+    def _generate_variant(root: str, safe_name: str):
+        if width <= 0:
+            return None
+        try:
+            from app.utils.images import generate_variant  # محلی برای جلوگیری از چرخه
+
+            variant_rel = generate_variant(root, safe_name, width, quality, f"w{width}_q{quality}", fmt.upper())
+            if not variant_rel:
+                return None
+            abs_path = os.path.join(root, variant_rel)
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+            if os.path.isfile(abs_path):
+                vdir, vfile = os.path.split(abs_path)
+                resp = send_from_directory(vdir, vfile)
+                resp.headers["Cache-Control"] = variant_headers_for_width(width)
+                resp.headers["Content-Type"] = "image/webp"
+                return resp
+        except Exception as e:
+            current_app.logger.debug("Variant generation failed: %s", e, exc_info=True)
+        return None
+
     def _maybe_set_apk_download_name(resp):
         try:
             fn_norm = (filename or '').replace('\\', '/')
@@ -588,10 +646,17 @@ def uploaded_file(filename):
         if base_cfg:
             fp_cfg = os.path.join(base_cfg, filename)
             if os.path.isfile(fp_cfg):
+                # تلاش برای سرو واریانت
+                variant_resp = _generate_variant(base_cfg, filename)
+                if variant_resp:
+                    return variant_resp
                 resp = send_from_directory(base_cfg, filename)
                 resp = _maybe_set_apk_download_name(resp)
                 try:
-                    resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+                    if width > 0:
+                        resp.headers["Cache-Control"] = variant_headers_for_width(width)
+                    else:
+                        resp.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=86400"
                 except Exception:
                     pass
                 return resp
@@ -606,10 +671,13 @@ def uploaded_file(filename):
     for folder in upload_roots:
         fp = os.path.join(folder, filename)
         if os.path.isfile(fp):
+            variant_resp = _generate_variant(folder, filename)
+            if variant_resp:
+                return variant_resp
             resp = send_from_directory(folder, filename)
             resp = _maybe_set_apk_download_name(resp)
             try:
-                resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+                resp.headers["Cache-Control"] = variant_headers_for_width(width) if width > 0 else "public, max-age=86400, stale-while-revalidate=86400"
             except Exception:
                 pass
             return resp
@@ -630,7 +698,7 @@ def uploaded_file(filename):
                 resp = send_from_directory(os.path.join(static_root, rel_dir), fn)
                 resp = _maybe_set_apk_download_name(resp)
                 try:
-                    resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+                    resp.headers["Cache-Control"] = variant_headers_for_width(width) if width > 0 else "public, max-age=86400, stale-while-revalidate=86400"
                 except Exception:
                     pass
                 return resp

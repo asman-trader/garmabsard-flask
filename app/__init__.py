@@ -305,6 +305,9 @@ def create_app() -> Flask:
     def add_cache_headers(resp):
         try:
             path = request.path or ""
+            # اگر هدر Cache-Control قبلاً ست شده (مثلاً برای واریانت تصاویر)، دست نزن
+            if resp.headers.get("Cache-Control"):
+                return resp
             # Long cache for static assets and uploads
             if path.startswith("/static/") or path.startswith("/uploads/"):
                 resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
