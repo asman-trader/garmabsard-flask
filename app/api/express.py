@@ -5,7 +5,7 @@ Express Listings API endpoints for Vinor Express feature
 """
 
 from flask import Blueprint, jsonify, request, current_app, make_response
-from app.utils.storage import load_express_lands_cached
+from app.utils.storage import load_express_lands_cached, get_lands_file_stats
 from app.services.notifications import add_notification
 
 express_api_bp = Blueprint('express_api', __name__, url_prefix='/api')
@@ -15,6 +15,17 @@ def get_express_listings():
     """Get all express listings (بهینه شده)"""
     try:
         express_lands = load_express_lands_cached()
+        stats = get_lands_file_stats()
+        etag = stats.get("etag")
+
+        # ETag short-circuit
+        inm = request.headers.get("If-None-Match")
+        if inm and etag and inm == etag:
+            resp = make_response(("", 304))
+            resp.headers['ETag'] = etag
+            resp.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
+            return resp
+
         # فیلتر فقط approved
         express_lands = [l for l in express_lands if l.get('express_status') == 'approved']
         
@@ -23,7 +34,9 @@ def get_express_listings():
             'lands': express_lands,
             'count': len(express_lands)
         }))
-        response.headers['Cache-Control'] = 'public, max-age=60, s-maxage=60'
+        response.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
+        if etag:
+            response.headers['ETag'] = etag
         return response
     except Exception as e:
         current_app.logger.error(f"Error loading express listings: {e}")
@@ -40,6 +53,16 @@ def express_search():
         
         # استفاده از کش بهینه شده
         express_lands = load_express_lands_cached() or []
+        stats = get_lands_file_stats()
+        # ETag را به پارامتر جستجو وابسته می‌کنیم
+        base_etag = stats.get("etag") or 'W/"lands"'
+        etag = f'{base_etag}-search-{hash(query) & 0xffff:x}'
+        inm = request.headers.get("If-None-Match")
+        if inm and etag and inm == etag:
+            resp = make_response(("", 304))
+            resp.headers['ETag'] = etag
+            resp.headers['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=60'
+            return resp
         
         # جستجو (بهینه شده)
         if query:
@@ -70,7 +93,10 @@ def express_search():
             'lands': minimal_lands,
             'count': len(express_lands)
         }))
-        response.headers['Cache-Control'] = 'public, max-age=30, s-maxage=30'
+        response.headers['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=60'
+        response.headers['Vary'] = 'Accept-Encoding'
+        if etag:
+            response.headers['ETag'] = etag
         return response
     except Exception as e:
         current_app.logger.error(f"Error in express search: {e}", exc_info=True)
@@ -89,6 +115,15 @@ def express_list():
         
         # استفاده از کش بهینه شده برای فایل‌های اکسپرس
         express_lands = load_express_lands_cached() or []
+        stats = get_lands_file_stats()
+        base_etag = stats.get("etag") or 'W/"lands"'
+        etag = f'{base_etag}-list-p{page}-pp{per_page}-q{hash(search_query) & 0xffff:x}'
+        inm = request.headers.get("If-None-Match")
+        if inm and etag and inm == etag:
+            resp = make_response(("", 304))
+            resp.headers['ETag'] = etag
+            resp.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
+            return resp
         
         # جستجو (فقط در صورت نیاز)
         if search_query:
@@ -142,8 +177,10 @@ def express_list():
         }))
         
         # اضافه کردن cache headers برای سرعت بیشتر
-        response.headers['Cache-Control'] = 'public, max-age=60, s-maxage=60'
+        response.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=120'
         response.headers['Vary'] = 'Accept-Encoding'
+        if etag:
+            response.headers['ETag'] = etag
         
         return response
     except Exception as e:
@@ -158,6 +195,8 @@ def get_express_detail(code):
     """Get express listing detail (بهینه شده)"""
     try:
         express_lands = load_express_lands_cached()
+        stats = get_lands_file_stats()
+        base_etag = stats.get("etag") or 'W/"lands"'
         express_land = next((land for land in express_lands if land.get('code') == code), None)
         
         if not express_land:
@@ -166,11 +205,21 @@ def get_express_detail(code):
                 'error': 'آگهی اکسپرس یافت نشد'
             }), 404
         
+        etag = f'{base_etag}-detail-{code}'
+        inm = request.headers.get("If-None-Match")
+        if inm and etag and inm == etag:
+            resp = make_response(("", 304))
+            resp.headers['ETag'] = etag
+            resp.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
+            return resp
+
         response = make_response(jsonify({
             'success': True,
             'land': express_land
         }))
-        response.headers['Cache-Control'] = 'public, max-age=300, s-maxage=300'
+        response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
+        response.headers['Vary'] = 'Accept-Encoding'
+        response.headers['ETag'] = etag
         return response
     except Exception as e:
         current_app.logger.error(f"Error loading express detail: {e}")

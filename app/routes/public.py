@@ -298,6 +298,18 @@ def express_public_list():
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
         paginated_lands = express_lands[start_idx:end_idx]
+        # کاهش حجم داده برای تمپلیت (کمینه‌سازی)
+        lands_min = []
+        for land in paginated_lands:
+            lands_min.append({
+                'code': land.get('code'),
+                'title': land.get('title'),
+                'location': land.get('location'),
+                'size': land.get('size'),
+                'price_total': land.get('price_total'),
+                'images': land.get('images', [])[:1],
+                'video': land.get('video'),
+            })
         
     except Exception as e:
         current_app.logger.error(f"Error loading express listings: {e}", exc_info=True)
@@ -341,12 +353,21 @@ def express_public_list():
         cached = _mc_get(key)
         if cached:
             resp = make_response(cached)
-            resp.headers["Cache-Control"] = "public, max-age=20"
+            resp.headers["Cache-Control"] = "public, max-age=20, stale-while-revalidate=40"
+            # ETag بر اساس وضعیت فایل آگهی + پارامترها
+            try:
+                from ..utils.storage import get_lands_file_stats
+                stats = get_lands_file_stats()
+                base_etag = stats.get("etag") or 'W/"lands"'
+                etag = f'{base_etag}-page-{page}-q{hash(search_query) & 0xffff:x}'
+                resp.headers["ETag"] = etag
+            except Exception:
+                pass
             return resp
 
     html = render_template(
         template_name,
-        lands=paginated_lands,
+        lands=lands_min,
         pagination={'page': page, 'pages': pages, 'total': total},
         show_back_button=show_back_button,
         search_query=search_query,
@@ -365,7 +386,16 @@ def express_public_list():
     except Exception:
         pass
     resp = make_response(html)
-    resp.headers["Cache-Control"] = "public, max-age=20"
+    resp.headers["Cache-Control"] = "public, max-age=20, stale-while-revalidate=40"
+    if not session.get('user_phone'):
+        try:
+            from ..utils.storage import get_lands_file_stats
+            stats = get_lands_file_stats()
+            base_etag = stats.get("etag") or 'W/"lands"'
+            etag = f'{base_etag}-page-{page}-q{hash(search_query) & 0xffff:x}'
+            resp.headers["ETag"] = etag
+        except Exception:
+            pass
     return resp
 
 @main_bp.route("/express/<code>", endpoint="express_detail")

@@ -141,6 +141,23 @@ def load_express_lands_cached(app=None):
     _EXPRESS_LANDS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": express_lands})
     return express_lands
 
+def get_lands_file_stats(app=None):
+    """
+    آمار فایل آگهی‌ها برای ساخت ETag/Last-Modified سریع.
+    خروجی: {"path": str, "mtime": int|None, "size": int|None, "etag": str}
+    """
+    app = app or current_app
+    path = ensure_file('LANDS_FILE','lands.json',[],app)
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+    etag = f'W/"lands-{mtime}-{size}"'
+    return {"path": path, "mtime": mtime, "size": size, "etag": etag}
+
 def _update_ads_cache_after_save(path, items):
     try:
         st = os.stat(path)
