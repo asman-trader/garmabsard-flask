@@ -301,7 +301,10 @@ class OnboardingTour {
         title: 'کارت فایل',
         description: 'هر کارت یک فایل اختصاص داده شده به شماست. می‌توانید روی کارت کلیک کنید تا جزئیات را ببینید.',
         position: 'top',
-        page: 'dashboard'
+        page: 'dashboard',
+        action: 'auto-navigate',
+        actionMessage: 'در حال انتقال به صفحه جزئیات فایل...',
+        nextUrl: null // به صورت خودکار از کارت اول گرفته می‌شود
       },
       // مرحله 4: جزئیات فایل - تصویر
       {
@@ -381,8 +384,8 @@ class OnboardingTour {
         description: 'برای افزودن یادداشت جدید، روی دکمه + در هدر کلیک کنید. سپس می‌توانید یادداشت خود را بنویسید و ذخیره کنید.',
         position: 'bottom',
         page: 'notes',
-        action: 'click',
-        actionMessage: 'لطفاً روی دکمه + کلیک کنید تا فرم افزودن یادداشت نمایش داده شود.'
+        action: 'auto-navigate',
+        actionMessage: 'در حال نمایش فرم افزودن یادداشت...'
       },
       // مرحله 13: فیلد ثبت یادداشت
       {
@@ -659,6 +662,8 @@ class OnboardingTour {
       actionHtml = `<div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">${step.actionMessage || 'لطفاً روی المنت کلیک کنید.'}</div>`;
     } else if (step.action === 'navigate') {
       actionHtml = `<div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">${step.actionMessage || 'لطفاً به صفحه بعدی بروید.'}</div>`;
+    } else if (step.action === 'auto-navigate') {
+      actionHtml = `<div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">${step.actionMessage || 'در حال انتقال...'}</div>`;
     }
 
     // بررسی dark mode
@@ -709,6 +714,10 @@ class OnboardingTour {
           ${step.action === 'navigate' && step.nextUrl ? `
             <button onclick="window.onboardingTour.navigateToNext('${step.nextUrl}')" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation" style="min-height: ${isMobile ? '44px' : 'auto'}">
               برو به صفحه بعدی
+            </button>
+          ` : step.action === 'auto-navigate' ? `
+            <button onclick="window.onboardingTour.autoNavigateToNext(${index})" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation" style="min-height: ${isMobile ? '44px' : 'auto'}">
+              ادامه
             </button>
           ` : step.action === 'click' ? `
             <button onclick="window.onboardingTour.nextStep()" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition opacity-50 cursor-not-allowed touch-manipulation" disabled style="min-height: ${isMobile ? '44px' : 'auto'}">
@@ -830,6 +839,60 @@ class OnboardingTour {
     sessionStorage.setItem('vinor_tour_step', (this.currentStep + 1).toString());
     sessionStorage.setItem('vinor_tour_data', JSON.stringify(this.tourData));
     window.location.href = url;
+  }
+
+  autoNavigateToNext(stepIndex) {
+    // برای auto-navigate، باید URL را از المنت بگیریم یا action را اجرا کنیم
+    const step = this.tourData[stepIndex];
+    const element = document.querySelector(step.element);
+    
+    if (!element) {
+      // اگر المنت پیدا نشد، به مرحله بعد برو
+      this.nextStep();
+      return;
+    }
+
+    // اگر المنت یک دکمه است که فرم را نمایش می‌دهد (مثل دکمه + در notes)
+    const onclickAttr = element.getAttribute('onclick');
+    if (onclickAttr && (onclickAttr.includes('addNoteForm') || onclickAttr.includes('classList.toggle'))) {
+      // اجرای onclick برای نمایش فرم
+      try {
+        eval(onclickAttr);
+      } catch (e) {
+        console.warn('Error executing onclick:', e);
+      }
+      // بعد از 300ms به مرحله بعد برو (منتظر نمایش فرم)
+      setTimeout(() => {
+        this.showStep(stepIndex + 1);
+      }, 300);
+      return;
+    }
+
+    // تلاش برای پیدا کردن URL از المنت
+    let targetUrl = null;
+    
+    // اگر المنت خودش data-href دارد
+    if (element.getAttribute('data-href')) {
+      targetUrl = element.getAttribute('data-href');
+    } else {
+      // اگر المنت یک کارت است، href را از data-href بگیر
+      const cardLink = element.closest('[data-href]');
+      if (cardLink) {
+        targetUrl = cardLink.getAttribute('data-href');
+      }
+    }
+
+    if (targetUrl) {
+      // ذخیره وضعیت تور
+      sessionStorage.setItem('vinor_tour_step', (stepIndex + 1).toString());
+      sessionStorage.setItem('vinor_tour_data', JSON.stringify(this.tourData));
+      // رفتن به صفحه بعدی
+      window.location.href = targetUrl;
+    } else {
+      // اگر URL پیدا نشد، به مرحله بعد برو (شاید المنت بعدی در همان صفحه باشد)
+      console.warn('Could not find URL for auto-navigate, proceeding to next step');
+      this.nextStep();
+    }
   }
 
   calculatePosition(rect, position) {
