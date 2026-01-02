@@ -503,11 +503,31 @@
   </div>
 
   <script>
+    // ذخیره کردن referrer اصلی در sessionStorage (قبل از هر navigation)
+    // این referrer حتی وقتی با replace بین فایل‌ها جابجا می‌شویم حفظ می‌شود
+    (function() {
+      const referer = document.referrer || '';
+      const currentPath = window.location.pathname;
+      
+      // اگر از صفحه اکسپلور آمده‌ایم و هنوز referrer ذخیره نشده، ذخیره کن
+      if (referer && (referer.includes('/public') || referer.includes('/express/partner/explore'))) {
+        const savedReferer = sessionStorage.getItem('express_detail_referer');
+        if (!savedReferer) {
+          sessionStorage.setItem('express_detail_referer', referer);
+        }
+      }
+      // اگر referrer ذخیره شده وجود دارد و از فایل دیگری آمده‌ایم (با replace),
+      // referrer ذخیره شده را حفظ کن (نادیده نگیر)
+    })();
+
     // تابع برای بازگشت به صفحه اکسپلور
     function goToExplore() {
-      // بررسی اینکه آیا کاربر از صفحه اکسپلور همکاران آمده یا نه
-      const referer = document.referrer || '';
-      const isFromPartnerExplore = referer.includes('/express/partner/explore');
+      // بررسی referrer ذخیره شده در sessionStorage
+      const savedReferer = sessionStorage.getItem('express_detail_referer') || '';
+      const isFromPartnerExplore = savedReferer.includes('/express/partner/explore');
+      
+      // پاک کردن referrer ذخیره شده
+      sessionStorage.removeItem('express_detail_referer');
       
       // اگر از صفحه اکسپلور همکاران آمده، به همان صفحه برگرد
       if (isFromPartnerExplore) {
@@ -885,13 +905,16 @@
           // Swipe به بالا = فایل بعدی
           const next = getNextCode();
           if (next) {
-            window.location.href = '/express/' + next;
+            // استفاده از replace برای جلوگیری از اضافه شدن به history
+            // تا دکمه back همیشه به اکسپلور برگردد
+            window.location.replace('/express/' + next);
           }
         } else if (dy > 0) {
           // Swipe به پایین = فایل قبلی
           const prev = getPrevCode();
           if (prev) {
-            window.location.href = '/express/' + prev;
+            // استفاده از replace برای جلوگیری از اضافه شدن به history
+            window.location.replace('/express/' + prev);
           }
         }
       }
@@ -923,13 +946,15 @@
           const next = getNextCode();
           if (next) {
             e.preventDefault();
-            window.location.href = '/express/' + next;
+            // استفاده از replace برای جلوگیری از اضافه شدن به history
+            window.location.replace('/express/' + next);
           }
         } else if (e.key === 'ArrowDown') {
           const prev = getPrevCode();
           if (prev) {
             e.preventDefault();
-            window.location.href = '/express/' + prev;
+            // استفاده از replace برای جلوگیری از اضافه شدن به history
+            window.location.replace('/express/' + prev);
           }
         }
       });
