@@ -212,26 +212,50 @@ class OnboardingTour {
     return [
       {
         element: '[data-tour="profile-section"]',
-        title: 'پروفایل شما',
-        description: 'اطلاعات حساب کاربری شما در این بخش نمایش داده می‌شود.',
+        title: 'پروفایل شما 👤',
+        description: 'در این بخش اطلاعات حساب کاربری شما شامل نام، شماره تماس و نقش نمایش داده می‌شود. همچنین می‌توانید از اینجا از حساب خود خارج شوید.',
         position: 'bottom'
       },
       {
         element: '[data-tour="notes-link"]',
-        title: 'یادداشت‌ها',
-        description: 'برای مشاهده و مدیریت یادداشت‌های خصوصی خود، اینجا کلیک کنید.',
+        title: 'یادداشت‌های خصوصی 📝',
+        description: 'یادداشت‌های شخصی خود را اینجا ثبت و مدیریت کنید. این یادداشت‌ها فقط برای شما قابل مشاهده است و می‌توانید از آن‌ها برای یادآوری اطلاعات مهم استفاده کنید.',
+        position: 'top'
+      },
+      {
+        element: '[data-tour="notifications-link"]',
+        title: 'اعلان‌ها 🔔',
+        description: 'تمام اعلان‌های مهم مانند تایید پورسانت، فایل‌های جدید و پیام‌های سیستم در این بخش نمایش داده می‌شود. تعداد اعلان‌های خوانده نشده روی آیکون نمایش داده می‌شود.',
+        position: 'top'
+      },
+      {
+        element: '[data-tour="top-sellers-link"]',
+        title: 'فروشنده‌های برتر 🏆',
+        description: 'رتبه‌بندی همکاران برتر را مشاهده کنید و ببینید چه کسانی بیشترین فروش را داشته‌اند. این می‌تواند انگیزه‌بخش باشد!',
+        position: 'top'
+      },
+      {
+        element: '[data-tour="help-link"]',
+        title: 'راهنمای استفاده 📚',
+        description: 'اگر سوالی دارید یا می‌خواهید نحوه استفاده از پلتفرم را یاد بگیرید، این بخش را مطالعه کنید. راهنمای کامل استفاده از تمام قابلیت‌ها در اینجا موجود است.',
         position: 'top'
       },
       {
         element: '[data-tour="support-link"]',
-        title: 'پشتیبانی',
-        description: 'در صورت نیاز به راهنمایی یا پشتیبانی، می‌توانید از این بخش با ما تماس بگیرید.',
+        title: 'تماس با پشتیبانی 💬',
+        description: 'در صورت بروز مشکل یا نیاز به راهنمایی، می‌توانید از طریق این بخش با تیم پشتیبانی تماس بگیرید. ما همیشه آماده کمک به شما هستیم.',
+        position: 'top'
+      },
+      {
+        element: '[data-tour="bottom-nav"]',
+        title: 'منوی پایین 📱',
+        description: 'از این منو می‌توانید به بخش‌های اصلی پنل دسترسی سریع داشته باشید: فایل‌ها، پورسانت‌ها، اعلان‌ها و پروفایل.',
         position: 'top'
       },
       {
         element: '[data-tour="restart-tour"]',
-        title: 'اجرای مجدد تور',
-        description: 'اگر می‌خواهید دوباره تور راهنما را ببینید، روی این دکمه کلیک کنید.',
+        title: 'اجرای مجدد تور راهنما 🔄',
+        description: 'اگر می‌خواهید دوباره تور راهنما را ببینید یا بخشی از آموزش را مرور کنید، روی این دکمه کلیک کنید. تور از ابتدا شروع می‌شود و تمام بخش‌ها را پوشش می‌دهد.',
         position: 'top'
       }
     ];
@@ -351,40 +375,64 @@ class OnboardingTour {
       // مرحله 13: پروفایل
       {
         element: '[data-tour="profile-section"]',
-        title: 'پروفایل شما',
-        description: 'اطلاعات حساب کاربری شما در این بخش نمایش داده می‌شود.',
+        title: 'پروفایل شما 👤',
+        description: 'در این بخش اطلاعات حساب کاربری شما شامل نام، شماره تماس و نقش نمایش داده می‌شود. همچنین می‌توانید از اینجا از حساب خود خارج شوید.',
         position: 'bottom',
         page: 'profile'
       },
       // مرحله 14: لینک یادداشت‌ها در پروفایل
       {
         element: '[data-tour="notes-link"]',
-        title: 'دسترسی سریع به یادداشت‌ها',
-        description: 'می‌توانید از اینجا به یادداشت‌های خود دسترسی سریع داشته باشید.',
+        title: 'یادداشت‌های خصوصی 📝',
+        description: 'یادداشت‌های شخصی خود را اینجا ثبت و مدیریت کنید. این یادداشت‌ها فقط برای شما قابل مشاهده است و می‌توانید از آن‌ها برای یادآوری اطلاعات مهم استفاده کنید.',
         position: 'top',
         page: 'profile'
       },
-      // مرحله 15: پشتیبانی
+      // مرحله 15: اعلان‌ها
+      {
+        element: '[data-tour="notifications-link"]',
+        title: 'اعلان‌ها 🔔',
+        description: 'تمام اعلان‌های مهم مانند تایید پورسانت، فایل‌های جدید و پیام‌های سیستم در این بخش نمایش داده می‌شود. تعداد اعلان‌های خوانده نشده روی آیکون نمایش داده می‌شود.',
+        position: 'top',
+        page: 'profile'
+      },
+      // مرحله 16: فروشنده‌های برتر
+      {
+        element: '[data-tour="top-sellers-link"]',
+        title: 'فروشنده‌های برتر 🏆',
+        description: 'رتبه‌بندی همکاران برتر را مشاهده کنید و ببینید چه کسانی بیشترین فروش را داشته‌اند. این می‌تواند انگیزه‌بخش باشد!',
+        position: 'top',
+        page: 'profile'
+      },
+      // مرحله 17: راهنما
+      {
+        element: '[data-tour="help-link"]',
+        title: 'راهنمای استفاده 📚',
+        description: 'اگر سوالی دارید یا می‌خواهید نحوه استفاده از پلتفرم را یاد بگیرید، این بخش را مطالعه کنید. راهنمای کامل استفاده از تمام قابلیت‌ها در اینجا موجود است.',
+        position: 'top',
+        page: 'profile'
+      },
+      // مرحله 18: پشتیبانی
       {
         element: '[data-tour="support-link"]',
-        title: 'پشتیبانی',
-        description: 'در صورت نیاز به راهنمایی یا پشتیبانی، می‌توانید از این بخش با ما تماس بگیرید.',
+        title: 'تماس با پشتیبانی 💬',
+        description: 'در صورت بروز مشکل یا نیاز به راهنمایی، می‌توانید از طریق این بخش با تیم پشتیبانی تماس بگیرید. ما همیشه آماده کمک به شما هستیم.',
         position: 'top',
         page: 'profile'
       },
-      // مرحله 16: منوی پایین
+      // مرحله 19: منوی پایین
       {
         element: '[data-tour="bottom-nav"]',
-        title: 'منوی پایین',
-        description: 'از این منو می‌توانید به بخش‌های مختلف پنل دسترسی داشته باشید: فایل‌ها، پورسانت‌ها، اعلان‌ها و پروفایل.',
+        title: 'منوی پایین 📱',
+        description: 'از این منو می‌توانید به بخش‌های اصلی پنل دسترسی سریع داشته باشید: فایل‌ها، پورسانت‌ها، اعلان‌ها و پروفایل.',
         position: 'top',
         page: 'profile'
       },
-      // مرحله 17: اجرای مجدد تور
+      // مرحله 20: اجرای مجدد تور
       {
         element: '[data-tour="restart-tour"]',
-        title: 'اجرای مجدد تور',
-        description: 'اگر می‌خواهید دوباره این تور راهنما را ببینید، روی این دکمه کلیک کنید.',
+        title: 'اجرای مجدد تور راهنما 🔄',
+        description: 'اگر می‌خواهید دوباره تور راهنما را ببینید یا بخشی از آموزش را مرور کنید، روی این دکمه کلیک کنید. تور از ابتدا شروع می‌شود و تمام بخش‌ها را پوشش می‌دهد.',
         position: 'top',
         page: 'profile'
       }
@@ -407,7 +455,8 @@ class OnboardingTour {
     `;
     document.body.appendChild(this.overlay);
 
-    // ایجاد tooltip
+    // ایجاد tooltip (موبایل محور)
+    const isMobile = window.innerWidth < 640;
     this.tooltip = document.createElement('div');
     this.tooltip.className = 'onboarding-tooltip';
     this.tooltip.style.cssText = `
@@ -415,12 +464,18 @@ class OnboardingTour {
       z-index: 9999;
       background: white;
       border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      max-width: 320px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-radius: ${isMobile ? '16px' : '12px'};
+      padding: ${isMobile ? '20px 16px' : '16px'};
+      max-width: ${isMobile ? 'calc(100vw - 16px)' : '320px'};
+      min-width: ${isMobile ? 'calc(100vw - 16px)' : '280px'};
+      width: ${isMobile ? 'calc(100vw - 16px)' : 'auto'};
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
       font-family: 'Vazirmatn', sans-serif;
       direction: rtl;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      animation: tooltipFadeIn 0.3s ease forwards;
     `;
     // اضافه کردن کلاس dark mode
     if (document.documentElement.classList.contains('dark')) {
@@ -428,6 +483,75 @@ class OnboardingTour {
       this.tooltip.style.borderColor = '#374151';
       this.tooltip.style.color = '#f9fafb';
     }
+    
+    // اضافه کردن استایل انیمیشن (موبایل محور)
+    if (!document.getElementById('onboarding-animations')) {
+      const style = document.createElement('style');
+      style.id = 'onboarding-animations';
+      style.textContent = `
+        @keyframes tooltipFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        @keyframes highlightPulse {
+          0%, 100% {
+            outline-color: #2563EB;
+          }
+          50% {
+            outline-color: #3B82F6;
+          }
+        }
+        .onboarding-highlight {
+          animation: highlightPulse 2s ease-in-out infinite;
+        }
+        /* استایل‌های موبایل */
+        @media (max-width: 640px) {
+          .onboarding-tooltip {
+            max-width: calc(100vw - 16px) !important;
+            min-width: calc(100vw - 16px) !important;
+            width: calc(100vw - 16px) !important;
+            padding: 20px 16px !important;
+            border-radius: 16px !important;
+            font-size: 14px !important;
+          }
+          .onboarding-tooltip h3 {
+            font-size: 16px !important;
+            margin-bottom: 8px !important;
+          }
+          .onboarding-tooltip p {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+          }
+          .onboarding-tooltip button {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            min-height: 44px !important;
+            touch-action: manipulation;
+          }
+          .onboarding-tooltip .fa-times {
+            font-size: 16px !important;
+          }
+          .onboarding-overlay {
+            background: rgba(0, 0, 0, 0.6) !important;
+          }
+        }
+        /* بهبود touch targets برای موبایل */
+        @media (pointer: coarse) {
+          .onboarding-tooltip button {
+            min-height: 44px;
+            min-width: 44px;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
     document.body.appendChild(this.tooltip);
   }
 
@@ -507,32 +631,50 @@ class OnboardingTour {
     this.tooltip.style.borderColor = borderColor;
     this.tooltip.style.color = textColor;
 
+    const isMobile = window.innerWidth < 640;
+    const closeButtonSize = isMobile ? 'w-9 h-9' : 'w-7 h-7';
+    const closeButtonIconSize = isMobile ? 'text-sm' : 'text-xs';
+    const titleSize = isMobile ? 'text-lg' : 'text-base';
+    const descSize = isMobile ? 'text-base' : 'text-sm';
+    const buttonPadding = isMobile ? 'px-4 py-2.5' : 'px-3 py-1.5';
+    const buttonTextSize = isMobile ? 'text-sm' : 'text-xs';
+    const counterTextSize = isMobile ? 'text-sm' : 'text-xs';
+    
     this.tooltip.innerHTML = `
-      <div class="mb-3">
-        <h3 class="text-base font-semibold mb-1" style="color: ${textColor}">${step.title}</h3>
-        <p class="text-sm leading-relaxed" style="color: ${textSecondary}">${step.description}</p>
-        ${actionHtml}
+      <div class="relative">
+        <!-- دکمه بستن -->
+        <button onclick="window.onboardingTour.closeTour()" 
+                class="absolute top-0 left-0 ${closeButtonSize} flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors touch-manipulation"
+                style="color: ${textSecondary}"
+                aria-label="بستن تور">
+          <i class="fas fa-times ${closeButtonIconSize}"></i>
+        </button>
+        <div class="mb-4 ${isMobile ? 'pr-10' : 'pr-7'}">
+          <h3 class="${titleSize} font-semibold mb-2" style="color: ${textColor}">${step.title}</h3>
+          <p class="${descSize} leading-relaxed" style="color: ${textSecondary}">${step.description}</p>
+          ${actionHtml}
+        </div>
       </div>
-      <div class="flex items-center justify-between gap-2 pt-2" style="border-top-color: ${borderColor}">
-        <div class="text-xs" style="color: ${textSecondary}">
+      <div class="flex items-center justify-between gap-2 pt-3" style="border-top: 1px solid ${borderColor}">
+        <div class="${counterTextSize} font-medium" style="color: ${textSecondary}">
           ${index + 1} از ${this.tourData.length}
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           ${index > 0 ? `
-            <button onclick="window.onboardingTour.prevStep()" class="px-3 py-1.5 text-xs font-medium border rounded-lg hover:opacity-80 transition" style="border-color: ${borderColor}; color: ${textColor}">
+            <button onclick="window.onboardingTour.prevStep()" class="${buttonPadding} ${buttonTextSize} font-medium border rounded-lg hover:opacity-80 active:opacity-60 transition touch-manipulation" style="border-color: ${borderColor}; color: ${textColor}; min-height: ${isMobile ? '44px' : 'auto'}">
               قبلی
             </button>
           ` : ''}
           ${step.action === 'navigate' && step.nextUrl ? `
-            <button onclick="window.onboardingTour.navigateToNext('${step.nextUrl}')" class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <button onclick="window.onboardingTour.navigateToNext('${step.nextUrl}')" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation" style="min-height: ${isMobile ? '44px' : 'auto'}">
               برو به صفحه بعدی
             </button>
           ` : step.action === 'click' ? `
-            <button onclick="window.onboardingTour.nextStep()" class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition opacity-50 cursor-not-allowed" disabled>
+            <button onclick="window.onboardingTour.nextStep()" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition opacity-50 cursor-not-allowed touch-manipulation" disabled style="min-height: ${isMobile ? '44px' : 'auto'}">
               روی المنت کلیک کنید
             </button>
           ` : `
-            <button onclick="window.onboardingTour.nextStep()" class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <button onclick="window.onboardingTour.nextStep()" class="${buttonPadding} ${buttonTextSize} font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition touch-manipulation" style="min-height: ${isMobile ? '44px' : 'auto'}">
               ${index === this.tourData.length - 1 ? 'پایان' : 'بعدی'}
             </button>
           `}
@@ -542,6 +684,10 @@ class OnboardingTour {
 
     this.tooltip.style.left = position.left + 'px';
     this.tooltip.style.top = position.top + 'px';
+    if (position.width) {
+      this.tooltip.style.width = position.width + 'px';
+      this.tooltip.style.maxWidth = position.width + 'px';
+    }
 
     // ایجاد highlight برای المنت
     this.highlightElement(element);
@@ -627,44 +773,77 @@ class OnboardingTour {
   }
 
   calculatePosition(rect, position) {
-    const tooltipWidth = 320;
-    const tooltipHeight = 200;
-    const padding = 16;
+    // محاسبه اندازه tooltip بر اساس محتوا (موبایل محور)
+    const isMobile = window.innerWidth < 640;
+    const tooltipMaxWidth = isMobile ? window.innerWidth - 16 : Math.min(320, window.innerWidth - 32);
+    const tooltipMinWidth = isMobile ? window.innerWidth - 16 : 280;
+    const tooltipWidth = Math.max(tooltipMinWidth, tooltipMaxWidth);
+    const tooltipHeight = isMobile ? Math.min(300, window.innerHeight * 0.5) : Math.min(250, window.innerHeight * 0.4);
+    const padding = isMobile ? 8 : 16;
+    const actualPadding = padding;
     let left, top;
 
     switch (position) {
       case 'top':
-        left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-        top = rect.top - tooltipHeight - padding;
+        if (isMobile) {
+          // در موبایل tooltip را در وسط صفحه قرار بده
+          left = actualPadding;
+          top = Math.max(actualPadding, (window.innerHeight - tooltipHeight) / 2);
+        } else {
+          left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+          top = rect.top - tooltipHeight - actualPadding;
+          // اگر فضا برای بالا نیست، به پایین ببر
+          if (top < actualPadding) {
+            top = rect.bottom + actualPadding;
+          }
+        }
         break;
       case 'bottom':
-        left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-        top = rect.bottom + padding;
+        if (isMobile) {
+          // در موبایل tooltip را در پایین صفحه قرار بده
+          left = actualPadding;
+          top = window.innerHeight - tooltipHeight - actualPadding - 80; // فاصله از bottom nav
+        } else {
+          left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+          top = rect.bottom + actualPadding;
+          // اگر فضا برای پایین نیست، به بالا ببر
+          if (top + tooltipHeight > window.innerHeight - actualPadding) {
+            top = rect.top - tooltipHeight - actualPadding;
+          }
+        }
         break;
       case 'left':
-        left = rect.left - tooltipWidth - padding;
+        left = rect.left - tooltipWidth - actualPadding;
         top = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+        // اگر فضا برای چپ نیست، به راست ببر
+        if (left < actualPadding) {
+          left = rect.right + actualPadding;
+        }
         break;
       case 'right':
-        left = rect.right + padding;
+        left = rect.right + actualPadding;
         top = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+        // اگر فضا برای راست نیست، به چپ ببر
+        if (left + tooltipWidth > window.innerWidth - actualPadding) {
+          left = rect.left - tooltipWidth - actualPadding;
+        }
         break;
       default:
         left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-        top = rect.bottom + padding;
+        top = rect.bottom + actualPadding;
     }
 
-    // اطمینان از اینکه tooltip در viewport است
-    if (left < padding) left = padding;
-    if (left + tooltipWidth > window.innerWidth - padding) {
-      left = window.innerWidth - tooltipWidth - padding;
+    // اطمینان از اینکه tooltip در viewport است (با در نظر گیری responsive)
+    if (left < actualPadding) left = actualPadding;
+    if (left + tooltipWidth > window.innerWidth - actualPadding) {
+      left = window.innerWidth - tooltipWidth - actualPadding;
     }
-    if (top < padding) top = padding;
-    if (top + tooltipHeight > window.innerHeight - padding) {
-      top = window.innerHeight - tooltipHeight - padding;
+    if (top < actualPadding) top = actualPadding;
+    if (top + tooltipHeight > window.innerHeight - actualPadding) {
+      top = window.innerHeight - tooltipHeight - actualPadding;
     }
 
-    return { left, top };
+    return { left, top, width: tooltipWidth };
   }
 
   highlightElement(element) {
@@ -675,15 +854,49 @@ class OnboardingTour {
       el.style.outlineOffset = '';
     });
 
-    // اضافه کردن highlight
+    // اضافه کردن highlight با انیمیشن
     element.classList.add('onboarding-highlight');
     element.style.outline = '3px solid #2563EB';
     element.style.outlineOffset = '4px';
     element.style.zIndex = '9999';
     element.style.position = 'relative';
+    element.style.transition = 'outline-color 0.3s ease';
+    
+    // اضافه کردن backdrop برای بهتر دیده شدن
+    if (!document.querySelector('.onboarding-backdrop')) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'onboarding-backdrop';
+      backdrop.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(37, 99, 235, 0.1);
+        z-index: 9997;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      `;
+      document.body.appendChild(backdrop);
+      setTimeout(() => {
+        backdrop.style.opacity = '1';
+      }, 10);
+    }
 
-    // اسکرول به المنت
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // اسکرول به المنت (بهینه برای موبایل)
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      // در موبایل با offset بیشتر اسکرول کن تا tooltip دیده شود
+      const elementTop = element.getBoundingClientRect().top + window.pageYOffset;
+      const offset = 100; // فاصله از بالا برای نمایش tooltip
+      window.scrollTo({
+        top: elementTop - offset,
+        behavior: 'smooth'
+      });
+    } else {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   nextStep() {
@@ -694,6 +907,7 @@ class OnboardingTour {
       el.style.outlineOffset = '';
       el.style.zIndex = '';
       el.style.position = '';
+      el.style.transition = '';
     });
 
     this.showStep(this.currentStep + 1);
@@ -707,6 +921,7 @@ class OnboardingTour {
       el.style.outlineOffset = '';
       el.style.zIndex = '';
       el.style.position = '';
+      el.style.transition = '';
     });
 
     if (this.currentStep > 0) {
@@ -714,16 +929,33 @@ class OnboardingTour {
     }
   }
 
-  completeTour() {
-    // ذخیره اینکه کاربر تور را دیده است
-    localStorage.setItem('vinor_onboarding_completed', 'true');
+  closeTour() {
+    // بستن تور بدون ذخیره کردن completion (کاربر می‌تواند دوباره ببیند)
+    this.completeTour(false);
+  }
+
+  completeTour(saveCompletion = true) {
+    // ذخیره اینکه کاربر تور را دیده است (فقط اگر saveCompletion true باشد)
+    if (saveCompletion) {
+      localStorage.setItem('vinor_onboarding_completed', 'true');
+    }
     
-    // حذف overlay و tooltip
+    // حذف backdrop
+    const backdrop = document.querySelector('.onboarding-backdrop');
+    if (backdrop) {
+      backdrop.style.opacity = '0';
+      setTimeout(() => backdrop.remove(), 300);
+    }
+    
+    // حذف overlay و tooltip با انیمیشن
     if (this.overlay) {
-      this.overlay.remove();
+      this.overlay.style.opacity = '0';
+      setTimeout(() => this.overlay.remove(), 300);
     }
     if (this.tooltip) {
-      this.tooltip.remove();
+      this.tooltip.style.opacity = '0';
+      this.tooltip.style.transform = 'scale(0.95) translateY(-10px)';
+      setTimeout(() => this.tooltip.remove(), 300);
     }
 
     // حذف highlight
@@ -733,7 +965,13 @@ class OnboardingTour {
       el.style.outlineOffset = '';
       el.style.zIndex = '';
       el.style.position = '';
+      el.style.transition = '';
     });
+
+    // پاک کردن sessionStorage برای تور در حال اجرا
+    sessionStorage.removeItem('vinor_tour_step');
+    sessionStorage.removeItem('vinor_tour_data');
+    sessionStorage.removeItem('vinor_start_full_tour');
 
     this.isActive = false;
   }

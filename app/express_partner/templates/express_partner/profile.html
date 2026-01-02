@@ -58,6 +58,7 @@
 
     <!-- اعلان‌ها -->
     <a href="{{ url_for('express_partner.notifications') }}" 
+       data-tour="notifications-link"
        class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors relative"
        x-data="vinorNotifyBadge()">
       <div class="flex items-center gap-3">
@@ -80,6 +81,7 @@
 
     <!-- فروشنده‌های برتر -->
     <a href="{{ url_for('express_partner.top_sellers') }}" 
+       data-tour="top-sellers-link"
        class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
@@ -95,6 +97,7 @@
 
     <!-- راهنما -->
     <a href="{{ url_for('express_partner.help') }}" 
+       data-tour="help-link"
        class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
