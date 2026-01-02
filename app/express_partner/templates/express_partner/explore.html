@@ -41,11 +41,10 @@
 
 <div class="max-w-5xl mx-auto pt-0 px-4 pb-16" id="exploreContainer">
 
-  <!-- Pull to Refresh Indicator -->
-  <div id="pullToRefreshIndicator" class="fixed top-0 left-0 right-0 z-40 flex items-center justify-center py-3 pointer-events-none opacity-0 transition-opacity duration-300">
-    <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-      <div id="refreshSpinner" class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin hidden"></div>
-      <span id="refreshText" class="text-sm font-medium">کشیدن برای رفرش</span>
+  <!-- Pull to Refresh Indicator - مینیمال -->
+  <div id="pullToRefreshIndicator" class="fixed top-2 left-1/2 transform -translate-x-1/2 z-40 pointer-events-none opacity-0 transition-all duration-200">
+    <div id="refreshIcon" class="w-8 h-8 rounded-full bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
+      <i class="fas fa-sync-alt text-blue-600 dark:text-blue-400 text-sm"></i>
     </div>
   </div>
 
@@ -190,13 +189,15 @@
     to { transform: rotate(360deg); }
   }
   
-  /* Pull to Refresh Indicator */
+  /* Pull to Refresh Indicator - مینیمال */
   #pullToRefreshIndicator {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
-    backdrop-filter: blur(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .dark #pullToRefreshIndicator {
-    background: linear-gradient(to bottom, rgba(17, 24, 39, 0.95) 0%, rgba(17, 24, 39, 0.8) 100%);
+  #refreshIcon {
+    transition: transform 0.2s ease;
+  }
+  #refreshIcon.spinning {
+    animation: spin 0.6s linear infinite;
   }
   
   /* بهینه‌سازی برای تصاویر */
@@ -207,6 +208,106 @@
 </style>
 
 <script>
+  // Pull to Refresh - مینیمال و سریع (سبک اینستاگرام)
+  (function() {
+    const container = document.getElementById('exploreContainer');
+    const grid = document.getElementById('instagramGrid');
+    const pullIndicator = document.getElementById('pullToRefreshIndicator');
+    const refreshIcon = document.getElementById('refreshIcon');
+    
+    if (!container || !pullIndicator || !grid) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    const PULL_THRESHOLD = 60; // کاهش threshold برای رفرش سریع‌تر
+    const MAX_PULL = 80; // کاهش max pull برای مینیمال بودن
+
+    function handleTouchStart(e) {
+      // فقط اگر در بالای صفحه هستیم
+      if (window.scrollY > 5 || isRefreshing) return;
+      
+      startY = e.touches[0].clientY;
+      isPulling = false;
+    }
+
+    function handleTouchMove(e) {
+      if (window.scrollY > 5 || isRefreshing) return;
+      
+      currentY = e.touches[0].clientY;
+      const pullDistance = currentY - startY;
+
+      if (pullDistance > 0 && pullDistance < MAX_PULL) {
+        isPulling = true;
+        e.preventDefault();
+        
+        // نمایش indicator با انیمیشن smooth
+        const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
+        const opacity = progress;
+        const scale = 0.8 + (progress * 0.2); // از 0.8 تا 1.0
+        const rotation = progress * 180; // چرخش آیکون
+        
+        pullIndicator.style.opacity = opacity.toString();
+        pullIndicator.style.transform = `translate(-50%, ${Math.min(pullDistance * 0.5, 40)}px)`;
+        refreshIcon.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+        
+        // اسکرول grid به پایین
+        grid.style.transform = `translateY(${Math.min(pullDistance * 0.3, 30)}px)`;
+        grid.style.transition = 'none';
+        
+        // شروع چرخش آیکون وقتی به threshold رسید
+        if (pullDistance >= PULL_THRESHOLD) {
+          refreshIcon.classList.add('spinning');
+        } else {
+          refreshIcon.classList.remove('spinning');
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (!isPulling || isRefreshing) return;
+      
+      const pullDistance = currentY - startY;
+      
+      if (pullDistance >= PULL_THRESHOLD) {
+        // شروع رفرش
+        isRefreshing = true;
+        refreshIcon.classList.add('spinning');
+        
+        // انیمیشن smooth برای grid
+        grid.style.transition = 'transform 0.3s ease-out';
+        grid.style.transform = 'translateY(0)';
+        
+        // رفرش سریع صفحه
+        setTimeout(() => {
+          window.location.reload();
+        }, 200);
+      } else {
+        // بازگشت به حالت اولیه با انیمیشن
+        resetPullIndicator();
+      }
+      
+      isPulling = false;
+      startY = 0;
+      currentY = 0;
+    }
+
+    function resetPullIndicator() {
+      pullIndicator.style.opacity = '0';
+      pullIndicator.style.transform = 'translate(-50%, 0)';
+      refreshIcon.style.transform = 'scale(0.8) rotate(0deg)';
+      refreshIcon.classList.remove('spinning');
+      grid.style.transition = 'transform 0.3s ease-out';
+      grid.style.transform = 'translateY(0)';
+    }
+
+    // Event listeners
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+  })();
+
   // Infinite Scroll - سبک اینستاگرام
   (function() {
     const grid = document.getElementById('instagramGrid');
