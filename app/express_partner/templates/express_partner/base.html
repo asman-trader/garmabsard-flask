@@ -565,30 +565,117 @@
           unreadCount: Number(initialUnread || 0),
           loading: false,
           init() {
+            // Debug: log initial data
+            console.debug('vinorNotificationsPage init:', {
+              initialList: initialList,
+              initialListLength: Array.isArray(initialList) ? initialList.length : 0,
+              initialListType: typeof initialList,
+              initialListIsArray: Array.isArray(initialList),
+              initialUnread: initialUnread,
+              currentState: typeof VinorNotifyCenter !== 'undefined' ? VinorNotifyCenter.getState() : null
+            });
+            
+            // تنظیم event listener برای به‌روزرسانی‌های بعدی (قبل از هر چیز)
+            this._onUpdate = (evt) => {
+              console.debug('Notification update event received:', evt.detail);
+              this.sync(evt.detail);
+            };
+            window.addEventListener('vinor:notifications:update', this._onUpdate);
+            
+            // بررسی و parse کردن initialList (ممکن است string باشد از tojson)
+            let parsedInitialList = initialList;
+            if (typeof initialList === 'string') {
+              try {
+                parsedInitialList = JSON.parse(initialList);
+                console.debug('Parsed initialList from string:', parsedInitialList, 'length:', parsedInitialList.length);
+              } catch (e) {
+                console.warn('Failed to parse initialList as JSON:', e, 'initialList:', initialList);
+                parsedInitialList = [];
+              }
+            } else if (initialList && typeof initialList === 'object' && !Array.isArray(initialList)) {
+              // اگر object است اما array نیست، سعی کن آن را به array تبدیل کن
+              console.warn('initialList is object but not array:', initialList);
+              parsedInitialList = [];
+            }
+            
             // اگر initial data وجود دارد، از آن استفاده کن
-            if (Array.isArray(initialList) && initialList.length > 0) {
-              this.items = initialList;
+            if (Array.isArray(parsedInitialList) && parsedInitialList.length > 0) {
+              this.items = parsedInitialList;
               this.unreadCount = Number(initialUnread || 0);
               this.loading = false;
+              console.debug('Using initial data:', this.items.length, 'items');
+            } else if (Array.isArray(parsedInitialList)) {
+              // اگر initialList یک آرایه خالی است، آن را استفاده کن
+              this.items = [];
+              this.unreadCount = Number(initialUnread || 0);
+              this.loading = false;
+              console.debug('Using empty initial data');
             } else {
               // در غیر این صورت، از state موجود استفاده کن
-              const currentState = VinorNotifyCenter.getState();
-              if (currentState && currentState.notifications && currentState.notifications.length > 0) {
-                this.items = currentState.notifications;
-                this.unreadCount = currentState.unread || 0;
-                this.loading = false;
+              if (typeof VinorNotifyCenter !== 'undefined') {
+                const currentState = VinorNotifyCenter.getState();
+                if (currentState) {
+                  this.items = Array.isArray(currentState.notifications) ? currentState.notifications : [];
+                  this.unreadCount = Number(currentState.unread || 0);
+                  this.loading = !!currentState.loading;
+                  console.debug('Using state data:', this.items.length, 'items, loading:', this.loading);
+                } else {
+                  // اگر state موجود نیست، loading را true کن و fetch کن
+                  this.items = [];
+                  this.unreadCount = 0;
+                  this.loading = true;
+                  console.debug('No state found, setting loading to true');
+                }
               } else {
-                // اگر هیچ داده‌ای نیست، loading را true کن و fetch کن
+                // اگر VinorNotifyCenter در دسترس نیست، loading را true کن و fetch کن
+                this.items = [];
+                this.unreadCount = 0;
                 this.loading = true;
+                console.debug('VinorNotifyCenter not available, setting loading to true');
               }
             }
             
-            // تنظیم event listener برای به‌روزرسانی‌های بعدی
-            this._onUpdate = (evt) => this.sync(evt.detail);
-            window.addEventListener('vinor:notifications:update', this._onUpdate);
-            
             // همیشه fetch کن تا داده‌های جدید را بگیر
-            VinorNotifyCenter.fetchList(true);
+            // حتی اگر initial data وجود دارد، برای اطمینان از به‌روز بودن داده‌ها fetch کن
+            // اما با تاخیر کوتاه تا component به درستی initialize شود
+            setTimeout(() => {
+              if (typeof VinorNotifyCenter !== 'undefined') {
+                // اگر initial data وجود دارد، loading را false نگه دار اما fetch کن
+                if (this.items.length > 0) {
+                  this.loading = false;
+                }
+                console.debug('Calling VinorNotifyCenter.fetchList(true)');
+                VinorNotifyCenter.fetchList(true);
+              } else {
+                // اگر VinorNotifyCenter در دسترس نیست، مستقیماً fetch کن
+                console.debug('VinorNotifyCenter not available, calling fetchDirectly()');
+                this.fetchDirectly();
+              }
+            }, 100);
+          },
+          async fetchDirectly() {
+            try {
+              this.loading = true;
+              console.debug('Fetching notifications directly...');
+              const res = await fetch('/express/partner/api/notifications', { credentials: 'same-origin' });
+              if (res.ok) {
+                const data = await res.json();
+                console.debug('Direct fetch response:', data);
+                if (data.success && Array.isArray(data.notifications)) {
+                  this.items = data.notifications;
+                  this.unreadCount = Number(data.unread_count || 0);
+                  console.debug('Direct fetch successful:', this.items.length, 'items');
+                } else {
+                  console.warn('Direct fetch: invalid response format', data);
+                }
+              } else {
+                console.error('Direct fetch failed with status:', res.status);
+              }
+            } catch (err) {
+              console.error('Direct fetch failed:', err);
+            } finally {
+              this.loading = false;
+            }
           },
           destroy() {
             if (this._onUpdate) {
@@ -596,17 +683,33 @@
             }
           },
           sync(state) {
-            if (!state) return;
-            this.items = state.notifications || [];
-            this.unreadCount = state.unread || 0;
-            this.loading = !!state.loading && !this.items.length;
+            if (!state) {
+              console.warn('Sync called with null/undefined state');
+              return;
+            }
+            console.debug('Syncing state:', state);
+            const newItems = Array.isArray(state.notifications) ? state.notifications : [];
+            const newUnread = Number(state.unread || 0);
+            const newLoading = !!state.loading;
+            
+            // همیشه به‌روزرسانی کن (Alpine.js خودش تغییرات را تشخیص می‌دهد)
+            this.items = newItems;
+            this.unreadCount = newUnread;
+            this.loading = newLoading;
+            console.debug('After sync:', this.items.length, 'items, unread:', this.unreadCount, 'loading:', this.loading);
+            // Force Alpine.js to re-render
+            this.$nextTick(() => {
+              console.debug('After $nextTick:', this.items.length, 'items');
+            });
           },
           markAll() {
             VinorNotifyCenter.markAll();
           },
           markRead(notif) {
-            if (!notif || !notif.id) return;
-            VinorNotifyCenter.markRead(notif.id);
+            if (!notif) return;
+            const notifId = notif.id || notif.getAttribute?.('data-id') || notif;
+            if (!notifId) return;
+            VinorNotifyCenter.markRead(notifId);
           },
           openLink(url) {
             if (url) window.location.href = url;

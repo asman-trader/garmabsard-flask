@@ -1,11 +1,12 @@
 # app/__init__.py
 # -*- coding: utf-8 -*-
 """
-Vinor (vinor.ir) – Flask App Factory (Final)
+Vinor Express (vinor.ir) – Flask App Factory
 - Mobile-first، امن و شفاف
-- رجیستر بلوپرینت‌ها: main, admin, webhook, lands (اختیاری), uploads_api (اختیاری), push (اختیاری)
+- رجیستر بلوپرینت‌ها: main, admin, webhook, express_partner, uploads_api, push
 - سرو sw.js و manifest.webmanifest از ریشه (با fallback)
 - گِیت پیمایش مهمان/کاربر
+- فقط صفحات همکار اکسپرس و پنل ادمین همکار اکسپرس
 """
 import os
 import logging
@@ -186,7 +187,7 @@ def create_app() -> Flask:
         VAPID_CLAIMS={"sub": vapid_sub},
         VAPID_CLAIMS_SUB=vapid_sub,
         PUSH_STORE_PATH=os.environ.get("PUSH_STORE_PATH", default_push_store),
-        APP_BRAND_NAME="وینور | Vinor",
+        APP_BRAND_NAME="وینور اکسپرس | Vinor Express",
         WTF_CSRF_ENABLED=True,
         WTF_CSRF_TIME_LIMIT=3600,  # 1 hour
         WTF_CSRF_CHECK_DEFAULT=True,
@@ -237,7 +238,7 @@ def create_app() -> Flask:
         return {
             "VAPID_PUBLIC_KEY": app.config.get("VAPID_PUBLIC_KEY", ""),
             "VINOR_IS_LOGGED_IN": is_logged,
-            "APP_BRAND_NAME": app.config.get("APP_BRAND_NAME", "Vinor"),
+            "APP_BRAND_NAME": app.config.get("APP_BRAND_NAME", "Vinor Express"),
             "csrf_token": generate_csrf,
             "SHOW_SUBMIT_BUTTON": bool(settings.get("show_submit_button", True)),
         }
@@ -409,11 +410,11 @@ def create_app() -> Flask:
                     return redirect(url_for("main.index"))
 
     # ---------- فایل‌های PWA ----------
-    @app.get("/sw.js")
-    def service_worker():
-        # برای سازگاری: سرو sw.js از static
-        static_dir = os.path.join(app.root_path, "static")
-        return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
+    # Service Worker وینور غیرفعال شد - فقط همکاران اکسپرس از Service Worker استفاده می‌کنند
+    # @app.get("/sw.js")
+    # def service_worker():
+    #     static_dir = os.path.join(app.root_path, "static")
+    #     return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
 
     @app.get("/manifest.webmanifest")
     def serve_manifest():
@@ -469,9 +470,6 @@ def create_app() -> Flask:
             "/healthz", "/diag", "/connection",
             # Public help pages (accessible without login)
             "/help", "/راهنما",
-            "/about", "/درباره-ما",
-            "/faq", "/سوالات-پرتکرار",
-            "/guide/safe-buy", "/راهنمای-خرید-امن",
             # Public landing pages
             "/partners",
             # Express Partner auth paths (public)

@@ -1,65 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}راهنما | وینور{% endblock %}
-
-{% block content %}
-<!-- Minimal sticky header -->
-<header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-3xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
-    <button type="button" onclick="history.back()" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="بازگشت">
-      <i class="fas fa-arrow-right"></i>
-    </button>
-    <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">راهنما</h1>
-    <span class="w-8"></span>
-  </div>
-  </header>
-
-<main class="max-w-3xl mx-auto px-3 py-4">
-  <nav class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-200 dark:divide-gray-800 overflow-hidden">
-    <a href="{{ url_for('main.about') }}" class="flex items-center justify-between px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-info-circle text-emerald-600"></i>
-        <div>
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">درباره وینور</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">معرفی کوتاه و اهداف</div>
-        </div>
-      </div>
-      <i class="fas fa-angle-left text-gray-400"></i>
-    </a>
-    <a href="{{ url_for('main.faq') }}" class="flex items-center justify-between px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-circle-question text-indigo-600"></i>
-        <div>
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">سوالات پرتکرار</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">پاسخ سریع به پرسش‌های عمومی</div>
-        </div>
-      </div>
-      <i class="fas fa-angle-left text-gray-400"></i>
-    </a>
-    <a href="{{ url_for('main.buy_safe') }}" class="flex items-center justify-between px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-shield-halved text-amber-600"></i>
-        <div>
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">راهنمای خرید امن</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">نکات ضروری پیش از معامله</div>
-        </div>
-      </div>
-      <i class="fas fa-angle-left text-gray-400"></i>
-    </a>
-    <div class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-      پشتیبانی
-    </div>
-    <div class="px-4 py-3 space-y-1 text-sm text-gray-700 dark:text-gray-300">
-      <div>📞 تلفن: <a href="tel:+989121234567" class="text-emerald-700 dark:text-emerald-300">09121234567</a></div>
-      <div>💬 واتساپ: <a href="https://wa.me/989121234567" target="_blank" class="text-emerald-700 dark:text-emerald-300">ارسال پیام</a></div>
-      <div>🌐 وب‌سایت: <a href="https://vinor.ir" class="text-emerald-700 dark:text-emerald-300">vinor.ir</a></div>
-    </div>
-  </nav>
-
-  <div class="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">© {{ current_year|default(2025) }} وینور | vinor.ir</div>
-</main>
-{% endblock %}
-
-{% block floating_action %}{% endblock %}
-
-

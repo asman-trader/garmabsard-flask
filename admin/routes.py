@@ -1108,6 +1108,15 @@ def notifications_colleagues():
         'subs_count': len(subs_for_diag or []),
     }
     
+    # اجرای merge خودکار کلیدهای تکراری برای اطمینان از صحت داده‌ها
+    try:
+        from app.services.notifications import merge_duplicate_keys
+        merge_result = merge_duplicate_keys()
+        if merge_result.get("merged_count", 0) > 0:
+            current_app.logger.info(f"Admin notifications page: Merged {merge_result['merged_count']} duplicate notification keys")
+    except Exception as e:
+        current_app.logger.warning(f"Admin notifications page: Failed to merge duplicate keys: {e}")
+    
     # واکشی همکاران
     try:
         partners = load_express_partners() or []
@@ -1141,13 +1150,22 @@ def notifications_colleagues():
             sent = 0
             failed = 0
             # ثبت اعلان در in-app notifications برای همکاران
+            # اجرای merge خودکار کلیدهای تکراری قبل از ارسال
+            try:
+                from app.services.notifications import merge_duplicate_keys
+                merge_result = merge_duplicate_keys()
+                if merge_result.get("merged_count", 0) > 0:
+                    current_app.logger.info(f"Admin: Merged {merge_result['merged_count']} duplicate notification keys before sending")
+            except Exception as e:
+                current_app.logger.warning(f"Admin: Failed to merge duplicate keys: {e}")
+            
             for partner in approved_partners:
                 try:
                     # partner['phone'] قبلاً normalize شده است
                     phone_normalized = partner['phone']
                     if phone_normalized and len(phone_normalized) == 11:
                         # Log برای debug
-                        current_app.logger.info(f"Sending notification to partner: {partner['name']} ({phone_normalized})")
+                        current_app.logger.info(f"Admin: Sending notification to partner: {partner['name']} ({phone_normalized})")
                         add_notification(
                             user_id=phone_normalized,
                             title=title,
@@ -1156,13 +1174,13 @@ def notifications_colleagues():
                             action_url=url_for('express_partner.dashboard', _external=True)
                         )
                         sent += 1
-                        current_app.logger.info(f"Notification sent successfully to {phone_normalized}")
+                        current_app.logger.info(f"Admin: Notification sent successfully to {phone_normalized}")
                     else:
                         failed += 1
-                        current_app.logger.warning(f"Invalid phone number format: {partner.get('phone', 'unknown')} (length: {len(phone_normalized) if phone_normalized else 0})")
+                        current_app.logger.warning(f"Admin: Invalid phone number format: {partner.get('phone', 'unknown')} (length: {len(phone_normalized) if phone_normalized else 0})")
                 except Exception as e:
                     failed += 1
-                    current_app.logger.error(f"Failed to send notification to {partner.get('name', 'unknown')} ({partner.get('phone', 'unknown')}): {e}", exc_info=True)
+                    current_app.logger.error(f"Admin: Failed to send notification to {partner.get('name', 'unknown')} ({partner.get('phone', 'unknown')}): {e}", exc_info=True)
 
             # تلاش برای ارسال Web Push با صدا (در کلاینت)
             # توجه: چون push subscriptions با user_id مرتبط نیستند، 

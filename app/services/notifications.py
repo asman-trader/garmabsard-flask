@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Vinor Notifications Service – سیستم مرکزی مدیریت اعلان‌ها
+Express Partner Notifications Service – سیستم مرکزی مدیریت اعلان‌های همکاران اکسپرس
+(سیستم اعلان وینور حذف شد - فقط همکاران اکسپرس از این سیستم استفاده می‌کنند)
 """
 import time
 import uuid

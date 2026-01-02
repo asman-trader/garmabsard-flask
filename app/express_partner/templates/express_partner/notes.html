@@ -1,7 +1,32 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}یادداشت‌های خصوصی | وینور اکسپرس{% endblock %}
 {% block content %}
-{% include 'express/partner_notes.html' %}
+<div class="max-w-5xl mx-auto pt-4 px-4 pb-16">
+  <header class="mb-4">
+    <h1 class="text-lg font-bold text-gray-900 dark:text-white">یادداشت‌های خصوصی</h1>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">یادداشت‌های شخصی شما</p>
+  </header>
+  
+  {% if notes and notes|length > 0 %}
+    <div class="space-y-3">
+      {% for note in notes %}
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ note.get('text', '') }}</p>
+          {% if note.get('created_at') %}
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">{{ note.created_at }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+      <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <i class="fas fa-sticky-note text-2xl"></i>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">یادداشتی وجود ندارد.</p>
+    </div>
+  {% endif %}
+</div>
 {% endblock %}
 
 

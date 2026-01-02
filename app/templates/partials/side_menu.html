@@ -1,4 +1,4 @@
-{# side_menu.html - Vinor | Mobile-first, final (بدون خانه و جستجو) #}
+{# side_menu.html - Express Partner | Mobile-first, final (بدون خانه و جستجو) #}
 {% macro MenuItem(href, icon, text, require_login=False, badge=None) -%}
   <a href="{{ href }}"
      class="group flex items-center gap-3 p-3 rounded-xl transition
@@ -147,9 +147,9 @@
     // Web Share + WhatsApp text
     const btnShare   = document.getElementById('qaShare');
     const aWhatsapp  = document.getElementById('qaWhatsapp');
-    const shareTitle = document.title || 'وینور | خرید و فروش ملک';
+    const shareTitle = document.title || 'وینور اکسپرس | خرید و فروش ملک';
     const shareUrl   = window.location.href;
-    const shareText  = (aWhatsapp?.dataset.waText) || 'وینور | خرید و فروش ملک';
+    const shareText  = (aWhatsapp?.dataset.waText) || 'وینور اکسپرس | خرید و فروش ملک';
 
     if (aWhatsapp) {
       const wa = aWhatsapp.dataset.wa || '';

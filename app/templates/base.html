@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>{% block title %}وینور | خرید و فروش ملک{% endblock %}</title>
+  <title>{% block title %}وینور اکسپرس | خرید و فروش ملک{% endblock %}</title>
 
   {# --- Favicon & PWA --- #}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
@@ -116,11 +116,11 @@
   {% if not hide_header and not request.endpoint in ['main.index', 'main.partners'] %}
   <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3" aria-label="وینور | صفحه اصلی">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-3" aria-label="وینور اکسپرس | صفحه اصلی">
         <span class="bg-green-600 hover:bg-green-700 text-white w-10 h-10 flex items-center justify-center rounded-full text-xl shadow-lg font-bold">
           <i class="fas fa-seedling animate-pulse"></i>
         </span>
-        <span id="brandTitle" class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور</span>
+        <span id="brandTitle" class="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">وینور اکسپرس</span>
       </a>
       <div class="flex items-center gap-4">
         <div class="relative">
@@ -149,7 +149,7 @@
     <div class="pwa-card">
       <div class="sprout text-3xl"><i class="fas fa-seedling"></i></div>
       <div class="text-center">
-        <div class="font-extrabold text-lg">به وینور خوش آمدید</div>
+        <div class="font-extrabold text-lg">به وینور اکسپرس خوش آمدید</div>
         <div class="text-sm text-gray-300 mt-1">اپ آماده است؛ تجربه‌ای سریع و روان داشته باشید.</div>
       </div>
       <button id="pwaWelcomeClose" class="mt-1 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm">شروع</button>
@@ -286,7 +286,7 @@
         const txt = document.getElementById('offlineText');
         const btn = document.getElementById('offlineRefresh');
         const brand = document.getElementById('brandTitle');
-        const BRAND_ONLINE = 'وینور';
+        const BRAND_ONLINE = 'وینور اکسپرس';
         const BRAND_OFFLINE = 'اتصال برقرار نیست';
         function show(on,msg){
           if (!bar) return;
@@ -429,64 +429,7 @@
         if (!e.target.closest("#advancedFilters")&& !e.target.closest("#toggleFilters"))  filters?.classList.remove("active");
       });
 
-      // ثبت Service Worker (PWA) از روت سراسری + Warmup شل
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
-          .then(async (reg) => {
-            try {
-              await navigator.serviceWorker.ready;
-              const sw = navigator.serviceWorker.controller || (await (async()=>{
-                // اگر کنترلری نیست، تلاش برای ادعا کردن کنترل پس از فعال‌سازی
-                try { await reg.update(); } catch {}
-                return navigator.serviceWorker.controller;
-              })());
-              const urls = [];
-              // شل مهمان
-              urls.push('/','/start','/login','/verify','/partners','/about','/help','/faq','/guide/safe-buy','/connection','/city','/city/multi','/careers/consultant','/careers/consultant/apply');
-              // شل Express Partner در صورت ورود
-              if (IS_LOGGED_IN) {
-                urls.push('/express/partner/dashboard');
-                urls.push('/api/express-listings'); // warm API cache
-                // شل کامل ثبت آگهی (۴ مرحله)
-                // صفحات اصلی کاربر
-                urls.push('/notifications','/profile','/settings');
-              } else {
-                // صفحات مهم مهمان
-                urls.push('/','/start','/login','/verify','/about','/help','/faq','/guide/safe-buy');
-              }
-              if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
-              if (sw) sw.postMessage({ type: 'VINOR_WARMUP_EXT' });
-              
-              // Check for waiting SW and notify sidebar menu
-              const checkWaiting = () => {
-                if (reg.waiting) {
-                  try { window.dispatchEvent(new CustomEvent('vinor:sw-update-available')); } catch(_) {}
-                }
-              };
-              checkWaiting();
-              
-              // Listen for SW updates
-              reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      checkWaiting();
-                    }
-                  });
-                }
-              });
-            } catch {}
-          })
-          .catch(()=>{});
-        
-        // Listen for controller change (SW activated)
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          try { window.dispatchEvent(new CustomEvent('vinor:sw-updated')); } catch(_) {}
-          // Optionally reload page to use new SW
-          setTimeout(() => { try { location.reload(); } catch(_) {} }, 100);
-        });
-      }
+      // Service Worker وینور حذف شد - فقط همکاران اکسپرس از Service Worker استفاده می‌کنند
 
       // PWA First-run Welcome (mobile, standalone, once)
       (function(){
@@ -519,261 +462,7 @@
     })();
   </script>
 
-  {# ===== Push Helpers (بدون UI) — صفحه‌ها می‌توانند از این توابع استفاده کنند ===== #}
-  <script>
-    (function(){
-      // VAPID Public Key از کانفیگ (تزریق‌شده در context processor)
-      const VAPID_PUBLIC_KEY = "{{ VAPID_PUBLIC_KEY|default('', true) }}";
-
-      function urlBase64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-        return outputArray;
-      }
-
-      async function requestPermission() {
-        if (!("Notification" in window)) throw new Error("مرورگر شما از اعلان پشتیبانی نمی‌کند.");
-        const perm = await Notification.requestPermission();
-        if (perm !== "granted") throw new Error("اجازه اعلان داده نشد.");
-        return perm;
-      }
-
-      async function getRegistration() {
-        if (!('serviceWorker' in navigator)) throw new Error("Service Worker پشتیبانی نمی‌شود.");
-        const reg = await navigator.serviceWorker.getRegistration('/');
-        if (reg) return reg;
-        // تلاش برای رجیستر اگر هنوز انجام نشده
-        return await navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' });
-      }
-
-      async function subscribePush() {
-        await requestPermission();
-        const reg = await getRegistration();
-        const existing = await reg.pushManager.getSubscription();
-        if (existing) return existing;
-        if (!VAPID_PUBLIC_KEY) throw new Error("VAPID_PUBLIC_KEY تنظیم نشده است.");
-        const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        return await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: appServerKey });
-      }
-
-      async function saveSubscription(sub) {
-        const res = await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify(sub),
-        });
-        if (!res.ok) throw new Error("ذخیره اشتراک ناموفق بود.");
-        return await res.json();
-      }
-
-      async function testPush(payload = { title: "وینور", body: "اعلان تستی فعال شد ✅", url: "/app/notifications" }) {
-        const res = await fetch("/api/push/test", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("ارسال تست ناموفق بود.");
-        return await res.json();
-      }
-
-      // اکسپورت سراسری (بدون آلودگی زیاد)
-      window.VinorPush = {
-        subscribe: async () => {
-          const sub = await subscribePush();
-          await saveSubscription(sub);
-          return sub;
-        },
-        test: testPush,
-        permission: () => (Notification && Notification.permission) || "default",
-        hasSW: () => 'serviceWorker' in navigator,
-        vapid: () => VAPID_PUBLIC_KEY
-      };
-
-      // پشتیبانی از ایونت سفارشی برای صفحات
-      window.addEventListener("vinor:enable-push", async (e) => {
-        try {
-          await window.VinorPush.subscribe();
-          window.dispatchEvent(new CustomEvent("vinor:push-enabled", { detail: { ok: true }}));
-        } catch (err) {
-          window.dispatchEvent(new CustomEvent("vinor:push-enabled", { detail: { ok: false, error: String(err) }}));
-        }
-      });
-
-      window.addEventListener("vinor:test-push", async (e) => {
-        try {
-          await window.VinorPush.test(e.detail || undefined);
-          window.dispatchEvent(new CustomEvent("vinor:push-tested", { detail: { ok: true }}));
-        } catch (err) {
-          window.dispatchEvent(new CustomEvent("vinor:push-tested", { detail: { ok: false, error: String(err) }}));
-        }
-      });
-
-      // ===== فعال‌سازی خودکار اعلان‌ها در پس‌زمینه هنگام ورود =====
-      async function autoEnableNotificationsInBackground() {
-        try {
-          // بررسی لاگین بودن کاربر (از طریق context processor)
-          {% if __is_logged_in %}
-          const isLoggedIn = true;
-          {% else %}
-          const isLoggedIn = false;
-          {% endif %}
-          
-          if (!isLoggedIn) return; // فقط اگر کاربر لاگین باشد
-          
-          if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
-          if (!VAPID_PUBLIC_KEY) return;
-          
-          // بررسی اینکه قبلاً درخواست نشده باشد (برای جلوگیری از مزاحمت)
-          const NOTIFICATION_AUTO_ENABLED_FLAG = 'vinor_notifications_auto_enabled';
-          const AUTO_PROMPT_DISMISSED = 'vinor_notifications_auto_prompt_dismissed';
-          const lastPromptTime = localStorage.getItem('vinor_notifications_last_prompt');
-          const dismissed = localStorage.getItem(AUTO_PROMPT_DISMISSED);
-          
-          // اگر کاربر قبلاً رد کرده یا کمتر از 24 ساعت پیش درخواست داده‌ایم، صبر کن
-          if (dismissed === '1') return;
-          if (lastPromptTime) {
-            const hoursSinceLastPrompt = (Date.now() - parseInt(lastPromptTime)) / (1000 * 60 * 60);
-            if (hoursSinceLastPrompt < 24) return;
-          }
-          
-          const currentPerm = Notification.permission;
-          
-          // اگر اجازه داده نشده، در پس‌زمینه درخواست بده
-          if (currentPerm === 'default') {
-            // ثبت زمان درخواست
-            try { localStorage.setItem('vinor_notifications_last_prompt', String(Date.now())); } catch(_) {}
-            
-            // درخواست اجازه (در پس‌زمینه - بدون مزاحمت برای کاربر)
-            const perm = await Notification.requestPermission().catch(() => 'default');
-            
-            if (perm !== 'granted') {
-              // اگر رد شد، علامت بزن که دیگر درخواست ندهیم
-              try { localStorage.setItem(AUTO_PROMPT_DISMISSED, '1'); } catch(_) {}
-              return;
-            }
-          }
-          
-          // اگر اجازه داده شد، ادامه بده
-          if (currentPerm === 'granted' || Notification.permission === 'granted') {
-            // ثبت Service Worker
-            let reg = await navigator.serviceWorker.getRegistration('/');
-            if (!reg) {
-              reg = await navigator.serviceWorker.register('{{ url_for("service_worker") }}', { scope: '/' }).catch(() => null);
-            }
-            
-            if (!reg) return;
-            
-            // بررسی subscription موجود
-            const existing = await reg.pushManager.getSubscription().catch(() => null);
-            if (existing) {
-              // بررسی اینکه subscription در سرور ثبت شده باشد
-              try {
-                const subObj = existing.toJSON();
-                const res = await fetch('/api/push/subscribe', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'same-origin',
-                  body: JSON.stringify(subObj)
-                }).catch(() => null);
-                if (res && res.ok) {
-                  try { localStorage.setItem(NOTIFICATION_AUTO_ENABLED_FLAG, '1'); } catch(_) {}
-                }
-              } catch(_) {}
-              return;
-            }
-            
-            // ایجاد subscription جدید
-            try {
-              const sub = await subscribePush();
-              if (sub) {
-                await saveSubscription(sub);
-                try { localStorage.setItem(NOTIFICATION_AUTO_ENABLED_FLAG, '1'); } catch(_) {}
-                
-                // علامت‌گذاری موفقیت در localStorage
-                try {
-                  window.dispatchEvent(new CustomEvent('vinor:notifications-auto-enabled', { detail: { success: true } }));
-                } catch(_) {}
-              }
-            } catch(err) {
-              // در صورت خطا، سکوت کن (تا مزاحم کاربر نشویم)
-              console.debug('Auto-enable notifications failed:', err);
-            }
-          }
-        } catch(err) {
-          // سکوت در صورت خطا (اجرای پس‌زمینه)
-          console.debug('Auto-enable notifications error:', err);
-        }
-      }
-      
-      // اجرای خودکار هنگام بارگذاری صفحه (در پس‌زمینه)
-      // با تأخیر کوتاه تا صفحه کامل بارگذاری شود
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          setTimeout(autoEnableNotificationsInBackground, 2000); // 2 ثانیه تأخیر
-        });
-      } else {
-        setTimeout(autoEnableNotificationsInBackground, 2000);
-      }
-      
-      // تلاش خودکار برای ثبت پوش اگر قبلاً اجازه داده شده و سابسکرایب نداریم
-      document.addEventListener('DOMContentLoaded', async () => {
-        try {
-          if (!('serviceWorker' in navigator)) return;
-          const perm = (Notification && Notification.permission) || 'default';
-          if (perm === 'granted' && VAPID_PUBLIC_KEY) {
-            const reg = await navigator.serviceWorker.getRegistration('/');
-            if (reg) {
-              const existing = await reg.pushManager.getSubscription();
-              if (!existing) {
-                try { const sub = await subscribePush(); await saveSubscription(sub); } catch(_){}
-              } else {
-                // اگر subscription موجود است، آن را در سرور ثبت کن
-                try {
-                  const subObj = existing.toJSON();
-                  await fetch('/api/push/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(subObj)
-                  });
-                } catch(_){}
-              }
-            }
-          }
-        } catch(_){}
-      });
-    })();
-  </script>
-
-  <!-- نوار فعال‌سازی اعلان حذف شد - فعال‌سازی به صورت خودکار در پس‌زمینه انجام می‌شود -->
-
-  <script>
-    (function(){
-      try {
-        if (navigator.serviceWorker) {
-          navigator.serviceWorker.addEventListener('message', (e) => {
-            const data = e.data || {};
-            if (data && data.type === 'PUSH_RECEIVED') {
-              try {
-                const el = document.getElementById('notifySound');
-                if (el) {
-                  el.play().catch(()=>{});
-                }
-              } catch (_) {}
-            }
-          });
-        }
-      } catch (_) {}
-    })();
-  </script>
-
-  <!-- Hidden audio for notification sound (preloaded/unlocked on first gesture) -->
-  <audio id="notifySound" src="{{ url_for('static', filename='sounds/notify.mp3') }}" preload="auto" style="display:none"></audio>
+  {# ===== سیستم اعلان وینور حذف شد - فقط همکاران اکسپرس از سیستم اعلان استفاده می‌کنند ===== #}
 
   <script>
     (function(){

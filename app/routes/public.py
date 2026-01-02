@@ -61,7 +61,7 @@ def inject_vinor_globals():
     return {
         "VINOR_IS_LOGGED_IN": bool(session.get("user_id")),
         "VINOR_HOME_URL": url_for("main.index"),
-        "VINOR_BRAND": "وینور",
+        "VINOR_BRAND": "وینور اکسپرس",
         "VINOR_DOMAIN": "vinor.ir",
         # نقش‌ها
         "VINOR_IS_EXPRESS_PARTNER": is_express_partner,
@@ -388,9 +388,9 @@ def express_public_list():
         show_back_button=show_back_button,
         search_query=search_query,
         seo={
-            'title': 'فایل‌های اکسپرس وینور | خرید و فروش ملک',
-            'description': f'لیست کامل فایل‌های اکسپرس وینور. {total} فایل معتبر برای خرید و فروش ملک. مشاهده قیمت، موقعیت و جزئیات کامل.',
-            'keywords': 'فایل اکسپرس, خرید ملک, فروش ملک, زمین, ویلایی, آپارتمان, وینور, vinor',
+            'title': 'فایل‌های اکسپرس وینور اکسپرس | خرید و فروش ملک',
+            'description': f'لیست کامل فایل‌های اکسپرس وینور اکسپرس. {total} فایل معتبر برای خرید و فروش ملک. مشاهده قیمت، موقعیت و جزئیات کامل.',
+            'keywords': 'فایل اکسپرس, خرید ملک, فروش ملک, زمین, ویلایی, آپارتمان, وینور اکسپرس, vinor express',
             'canonical': canonical_url,
             'og_type': 'website',
             'og_image': f"{base_url}/static/icons/icon-512.png"
@@ -719,14 +719,14 @@ def serve_express_document(filename):
 
 @main_bp.route("/help", endpoint="help")
 def help_page():
-    """صفحه راهنمای عمومی"""
+    """صفحه راهنمای عمومی - فقط برای Express Partner"""
     base_url = request.url_root.rstrip('/')
     return render_template(
         'public/help.html',
         seo={
-            'title': 'راهنما | وینور',
-            'description': 'راهنمای استفاده از پلتفرم وینور، سوالات پرتکرار، راهنمای خرید امن و اطلاعات تماس پشتیبانی',
-            'keywords': 'راهنما, سوالات پرتکرار, خرید امن, پشتیبانی, وینور',
+            'title': 'راهنما | وینور اکسپرس',
+            'description': 'راهنمای استفاده از پلتفرم وینور اکسپرس و اطلاعات تماس پشتیبانی',
+            'keywords': 'راهنما, پشتیبانی, وینور اکسپرس',
             'canonical': f"{base_url}/help",
             'og_type': 'website',
             'og_image': f"{base_url}/static/icons/icon-512.png"
