@@ -167,7 +167,7 @@
     background: rgba(0, 0, 0, 0.1);
   }
   .loading-spinner {
-    display: flex;
+    display: none !important; /* مخفی کردن loading indicator - لودینگ در پس‌زمینه */
     justify-content: center;
     align-items: center;
     padding: 2rem;
@@ -260,7 +260,7 @@
       if (isLoading || !hasMore) return;
 
       isLoading = true;
-      loadingIndicator.classList.remove('hidden');
+      // loadingIndicator.classList.remove('hidden'); // مخفی نگه داشتن loading indicator
       currentPage++;
 
       try {
@@ -292,17 +292,15 @@
           });
           
           hasMore = data.pagination.has_next;
-          if (!hasMore) {
-            loadingIndicator.classList.add('hidden');
-          }
+          // loadingIndicator.classList.add('hidden'); // loading indicator همیشه مخفی است
         } else {
           hasMore = false;
-          loadingIndicator.classList.add('hidden');
+          // loadingIndicator.classList.add('hidden');
         }
       } catch (error) {
         console.error('Error loading next page:', error);
         hasMore = false;
-        loadingIndicator.classList.add('hidden');
+        // loadingIndicator.classList.add('hidden');
       } finally {
         isLoading = false;
       }
@@ -354,7 +352,7 @@
         requestAnimationFrame(() => {
           grid.innerHTML = '';
         });
-        loadingIndicator.classList.remove('hidden');
+        // loadingIndicator.classList.remove('hidden'); // loading indicator همیشه مخفی است
         emptyState.classList.add('hidden');
 
         try {
@@ -385,15 +383,13 @@
             });
             emptyState.classList.add('hidden');
             hasMore = data.pagination.has_next;
-            if (!hasMore) {
-              loadingIndicator.classList.add('hidden');
-            }
+            // loadingIndicator.classList.add('hidden'); // loading indicator همیشه مخفی است
           } else {
             requestAnimationFrame(() => {
               grid.innerHTML = '';
             });
             emptyState.classList.remove('hidden');
-            loadingIndicator.classList.add('hidden');
+            // loadingIndicator.classList.add('hidden');
             hasMore = false;
           }
         } catch (error) {
@@ -402,7 +398,7 @@
             grid.innerHTML = '';
           });
           emptyState.classList.remove('hidden');
-          loadingIndicator.classList.add('hidden');
+          // loadingIndicator.classList.add('hidden');
           hasMore = false;
         } finally {
           isLoading = false;
@@ -443,7 +439,7 @@
       }
     {% else %}
       hasMore = false;
-      loadingIndicator.classList.add('hidden');
+      // loadingIndicator.classList.add('hidden'); // loading indicator همیشه مخفی است
     {% endif %}
   })();
 </script>

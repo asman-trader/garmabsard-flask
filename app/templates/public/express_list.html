@@ -100,7 +100,7 @@
       background: transparent;
     }
     .loading-spinner {
-      display: flex;
+      display: none !important; /* مخفی کردن loading indicator - لودینگ در پس‌زمینه */
       justify-content: center;
       align-items: center;
       padding: 2rem;
@@ -427,7 +427,7 @@
         if (isLoading || !hasMore) return;
 
         isLoading = true;
-        loadingIndicator.classList.remove('hidden');
+        // loadingIndicator.classList.remove('hidden'); // loading indicator همیشه مخفی است
         currentPage++;
 
         try {
@@ -441,17 +441,15 @@
             bindLazyImages(grid);
             
             hasMore = data.pagination.has_next;
-            if (!hasMore) {
-              loadingIndicator.classList.add('hidden');
-            }
+            // loadingIndicator.classList.add('hidden'); // loading indicator همیشه مخفی است
           } else {
             hasMore = false;
-            loadingIndicator.classList.add('hidden');
+            // loadingIndicator.classList.add('hidden');
           }
         } catch (error) {
           console.error('Error loading next page:', error);
           hasMore = false;
-          loadingIndicator.classList.add('hidden');
+          // loadingIndicator.classList.add('hidden');
         } finally {
           isLoading = false;
         }
@@ -496,7 +494,7 @@
           
           grid.innerHTML = '';
           if (cardsList) { cardsList.innerHTML = ''; }
-          loadingIndicator.classList.remove('hidden');
+          // loadingIndicator.classList.remove('hidden'); // loading indicator همیشه مخفی است
           emptyState.classList.add('hidden');
 
           try {
@@ -512,21 +510,19 @@
               bindLazyImages(grid);
               emptyState.classList.add('hidden');
               hasMore = data.pagination.has_next;
-              if (!hasMore) {
-                loadingIndicator.classList.add('hidden');
-              }
+              // loadingIndicator.classList.add('hidden'); // loading indicator همیشه مخفی است
             } else {
               grid.innerHTML = '';
               if (cardsList) { cardsList.innerHTML = ''; }
               emptyState.classList.remove('hidden');
-              loadingIndicator.classList.add('hidden');
+              // loadingIndicator.classList.add('hidden');
               hasMore = false;
             }
           } catch (error) {
             console.error('Search error:', error);
             grid.innerHTML = '';
             emptyState.classList.remove('hidden');
-            loadingIndicator.classList.add('hidden');
+            // loadingIndicator.classList.add('hidden');
             hasMore = false;
           } finally {
             isLoading = false;
