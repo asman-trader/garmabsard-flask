@@ -362,23 +362,64 @@
         }
       }
 
+      async function refreshContent() {
+        try {
+          const searchQuery = document.getElementById('searchInput')?.value || '';
+          const url = `/api/express-list?page=1&per_page=30${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
+          const response = await fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          });
+          const data = await response.json();
+
+          if (data.success && data.lands && data.lands.length > 0) {
+            // استفاده از renderGridItem از scope بیرونی
+            const gridItemsHtml = data.lands.map(renderGridItem).join('');
+            const cardItemsHtml = data.lands.map(renderCardItem).join('');
+
+            // به‌روزرسانی grid با fade effect
+            grid.style.opacity = '0.7';
+            requestAnimationFrame(() => {
+              grid.innerHTML = gridItemsHtml;
+              if (cardsList) cardsList.innerHTML = cardItemsHtml;
+              bindLazyImages(grid);
+              grid.style.opacity = '1';
+              grid.style.transition = 'opacity 0.3s ease';
+            });
+          }
+        } catch (error) {
+          console.error('Error refreshing content:', error);
+        }
+      }
+
       function handleTouchEnd(e) {
         if (!isPulling || isRefreshing) return;
         
         const pullDistance = currentY - startY;
         
         if (pullDistance >= PULL_THRESHOLD) {
-          // شروع رفرش
+          // شروع رفرش بدون reload صفحه
           isRefreshing = true;
           
           // انیمیشن smooth برای grid
           grid.style.transition = 'transform 0.3s ease-out';
           grid.style.transform = 'translateY(0)';
           
-          // رفرش سریع صفحه
-          setTimeout(() => {
-            window.location.reload();
-          }, 200);
+          // رفرش محتوا بدون reload صفحه - استفاده از تابع performRefresh
+          if (window.performRefresh) {
+            window.performRefresh().then(() => {
+              isRefreshing = false;
+            }).catch(() => {
+              isRefreshing = false;
+            });
+          } else {
+            // Fallback: reload صفحه
+            setTimeout(() => {
+              window.location.reload();
+            }, 200);
+          }
         } else {
           // بازگشت به حالت اولیه با انیمیشن
           grid.style.transition = 'transform 0.3s ease-out';
@@ -489,6 +530,46 @@
         });
       }
       bindLazyImages(document);
+
+      // تابع رفرش محتوا بدون reload صفحه
+      async function performRefresh() {
+        try {
+          const searchQuery = document.getElementById('searchInput')?.value || '';
+          const url = `/api/express-list?page=1&per_page=30${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
+          const response = await fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          });
+          const data = await response.json();
+
+          if (data.success && data.lands && data.lands.length > 0) {
+            // استفاده از renderItem
+            const gridItemsHtml = data.lands.map(renderItem).join('');
+
+            // به‌روزرسانی grid با fade effect
+            grid.style.opacity = '0.7';
+            requestAnimationFrame(() => {
+              grid.innerHTML = gridItemsHtml;
+              if (cardsList) cardsList.innerHTML = gridItemsHtml;
+              bindLazyImages(grid);
+              grid.style.opacity = '1';
+              grid.style.transition = 'opacity 0.3s ease';
+            });
+            
+            // Reset pagination
+            currentPage = 1;
+            hasMore = data.pagination.has_next;
+          }
+        } catch (error) {
+          console.error('Error refreshing content:', error);
+          throw error;
+        }
+      }
+
+      // قرار دادن تابع در scope جهانی برای دسترسی از pull-to-refresh
+      window.performRefresh = performRefresh;
 
       // تابع برای بارگذاری صفحه بعد
       async function loadNextPage() {
