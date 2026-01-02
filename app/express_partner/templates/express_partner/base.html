@@ -561,14 +561,14 @@
         }));
 
         Alpine.data('vinorNotificationsPage', (initialList = [], initialUnread = 0) => ({
-          items: Array.isArray(initialList) ? initialList : [],
-          unreadCount: Number(initialUnread || 0),
-          loading: false,
+          items: [],
+          unreadCount: 0,
+          loading: true,
           init() {
             // Debug: log initial data
             console.debug('vinorNotificationsPage init:', {
               initialList: initialList,
-              initialListLength: Array.isArray(initialList) ? initialList.length : 0,
+              initialListLength: Array.isArray(initialList) ? initialList.length : (typeof initialList === 'string' ? initialList.length : 0),
               initialListType: typeof initialList,
               initialListIsArray: Array.isArray(initialList),
               initialUnread: initialUnread,
@@ -582,19 +582,35 @@
             };
             window.addEventListener('vinor:notifications:update', this._onUpdate);
             
-            // بررسی و parse کردن initialList (ممکن است string باشد از tojson)
+            // بررسی و parse کردن initialList
+            // اگر initialList یک array است، مستقیماً استفاده کن
+            // اگر string است، parse کن
+            // اگر object است اما array نیست، تبدیل به array خالی کن
             let parsedInitialList = initialList;
-            if (typeof initialList === 'string') {
+            
+            if (Array.isArray(initialList)) {
+              // اگر از قبل array است، مستقیماً استفاده کن
+              parsedInitialList = initialList;
+              console.debug('initialList is already an array:', parsedInitialList.length, 'items');
+            } else if (typeof initialList === 'string') {
+              // اگر string است، parse کن
               try {
                 parsedInitialList = JSON.parse(initialList);
-                console.debug('Parsed initialList from string:', parsedInitialList, 'length:', parsedInitialList.length);
+                console.debug('Parsed initialList from string:', parsedInitialList, 'length:', Array.isArray(parsedInitialList) ? parsedInitialList.length : 0);
+                if (!Array.isArray(parsedInitialList)) {
+                  console.warn('Parsed JSON is not an array:', parsedInitialList);
+                  parsedInitialList = [];
+                }
               } catch (e) {
                 console.warn('Failed to parse initialList as JSON:', e, 'initialList:', initialList);
                 parsedInitialList = [];
               }
             } else if (initialList && typeof initialList === 'object' && !Array.isArray(initialList)) {
-              // اگر object است اما array نیست، سعی کن آن را به array تبدیل کن
+              // اگر object است اما array نیست، تبدیل به array خالی کن
               console.warn('initialList is object but not array:', initialList);
+              parsedInitialList = [];
+            } else if (initialList === null || initialList === undefined) {
+              // اگر null یا undefined است، array خالی کن
               parsedInitialList = [];
             }
             
@@ -614,22 +630,22 @@
               // در غیر این صورت، از state موجود استفاده کن
               if (typeof VinorNotifyCenter !== 'undefined') {
                 const currentState = VinorNotifyCenter.getState();
-                if (currentState) {
-                  this.items = Array.isArray(currentState.notifications) ? currentState.notifications : [];
+                if (currentState && Array.isArray(currentState.notifications) && currentState.notifications.length > 0) {
+                  this.items = currentState.notifications;
                   this.unreadCount = Number(currentState.unread || 0);
                   this.loading = !!currentState.loading;
                   console.debug('Using state data:', this.items.length, 'items, loading:', this.loading);
                 } else {
-                  // اگر state موجود نیست، loading را true کن و fetch کن
+                  // اگر state موجود نیست یا خالی است، loading را true کن و fetch کن
                   this.items = [];
-                  this.unreadCount = 0;
+                  this.unreadCount = Number(initialUnread || 0);
                   this.loading = true;
-                  console.debug('No state found, setting loading to true');
+                  console.debug('No state found or empty, setting loading to true');
                 }
               } else {
                 // اگر VinorNotifyCenter در دسترس نیست، loading را true کن و fetch کن
                 this.items = [];
-                this.unreadCount = 0;
+                this.unreadCount = Number(initialUnread || 0);
                 this.loading = true;
                 console.debug('VinorNotifyCenter not available, setting loading to true');
               }
@@ -664,16 +680,21 @@
                 if (data.success && Array.isArray(data.notifications)) {
                   this.items = data.notifications;
                   this.unreadCount = Number(data.unread_count || 0);
+                  this.loading = false;
                   console.debug('Direct fetch successful:', this.items.length, 'items');
                 } else {
                   console.warn('Direct fetch: invalid response format', data);
+                  this.items = [];
+                  this.loading = false;
                 }
               } else {
                 console.error('Direct fetch failed with status:', res.status);
+                this.items = [];
+                this.loading = false;
               }
             } catch (err) {
               console.error('Direct fetch failed:', err);
-            } finally {
+              this.items = [];
               this.loading = false;
             }
           },
@@ -697,10 +718,6 @@
             this.unreadCount = newUnread;
             this.loading = newLoading;
             console.debug('After sync:', this.items.length, 'items, unread:', this.unreadCount, 'loading:', this.loading);
-            // Force Alpine.js to re-render
-            this.$nextTick(() => {
-              console.debug('After $nextTick:', this.items.length, 'items');
-            });
           },
           markAll() {
             VinorNotifyCenter.markAll();

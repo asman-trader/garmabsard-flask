@@ -2,8 +2,16 @@
 {% block title %}اعلان‌ها | وینور اکسپرس{% endblock %}
 {% block content %}
 
-<div x-data="vinorNotificationsPage({{ notifications|tojson|safe }}, {{ unread_count|default(0) }})" 
-     x-init="console.log('Notifications page initialized', { itemsCount: items.length, items: items, loading: loading, unreadCount: unreadCount })">
+<script>
+  // قرار دادن داده‌های اعلان‌ها در یک متغیر JavaScript قبل از initialize شدن Alpine.js
+  window.__NOTIFICATIONS_INIT_DATA__ = {
+    notifications: {{ notifications|tojson|safe }},
+    unreadCount: {{ unread_count|default(0) }}
+  };
+</script>
+
+<div x-data="vinorNotificationsPage(window.__NOTIFICATIONS_INIT_DATA__.notifications, window.__NOTIFICATIONS_INIT_DATA__.unreadCount)" 
+     x-init="console.log('Notifications page initialized', { itemsCount: items.length, items: items, loading: loading, unreadCount: unreadCount }); $watch('items', (val) => console.log('Items changed:', val ? val.length : 0)); $watch('loading', (val) => console.log('Loading changed:', val))">
   <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 h-14 flex items-center justify-between">
       <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
