@@ -783,7 +783,7 @@
   {% block scripts %}{% endblock %}
   
   <!-- Onboarding Tour System -->
-  <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+  <script src="{{ 'js/onboarding.js'|static_version }}"></script>
   
 </body>
 </html>

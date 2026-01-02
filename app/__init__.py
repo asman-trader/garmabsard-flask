@@ -72,6 +72,27 @@ def _register_jinja_filters(app: Flask) -> None:
                     continue
         return None
 
+    @app.template_filter("static_version")
+    def static_version(filename):
+        """افزودن version query parameter به فایل‌های static برای جلوگیری از کش"""
+        try:
+            import os
+            from flask import url_for, current_app
+            # در template filter، current_app در دسترس است
+            static_path = os.path.join(current_app.static_folder, filename)
+            if os.path.exists(static_path):
+                # استفاده از modification time به عنوان version
+                mtime = int(os.path.getmtime(static_path))
+                base_url = url_for('static', filename=filename)
+                return f"{base_url}?v={mtime}"
+            return url_for('static', filename=filename)
+        except Exception:
+            # Fallback: بدون version
+            try:
+                return url_for('static', filename=filename)
+            except Exception:
+                return f"/static/{filename}"
+
     @app.template_filter("time_ago")
     def time_ago(value):
         dt = _parse_dt(value)
