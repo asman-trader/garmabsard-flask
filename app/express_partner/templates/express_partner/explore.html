@@ -41,8 +41,8 @@
 
 <div class="max-w-5xl mx-auto pt-0 px-4 pb-16" id="exploreContainer">
 
-  <!-- Pull to Refresh Indicator - مینیمال -->
-  <div id="pullToRefreshIndicator" class="fixed top-2 left-1/2 transform -translate-x-1/2 z-40 pointer-events-none opacity-0 transition-all duration-200">
+  <!-- Pull to Refresh Indicator - مینیمال (زیر هدر) -->
+  <div id="pullToRefreshIndicator" class="fixed left-1/2 transform -translate-x-1/2 z-30 pointer-events-none opacity-0 transition-all duration-200" style="top: 70px;">
     <div id="refreshIcon" class="w-8 h-8 rounded-full bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
       <i class="fas fa-sync-alt text-blue-600 dark:text-blue-400 text-sm"></i>
     </div>
@@ -249,7 +249,7 @@
         const rotation = progress * 180; // چرخش آیکون
         
         pullIndicator.style.opacity = opacity.toString();
-        pullIndicator.style.transform = `translate(-50%, ${Math.min(pullDistance * 0.5, 40)}px)`;
+        pullIndicator.style.transform = `translate(-50%, ${70 + Math.min(pullDistance * 0.5, 40)}px)`;
         refreshIcon.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
         
         // اسکرول grid به پایین
@@ -295,7 +295,7 @@
 
     function resetPullIndicator() {
       pullIndicator.style.opacity = '0';
-      pullIndicator.style.transform = 'translate(-50%, 0)';
+      pullIndicator.style.transform = 'translate(-50%, 70px)';
       refreshIcon.style.transform = 'scale(0.8) rotate(0deg)';
       refreshIcon.classList.remove('spinning');
       grid.style.transition = 'transform 0.3s ease-out';
