@@ -116,6 +116,14 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    /* Pull to Refresh Indicator */
+    #pullToRefreshIndicator {
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+      backdrop-filter: blur(10px);
+    }
+    .dark #pullToRefreshIndicator {
+      background: linear-gradient(to bottom, rgba(17, 24, 39, 0.95) 0%, rgba(17, 24, 39, 0.8) 100%);
+    }
   </style>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -168,7 +176,15 @@
       </div>
     </header>
 
-    <div class="max-w-6xl mx-auto pt-0 px-0 pb-16">
+    <div class="max-w-6xl mx-auto pt-0 px-0 pb-16" id="exploreContainer">
+
+      <!-- Pull to Refresh Indicator -->
+      <div id="pullToRefreshIndicator" class="fixed top-0 left-0 right-0 z-40 flex items-center justify-center py-3 pointer-events-none opacity-0 transition-opacity duration-300">
+        <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <div id="refreshSpinner" class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin hidden"></div>
+          <span id="refreshText" class="text-sm font-medium">کشیدن برای رفرش</span>
+        </div>
+      </div>
 
       <!-- Grid اینستاگرام - 3 ستون -->
       <div id="instagramGrid" class="instagram-grid mb-4">
@@ -321,6 +337,96 @@
           });
         }
       } catch (_) {}
+    })();
+
+    // Pull to Refresh - سبک اینستاگرام
+    (function() {
+      const container = document.getElementById('exploreContainer');
+      const pullIndicator = document.getElementById('pullToRefreshIndicator');
+      const refreshSpinner = document.getElementById('refreshSpinner');
+      const refreshText = document.getElementById('refreshText');
+      
+      if (!container || !pullIndicator) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isPulling = false;
+      let isRefreshing = false;
+      const PULL_THRESHOLD = 80; // حداقل فاصله برای رفرش
+      const MAX_PULL = 120; // حداکثر فاصله کشیدن
+
+      function handleTouchStart(e) {
+        // فقط اگر در بالای صفحه هستیم و اسکرول به بالا نیست
+        if (window.scrollY > 0 || isRefreshing) return;
+        
+        startY = e.touches[0].clientY;
+        isPulling = false;
+      }
+
+      function handleTouchMove(e) {
+        if (window.scrollY > 0 || isRefreshing) return;
+        
+        currentY = e.touches[0].clientY;
+        const pullDistance = currentY - startY;
+
+        if (pullDistance > 0 && pullDistance < MAX_PULL) {
+          isPulling = true;
+          e.preventDefault();
+          
+          // نمایش indicator
+          const opacity = Math.min(pullDistance / PULL_THRESHOLD, 1);
+          const scale = Math.min(pullDistance / PULL_THRESHOLD, 1.2);
+          
+          pullIndicator.style.opacity = opacity.toString();
+          pullIndicator.style.transform = `translateY(${Math.min(pullDistance, MAX_PULL)}px)`;
+          
+          // تغییر متن و نمایش spinner
+          if (pullDistance >= PULL_THRESHOLD) {
+            refreshText.textContent = 'رها کنید برای رفرش';
+            refreshSpinner.classList.remove('hidden');
+          } else {
+            refreshText.textContent = 'کشیدن برای رفرش';
+            refreshSpinner.classList.add('hidden');
+          }
+        }
+      }
+
+      function handleTouchEnd(e) {
+        if (!isPulling || isRefreshing) return;
+        
+        const pullDistance = currentY - startY;
+        
+        if (pullDistance >= PULL_THRESHOLD) {
+          // شروع رفرش
+          isRefreshing = true;
+          refreshText.textContent = 'در حال رفرش...';
+          refreshSpinner.classList.remove('hidden');
+          
+          // رفرش صفحه
+          setTimeout(() => {
+            window.location.reload();
+          }, 300);
+        } else {
+          // بازگشت به حالت اولیه
+          resetPullIndicator();
+        }
+        
+        isPulling = false;
+        startY = 0;
+        currentY = 0;
+      }
+
+      function resetPullIndicator() {
+        pullIndicator.style.opacity = '0';
+        pullIndicator.style.transform = 'translateY(0)';
+        refreshText.textContent = 'کشیدن برای رفرش';
+        refreshSpinner.classList.add('hidden');
+      }
+
+      // Event listeners
+      document.addEventListener('touchstart', handleTouchStart, { passive: true });
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd, { passive: true });
     })();
 
     // Infinite Scroll - سبک اینستاگرام

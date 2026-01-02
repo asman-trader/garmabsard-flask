@@ -39,7 +39,15 @@
     </div>
   </header>
 
-<div class="max-w-5xl mx-auto pt-0 px-4 pb-16">
+<div class="max-w-5xl mx-auto pt-0 px-4 pb-16" id="exploreContainer">
+
+  <!-- Pull to Refresh Indicator -->
+  <div id="pullToRefreshIndicator" class="fixed top-0 left-0 right-0 z-40 flex items-center justify-center py-3 pointer-events-none opacity-0 transition-opacity duration-300">
+    <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+      <div id="refreshSpinner" class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin hidden"></div>
+      <span id="refreshText" class="text-sm font-medium">کشیدن برای رفرش</span>
+    </div>
+  </div>
 
   <!-- Grid اینستاگرام - 3 ستون -->
   <div id="instagramGrid" class="instagram-grid mb-4">
@@ -180,6 +188,15 @@
   }
   @keyframes spin {
     to { transform: rotate(360deg); }
+  }
+  
+  /* Pull to Refresh Indicator */
+  #pullToRefreshIndicator {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+    backdrop-filter: blur(10px);
+  }
+  .dark #pullToRefreshIndicator {
+    background: linear-gradient(to bottom, rgba(17, 24, 39, 0.95) 0%, rgba(17, 24, 39, 0.8) 100%);
   }
   
   /* بهینه‌سازی برای تصاویر */
