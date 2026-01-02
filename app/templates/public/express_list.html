@@ -362,38 +362,6 @@
         }
       }
 
-      async function refreshContent() {
-        try {
-          const searchQuery = document.getElementById('searchInput')?.value || '';
-          const url = `/api/express-list?page=1&per_page=30${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
-          const response = await fetch(url, {
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          });
-          const data = await response.json();
-
-          if (data.success && data.lands && data.lands.length > 0) {
-            // استفاده از renderGridItem از scope بیرونی
-            const gridItemsHtml = data.lands.map(renderGridItem).join('');
-            const cardItemsHtml = data.lands.map(renderCardItem).join('');
-
-            // به‌روزرسانی grid با fade effect
-            grid.style.opacity = '0.7';
-            requestAnimationFrame(() => {
-              grid.innerHTML = gridItemsHtml;
-              if (cardsList) cardsList.innerHTML = cardItemsHtml;
-              bindLazyImages(grid);
-              grid.style.opacity = '1';
-              grid.style.transition = 'opacity 0.3s ease';
-            });
-          }
-        } catch (error) {
-          console.error('Error refreshing content:', error);
-        }
-      }
-
       function handleTouchEnd(e) {
         if (!isPulling || isRefreshing) return;
         
