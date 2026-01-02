@@ -530,11 +530,17 @@ def express_detail(code):
         desc_parts.append(f"قیمت: {land.get('price_total'):,} تومان")
     description = f"{land.get('title', 'فایل اکسپرس')} - {' | '.join(desc_parts)}" if desc_parts else f"{land.get('title', 'فایل اکسپرس')} - خرید و فروش ملک در وینور"
     
-    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll (از کش استفاده می‌شود)
+    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll (حلقه‌ای - نامحدود)
     
     current_index = next((i for i, l in enumerate(express_lands) if l.get('code') == code), -1)
-    next_land = express_lands[current_index + 1] if current_index >= 0 and current_index + 1 < len(express_lands) else None
-    prev_land = express_lands[current_index - 1] if current_index > 0 else None
+    
+    # حلقه‌ای کردن: وقتی به آخر رسید به اول برگردد و برعکس
+    if current_index >= 0 and len(express_lands) > 0:
+        next_land = express_lands[(current_index + 1) % len(express_lands)]
+        prev_land = express_lands[(current_index - 1) % len(express_lands)]
+    else:
+        next_land = None
+        prev_land = None
     
     # Microcache detail for guests (short TTL)
     if not session.get('user_phone'):

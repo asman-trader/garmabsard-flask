@@ -71,7 +71,7 @@
     <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
       <div class="w-full px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
         <button type="button"
-                onclick="history.back()"
+                onclick="goToExplore()"
                 class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
                 aria-label="بازگشت">
           <i class="fas fa-arrow-right text-sm"></i>
@@ -503,6 +503,21 @@
   </div>
 
   <script>
+    // تابع برای بازگشت به صفحه اکسپلور
+    function goToExplore() {
+      // بررسی اینکه آیا کاربر از صفحه اکسپلور همکاران آمده یا نه
+      const referer = document.referrer || '';
+      const isFromPartnerExplore = referer.includes('/express/partner/explore');
+      
+      // اگر از صفحه اکسپلور همکاران آمده، به همان صفحه برگرد
+      if (isFromPartnerExplore) {
+        window.location.href = '/express/partner/explore';
+      } else {
+        // در غیر این صورت به صفحه اکسپلور عمومی برو
+        window.location.href = '{{ url_for("main.express_public_list") }}';
+      }
+    }
+
     // فعال‌سازی تم تیره براساس تنظیم سیستم (مانند دیوار)
     (function() {
       try {
@@ -830,7 +845,7 @@
       }
     })();
 
-    // Infinite Scroll - اسکرول بی‌نهایت بین فایل‌ها
+    // Infinite Scroll - اسکرول بی‌نهایت بین فایل‌ها (حلقه‌ای - نامحدود)
     (function() {
       const galleryEl = document.getElementById('landGallery');
       const container = document.querySelector('.min-h-screen');
@@ -840,21 +855,44 @@
       const prevCode = galleryEl.getAttribute('data-prev-code');
       const allLands = {{ all_lands | tojson if all_lands else '[]' }};
       const currentIndex = {{ current_index if current_index is defined else -1 }};
+      const currentCode = '{{ land.code }}';
 
       let verticalSwipeStartY = null;
       let verticalSwipeEndY = null;
       const VERTICAL_SWIPE_THRESHOLD = 100;
 
+      // تابع برای پیدا کردن فایل بعدی (حلقه‌ای)
+      function getNextCode() {
+        if (nextCode) return nextCode;
+        if (allLands.length === 0 || currentIndex < 0) return null;
+        const nextIndex = (currentIndex + 1) % allLands.length;
+        return allLands[nextIndex]?.code || null;
+      }
+
+      // تابع برای پیدا کردن فایل قبلی (حلقه‌ای)
+      function getPrevCode() {
+        if (prevCode) return prevCode;
+        if (allLands.length === 0 || currentIndex < 0) return null;
+        const prevIndex = (currentIndex - 1 + allLands.length) % allLands.length;
+        return allLands[prevIndex]?.code || null;
+      }
+
       // Swipe عمودی برای تغییر فایل
       function handleVerticalSwipe(dy) {
         if (Math.abs(dy) < VERTICAL_SWIPE_THRESHOLD) return;
         
-        if (dy < 0 && nextCode) {
+        if (dy < 0) {
           // Swipe به بالا = فایل بعدی
-          window.location.href = '/express/' + nextCode;
-        } else if (dy > 0 && prevCode) {
+          const next = getNextCode();
+          if (next) {
+            window.location.href = '/express/' + next;
+          }
+        } else if (dy > 0) {
           // Swipe به پایین = فایل قبلی
-          window.location.href = '/express/' + prevCode;
+          const prev = getPrevCode();
+          if (prev) {
+            window.location.href = '/express/' + prev;
+          }
         }
       }
 
@@ -881,24 +919,33 @@
 
       // Keyboard navigation
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowUp' && nextCode) {
-          e.preventDefault();
-          window.location.href = '/express/' + nextCode;
-        } else if (e.key === 'ArrowDown' && prevCode) {
-          e.preventDefault();
-          window.location.href = '/express/' + prevCode;
+        if (e.key === 'ArrowUp') {
+          const next = getNextCode();
+          if (next) {
+            e.preventDefault();
+            window.location.href = '/express/' + next;
+          }
+        } else if (e.key === 'ArrowDown') {
+          const prev = getPrevCode();
+          if (prev) {
+            e.preventDefault();
+            window.location.href = '/express/' + prev;
+          }
         }
       });
 
-      // Intersection Observer برای auto-load فایل بعدی
+      // Intersection Observer برای auto-load فایل بعدی (حلقه‌ای)
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          if (entry.isIntersecting && nextCode) {
-            // وقتی به انتهای صفحه رسید، فایل بعدی را preload کن
-            const link = document.createElement('link');
-            link.rel = 'prefetch';
-            link.href = '/express/' + nextCode;
-            document.head.appendChild(link);
+          if (entry.isIntersecting) {
+            const next = getNextCode();
+            if (next) {
+              // وقتی به انتهای صفحه رسید، فایل بعدی را preload کن
+              const link = document.createElement('link');
+              link.rel = 'prefetch';
+              link.href = '/express/' + next;
+              document.head.appendChild(link);
+            }
           }
         });
       }, {
