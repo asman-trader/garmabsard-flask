@@ -200,11 +200,17 @@ def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
     if normalized_user_id not in data:
         data[normalized_user_id] = []
     
-    data[normalized_user_id].insert(0, notif)
+    # بررسی اینکه آیا اعلان با همین id قبلاً وجود دارد (جلوگیری از duplicate)
+    existing_ids = {n.get('id') for n in data[normalized_user_id] if n.get('id')}
+    if notif['id'] not in existing_ids:
+        data[normalized_user_id].insert(0, notif)
     
     # محدود کردن تعداد اعلان‌ها (حفظ آخرین 100 اعلان)
     if len(data[normalized_user_id]) > 100:
         data[normalized_user_id] = data[normalized_user_id][:100]
+    
+    # sort بر اساس created_at (جدیدترین اول)
+    data[normalized_user_id].sort(key=lambda x: x.get('created_at', 0), reverse=True)
     
     # ذخیره
     if not _save_all(data):
@@ -308,7 +314,9 @@ def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]
     except Exception:
         pass
     
-    # محدود کردن تعداد
+    # محدود کردن تعداد و sort بر اساس created_at (جدیدترین اول)
+    # اطمینان از اینکه items به ترتیب زمانی صحیح هستند
+    items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
     limit = max(1, int(limit or 50))
     return items[:limit]
 
@@ -481,11 +489,15 @@ def merge_duplicate_keys() -> Dict[str, Any]:
             # فقط یک کلید - بدون تغییر
             merged_data[normalized_key] = data.get(original_keys[0], [])
     
-    # ذخیره داده‌های merge شده
-    if merged_count > 0:
+    # ذخیره داده‌های merge شده (حتی اگر merged_count = 0 باشد، برای normalize کردن کلیدها)
+    # این اطمینان می‌دهد که همه کلیدها normalize شده‌اند
+    if merged_count > 0 or len(merged_data) != len(data):
         _save_all(merged_data)
         try:
-            current_app.logger.info(f"Merged {merged_count} duplicate keys. Removed {len(removed_keys)} keys: {removed_keys}")
+            if merged_count > 0:
+                current_app.logger.info(f"Merged {merged_count} duplicate keys. Removed {len(removed_keys)} keys: {removed_keys}")
+            else:
+                current_app.logger.info(f"Normalized all notification keys. Total users: {len(merged_data)}")
         except Exception:
             pass
     

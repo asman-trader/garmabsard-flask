@@ -1605,10 +1605,26 @@ def mark_notification_read(notif_id: str):
     me_phone_raw = (session.get("user_phone") or "").strip()
     # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
     me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
+    
+    if not me_phone:
+        return jsonify({
+            "success": False,
+            "error": "Invalid user phone",
+            "unread_count": 0
+        }), 400
+    
     success = mark_read(me_phone, notif_id)
+    unread = unread_count(me_phone)
+    
+    try:
+        from flask import current_app
+        current_app.logger.info(f"API: Mark notification read: user={me_phone}, notif_id={notif_id}, success={success}, unread={unread}")
+    except Exception:
+        pass
+    
     return jsonify({
         "success": success,
-        "unread_count": unread_count(me_phone)
+        "unread_count": unread
     })
 
 
