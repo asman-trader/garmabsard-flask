@@ -411,10 +411,19 @@ def create_app() -> Flask:
 
     # ---------- فایل‌های PWA ----------
     # Service Worker وینور غیرفعال شد - فقط همکاران اکسپرس از Service Worker استفاده می‌کنند
-    # @app.get("/sw.js")
-    # def service_worker():
-    #     static_dir = os.path.join(app.root_path, "static")
-    #     return send_from_directory(static_dir, "sw.js", mimetype="application/javascript")
+    # اما برای جلوگیری از 404، یک fallback اضافه می‌کنیم
+    @app.get("/sw.js")
+    def service_worker_fallback():
+        """Fallback route for /sw.js - redirects to express partner service worker"""
+        from flask import redirect, url_for
+        try:
+            return redirect(url_for('express_partner.service_worker'), code=302)
+        except Exception:
+            # اگر route پیدا نشد، یک empty response برگردان
+            from flask import Response
+            return Response("// Service Worker not available", 
+                          mimetype="application/javascript", 
+                          status=404)
 
     @app.get("/manifest.webmanifest")
     def serve_manifest():

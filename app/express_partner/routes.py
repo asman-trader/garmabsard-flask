@@ -311,10 +311,20 @@ def serve_manifest():
 @express_partner_bp.route('/sw.js', methods=['GET'], endpoint='service_worker')
 def serve_service_worker():
     """Serve Express Partner service worker separately"""
-    from flask import send_from_directory
+    from flask import send_from_directory, Response
     import os
     static_dir = os.path.join(current_app.root_path, "static")
-    return send_from_directory(static_dir, "express-partner-sw.js", mimetype="application/javascript")
+    sw_file = "express-partner-sw.js"
+    sw_path = os.path.join(static_dir, sw_file)
+    
+    if os.path.exists(sw_path):
+        return send_from_directory(static_dir, sw_file, mimetype="application/javascript")
+    
+    # Fallback: return empty service worker if file not found
+    current_app.logger.warning(f"Service worker file not found: {sw_path}")
+    return Response("// Express Partner Service Worker not found", 
+                   mimetype="application/javascript", 
+                   status=404)
 
 
 @express_partner_bp.route('/offline', methods=['GET'], endpoint='offline')
@@ -691,6 +701,8 @@ def dashboard():
 def notes_page():
     me_phone = (session.get("user_phone") or "").strip()
     items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
+    # مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
+    items = _sort_by_created_at_desc(items)
     return render_template("express_partner/notes.html", notes=items, hide_header=True, SHOW_SUBMIT_BUTTON=False, brand="وینور", domain="vinor.ir")
 
 
