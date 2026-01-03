@@ -5,9 +5,10 @@ Express Listings API endpoints for Vinor Express feature
 """
 
 from flask import Blueprint, jsonify, request, current_app, make_response
-from app.utils.storage import load_express_lands_cached, get_lands_file_stats
+from app.utils.storage import load_express_lands_cached, get_lands_file_stats, load_express_reposts, load_express_partners
 from app.utils.images import prepare_variants_dict
 from app.services.notifications import add_notification
+from app.utils.share_tokens import encode_partner_ref
 
 express_api_bp = Blueprint('express_api', __name__, url_prefix='/api')
 
@@ -148,6 +149,34 @@ def express_list():
                 return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
         
+        # تزریق بازنشرها در ابتدای لیست (سبک ریتوییت)
+        try:
+            reposts = load_express_reposts() or []
+        except Exception:
+            reposts = []
+        if reposts:
+            # ساخت آیتم‌های boost از بازنشرها
+            code_to_land = {str(l.get('code')): l for l in express_lands}
+            try:
+                partners = load_express_partners() or []
+            except Exception:
+                partners = []
+            phone_to_name = {str(p.get('phone') or ''): (p.get('name') or 'همکار') for p in partners if isinstance(p, dict)}
+            boost_items = []
+            for r in reposts[-100:][::-1]:
+                c = str(r.get('code') or '')
+                phone = str(r.get('partner_phone') or '')
+                land = code_to_land.get(c)
+                if land and phone:
+                    item = dict(land)
+                    try:
+                        item['_share_token'] = encode_partner_ref(phone)
+                    except Exception:
+                        item['_share_token'] = ''
+                    item['_repost_by_name'] = phone_to_name.get(phone) or 'همکار'
+                    boost_items.append(item)
+            express_lands = boost_items + express_lands
+
         # صفحه‌بندی
         total = len(express_lands)
         pages = max(1, (total + per_page - 1) // per_page)
@@ -175,7 +204,9 @@ def express_list():
                 'images_v2': [prepare_variants_dict(i) for i in images],
                 'video': land.get('video'),
                 'price_total': land.get('price_total'),
-                'created_at': land.get('created_at')
+                'created_at': land.get('created_at'),
+                '_share_token': land.get('_share_token',''),
+                '_repost_by_name': land.get('_repost_by_name',''),
             })
         
         response = make_response(jsonify({

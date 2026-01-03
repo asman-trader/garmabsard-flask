@@ -18,7 +18,7 @@ from ..utils.storage import (
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
-    load_express_reposts,
+    load_express_reposts, save_express_reposts,
     load_ads_cached, load_active_cities, load_express_lands_cached,
     load_sms_history, save_sms_history,
     load_settings,
