@@ -416,120 +416,122 @@
     });
   })();
 
-  // Pull-to-refresh functionality
-  (function(){
+  // Pull to Refresh - مینیمال و سریع (بدون آیکون، فقط اسکرول کارت‌ها)
+  (function() {
+    const container = document.getElementById('cardsTrack');
+    if (!container) return;
+
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
-    let pullThreshold = 80; // Minimum distance to trigger refresh
-    let refreshElement = null;
+    let isRefreshing = false;
+    const PULL_THRESHOLD = 60; // حداقل فاصله برای رفرش
+    const MAX_PULL = 80; // حداکثر فاصله کشیدن
 
-    function createRefreshElement() {
-      const el = document.createElement('div');
-      el.id = 'pull-refresh-indicator';
-      el.className = 'fixed top-0 left-0 right-0 z-[100] bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800 transform -translate-y-full transition-transform duration-300';
-      el.innerHTML = `
-        <div class="max-w-5xl mx-auto px-3 py-3">
-          <div class="refresh-box mx-auto w-fit flex items-center gap-2 px-3 py-2 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-200 dark:border-gray-700 transition-colors">
-            <div class="refresh-arrow w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-xs transition-transform duration-200">
-              <i class="fas fa-arrow-down"></i>
-            </div>
-            <span class="text-xs sm:text-sm font-medium refresh-label text-gray-800 dark:text-gray-100">کشیده و رها کنید</span>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(el);
-      return el;
+    function handleTouchStart(e) {
+      // فقط اگر در بالای صفحه هستیم
+      if (window.scrollY > 5 || isRefreshing) return;
+      
+      startY = e.touches[0].clientY;
+      isPulling = false;
     }
 
-    function showRefreshIndicator(progress) {
-      if (!refreshElement) {
-        refreshElement = createRefreshElement();
-      }
-      const translateY = Math.min(progress * 0.5, pullThreshold);
-      refreshElement.style.transform = `translateY(${translateY - pullThreshold}px)`;
+    function handleTouchMove(e) {
+      if (window.scrollY > 5 || isRefreshing) return;
+      
+      currentY = e.touches[0].clientY;
+      const pullDistance = currentY - startY;
 
-      // Change icon based on progress
-      const textEl = refreshElement.querySelector('.refresh-text');
-      const label = refreshElement.querySelector('.refresh-label');
-      const arrow = refreshElement.querySelector('.refresh-arrow');
-      if (arrow) {
-        const deg = Math.min(180, Math.max(0, (progress / pullThreshold) * 180));
-        arrow.style.transform = `rotate(${deg}deg)`;
-      }
-      if (progress >= pullThreshold) {
-        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
-        if (label) label.textContent = 'رها کنید برای بروزرسانی';
-      } else {
-        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-gray-600 dark:text-gray-400';
-        if (label) label.textContent = 'کشیده و رها کنید';
-      }
-    }
-
-    function hideRefreshIndicator() {
-      if (refreshElement) {
-        refreshElement.style.transform = 'translateY(-100%)';
-        setTimeout(() => {
-          if (refreshElement) {
-            refreshElement.remove();
-            refreshElement = null;
-          }
-        }, 300);
-      }
-    }
-
-    function triggerRefresh() {
-      if (refreshElement) {
-        const textEl = refreshElement.querySelector('.refresh-text');
-        const label = refreshElement.querySelector('.refresh-label');
-        const arrow = refreshElement.querySelector('.refresh-arrow');
-        if (textEl) textEl.className = 'refresh-text flex items-center gap-3 text-emerald-600 dark:text-emerald-400';
-        if (label) label.textContent = 'در حال بروزرسانی...';
-        if (arrow) arrow.style.transform = 'rotate(0deg)';
-        refreshElement.style.transform = 'translateY(0)';
-      }
-
-      // Reload the page after a short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    }
-
-    document.addEventListener('touchstart', function(e) {
-      if (window.scrollY === 0) { // Only when at top of page
-        startY = e.touches[0].clientY;
+      if (pullDistance > 0 && pullDistance < MAX_PULL) {
         isPulling = true;
+        e.preventDefault();
+        
+        // اسکرول کارت‌ها به پایین
+        container.style.transform = `translateY(${Math.min(pullDistance * 0.3, 30)}px)`;
+        container.style.transition = 'none';
       }
-    }, { passive: true });
+    }
 
-    document.addEventListener('touchmove', function(e) {
-      if (isPulling && startY > 0) {
-        currentY = e.touches[0].clientY;
-        const pullDistance = currentY - startY;
-
-        if (pullDistance > 0) { // Only downward pulls
-          e.preventDefault(); // Prevent default scrolling
-          showRefreshIndicator(pullDistance);
-        }
-      }
-    }, { passive: false });
-
-    document.addEventListener('touchend', function(e) {
-      if (isPulling) {
-        const pullDistance = currentY - startY;
-
-        if (pullDistance >= pullThreshold) {
-          triggerRefresh();
+    function handleTouchEnd(e) {
+      if (!isPulling || isRefreshing) return;
+      
+      const pullDistance = currentY - startY;
+      
+      if (pullDistance >= PULL_THRESHOLD) {
+        // شروع رفرش بدون reload صفحه
+        isRefreshing = true;
+        
+        // انیمیشن smooth برای کارت‌ها
+        container.style.transition = 'transform 0.3s ease-out';
+        container.style.transform = 'translateY(0)';
+        
+        // رفرش محتوا بدون reload صفحه - استفاده از تابع performRefresh
+        if (window.performRefresh) {
+          window.performRefresh().then(() => {
+            isRefreshing = false;
+          }).catch(() => {
+            isRefreshing = false;
+          });
         } else {
-          hideRefreshIndicator();
+          // Fallback: reload صفحه
+          setTimeout(() => {
+            window.location.reload();
+          }, 200);
         }
-
-        startY = 0;
-        currentY = 0;
-        isPulling = false;
+      } else {
+        // بازگشت به حالت اولیه با انیمیشن
+        container.style.transition = 'transform 0.3s ease-out';
+        container.style.transform = 'translateY(0)';
       }
-    });
+      
+      isPulling = false;
+      startY = 0;
+      currentY = 0;
+    }
+
+    // Event listeners
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
   })();
+
+  // تابع رفرش محتوا بدون reload صفحه
+  async function performRefresh() {
+    try {
+      // رفرش صفحه با no-cache
+      const response = await fetch(window.location.href, {
+        headers: {
+          'Accept': 'text/html',
+          'Cache-Control': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // به‌روزرسانی کارت‌ها
+        const newCardsTrack = doc.getElementById('cardsTrack');
+        const currentCardsTrack = document.getElementById('cardsTrack');
+        
+        if (newCardsTrack && currentCardsTrack) {
+          // به‌روزرسانی با fade effect
+          currentCardsTrack.style.opacity = '0.7';
+          requestAnimationFrame(() => {
+            currentCardsTrack.innerHTML = newCardsTrack.innerHTML;
+            currentCardsTrack.style.opacity = '1';
+            currentCardsTrack.style.transition = 'opacity 0.3s ease';
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing content:', error);
+      throw error;
+    }
+  }
+  window.performRefresh = performRefresh;
 </script>
 {% endblock %}
 
