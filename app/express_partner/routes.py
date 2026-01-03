@@ -18,6 +18,7 @@ from ..utils.storage import (
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
+    load_express_reposts,
     load_ads_cached, load_active_cities, load_express_lands_cached,
     load_sms_history, save_sms_history,
     load_settings,
@@ -613,6 +614,13 @@ def dashboard():
     # بررسی اعتبار فایل‌ها
     from ..utils.dates import is_ad_expired
     
+    # وضعیت بازنشرهای من برای رنگ دکمه
+    try:
+        my_reposts = [r for r in (load_express_reposts() or []) if str(r.get('partner_phone')) == me_phone]
+        my_reposted_codes = {str(r.get('code')) for r in my_reposts}
+    except Exception:
+        my_reposted_codes = set()
+
     for a in my_assignments:
         land = code_to_land.get(str(a.get('land_code')))
         if not land:
@@ -649,6 +657,7 @@ def dashboard():
         except Exception:
             item['_share_url'] = ''
         item['_share_token'] = share_token
+        item['_reposted_by_me'] = str(item.get('code')) in my_reposted_codes
         # اطمینان از وجود created_at برای مرتب‌سازی (بر اساس تاریخ ثبت آگهی)
         # item از dict(land) ساخته شده، پس created_at باید از land بیاید
         if not item.get('created_at'):
@@ -724,12 +733,36 @@ def api_repost():
     items = load_express_reposts() or []
     now = datetime.utcnow().isoformat() + "Z"
     items.append({'code': code, 'partner_phone': me_phone, 'timestamp': now})
-    items.append({'code': code, 'partner_phone': me_phone, 'timestamp': now})
     # محدود کردن طول فایل به 2000 رکورد برای جلوگیری از رشد
     if len(items) > 2000:
         items = items[-2000:]
     save_express_reposts(items)
     return jsonify({'ok': True})
+
+
+@express_partner_bp.post('/api/repost/remove')
+@require_partner_access()
+def api_repost_remove():
+    """
+    حذف بازنشر یک فایل توسط همکار (برداشت بازنشر).
+    - ورودی: code
+    """
+    try:
+        data = request.get_json(silent=True) or request.form
+        code = (data.get('code') or '').strip()
+    except Exception:
+        code = ''
+    if not code:
+        return jsonify({'ok': False, 'error': 'missing_code'}), 400
+    me_phone = (session.get("user_phone") or '').strip()
+    try:
+        items = load_express_reposts() or []
+        # حذف تمام رکوردهای مربوط به این همکار و این فایل
+        items = [r for r in items if not (str(r.get('partner_phone')) == me_phone and str(r.get('code')) == code)]
+        save_express_reposts(items)
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'ok': False, 'error': 'persist_failed'}), 500
 
 @express_partner_bp.get('/notes', endpoint='notes')
 @require_partner_access()
@@ -826,6 +859,7 @@ def explore_page():
                 ]).lower()
                 return all(t in txt for t in terms)
             express_lands = [l for l in express_lands if _matches(l)]
+        # (بازنشر فقط برای اکسپلور عمومی اعمال می‌شود)
         page = int(request.args.get('page', 1) or 1)
         per_page = 20
         total = len(express_lands)

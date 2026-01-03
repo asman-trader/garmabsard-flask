@@ -297,30 +297,39 @@ def express_public_list():
             reposts = load_express_reposts() or []
         except Exception:
             reposts = []
+        # آماده‌سازی شمارش بازنشرها و ساخت آیتم‌های بازنشر (سبک ریتوییت)
+        code_to_repost_count = {}
         if reposts:
-            # فقط بازنشرهای اخیر ۷۲ ساعت اخیر
-            from datetime import datetime, timedelta
-            def _is_recent(ts):
-                try:
-                    dt = datetime.fromisoformat(str(ts).replace('Z','+00:00'))
-                except Exception:
-                    return False
-                return (datetime.utcnow() - dt.replace(tzinfo=None)) <= timedelta(hours=72)
-            recent = [r for r in reposts if _is_recent(r.get('timestamp'))]
+            for r in reposts:
+                c = str(r.get('code') or '')
+                if not c:
+                    continue
+                code_to_repost_count[c] = code_to_repost_count.get(c, 0) + 1
             # به ازای هر رکورد، آیتم تقویتی بساز
             code_to_land = {str(l.get('code')): l for l in express_lands}
+            # برای نمایش نام همکار بازنشرکننده
+            try:
+                partners = load_express_partners() or []
+            except Exception:
+                partners = []
+            phone_to_name = {str(p.get('phone') or ''): (p.get('name') or 'همکار') for p in partners if isinstance(p, dict)}
+
             boost_items = []
             from ..utils.share_tokens import encode_partner_ref
-            for r in recent[::-1]:  # جدیدها جلوتر
+            # آخرین 100 بازنشر (جدیدترین‌ها جلوتر)
+            for r in reposts[-100:][::-1]:
                 c = str(r.get('code') or '')
                 land = code_to_land.get(c)
                 phone = str(r.get('partner_phone') or '')
                 if land and phone:
                     item = dict(land)
+                    # تزریق ref همکار برای نمایش کارت همکار در جزئیات
                     try:
                         item['_share_token'] = encode_partner_ref(phone)
                     except Exception:
                         item['_share_token'] = ''
+                    # نام همکار بازنشرکننده برای نشان کوچک
+                    item['_repost_by_name'] = phone_to_name.get(phone) or 'همکار'
                     boost_items.append(item)
             # افزودن به ابتدای لیست
             express_lands = boost_items + express_lands
@@ -359,6 +368,8 @@ def express_public_list():
                 'image_raw': cover_variants.get('raw'),
                 'images_v2': images_v2,
                 '_share_token': land.get('_share_token',''),
+                '_repost_by_name': land.get('_repost_by_name',''),
+                '_repost_count': code_to_repost_count.get(str(land.get('code')), 0),
             })
         
     except Exception as e:

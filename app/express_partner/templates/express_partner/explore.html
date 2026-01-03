@@ -10,33 +10,33 @@
       </a>
       <!-- باکس جستجو -->
       <form method="GET" action="{{ url_for('main.express_public_list') }}" class="flex-1 min-w-0" id="searchForm">
-        <div class="relative w-full">
-          <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
-            <input type="text"
-                   name="q"
-                   id="searchInput"
-                   value="{{ search_query or '' }}"
-                   placeholder="جستجو در فایل‌ها..."
-                   autocomplete="off"
-                   class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-2.5 px-4 min-w-0">
-            <div class="flex items-center gap-1 pr-2">
-              {% if search_query %}
-              <a href="{{ url_for('main.express_public_list') }}"
-                 class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                 aria-label="پاک کردن جستجو">
-                <i class="fas fa-times text-xs"></i>
-              </a>
-              {% endif %}
-              <button type="submit"
-                      class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                      aria-label="جستجو">
-                <i class="fas fa-magnifying-glass text-sm"></i>
-              </button>
-            </div>
+      <div class="relative w-full">
+        <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
+          <input type="text"
+                 name="q"
+                 id="searchInput"
+                 value="{{ search_query or '' }}"
+                 placeholder="جستجو در فایل‌ها..."
+                 autocomplete="off"
+                 class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-2.5 px-4 min-w-0">
+          <div class="flex items-center gap-1 pr-2">
+            {% if search_query %}
+            <a href="{{ url_for('main.express_public_list') }}"
+               class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+               aria-label="پاک کردن جستجو">
+              <i class="fas fa-times text-xs"></i>
+            </a>
+            {% endif %}
+            <button type="submit"
+                    class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    aria-label="جستجو">
+              <i class="fas fa-magnifying-glass text-sm"></i>
+            </button>
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
+  </div>
   </header>
 
 <div class="max-w-5xl mx-auto pt-0 px-4 pb-16" id="exploreContainer">

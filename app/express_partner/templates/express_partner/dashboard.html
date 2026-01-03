@@ -231,12 +231,13 @@
           <div class="flex items-center justify-end mb-2">
             {% if land._share_url %}
             <button type="button"
-                    class="repost-btn inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+                    class="repost-btn inline-flex items-center justify-center w-7 h-7 rounded-full border {{ 'border-emerald-300 text-emerald-600 bg-emerald-50' if land._reposted_by_me else 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300' }} hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
                     title="بازنشر در اکسپلور با کارت شما"
                     data-url="{{ land._share_url }}"
                     data-code="{{ land.code }}"
+                    data-active="{{ '1' if land._reposted_by_me else '0' }}"
                     onclick="event.stopPropagation();">
-              <i class="fas fa-retweet text-[13px]"></i>
+              <i class="fas fa-retweet text-[13px] {{ 'text-emerald-600' if land._reposted_by_me }}"></i>
             </button>
             {% endif %}
           </div>
@@ -312,6 +313,15 @@
 
 <!-- Small script for accessibility enhancements + share/copy -->
 <script>
+  // Helper: read cookie value by name
+  function __getCookie(name){
+    try{
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }catch(_){}
+    return '';
+  }
   // add focus outline for keyboard users
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
@@ -380,11 +390,12 @@
         setTimeout(()=>t.remove(), 1500);
       }catch(_){ }
     }
-    // Repost (retweet-like) handler (server-side repost; no link copy/share)
+    // Repost toggle (server-side): add or remove repost
     document.querySelectorAll('.repost-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
         const code = btn.getAttribute('data-code') || '';
+        const isActive = btn.getAttribute('data-active') === '1';
         // تغییر حالت دکمه به سبز (موفقیت)
         function activateGreen() {
           try {
@@ -394,18 +405,40 @@
             if (icon) icon.classList.add('text-emerald-600');
             btn.setAttribute('aria-pressed', 'true');
             btn.title = 'بازنشر شد';
+            btn.setAttribute('data-active','1');
+          } catch(_) {}
+        }
+        function deactivateGreen() {
+          try {
+            btn.classList.remove('border-emerald-300','text-emerald-600','bg-emerald-50');
+            btn.classList.add('text-gray-600');
+            const icon = btn.querySelector('i');
+            if (icon) icon.classList.remove('text-emerald-600');
+            btn.removeAttribute('aria-pressed');
+            btn.title = 'بازنشر در اکسپلور با کارت شما';
+            btn.setAttribute('data-active','0');
           } catch(_) {}
         }
         if (!code) return;
         try {
-          const res = await fetch('/express/partner/api/repost', {
+          const endpoint = isActive ? '/express/partner/api/repost/remove' : '/express/partner/api/repost';
+          const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-CSRFToken': __getCookie('XSRF-TOKEN') || __getCookie('csrf_token') || ''
+            },
+            credentials: 'same-origin',
             body: JSON.stringify({ code })
           });
           if (res.ok) {
-            toast('بازنشر شد');
-            activateGreen();
+            if (isActive) {
+              toast('بازنشر برداشته شد');
+              deactivateGreen();
+            } else {
+              toast('بازنشر شد');
+              activateGreen();
+            }
           } else {
             toast('خطا در بازنشر');
           }
