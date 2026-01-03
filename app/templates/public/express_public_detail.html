@@ -552,12 +552,18 @@
     });
 
     // مودال تماس
+    let __contactModalOpen = false;
     function openContactModal() {
       const modal = document.getElementById('contactModal');
       if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        // اضافه کردن state به history تا با Back فقط مودال بسته شود
+        if (location.hash !== '#contact') {
+          try { history.pushState({ contactModal: true }, '', '#contact'); } catch (_) {}
+        }
+        __contactModalOpen = true;
       }
     }
 
@@ -568,6 +574,11 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+        // اگر state مودال در history وجود دارد، با Back همان state حذف می‌شود
+        if (location.hash === '#contact') {
+          try { history.back(); } catch (_) {}
+        }
+        __contactModalOpen = false;
       }
     }
 
@@ -577,6 +588,32 @@
         closeContactModal();
       }
     });
+
+    // مدیریت دکمه Back/Forward برای مودال تماس
+    window.addEventListener('popstate', function() {
+      const modal = document.getElementById('contactModal');
+      const isVisible = modal && !modal.classList.contains('hidden');
+      // اگر modal باز است ولی hash برداشته شد، مودال را ببند
+      if (isVisible && location.hash !== '#contact') {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+        __contactModalOpen = false;
+        return;
+      }
+      // اگر به state با hash=#contact رفتیم، مودال را باز نگه داریم
+      if (!isVisible && location.hash === '#contact') {
+        openContactModal();
+      }
+    });
+
+    // اگر لینک با hash=#contact باز شد، مودال را نمایش بده
+    if (location.hash === '#contact') {
+      // تا آماده شدن DOM کمی صبر کن
+      window.addEventListener('load', function() {
+        openContactModal();
+      });
+    }
 
     // اسلایدر تصاویر بالای صفحه به سبک دیوار
     (function(){
