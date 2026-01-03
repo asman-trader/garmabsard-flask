@@ -14,7 +14,7 @@ import random, re
 from . import express_partner_bp
 from ..utils.storage import (
     load_express_partner_apps, save_express_partner_apps,
-    load_express_partners, load_partner_notes, save_partner_notes,
+    load_express_partners, save_express_partners, load_partner_notes, save_partner_notes,
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
     load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
@@ -1435,17 +1435,6 @@ def profile_avatar_upload():
     f = request.files.get('avatar')
     if not f or not f.filename:
         return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
-    # اعتبارسنجی نوع فایل
-    filename_lower = f.filename.lower()
-    allowed_exts = ('.jpg', '.jpeg', '.png', '.webp')
-    ext = None
-    for e in allowed_exts:
-        if filename_lower.endswith(e):
-            ext = e
-            break
-    if not ext:
-        flash('فرمت تصویر نامعتبر است. فقط JPG/PNG/WEBP مجاز است.', 'error')
-        return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
     # مسیر ذخیره‌سازی: instance/data/uploads/partner/avatars/<phone>/
     base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', 'avatars', me_phone)
     os.makedirs(base, exist_ok=True)
@@ -1459,11 +1448,58 @@ def profile_avatar_upload():
                 continue
     except Exception:
         pass
-    # ذخیره آواتار جدید
-    safe_name = 'avatar' + ext
-    path = os.path.join(base, safe_name)
+    # ذخیره آواتار جدید با تبدیل به JPEG و کوچک‌سازی سمت سرور (برای موبایل)
+    tmp_path = os.path.join(base, '_tmp_upload')
+    final_name = 'avatar.jpg'
+    final_path = os.path.join(base, final_name)
     try:
-        f.save(path)
+        f.save(tmp_path)
+        converted = False
+        try:
+            from PIL import Image, ImageOps  # type: ignore
+            im = Image.open(tmp_path)
+            try:
+                im = ImageOps.exif_transpose(im)
+            except Exception:
+                pass
+            if im.mode in ("RGBA", "LA"):
+                bg = Image.new("RGB", im.size, (255, 255, 255))
+                bg.paste(im, mask=im.split()[-1])
+                im = bg
+            elif im.mode != "RGB":
+                im = im.convert("RGB")
+            # کوچک‌سازی: حداکثر ضلع 1200px
+            im.thumbnail((1200, 1200), Image.LANCZOS)
+            im.save(final_path, format='JPEG', quality=82, optimize=True)
+            converted = True
+        except Exception:
+            converted = False
+        # اگر تبدیل موفق نبود، همان فایل را به عنوان fallback ذخیره کنیم
+        if not converted:
+            # اگر نام اصلی پسوند داشت، همان را استفاده کنیم؛ وگرنه jpg
+            orig_lower = (f.filename or '').lower()
+            ext = '.jpg'
+            for e in ('.jpg', '.jpeg', '.png', '.webp'):
+                if orig_lower.endswith(e):
+                    ext = e
+                    break
+            final_name = 'avatar' + ext
+            final_path = os.path.join(base, final_name)
+            # کپی فایل موقت به مسیر نهایی
+            try:
+                import shutil
+                shutil.move(tmp_path, final_path)
+            except Exception:
+                # آخرین تلاش: دوباره ذخیره مستقیم
+                f.stream.seek(0)
+                with open(final_path, 'wb') as out:
+                    out.write(f.read())
+        # پاک‌سازی فایل موقت
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except Exception:
+            pass
     except Exception:
         flash('خطا در ذخیره تصویر پروفایل.', 'error')
         return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
@@ -1473,7 +1509,7 @@ def profile_avatar_upload():
     if not prof:
         prof = {"phone": me_phone}
         partners.append(prof)
-    rel_path = f'partner/avatars/{me_phone}/{safe_name}'
+    rel_path = f'partner/avatars/{me_phone}/{os.path.basename(final_path)}'
     prof['avatar'] = rel_path
     try:
         from time import time as _now
