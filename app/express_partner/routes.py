@@ -1375,7 +1375,68 @@ def profile_page():
     me_phone = (session.get('user_phone') or '').strip()
     profile = getattr(g, 'express_partner_profile', None) or {}
     me_name = (profile.get('name') or '').strip()
-    return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name)
+    return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name, profile=profile)
+
+@express_partner_bp.post('/profile/avatar')
+@require_partner_access()
+def profile_avatar_upload():
+    """
+    آپلود و تنظیم آواتار پروفایل همکار
+    """
+    me_phone = (session.get('user_phone') or '').strip()
+    f = request.files.get('avatar')
+    if not f or not f.filename:
+        return redirect(url_for('express_partner.profile'))
+    # اعتبارسنجی نوع فایل
+    filename_lower = f.filename.lower()
+    allowed_exts = ('.jpg', '.jpeg', '.png', '.webp')
+    ext = None
+    for e in allowed_exts:
+        if filename_lower.endswith(e):
+            ext = e
+            break
+    if not ext:
+        flash('فرمت تصویر نامعتبر است. فقط JPG/PNG/WEBP مجاز است.', 'error')
+        return redirect(url_for('express_partner.profile'))
+    # مسیر ذخیره‌سازی: instance/data/uploads/partner/avatars/<phone>/
+    base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', 'avatars', me_phone)
+    os.makedirs(base, exist_ok=True)
+    # حذف آواتارهای قبلی
+    try:
+        for fn in os.listdir(base):
+            try:
+                if fn.startswith('avatar.'):
+                    os.remove(os.path.join(base, fn))
+            except Exception:
+                continue
+    except Exception:
+        pass
+    # ذخیره آواتار جدید
+    safe_name = 'avatar' + ext
+    path = os.path.join(base, safe_name)
+    try:
+        f.save(path)
+    except Exception:
+        flash('خطا در ذخیره تصویر پروفایل.', 'error')
+        return redirect(url_for('express_partner.profile'))
+    # به‌روزرسانی پروفایل همکار
+    partners = load_express_partners() or []
+    prof = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
+    if not prof:
+        prof = {"phone": me_phone}
+        partners.append(prof)
+    rel_path = f'partner/avatars/{me_phone}/{safe_name}'
+    prof['avatar'] = rel_path
+    try:
+        from time import time as _now
+        prof['avatar_updated_at'] = int(_now())
+    except Exception:
+        prof['avatar_updated_at'] = 0
+    try:
+        save_express_partners(partners)
+    except Exception:
+        current_app.logger.error("Failed to save partner avatar path", exc_info=True)
+    return redirect(url_for('express_partner.profile'))
 
 
 @express_partner_bp.route('/top-sellers', methods=['GET'], endpoint='top_sellers')
