@@ -27,6 +27,21 @@
 </header>
 
 <div class="max-w-3xl mx-auto pt-0 px-4 pb-16">
+  <!-- Intro - Divar style -->
+  <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 grid place-items-center flex-shrink-0">
+        <i class="fas fa-user-cog"></i>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-sm font-bold text-gray-900 dark:text-white">تنظیمات پروفایل</h2>
+        <p class="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">
+          لطفاً اطلاعات خود را دقیق و خوانا وارد کنید. این اطلاعات در کارت معرفی شما نمایش داده می‌شود.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- Avatar change (Divar-style minimal) -->
   <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -34,9 +49,9 @@
     <!-- دو ورودی برای موبایل: دوربین و گالری -->
     <input id="avatarInputCamera" name="avatar" type="file" accept="image/*" capture="environment" class="hidden" />
     <input id="avatarInputLibrary" name="avatar" type="file" accept="image/*" class="hidden" />
-    <div class="flex items-center gap-4">
+    <div class="flex items-center sm:items-start gap-4 flex-col sm:flex-row">
       <button type="button" id="avatarEditTrigger"
-              class="relative w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
+              class="relative w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center mx-auto sm:mx-0 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
               title="تغییر عکس پروفایل">
         {% if profile and profile.get('avatar') %}
           <img id="avatarPreviewImg" src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
@@ -52,19 +67,10 @@
           <div class="w-7 h-7 rounded-full border-2 border-white/50 border-t-white animate-spin"></div>
         </div>
       </button>
-      <div class="flex-1">
+      <div class="flex-1 text-center sm:text-right w-full">
         <div class="text-sm font-semibold text-gray-900 dark:text-white mb-1">عکس پروفایل</div>
-        <div class="flex items-center gap-2">
-          <button type="button" id="openCameraBtn"
-                  class="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-            دوربین
-          </button>
-          <button type="button" id="openLibraryBtn"
-                  class="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-            گالری
-          </button>
-        </div>
-        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">فرمت‌های مجاز: JPG/PNG/WEBP — بهینه‌سازی خودکار برای موبایل</p>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">تصویر واضح از صورت یا لوگو. اندازه پیشنهادی مربعی (۱:۱).</p>
+        
       </div>
     </div>
   </form>
@@ -73,22 +79,32 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">نام و نام خانوادگی</label>
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">نام و نام خانوادگی</label>
+      <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">نامی که کاربران می‌بینند. بهتر است واقعی و کامل باشد.</p>
       <input type="text" name="name" value="{{ me_name }}"
              class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
              placeholder="مثال: علی رضایی" maxlength="60" />
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">شهر</label>
-      <input type="text" name="city" value="{{ me_city }}"
-             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-             placeholder="مثال: تهران" maxlength="40" />
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">شهر</label>
+      <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">شهر فعالیت اصلی شما برای پیشنهادهای دقیق‌تر.</p>
+      <select name="city"
+              class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <option value="">انتخاب شهر</option>
+        {% for c in (cities or []) %}
+          <option value="{{ c }}" {% if me_city == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">درباره من</label>
-      <textarea name="bio" rows="4"
+      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">درباره من</label>
+      <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between">
+        <span>توضیح کوتاه و حرفه‌ای درباره‌ی شما (حداکثر ۲۰۰ کاراکتر).</span>
+        <span id="bioCounter" class="text-gray-400">0/200</span>
+      </div>
+      <textarea name="bio" id="bioInput" rows="4" maxlength="200"
                 class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="توضیحات کوتاه درباره‌ی شما (اختیاری)">{{ me_bio }}</textarea>
     </div>
@@ -215,6 +231,27 @@
     }
     if (inputCamera) inputCamera.addEventListener('change', handleFileInput);
     if (inputLibrary) inputLibrary.addEventListener('change', handleFileInput);
+  })();
+
+  // Bio live counter (Divar style minimal helper)
+  (function() {
+    const input = document.getElementById('bioInput');
+    const counter = document.getElementById('bioCounter');
+    if (!input || !counter) return;
+    function update() {
+      const len = (input.value || '').length;
+      counter.textContent = len + '/200';
+      // رنگ هشدار نزدیک سقف
+      if (len > 180) {
+        counter.classList.remove('text-gray-400');
+        counter.classList.add('text-rose-500');
+      } else {
+        counter.classList.add('text-gray-400');
+        counter.classList.remove('text-rose-500');
+      }
+    }
+    input.addEventListener('input', update);
+    update();
   })();
 </script>
 {% endblock %}

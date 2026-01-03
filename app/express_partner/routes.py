@@ -1417,12 +1417,17 @@ def profile_edit_page():
     me_name = (profile.get('name') or '').strip()
     me_city = (profile.get('city') or '').strip()
     me_bio = (profile.get('bio') or '').strip()
+    try:
+        cities = load_active_cities() or []
+    except Exception:
+        cities = []
     return render_template('express_partner/profile_edit.html',
                            me_phone=me_phone,
                            me_name=me_name,
                            me_city=me_city,
                            me_bio=me_bio,
-                           profile=profile)
+                           profile=profile,
+                           cities=cities)
 
 @express_partner_bp.post('/profile/avatar')
 @require_partner_access()
