@@ -227,6 +227,8 @@ def load_express_partner_apps(app=None):   return _load(ensure_file('EXPRESS_PAR
 def save_express_partner_apps(items, app=None): return _save(ensure_file('EXPRESS_PARTNER_APPS_FILE','express_partner_applications.json',[],app), items)
 def load_express_partners(app=None):       return _load(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app))
 def save_express_partners(items, app=None): return _save(ensure_file('EXPRESS_PARTNERS_FILE','express_partners.json',[],app), items)
+def load_express_reposts(app=None):        return _load(ensure_file('EXPRESS_REPOSTS_FILE','express_reposts.json',[],app))
+def save_express_reposts(items, app=None): return _save(ensure_file('EXPRESS_REPOSTS_FILE','express_reposts.json',[],app), items)
 
 # Express Partner: Notes, Sales, Files (metadata)
 def load_partner_notes(app=None):          return _load(ensure_file('EXPRESS_PARTNER_NOTES_FILE','express_partner_notes.json',[],app))

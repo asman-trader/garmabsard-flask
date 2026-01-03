@@ -178,7 +178,9 @@
           {% set video = land.video %}
           {% set thumb_src = land.image_thumb if land.image_thumb else None %}
           {% set full_src = land.image_full if land.image_full else None %}
-          <a href="{{ url_for('main.express_detail', code=land.code) }}" 
+          {% set _detail_url = url_for('main.express_detail', code=land.code) %}
+          {% if land._share_token %}{% set _detail_url = _detail_url + '?ref=' + land._share_token %}{% endif %}
+          <a href="{{ _detail_url }}" 
              class="instagram-item"
              data-code="{{ land.code }}">
             {% if video %}

@@ -9,7 +9,7 @@ from flask import (
 
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_express_lands_cached
-from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
+from ..utils.storage import load_express_partners, load_landing_views, save_landing_views, load_express_reposts
 from ..utils.storage import load_express_views, save_express_views, load_express_assignments
 from ..utils.share_tokens import decode_partner_ref
 from ..utils.images import (
@@ -292,6 +292,39 @@ def express_public_list():
                 return all(term in search_text for term in search_terms)
             express_lands = [l for l in express_lands if _matches(l)]
         
+        # اعمال تقویت بازنشر: افزودن آیتم‌های boost به ابتدای لیست
+        try:
+            reposts = load_express_reposts() or []
+        except Exception:
+            reposts = []
+        if reposts:
+            # فقط بازنشرهای اخیر ۷۲ ساعت اخیر
+            from datetime import datetime, timedelta
+            def _is_recent(ts):
+                try:
+                    dt = datetime.fromisoformat(str(ts).replace('Z','+00:00'))
+                except Exception:
+                    return False
+                return (datetime.utcnow() - dt.replace(tzinfo=None)) <= timedelta(hours=72)
+            recent = [r for r in reposts if _is_recent(r.get('timestamp'))]
+            # به ازای هر رکورد، آیتم تقویتی بساز
+            code_to_land = {str(l.get('code')): l for l in express_lands}
+            boost_items = []
+            from ..utils.share_tokens import encode_partner_ref
+            for r in recent[::-1]:  # جدیدها جلوتر
+                c = str(r.get('code') or '')
+                land = code_to_land.get(c)
+                phone = str(r.get('partner_phone') or '')
+                if land and phone:
+                    item = dict(land)
+                    try:
+                        item['_share_token'] = encode_partner_ref(phone)
+                    except Exception:
+                        item['_share_token'] = ''
+                    boost_items.append(item)
+            # افزودن به ابتدای لیست
+            express_lands = boost_items + express_lands
+
         # صفحه‌بندی ساده
         page = int(request.args.get('page', 1) or 1)
         per_page = 20
@@ -325,6 +358,7 @@ def express_public_list():
                 'image_full': cover_variants.get('full'),
                 'image_raw': cover_variants.get('raw'),
                 'images_v2': images_v2,
+                '_share_token': land.get('_share_token',''),
             })
         
     except Exception as e:

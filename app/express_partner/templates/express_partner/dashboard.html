@@ -227,6 +227,19 @@
 
         <!-- Content Section - سبک دیوار -->
         <div class="p-3">
+          <!-- Repost (retweet) - کوچک و مینیمال -->
+          <div class="flex items-center justify-end mb-2">
+            {% if land._share_url %}
+            <button type="button"
+                    class="repost-btn inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+                    title="بازنشر در اکسپلور با کارت شما"
+                    data-url="{{ land._share_url }}"
+                    data-code="{{ land.code }}"
+                    onclick="event.stopPropagation();">
+              <i class="fas fa-retweet text-[13px]"></i>
+            </button>
+            {% endif %}
+          </div>
           <!-- Title -->
           <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 leading-snug min-h-[2.5rem]">
             {{ land.title or '—' }}
@@ -367,6 +380,38 @@
         setTimeout(()=>t.remove(), 1500);
       }catch(_){ }
     }
+    // Repost (retweet-like) handler (server-side repost; no link copy/share)
+    document.querySelectorAll('.repost-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const code = btn.getAttribute('data-code') || '';
+        // تغییر حالت دکمه به سبز (موفقیت)
+        function activateGreen() {
+          try {
+            btn.classList.add('border-emerald-300','text-emerald-600','bg-emerald-50');
+            btn.classList.remove('text-gray-600');
+            const icon = btn.querySelector('i');
+            if (icon) icon.classList.add('text-emerald-600');
+            btn.setAttribute('aria-pressed', 'true');
+            btn.title = 'بازنشر شد';
+          } catch(_) {}
+        }
+        if (!code) return;
+        try {
+          const res = await fetch('/express/partner/api/repost', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+          if (res.ok) {
+            toast('بازنشر شد');
+            activateGreen();
+          } else {
+            toast('خطا در بازنشر');
+          }
+        } catch(_) { toast('خطا در بازنشر'); }
+      }, { passive: false });
+    });
     document.querySelectorAll('.share-btn').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const url = btn.getAttribute('data-url')||location.href;

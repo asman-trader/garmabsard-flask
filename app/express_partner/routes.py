@@ -696,6 +696,41 @@ def dashboard():
     )
 
 
+@express_partner_bp.post('/api/repost')
+@require_partner_access()
+def api_repost():
+    """
+    ثبت بازنشر یک فایل توسط همکار.
+    - ورودی: code (کد فایل)
+    - رفتار: دو رکورد بازنشر برای تقویت نمایش در اکسپلور
+    """
+    try:
+        data = request.get_json(silent=True) or request.form
+        code = (data.get('code') or '').strip()
+    except Exception:
+        code = ''
+    if not code:
+        return jsonify({'ok': False, 'error': 'missing_code'}), 400
+    me_phone = (session.get("user_phone") or '').strip()
+    lands = load_ads_cached() or []
+    land = next((l for l in lands if str(l.get('code')) == code), None)
+    if not land:
+        return jsonify({'ok': False, 'error': 'not_found'}), 404
+    # ثبت دو رکورد بازنشر
+    try:
+        from ..utils.storage import load_express_reposts, save_express_reposts
+    except Exception:
+        return jsonify({'ok': False, 'error': 'storage_missing'}), 500
+    items = load_express_reposts() or []
+    now = datetime.utcnow().isoformat() + "Z"
+    items.append({'code': code, 'partner_phone': me_phone, 'timestamp': now})
+    items.append({'code': code, 'partner_phone': me_phone, 'timestamp': now})
+    # محدود کردن طول فایل به 2000 رکورد برای جلوگیری از رشد
+    if len(items) > 2000:
+        items = items[-2000:]
+    save_express_reposts(items)
+    return jsonify({'ok': True})
+
 @express_partner_bp.get('/notes', endpoint='notes')
 @require_partner_access()
 def notes_page():
