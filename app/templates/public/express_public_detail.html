@@ -398,56 +398,52 @@
       </div>
     </div>
 
-    <!-- مودال تماس -->
-    <div id="contactModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4" onclick="closeContactModal(event)">
-      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white">اطلاعات تماس</h3>
-          <button type="button" onclick="closeContactModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <i class="fas fa-times text-xl"></i>
-          </button>
-        </div>
+    <!-- مودال تماس - سبک مودال حذف یادداشت‌ها -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeContactModal()"></div>
+      <div class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden transform transition-all">
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">اطلاعات تماس</h3>
+            <button type="button" onclick="closeContactModal()" class="w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 grid place-items-center text-gray-500">
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
 
-        {% if ref_partner and ref_partner.get('phone') %}
-          {# نمایش اطلاعات تماس #}
+          {% if ref_partner and ref_partner.get('phone') %}
           <div class="space-y-4">
             <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <div class="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
                 <i class="fas fa-user-tie text-lg"></i>
               </div>
               <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  {{ ref_partner.get('name') or 'مشاور' }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ ref_partner.get('city') or 'مشاور منتخب' }}
-                </p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">{{ ref_partner.get('name') or 'مشاور' }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ ref_partner.get('city') or 'مشاور منتخب' }}</p>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a href="tel:{{ ref_partner.get('phone') }}"
-                 class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+                 class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold inline-flex items-center justify-center gap-2 transition">
                 <i class="fas fa-phone"></i>
                 تماس
               </a>
               <a href="sms:{{ ref_partner.get('phone') }}"
-                 class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition">
+                 class="w-full py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 font-semibold inline-flex items-center justify-center gap-2 transition">
                 <i class="fas fa-sms text-lg"></i>
                 پیامک
               </a>
             </div>
           </div>
-        {% else %}
+          {% else %}
           <div class="text-center py-6">
             <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <i class="fas fa-info-circle text-2xl text-gray-400 dark:text-gray-600"></i>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              اطلاعات تماس برای این فایل در دسترس نیست.
-            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">اطلاعات تماس برای این فایل در دسترس نیست.</p>
           </div>
-        {% endif %}
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -553,12 +549,20 @@
 
     // مودال تماس
     let __contactModalOpen = false;
+    function __disableScroll() {
+      document.documentElement.classList.add('overflow-hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+    function __enableScroll() {
+      document.documentElement.classList.remove('overflow-hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
     function openContactModal() {
       const modal = document.getElementById('contactModal');
       if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
+        __disableScroll();
         // اضافه کردن state به history تا با Back فقط مودال بسته شود
         if (location.hash !== '#contact') {
           try { history.pushState({ contactModal: true }, '', '#contact'); } catch (_) {}
@@ -573,7 +577,7 @@
       if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        document.body.style.overflow = '';
+        __enableScroll();
         // اگر state مودال در history وجود دارد، با Back همان state حذف می‌شود
         if (location.hash === '#contact') {
           try { history.back(); } catch (_) {}
