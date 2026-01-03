@@ -77,8 +77,7 @@
           <i class="fas fa-arrow-right text-sm"></i>
         </button>
         <div class="flex flex-col items-center flex-1 min-w-0">
-          <span class="text-[11px] text-gray-500 dark:text-gray-400">فایل اکسپرس</span>
-          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1 truncate max-w-full">{{ land.title or 'فایل اکسپرس' }}</h1>
+          <h1 class="text-sm font-bold text-gray-900 dark:text-gray-50 line-clamp-1 truncate max-w-full">{{ land.title or 'فایل' }}</h1>
         </div>
         <button type="button"
                 class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 copy-public-link"
@@ -101,7 +100,7 @@
         <li class="text-gray-400">/</li>
         <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
           <a href="{{ url_for('main.express_public_list') }}" itemprop="item" class="hover:text-gray-900 dark:hover:text-gray-100">
-            <span itemprop="name">فایل‌های اکسپرس</span>
+            <span itemprop="name">فایل‌ها</span>
           </a>
           <meta itemprop="position" content="2">
         </li>
@@ -174,7 +173,7 @@
               <img id="landMainImage"
                    src="{{ thumb_src }}"
                    data-full="{{ full_src }}"
-                   alt="{{ land.title or 'عکس فایل اکسپرس' }} - {{ land.location or '' }}"
+                   alt="{{ land.title or 'عکس فایل' }} - {{ land.location or '' }}"
                    itemprop="image"
                    class="w-full h-full object-cover cursor-pointer progressive-img {% if has_video %}hidden{% else %}block{% endif %}"
                    onclick="openLightbox(this.dataset.full || this.src)">
@@ -227,10 +226,6 @@
           <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-50 leading-snug">
             {{ land.title or 'بدون عنوان' }}
           </h2>
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-200 text-[11px] font-medium">
-            <i class="fas fa-bolt text-[10px]"></i>
-            Express
-          </span>
         </div>
 
         <div class="flex flex-col gap-1">
@@ -343,10 +338,10 @@
           </div>
           <div>
             <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
-              {{ ref_partner.get('name') or 'مشاور اکسپرس' }}
+              {{ ref_partner.get('name') or 'مشاور' }}
             </p>
             <p class="text-[11px] text-gray-500 dark:text-gray-400">
-              {{ ref_partner.get('city') or 'مشاور منتخب اکسپرس' }}
+              {{ ref_partner.get('city') or 'مشاور منتخب' }}
             </p>
           </div>
         </div>
@@ -392,23 +387,14 @@
     </main>
 
     <!-- نوار تماس ثابت پایین - سبک دیوار -->
-    <div class="fixed inset-x-0 bottom-0 z-30 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800 backdrop-blur">
-      <div class="max-w-4xl mx-auto px-3 sm:px-4 py-2">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex flex-col">
-            <span class="text-[11px] text-gray-500 dark:text-gray-400">هماهنگی بازدید این فایل</span>
-            <span class="text-xs font-medium text-gray-800 dark:text-gray-100">
-              از طریق مشاور اکسپرس
-            </span>
-          </div>
-
-          <button type="button"
-                  onclick="openContactModal()"
-                  class="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-sm">
-            <i class="fas fa-phone"></i>
-            تماس
-          </button>
-        </div>
+    <div class="fixed inset-x-0 bottom-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+      <div class="max-w-4xl mx-auto px-4 py-3">
+        <button type="button"
+                onclick="openContactModal()"
+                class="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-bold shadow-sm transition-colors">
+          <i class="fas fa-phone text-base"></i>
+          <span>تماس</span>
+        </button>
       </div>
     </div>
 
@@ -432,10 +418,10 @@
                 </div>
                 <div>
                   <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                    {{ ref_partner.get('name') or 'مشاور اکسپرس' }}
+                    {{ ref_partner.get('name') or 'مشاور' }}
                   </p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ ref_partner.get('city') or 'مشاور منتخب اکسپرس' }}
+                    {{ ref_partner.get('city') or 'مشاور منتخب' }}
                   </p>
                 </div>
               </div>
