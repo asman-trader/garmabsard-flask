@@ -31,31 +31,41 @@
   <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="next" value="{{ url_for('express_partner.profile_edit') }}">
-    <input id="avatarEditInput" name="avatar" type="file" accept="image/*" class="hidden" />
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <button type="button" id="avatarEditTrigger"
-                class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
-                title="تغییر عکس پروفایل">
-          {% if profile and profile.get('avatar') %}
-            <img src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
-                 alt="عکس پروفایل"
-                 class="w-full h-full object-cover" referrerpolicy="no-referrer" />
-          {% else %}
-            <span class="text-gray-600 dark:text-gray-400 text-lg font-semibold">
-              {{ (me_name or (me_phone or '')[-4:])[:2] }}
-            </span>
-          {% endif %}
-        </button>
-        <div>
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">عکس پروفایل</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">برای تغییر، روی عکس ضربه بزنید</div>
+    <!-- دو ورودی برای موبایل: دوربین و گالری -->
+    <input id="avatarInputCamera" name="avatar" type="file" accept="image/*" capture="environment" class="hidden" />
+    <input id="avatarInputLibrary" name="avatar" type="file" accept="image/*" class="hidden" />
+    <div class="flex items-center gap-4">
+      <button type="button" id="avatarEditTrigger"
+              class="relative w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
+              title="تغییر عکس پروفایل">
+        {% if profile and profile.get('avatar') %}
+          <img id="avatarPreviewImg" src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
+               alt="عکس پروفایل"
+               class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+        {% else %}
+          <span id="avatarPreviewFallback" class="text-gray-600 dark:text-gray-400 text-xl font-semibold">
+            {{ (me_name or (me_phone or '')[-4:])[:2] }}
+          </span>
+        {% endif %}
+        <!-- لودر کوچک هنگام آپلود -->
+        <div id="avatarUploading" class="hidden absolute inset-0 bg-black/40 flex items-center justify-center">
+          <div class="w-7 h-7 rounded-full border-2 border-white/50 border-t-white animate-spin"></div>
         </div>
-      </div>
-      <button type="button" id="avatarEditBtn"
-              class="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-        انتخاب تصویر
       </button>
+      <div class="flex-1">
+        <div class="text-sm font-semibold text-gray-900 dark:text-white mb-1">عکس پروفایل</div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="openCameraBtn"
+                  class="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+            دوربین
+          </button>
+          <button type="button" id="openLibraryBtn"
+                  class="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+            گالری
+          </button>
+        </div>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">فرمت‌های مجاز: JPG/PNG/WEBP — بهینه‌سازی خودکار برای موبایل</p>
+      </div>
     </div>
   </form>
 
@@ -105,18 +115,106 @@
 <script>
   (function() {
     const trigger = document.getElementById('avatarEditTrigger');
-    const chooseBtn = document.getElementById('avatarEditBtn');
-    const input = document.getElementById('avatarEditInput');
+    const openCameraBtn = document.getElementById('openCameraBtn');
+    const openLibraryBtn = document.getElementById('openLibraryBtn');
+    const inputCamera = document.getElementById('avatarInputCamera');
+    const inputLibrary = document.getElementById('avatarInputLibrary');
     const form = document.getElementById('avatarEditForm');
-    function openPicker() { if (input) input.click(); }
-    if (trigger) trigger.addEventListener('click', openPicker);
-    if (chooseBtn) chooseBtn.addEventListener('click', openPicker);
-    if (input && form) {
-      input.addEventListener('change', function() {
-        if (!input.files || input.files.length === 0) return;
-        form.submit();
+    const uploading = document.getElementById('avatarUploading');
+    const previewImg = document.getElementById('avatarPreviewImg');
+    const previewFallback = document.getElementById('avatarPreviewFallback');
+    const csrfInput = form?.querySelector('input[name="csrf_token"]');
+    const nextInput = form?.querySelector('input[name="next"]');
+
+    function openCamera() { inputCamera?.click(); }
+    function openLibrary() { inputLibrary?.click(); }
+    if (trigger) trigger.addEventListener('click', openLibrary);
+    if (openCameraBtn) openCameraBtn.addEventListener('click', openCamera);
+    if (openLibraryBtn) openLibraryBtn.addEventListener('click', openLibrary);
+
+    function showUploading(isOn) {
+      if (!uploading) return;
+      if (isOn) uploading.classList.remove('hidden');
+      else uploading.classList.add('hidden');
+    }
+
+    function previewFile(file) {
+      try {
+        const url = URL.createObjectURL(file);
+        if (previewImg) {
+          previewImg.src = url;
+          previewImg.classList.add('object-cover');
+        }
+        if (previewFallback) previewFallback.style.display = 'none';
+      } catch(_) {}
+    }
+
+    async function compressImage(file, maxSide = 1200, quality = 0.82) {
+      return new Promise((resolve) => {
+        try {
+          const img = new Image();
+          img.onload = function() {
+            let w = img.naturalWidth, h = img.naturalHeight;
+            if (!w || !h) return resolve(file);
+            const scale = Math.min(1, maxSide / Math.max(w, h));
+            const cw = Math.round(w * scale);
+            const ch = Math.round(h * scale);
+            const canvas = document.createElement('canvas');
+            canvas.width = cw;
+            canvas.height = ch;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, cw, ch);
+            canvas.toBlob((blob) => {
+              if (blob && blob.size > 0) {
+                const out = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+                resolve(out);
+              } else {
+                resolve(file);
+              }
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = function() { resolve(file); };
+          const fr = new FileReader();
+          fr.onload = function(e) { img.src = e.target.result; };
+          fr.onerror = function() { resolve(file); };
+          fr.readAsDataURL(file);
+        } catch(_) {
+          resolve(file);
+        }
       });
     }
+
+    async function uploadFile(file) {
+      if (!form) return;
+      showUploading(true);
+      previewFile(file);
+      try {
+        const compressed = await compressImage(file);
+        const fd = new FormData();
+        fd.append('avatar', compressed);
+        if (csrfInput) fd.append('csrf_token', csrfInput.value || '');
+        if (nextInput) fd.append('next', nextInput.value || '');
+        const res = await fetch(form.action, { method: 'POST', body: fd, credentials: 'same-origin' });
+        if (res.ok) {
+          window.location.replace(nextInput?.value || window.location.href);
+        } else {
+          form.submit();
+        }
+      } catch(_) {
+        form.submit();
+      } finally {
+        showUploading(false);
+      }
+    }
+
+    function handleFileInput(e) {
+      const files = e.target?.files;
+      if (!files || !files[0]) return;
+      const file = files[0];
+      uploadFile(file);
+    }
+    if (inputCamera) inputCamera.addEventListener('change', handleFileInput);
+    if (inputLibrary) inputLibrary.addEventListener('change', handleFileInput);
   })();
 </script>
 {% endblock %}
