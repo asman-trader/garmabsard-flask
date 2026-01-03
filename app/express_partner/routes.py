@@ -1377,6 +1377,53 @@ def profile_page():
     me_name = (profile.get('name') or '').strip()
     return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name, profile=profile)
 
+@express_partner_bp.route('/profile/edit', methods=['GET', 'POST'], endpoint='profile_edit')
+@require_partner_access()
+def profile_edit_page():
+    """
+    ویرایش مشخصات کاربر (نام، شهر، توضیحات کوتاه)
+    """
+    me_phone = (session.get('user_phone') or '').strip()
+    partners = load_express_partners() or []
+    profile = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
+    if not profile:
+        profile = {"phone": me_phone}
+        partners.append(profile)
+
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        city = (request.form.get('city') or '').strip()
+        bio = (request.form.get('bio') or '').strip()
+        if name:
+            profile['name'] = name
+        else:
+            profile.pop('name', None)
+        if city:
+            profile['city'] = city
+        else:
+            profile.pop('city', None)
+        if bio:
+            profile['bio'] = bio
+        else:
+            profile.pop('bio', None)
+        try:
+            save_express_partners(partners)
+            flash('مشخصات با موفقیت به‌روزرسانی شد.', 'success')
+        except Exception:
+            current_app.logger.error("Failed to save partner profile edits", exc_info=True)
+            flash('خطا در ذخیره مشخصات.', 'error')
+        return redirect(url_for('express_partner.profile'))
+
+    me_name = (profile.get('name') or '').strip()
+    me_city = (profile.get('city') or '').strip()
+    me_bio = (profile.get('bio') or '').strip()
+    return render_template('express_partner/profile_edit.html',
+                           me_phone=me_phone,
+                           me_name=me_name,
+                           me_city=me_city,
+                           me_bio=me_bio,
+                           profile=profile)
+
 @express_partner_bp.post('/profile/avatar')
 @require_partner_access()
 def profile_avatar_upload():
@@ -1384,9 +1431,10 @@ def profile_avatar_upload():
     آپلود و تنظیم آواتار پروفایل همکار
     """
     me_phone = (session.get('user_phone') or '').strip()
+    next_url = (request.form.get('next') or request.args.get('next') or '').strip()
     f = request.files.get('avatar')
     if not f or not f.filename:
-        return redirect(url_for('express_partner.profile'))
+        return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
     # اعتبارسنجی نوع فایل
     filename_lower = f.filename.lower()
     allowed_exts = ('.jpg', '.jpeg', '.png', '.webp')
@@ -1397,7 +1445,7 @@ def profile_avatar_upload():
             break
     if not ext:
         flash('فرمت تصویر نامعتبر است. فقط JPG/PNG/WEBP مجاز است.', 'error')
-        return redirect(url_for('express_partner.profile'))
+        return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
     # مسیر ذخیره‌سازی: instance/data/uploads/partner/avatars/<phone>/
     base = os.path.join(current_app.instance_path, 'data', 'uploads', 'partner', 'avatars', me_phone)
     os.makedirs(base, exist_ok=True)
@@ -1418,7 +1466,7 @@ def profile_avatar_upload():
         f.save(path)
     except Exception:
         flash('خطا در ذخیره تصویر پروفایل.', 'error')
-        return redirect(url_for('express_partner.profile'))
+        return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
     # به‌روزرسانی پروفایل همکار
     partners = load_express_partners() or []
     prof = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
@@ -1436,7 +1484,7 @@ def profile_avatar_upload():
         save_express_partners(partners)
     except Exception:
         current_app.logger.error("Failed to save partner avatar path", exc_info=True)
-    return redirect(url_for('express_partner.profile'))
+    return redirect(next_url if next_url.startswith('/express/partner/') else url_for('express_partner.profile'))
 
 
 @express_partner_bp.route('/top-sellers', methods=['GET'], endpoint='top_sellers')

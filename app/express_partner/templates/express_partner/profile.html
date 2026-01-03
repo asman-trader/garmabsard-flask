@@ -16,8 +16,8 @@
 <div class="max-w-6xl mx-auto pt-0 px-4 pb-16">
 
   <!-- Profile Section - سبک دیوار -->
-  <section data-tour="profile-section" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-    <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="flex items-center gap-3">
+  <section data-tour="profile-section" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer" id="profileClickableCard">
+    <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="flex items-center gap-3 pointer-events-auto">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input id="avatarInput" name="avatar" type="file" accept="image/*" class="hidden" />
       <button type="button" id="avatarTrigger"
@@ -233,6 +233,20 @@
     input.addEventListener('change', function() {
       if (!input.files || input.files.length === 0) return;
       form.submit();
+    });
+  })();
+
+  // Navigate to edit on card click (excluding avatar button and logout)
+  (function() {
+    const card = document.getElementById('profileClickableCard');
+    const avatarBtn = document.getElementById('avatarTrigger');
+    const logoutForm = document.getElementById('logoutProfileForm');
+    if (!card) return;
+    card.addEventListener('click', function(e) {
+      // جلوگیری از کلیک روی آواتار یا دکمه‌های داخل
+      if (avatarBtn && avatarBtn.contains(e.target)) return;
+      if (logoutForm && logoutForm.contains(e.target)) return;
+      window.location.href = "{{ url_for('express_partner.profile_edit') }}";
     });
   })();
 </script>
