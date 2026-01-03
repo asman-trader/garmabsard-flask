@@ -329,8 +329,8 @@
       </section>
       {% endif %}
 
-      <!-- مشاور معرفی‌شده / اطلاعات تماس - فقط برای کاربران لاگین شده -->
-      {% if ref_partner and (session.get('user_phone') or session.get('user_id')) %}
+      <!-- مشاور معرفی‌شده / اطلاعات تماس -->
+      {% if ref_partner %}
       <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 space-y-3">
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
@@ -408,74 +408,50 @@
           </button>
         </div>
 
-        {% if session.get('user_phone') or session.get('user_id') %}
-          {# کاربر لاگین شده - نمایش اطلاعات تماس #}
-          {% if ref_partner and ref_partner.get('phone') %}
-            <div class="space-y-4">
-              <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div class="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
-                  <i class="fas fa-user-tie text-lg"></i>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                    {{ ref_partner.get('name') or 'مشاور' }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ ref_partner.get('city') or 'مشاور منتخب' }}
-                  </p>
-                </div>
+        {% if ref_partner and ref_partner.get('phone') %}
+          {# نمایش اطلاعات تماس #}
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div class="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
+                <i class="fas fa-user-tie text-lg"></i>
               </div>
-
-              <div class="grid grid-cols-2 gap-3">
-                <a href="tel:{{ ref_partner.get('phone') }}"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
-                  <i class="fas fa-phone"></i>
-                  تماس
-                </a>
-                <a href="sms:{{ ref_partner.get('phone') }}"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition">
-                  <i class="fas fa-sms text-lg"></i>
-                  پیامک
-                </a>
-              </div>
-
-              <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  شماره تماس: <span class="font-mono text-gray-900 dark:text-gray-100">{{ ref_partner.get('phone') }}</span>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                  {{ ref_partner.get('name') or 'مشاور' }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ ref_partner.get('city') or 'مشاور منتخب' }}
                 </p>
               </div>
             </div>
-          {% else %}
-            <div class="text-center py-6">
-              <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-info-circle text-2xl text-gray-400 dark:text-gray-600"></i>
-              </div>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                اطلاعات تماس برای این فایل در دسترس نیست.
-              </p>
-            </div>
-          {% endif %}
-        {% else %}
-          {# کاربر لاگین نشده - درخواست ورود #}
-          <div class="text-center py-6 space-y-4">
-            <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
-              <i class="fas fa-lock text-2xl text-emerald-600 dark:text-emerald-400"></i>
-            </div>
-            <div>
-              <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                برای مشاهده اطلاعات تماس وارد شوید
-              </h4>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                برای هماهنگی بازدید و تماس با مشاور، لطفاً وارد حساب کاربری خود شوید.
-              </p>
-            </div>
-            <div class="pt-2">
-              <a href="{{ url_for('express_partner.login', next=request.path) }}"
-                 class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition w-full">
-                <i class="fas fa-sign-in-alt"></i>
-                ورود به حساب کاربری
+
+            <div class="grid grid-cols-2 gap-3">
+              <a href="tel:{{ ref_partner.get('phone') }}"
+                 class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+                <i class="fas fa-phone"></i>
+                تماس
+              </a>
+              <a href="sms:{{ ref_partner.get('phone') }}"
+                 class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition">
+                <i class="fas fa-sms text-lg"></i>
+                پیامک
               </a>
             </div>
+
+            <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                شماره تماس: <span class="font-mono text-gray-900 dark:text-gray-100">{{ ref_partner.get('phone') }}</span>
+              </p>
+            </div>
+          </div>
+        {% else %}
+          <div class="text-center py-6">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="fas fa-info-circle text-2xl text-gray-400 dark:text-gray-600"></i>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              اطلاعات تماس برای این فایل در دسترس نیست.
+            </p>
           </div>
         {% endif %}
       </div>

@@ -10,7 +10,7 @@ from flask import (
 from . import main_bp
 from ..utils.storage import data_dir, legacy_dir, load_express_lands_cached
 from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
-from ..utils.storage import load_express_views, save_express_views
+from ..utils.storage import load_express_views, save_express_views, load_express_assignments
 from ..utils.share_tokens import decode_partner_ref
 from ..utils.images import (
     prepare_variants_dict,
@@ -487,6 +487,20 @@ def express_detail(code):
     if ref_phone:
         partners = load_express_partners() or []
         ref_partner = next((p for p in partners if str(p.get('phone')) == ref_phone), None)
+    
+    # اگر ref_partner وجود نداشت، از assignments استفاده کنیم تا ببینیم کدام همکار این فایل را دارد
+    if not ref_partner:
+        try:
+            assignments = load_express_assignments() or []
+            # پیدا کردن assignment فعال برای این فایل
+            assignment = next((a for a in assignments if a.get('land_code') == code and a.get('status') in (None, 'active', 'pending', 'approved', 'in_transaction')), None)
+            if assignment:
+                partner_phone = assignment.get('partner_phone')
+                if partner_phone:
+                    partners = load_express_partners() or []
+                    ref_partner = next((p for p in partners if str(p.get('phone')) == str(partner_phone)), None)
+        except Exception as e:
+            current_app.logger.error(f"Error loading assignments for contact info: {e}", exc_info=True)
 
     # بررسی اینکه آیا کاربر از پنل همکاران آمده یا نه
     referer = request.headers.get('Referer', '')
