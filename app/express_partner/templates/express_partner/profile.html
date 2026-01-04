@@ -17,22 +17,24 @@
 
   <!-- Profile Section - سبک دیوار -->
   <section data-tour="profile-section" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer" id="profileClickableCard">
-    <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="flex items-center gap-3 pointer-events-auto">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input id="avatarInput" name="avatar" type="file" accept="image/*" class="hidden" />
-      <button type="button" id="avatarTrigger"
-              class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
-              title="تغییر عکس پروفایل">
-        {% if profile and profile.get('avatar') %}
-          <img src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
-               alt="عکس پروفایل"
-               class="w-full h-full object-cover" referrerpolicy="no-referrer" />
-        {% else %}
-          <span class="text-gray-600 dark:text-gray-400 text-lg font-semibold">
-            {{ (me_name or (me_phone or '')[-4:])[:2] }}
-          </span>
-        {% endif %}
-      </button>
+    <div class="flex items-center gap-3">
+      <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="pointer-events-auto">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input id="avatarInput" name="avatar" type="file" accept="image/*" class="hidden" />
+        <button type="button" id="avatarTrigger"
+                class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
+                title="تغییر عکس پروفایل">
+          {% if profile and profile.get('avatar') %}
+            <img src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
+                 alt="عکس پروفایل"
+                 class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+          {% else %}
+            <span class="text-gray-600 dark:text-gray-400 text-lg font-semibold">
+              {{ (me_name or (me_phone or '')[-4:])[:2] }}
+            </span>
+          {% endif %}
+        </button>
+      </form>
       <div class="flex-1 min-w-0">
         <div class="text-base font-semibold text-gray-900 dark:text-white truncate">
           {{ me_name or 'همکار وینور' }}
@@ -40,7 +42,7 @@
         <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
         <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-500">نقش: همکار</div>
       </div>
-      <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0">
+      <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0 pointer-events-auto">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="button"
                 onclick="showLogoutConfirm('logoutProfileForm')"
@@ -48,7 +50,7 @@
           خروج
         </button>
       </form>
-    </form>
+    </div>
   </section>
 
   <!-- Quick Links - سبک دیوار -->

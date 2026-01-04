@@ -1,7 +1,8 @@
 {% set bottom_nav_active = bottom_nav_active|default('') %}
-<nav class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+<nav id="bottomNavMenu" class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
   <div class="max-w-md mx-auto">
-    <div class="grid grid-cols-5 gap-0">
+    <div id="bottomNavItems" class="grid grid-cols-5 gap-0">
+      {# Loading state - نمایش منوی پیش‌فرض تا زمان بارگذاری از API #}
       {% set nav_items = [
         {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
         {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
@@ -13,7 +14,8 @@
         {% set is_active = (bottom_nav_active == item.key) %}
         <a href="{{ item.url }}"
            class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 transition-colors duration-150 {{ 'text-blue-600 dark:text-blue-400' if is_active else 'text-gray-600 dark:text-gray-400' }} hover:text-gray-900 dark:hover:text-gray-100"
-           aria-current="{{ 'page' if is_active else 'false' }}">
+           aria-current="{{ 'page' if is_active else 'false' }}"
+           data-nav-key="{{ item.key }}">
           <i class="fas {{ item.icon }} text-lg"></i>
           <span class="text-[11px] font-medium leading-tight">{{ item.label }}</span>
         </a>
@@ -21,4 +23,88 @@
     </div>
   </div>
 </nav>
+
+<script>
+(function() {
+  const activeKey = '{{ bottom_nav_active }}';
+  const navContainer = document.getElementById('bottomNavItems');
+  if (!navContainer) return;
+
+  // دریافت منو از API
+  async function loadMenuFromAPI() {
+    try {
+      const response = await fetch('/api/menu', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        credentials: 'same-origin'
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to load menu from API, using default menu');
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.menu && Array.isArray(data.menu)) {
+        renderMenu(data.menu);
+      }
+    } catch (error) {
+      console.warn('Error loading menu from API:', error);
+      // در صورت خطا، منوی پیش‌فرض باقی می‌ماند
+    }
+  }
+
+  // رندر منو
+  function renderMenu(menuItems) {
+    if (!navContainer || !Array.isArray(menuItems) || menuItems.length === 0) return;
+
+    navContainer.innerHTML = '';
+    
+    menuItems.forEach(item => {
+      const isActive = activeKey === item.key;
+      const link = document.createElement('a');
+      link.href = item.url || '#';
+      link.className = `flex flex-col items-center justify-center gap-1 py-2.5 px-2 transition-colors duration-150 ${
+        isActive 
+          ? 'text-blue-600 dark:text-blue-400' 
+          : 'text-gray-600 dark:text-gray-400'
+      } hover:text-gray-900 dark:hover:text-gray-100`;
+      link.setAttribute('aria-current', isActive ? 'page' : 'false');
+      link.setAttribute('data-nav-key', item.key);
+
+      const icon = document.createElement('i');
+      icon.className = `fas ${item.icon || 'fa-circle'} text-lg`;
+      link.appendChild(icon);
+
+      const label = document.createElement('span');
+      label.className = 'text-[11px] font-medium leading-tight';
+      label.textContent = item.label || '';
+      link.appendChild(label);
+
+      navContainer.appendChild(link);
+    });
+  }
+
+  // بارگذاری منو از API
+  loadMenuFromAPI();
+
+  // به‌روزرسانی منو در صورت تغییر وضعیت لاگین (مثلاً بعد از ورود/خروج)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'vinor_session' || e.key === 'vinor_user') {
+      loadMenuFromAPI();
+    }
+  });
+
+  // به‌روزرسانی منو بعد از navigation (برای تغییر وضعیت لاگین)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMenuFromAPI);
+  } else {
+    // اگر DOM از قبل آماده است، یک بار دیگر تلاش کن
+    setTimeout(loadMenuFromAPI, 100);
+  }
+})();
+</script>
 

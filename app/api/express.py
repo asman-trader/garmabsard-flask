@@ -4,7 +4,7 @@
 Express Listings API endpoints for Vinor Express feature
 """
 
-from flask import Blueprint, jsonify, request, current_app, make_response
+from flask import Blueprint, jsonify, request, current_app, make_response, session, url_for
 from app.utils.storage import load_express_lands_cached, get_lands_file_stats, load_express_reposts, load_express_partners
 from app.utils.images import prepare_variants_dict
 from app.services.notifications import add_notification
@@ -331,3 +331,89 @@ def express_contact_request(code):
             'success': False,
             'error': 'خطا در ارسال درخواست'
         }), 500
+
+@express_api_bp.route('/menu', methods=['GET'])
+def get_menu():
+    """API endpoint برای دریافت منوی فوتر - هماهنگ با بک‌اند"""
+    try:
+        # بررسی اینکه آیا کاربر لاگین است یا نه
+        is_logged_in = bool(session.get('user_id') or session.get('user_phone'))
+        
+        # بررسی اینکه آیا کاربر همکار اکسپرس است یا نه
+        is_express_partner = False
+        if session.get('user_phone'):
+            try:
+                me = str(session.get("user_phone") or "").strip()
+                _partners = load_express_partners()
+                is_express_partner = any(
+                    isinstance(p, dict)
+                    and str(p.get("phone") or "").strip() == me
+                    and (str(p.get("status") or "").lower() == "approved" or p.get("status") is True)
+                    for p in (_partners or [])
+                )
+            except Exception:
+                is_express_partner = False
+        
+        # منوی عمومی (برای کاربران غیرلاگین)
+        public_menu = [
+            {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
+            {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+            {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
+            {'key': 'about', 'url': '/', 'icon': 'fa-info-circle', 'label': 'درباره'},
+            {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}
+        ]
+        
+        # منوی همکار اکسپرس (برای کاربران لاگین شده)
+        partner_menu = [
+            {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'خانه'},
+            {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
+            {'key': 'express', 'endpoint': 'express_partner.explore', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+            {'key': 'routine', 'endpoint': 'express_partner.routine', 'icon': 'fa-list-check', 'label': 'روتین'},
+            {'key': 'profile', 'endpoint': 'express_partner.profile', 'icon': 'fa-user', 'label': 'من'}
+        ]
+        
+        # انتخاب منوی مناسب
+        if is_express_partner:
+            # تبدیل endpoint به URL
+            menu_items = []
+            for item in partner_menu:
+                menu_item = dict(item)
+                try:
+                    # استفاده از url_for برای ساخت URL از endpoint
+                    # request context از قبل موجود است
+                    menu_item['url'] = url_for(item['endpoint'])
+                except Exception as url_error:
+                    # در صورت خطا، از endpoint به عنوان URL استفاده کن
+                    current_app.logger.debug(f"Error generating URL for {item['endpoint']}: {url_error}")
+                    menu_item['url'] = f"/express/partner/{item['key']}"
+                # حذف endpoint از دیکشنری نهایی (فقط url را نگه دار)
+                if 'endpoint' in menu_item:
+                    del menu_item['endpoint']
+                menu_items.append(menu_item)
+        else:
+            menu_items = public_menu
+        
+        response = make_response(jsonify({
+            'success': True,
+            'menu': menu_items,
+            'is_logged_in': is_logged_in,
+            'is_express_partner': is_express_partner
+        }))
+        response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading menu: {e}", exc_info=True)
+        # در صورت خطا، منوی پیش‌فرض را برگردان
+        return jsonify({
+            'success': True,
+            'menu': [
+                {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
+                {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+                {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
+                {'key': 'about', 'url': '/', 'icon': 'fa-info-circle', 'label': 'درباره'},
+                {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}
+            ],
+            'is_logged_in': False,
+            'is_express_partner': False
+        }), 200
