@@ -78,24 +78,40 @@ def index():
     اگر کاربر وارد شده باشد، مستقیم به داشبورد همکاران می‌رود.
     """
     # بررسی اینکه آیا کاربر در پنل ادمین است یا نه
-    referer = request.headers.get('Referer', '') or ''
-    is_admin = (
-        session.get('logged_in') or 
-        request.path.startswith('/admin') or
-        '/admin' in referer
-    )
+    # فقط بر اساس session بررسی می‌کنیم (referer قابل اعتماد نیست)
+    is_admin = bool(session.get('logged_in'))
     
-    if session.get("user_phone") or session.get("user_id") or is_admin:
+    # بررسی session برای کاربران لاگین شده
+    user_phone = session.get("user_phone")
+    user_id = session.get("user_id")
+    is_logged_in = bool(user_phone or user_id or is_admin)
+    
+    # اگر کاربر لاگین شده باشد، به داشبورد مناسب redirect می‌کنیم
+    if is_logged_in:
+        # بررسی next parameter برای redirect به مسیر هدف
         nxt = request.args.get('next')
-        if nxt and nxt.startswith('/'):
+        if nxt and nxt.startswith('/') and not nxt.startswith('//'):
+            # اطمینان از اینکه next یک مسیر معتبر است
             return redirect(nxt)
+        
+        # Redirect به داشبورد مناسب
         if is_admin:
             return redirect(url_for("admin.dashboard"))
+        
+        # برای همکاران اکسپرس، به داشبورد همکاران redirect می‌کنیم
+        # اگر session معتبر نباشد، require_partner_access در داشبورد handle می‌کند
         return redirect(url_for("express_partner.dashboard"))
     
-    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین و درخواست‌های مستقیم)
-    # اگر referer از admin یا express/partner باشد، tracking نمی‌کنیم
-    if '/admin' not in referer and '/express/partner' not in referer:
+    # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین)
+    # بررسی referer برای جلوگیری از tracking درخواست‌های داخلی
+    referer = request.headers.get('Referer', '') or ''
+    should_track = (
+        not is_logged_in and 
+        '/admin' not in referer and 
+        '/express/partner' not in referer
+    )
+    
+    if should_track:
         try:
             views = load_landing_views() or []
             if not isinstance(views, list):
@@ -137,31 +153,41 @@ def index():
         except Exception as e:
             current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
+    # بارگذاری تنظیمات
     try:
         from ..utils.storage import load_settings
         _settings = load_settings()
     except Exception:
         _settings = {}
-    # Microcache only for guests
-    if not (session.get("user_phone") or session.get("user_id") or is_admin):
-        k = f"page:index"
-        cached = _mc_get(k)
+    
+    # Microcache فقط برای کاربران مهمان (غیرلاگین)
+    # برای کاربران لاگین شده cache نمی‌کنیم چون ممکن است محتوای شخصی‌سازی شده داشته باشند
+    if not is_logged_in:
+        cache_key = "page:index"
+        cached = _mc_get(cache_key)
         if cached:
             resp = make_response(cached)
-            resp.headers["Cache-Control"] = "no-cache"
+            resp.headers["Cache-Control"] = "no-cache, must-revalidate"
             return resp
-    html = render_template("home/partners.html",
-                           brand="وینور",
-                           domain="vinor.ir",
-                           android_apk_url=_settings.get('android_apk_url') or '',
-                           android_apk_version=_settings.get('android_apk_version') or '')
-    try:
-        if not (session.get("user_phone") or session.get("user_id") or is_admin):
+    
+    # رندر صفحه لندینگ
+    html = render_template(
+        "home/partners.html",
+        brand="وینور",
+        domain="vinor.ir",
+        android_apk_url=_settings.get('android_apk_url') or '',
+        android_apk_version=_settings.get('android_apk_version') or ''
+    )
+    
+    # ذخیره در cache فقط برای کاربران مهمان
+    if not is_logged_in:
+        try:
             _mc_set("page:index", html, ttl=15)
-    except Exception:
-        pass
+        except Exception:
+            pass
+    
     resp = make_response(html)
-    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["Cache-Control"] = "no-cache, must-revalidate"
     return resp
 
 @main_bp.route("/partners", endpoint="partners")
