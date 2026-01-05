@@ -354,16 +354,8 @@ def get_menu():
             except Exception:
                 is_express_partner = False
         
-        # منوی عمومی (برای کاربران غیرلاگین)
-        public_menu = [
-            {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
-            {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
-            {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
-            {'key': 'about', 'url': '/', 'icon': 'fa-info-circle', 'label': 'درباره'},
-            {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}
-        ]
-        
-        # منوی همکار اکسپرس (برای کاربران لاگین شده)
+        # منوی همکار اکسپرس - نمایش در هر دو حالت (وارد شده و وارد نشده)
+        # دسترسی‌ها بعداً تنظیم می‌شوند
         partner_menu = [
             {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'خانه'},
             {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
@@ -372,29 +364,23 @@ def get_menu():
             {'key': 'profile', 'endpoint': 'express_partner.profile', 'icon': 'fa-user', 'label': 'من'}
         ]
         
-        # انتخاب منوی مناسب
-        # اگر کاربر لاگین شده باشد، منوی همکار را نمایش بده (حتی اگر وضعیتش approved نباشد)
-        # چون اگر لاگین شده باشد، احتمالاً همکار اکسپرس است
-        if is_logged_in:
-            # تبدیل endpoint به URL
-            menu_items = []
-            for item in partner_menu:
-                menu_item = dict(item)
-                try:
-                    # استفاده از url_for برای ساخت URL از endpoint
-                    # request context از قبل موجود است
-                    menu_item['url'] = url_for(item['endpoint'])
-                except Exception as url_error:
-                    # در صورت خطا، از endpoint به عنوان URL استفاده کن
-                    current_app.logger.debug(f"Error generating URL for {item['endpoint']}: {url_error}")
-                    menu_item['url'] = f"/express/partner/{item['key']}"
-                # حذف endpoint از دیکشنری نهایی (فقط url را نگه دار)
-                if 'endpoint' in menu_item:
-                    del menu_item['endpoint']
-                menu_items.append(menu_item)
-        else:
-            # اگر کاربر لاگین نشده باشد، منوی عمومی را نمایش بده
-            menu_items = public_menu
+        # همیشه منوی همکار را نمایش بده (در هر دو حالت وارد شده و وارد نشده)
+        # تبدیل endpoint به URL
+        menu_items = []
+        for item in partner_menu:
+            menu_item = dict(item)
+            try:
+                # استفاده از url_for برای ساخت URL از endpoint
+                # request context از قبل موجود است
+                menu_item['url'] = url_for(item['endpoint'])
+            except Exception as url_error:
+                # در صورت خطا، از endpoint به عنوان URL استفاده کن
+                current_app.logger.debug(f"Error generating URL for {item['endpoint']}: {url_error}")
+                menu_item['url'] = f"/express/partner/{item['key']}"
+            # حذف endpoint از دیکشنری نهایی (فقط url را نگه دار)
+            if 'endpoint' in menu_item:
+                del menu_item['endpoint']
+            menu_items.append(menu_item)
         
         response = make_response(jsonify({
             'success': True,
@@ -410,15 +396,15 @@ def get_menu():
         
     except Exception as e:
         current_app.logger.error(f"Error loading menu: {e}", exc_info=True)
-        # در صورت خطا، منوی پیش‌فرض را برگردان
+        # در صورت خطا، منوی پیش‌فرض همکار را برگردان
         return jsonify({
             'success': True,
             'menu': [
-                {'key': 'home', 'url': '/', 'icon': 'fa-home', 'label': 'خانه'},
-                {'key': 'explore', 'url': '/public', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
-                {'key': 'help', 'url': '/help', 'icon': 'fa-question-circle', 'label': 'راهنما'},
-                {'key': 'about', 'url': '/', 'icon': 'fa-info-circle', 'label': 'درباره'},
-                {'key': 'login', 'url': '/express/partner/login', 'icon': 'fa-user', 'label': 'ورود'}
+                {'key': 'dashboard', 'url': '/express/partner/dashboard', 'icon': 'fa-home', 'label': 'خانه'},
+                {'key': 'commissions', 'url': '/express/partner/commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
+                {'key': 'express', 'url': '/express/partner/express', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
+                {'key': 'routine', 'url': '/express/partner/routine', 'icon': 'fa-list-check', 'label': 'روتین'},
+                {'key': 'profile', 'url': '/express/partner/profile', 'icon': 'fa-user', 'label': 'من'}
             ],
             'is_logged_in': False,
             'is_express_partner': False
