@@ -39,7 +39,10 @@
   <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
     <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <button @click="menuOpen = !menuOpen" class="lg:hidden focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+        <button @click="menuOpen = !menuOpen" 
+                onclick="event.preventDefault(); event.stopPropagation();"
+                class="lg:hidden focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="باز کردن منو">
           <i class="fa-solid fa-bars text-lg text-gray-600 dark:text-gray-400"></i>
         </button>
         <h1 class="text-base font-semibold text-gray-900 dark:text-white">
@@ -56,14 +59,17 @@
   </header>
 
   <!-- Mobile Menu Overlay -->
-  <div x-show="menuOpen" @click="menuOpen = false" 
+  <div x-show="menuOpen" 
+       @click="menuOpen = false" 
        x-transition:enter="transition-opacity duration-200"
        x-transition:enter-start="opacity-0"
        x-transition:enter-end="opacity-100"
        x-transition:leave="transition-opacity duration-150"
        x-transition:leave-start="opacity-100"
        x-transition:leave-end="opacity-0"
-       class="fixed inset-0 z-40 bg-black/40 lg:hidden" x-cloak></div>
+       class="fixed inset-0 z-40 bg-black/40 lg:hidden" 
+       x-cloak
+       style="display: none;"></div>
 
   <!-- Sidebar - Mobile Drawer -->
   <aside x-show="menuOpen"
@@ -74,7 +80,9 @@
          x-transition:leave="transition-transform duration-150"
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full"
-         class="fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-50 lg:hidden overflow-y-auto" x-cloak>
+         class="fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-50 lg:hidden overflow-y-auto" 
+         x-cloak
+         style="display: none; transform: translateX(100%);">
     {% include 'admin/partials/sidebar.html' %}
   </aside>
 
@@ -146,7 +154,9 @@
         <span class="text-xs">آگهی‌ها</span>
       </a>
       <button @click="menuOpen = !menuOpen" 
-              class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-600 dark:text-gray-400">
+              onclick="event.preventDefault(); event.stopPropagation();"
+              class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-600 dark:text-gray-400"
+              aria-label="باز کردن منو">
         <i class="fa-solid fa-bars text-lg"></i>
         <span class="text-xs">منو</span>
       </button>
@@ -160,6 +170,115 @@
 
   <!-- Alpine.js -->
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  
+  <!-- Fallback برای منو در موبایل (در صورت عدم لود شدن Alpine.js) -->
+  <script>
+    (function() {
+      let menuOpen = false;
+      let fallbackInitialized = false;
+      
+      function initMenuFallback() {
+        if (fallbackInitialized) return;
+        
+        // اگر Alpine.js لود شده باشد، صبر کن تا initialize شود
+        if (typeof Alpine !== 'undefined') {
+          // Alpine.js موجود است، اما ممکن است هنوز initialize نشده باشد
+          setTimeout(function() {
+            // بررسی اینکه آیا Alpine.js واقعاً کار می‌کند
+            const testElement = document.querySelector('[x-data*="menuOpen"]');
+            if (testElement && Alpine && Alpine.$data && typeof Alpine.$data === 'function') {
+              // Alpine.js کار می‌کند، fallback لازم نیست
+              return;
+            } else {
+              // Alpine.js لود شده اما کار نمی‌کند، fallback را فعال کن
+              setupFallback();
+            }
+          }, 1000);
+        } else {
+          // Alpine.js لود نشده، فوراً fallback را فعال کن
+          setupFallback();
+        }
+      }
+      
+      function setupFallback() {
+        if (fallbackInitialized) return;
+        fallbackInitialized = true;
+        console.warn('Alpine.js not working, using fallback menu');
+        
+        const menuOverlay = document.querySelector('[x-show="menuOpen"][class*="bg-black"]');
+        const menuSidebar = document.querySelector('aside[x-show="menuOpen"]');
+        
+        function toggleMenu() {
+          menuOpen = !menuOpen;
+          if (menuOverlay) {
+            menuOverlay.style.display = menuOpen ? 'block' : 'none';
+            menuOverlay.style.opacity = menuOpen ? '0.4' : '0';
+            menuOverlay.style.transition = 'opacity 0.2s';
+          }
+          if (menuSidebar) {
+            menuSidebar.style.display = menuOpen ? 'block' : 'none';
+            menuSidebar.style.transform = menuOpen ? 'translateX(0)' : 'translateX(100%)';
+            menuSidebar.style.transition = 'transform 0.2s';
+          }
+          document.body.style.overflow = menuOpen ? 'hidden' : '';
+        }
+        
+        // اضافه کردن event listener به دکمه‌ها
+        document.querySelectorAll('button[onclick*="menuOpen"], button[aria-label*="منو"]').forEach(btn => {
+          // حذف event listener قبلی
+          const newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          
+          newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
+          }, true);
+        });
+        
+        // بستن منو با کلیک روی overlay
+        if (menuOverlay) {
+          menuOverlay.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
+          }, true);
+        }
+        
+        // بستن منو با کلیک روی دکمه بستن
+        const closeBtn = document.querySelector('button[onclick*="menuOpen = false"]');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
+          }, true);
+        }
+        
+        // بستن منو با کلیک روی لینک‌های منو
+        const menuLinks = document.querySelectorAll('aside[x-show="menuOpen"] a');
+        menuLinks.forEach(link => {
+          link.addEventListener('click', function() {
+            setTimeout(toggleMenu, 100);
+          });
+        });
+      }
+      
+      // اجرا بعد از لود DOM
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(initMenuFallback, 500);
+        });
+      } else {
+        setTimeout(initMenuFallback, 500);
+      }
+      
+      // اجرا بعد از لود کامل صفحه
+      window.addEventListener('load', function() {
+        setTimeout(initMenuFallback, 1000);
+      });
+    })();
+  </script>
 
   <!-- PWA Service Worker Registration -->
   <script>
