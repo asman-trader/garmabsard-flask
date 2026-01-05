@@ -93,6 +93,36 @@
       </div>
     </a>
 
+    <!-- بروزرسانی اپلیکیشن -->
+    <a href="#"
+       id="appUpdateCard"
+       data-tour="app-update-link"
+       aria-label="بروزرسانی اپلیکیشن اندروید"
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <i class="fas fa-download text-amber-600 dark:text-amber-400"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">بروزرسانی اپلیکیشن</div>
+          <div id="appUpdateSubtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+            بررسی نسخه جدید...
+          </div>
+          <div id="appUpdateMeta" class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
+            <!-- متا (نسخه/تاریخ/حجم) با جاوااسکریپت پر می‌شود -->
+          </div>
+        </div>
+        <button type="button"
+                id="appUpdateAction"
+                class="shrink-0 px-2.5 py-1.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold transition-colors"
+                aria-label="دانلود آخرین نسخه"
+                title="دانلود آخرین نسخه"
+                style="display:none">
+          دانلود
+        </button>
+      </div>
+    </a>
+
     <!-- فروشنده‌های برتر -->
     <a href="{{ url_for('express_partner.top_sellers') }}" 
        data-tour="top-sellers-link"
@@ -236,6 +266,80 @@
       if (!input.files || input.files.length === 0) return;
       form.submit();
     });
+  })();
+
+  // App update card: fetch latest version and set link
+  (function() {
+    const card = document.getElementById('appUpdateCard');
+    const sub = document.getElementById('appUpdateSubtitle');
+    const meta = document.getElementById('appUpdateMeta');
+    const action = document.getElementById('appUpdateAction');
+    if (!card || !sub) return;
+    function absUrl(path) {
+      try {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        const u = new URL(window.location.href);
+        const base = u.origin;
+        return base + path;
+      } catch(_){ return path || ''; }
+    }
+    function humanSize(n) {
+      try {
+        const b = Number(n||0);
+        if (!isFinite(b) || b <= 0) return '';
+        const units = ['بایت','کیلوبایت','مگابایت','گیگابایت'];
+        let i = 0, val = b;
+        while (val >= 1024 && i < units.length-1) { val /= 1024; i++; }
+        return `${val.toFixed(val>=10?0:1)} ${units[i]}`;
+      } catch(_){ return ''; }
+    }
+    function faDate(iso) {
+      try {
+        if (!iso) return '';
+        const d = new Date(String(iso).replace(' ','T'));
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('fa-IR', { year:'numeric', month:'2-digit', day:'2-digit' });
+      } catch(_){ return ''; }
+    }
+    fetch('/api/app/version', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        if (!d || d.success !== true) throw new Error();
+        const v = String(d.android_apk_version || '').trim();
+        const url = String(d.android_apk_url || '').trim();
+        const size = d.android_apk_size_bytes;
+        const updated = d.android_apk_updated_at;
+        const items = [];
+        if (v) items.push(`نسخه ${v}`);
+        if (updated) items.push(`تاریخ ${faDate(updated)}`);
+        if (size) { const hs = humanSize(size); if (hs) items.push(hs); }
+        if (items.length && meta) {
+          meta.innerHTML = items.map(t => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">${t}</span>`).join(' ');
+        }
+        if (v && url) {
+          sub.textContent = 'نسخه جدید برای دانلود آماده است';
+          const link = absUrl(url);
+          if (action) {
+            action.style.display = '';
+            action.onclick = function(e){ e.preventDefault(); window.location.assign(link); };
+          }
+          card.onclick = function(e){ e.preventDefault(); window.location.assign(link); };
+        } else if (v) {
+          sub.textContent = `آخرین نسخه: ${v}`;
+          if (action) action.style.display = 'none';
+          card.classList.add('opacity-80','pointer-events-none');
+        } else {
+          sub.textContent = 'نسخه جدید در حال حاضر موجود نیست';
+          if (action) action.style.display = 'none';
+          card.classList.add('opacity-80','pointer-events-none');
+        }
+      })
+      .catch(() => {
+        sub.textContent = 'عدم دسترسی به اطلاعات بروزرسانی';
+        if (action) action.style.display = 'none';
+        card.classList.add('opacity-80','pointer-events-none');
+      });
   })();
 
   // Navigate to edit on card click (excluding avatar button and logout)
