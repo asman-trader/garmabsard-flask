@@ -874,9 +874,25 @@
       const currentIndex = {{ current_index if current_index is defined else -1 }};
       const currentCode = '{{ land.code }}';
 
-      let verticalSwipeStartY = null;
-      let verticalSwipeEndY = null;
+      let verticalTouchStartY = null;
+      let verticalTouchEndY = null;
+      let scrollPositionAtStart = null;
       const VERTICAL_SWIPE_THRESHOLD = 100;
+      const SCROLL_THRESHOLD = 50; // حد آستانه برای تشخیص انتهای/ابتدای صفحه
+
+      // تابع برای چک کردن اینکه آیا به انتهای صفحه رسیده‌ایم
+      function isAtBottom() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        return (scrollTop + windowHeight >= documentHeight - SCROLL_THRESHOLD);
+      }
+
+      // تابع برای چک کردن اینکه آیا در ابتدای صفحه هستیم
+      function isAtTop() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        return scrollTop <= SCROLL_THRESHOLD;
+      }
 
       // تابع برای پیدا کردن فایل بعدی (حلقه‌ای)
       function getNextCode() {
@@ -894,34 +910,43 @@
         return allLands[prevIndex]?.code || null;
       }
 
-      // Swipe عمودی برای تغییر فایل
-      function handleVerticalSwipe(dy) {
+      // Swipe عمودی برای تغییر فایل - فقط بعد از رسیدن به انتهای/ابتدای صفحه
+      function handleVerticalSwipe(dy, wasAtBottom, wasAtTop) {
         if (Math.abs(dy) < VERTICAL_SWIPE_THRESHOLD) return;
         
         if (dy < 0) {
           // Swipe به بالا = فایل بعدی
-          const next = getNextCode();
-          if (next) {
-            // استفاده از replace برای جلوگیری از اضافه شدن به history
-            // تا دکمه back همیشه به اکسپلور برگردد
-            window.location.replace('/express/' + next);
+          // فقط اگر به انتهای صفحه رسیده بودیم و دوباره swipe به بالا کردیم
+          if (wasAtBottom) {
+            const next = getNextCode();
+            if (next) {
+              // استفاده از replace برای جلوگیری از اضافه شدن به history
+              // تا دکمه back همیشه به اکسپلور برگردد
+              window.location.replace('/express/' + next);
+            }
           }
         } else if (dy > 0) {
           // Swipe به پایین = فایل قبلی
-          const prev = getPrevCode();
-          if (prev) {
-            // استفاده از replace برای جلوگیری از اضافه شدن به history
-            window.location.replace('/express/' + prev);
+          // فقط اگر در ابتدای صفحه بودیم و swipe به پایین کردیم
+          if (wasAtTop) {
+            const prev = getPrevCode();
+            if (prev) {
+              // استفاده از replace برای جلوگیری از اضافه شدن به history
+              window.location.replace('/express/' + prev);
+            }
           }
         }
       }
 
       // Event listeners برای swipe عمودی
-      let verticalTouchStartY = null;
-      let verticalTouchEndY = null;
-
       container.addEventListener('touchstart', function(e) {
         verticalTouchStartY = e.touches[0].clientY;
+        // ذخیره موقعیت اسکرول در شروع touch
+        scrollPositionAtStart = {
+          scrollTop: window.scrollY || document.documentElement.scrollTop,
+          isAtBottom: isAtBottom(),
+          isAtTop: isAtTop()
+        };
       }, { passive: true });
 
       container.addEventListener('touchmove', function(e) {
@@ -929,29 +954,36 @@
       }, { passive: true });
 
       container.addEventListener('touchend', function(e) {
-        if (verticalTouchStartY !== null && verticalTouchEndY !== null) {
+        if (verticalTouchStartY !== null && verticalTouchEndY !== null && scrollPositionAtStart) {
           const dy = verticalTouchEndY - verticalTouchStartY;
-          handleVerticalSwipe(dy);
+          handleVerticalSwipe(dy, scrollPositionAtStart.isAtBottom, scrollPositionAtStart.isAtTop);
         }
         verticalTouchStartY = null;
         verticalTouchEndY = null;
+        scrollPositionAtStart = null;
       }, { passive: true });
 
-      // Keyboard navigation
+      // Keyboard navigation - فقط بعد از رسیدن به انتهای/ابتدای صفحه
       document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowUp') {
-          const next = getNextCode();
-          if (next) {
-            e.preventDefault();
-            // استفاده از replace برای جلوگیری از اضافه شدن به history
-            window.location.replace('/express/' + next);
+          // فقط اگر به انتهای صفحه رسیده‌ایم
+          if (isAtBottom()) {
+            const next = getNextCode();
+            if (next) {
+              e.preventDefault();
+              // استفاده از replace برای جلوگیری از اضافه شدن به history
+              window.location.replace('/express/' + next);
+            }
           }
         } else if (e.key === 'ArrowDown') {
-          const prev = getPrevCode();
-          if (prev) {
-            e.preventDefault();
-            // استفاده از replace برای جلوگیری از اضافه شدن به history
-            window.location.replace('/express/' + prev);
+          // فقط اگر در ابتدای صفحه هستیم
+          if (isAtTop()) {
+            const prev = getPrevCode();
+            if (prev) {
+              e.preventDefault();
+              // استفاده از replace برای جلوگیری از اضافه شدن به history
+              window.location.replace('/express/' + prev);
+            }
           }
         }
       });
