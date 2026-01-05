@@ -271,13 +271,18 @@
     });
   })();
 
-  // App update card: fetch latest version and set link
+  // App update card: اگر سرور نسخه/لینک را داده، AJAX لازم نیست
   (function() {
     const card = document.getElementById('appUpdateCard');
     const sub = document.getElementById('appUpdateSubtitle');
     const meta = document.getElementById('appUpdateMeta');
     const action = document.getElementById('appUpdateAction');
     if (!card || !sub) return;
+    const serverV = "{{ android_apk_version or '' }}".trim();
+    const serverU = "{{ android_apk_url or '' }}".trim();
+    if (serverV || serverU) {
+      return; // از داده‌های سرور استفاده می‌شود
+    }
     function absUrl(path) {
       try {
         if (!path) return '';
