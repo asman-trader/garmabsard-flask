@@ -373,7 +373,9 @@ def get_menu():
         ]
         
         # انتخاب منوی مناسب
-        if is_express_partner:
+        # اگر کاربر لاگین شده باشد، منوی همکار را نمایش بده (حتی اگر وضعیتش approved نباشد)
+        # چون اگر لاگین شده باشد، احتمالاً همکار اکسپرس است
+        if is_logged_in:
             # تبدیل endpoint به URL
             menu_items = []
             for item in partner_menu:
@@ -391,6 +393,7 @@ def get_menu():
                     del menu_item['endpoint']
                 menu_items.append(menu_item)
         else:
+            # اگر کاربر لاگین نشده باشد، منوی عمومی را نمایش بده
             menu_items = public_menu
         
         response = make_response(jsonify({
@@ -399,7 +402,10 @@ def get_menu():
             'is_logged_in': is_logged_in,
             'is_express_partner': is_express_partner
         }))
-        response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
+        # غیرفعال کردن cache برای منو تا تغییرات وضعیت لاگین فوراً اعمال شود
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
         return response
         
     except Exception as e:
