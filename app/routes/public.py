@@ -21,6 +21,7 @@ from time import time as _now
 
 # --- very small in-memory microcache (5-20s) for public pages ---
 _MICROCACHE: dict = {}  # key -> (expires_at, payload)
+_SETTINGS_CACHE: dict = {}  # Cache for settings
 def _mc_get(key: str):
     try:
         exp, val = _MICROCACHE.get(key, (0, None))
@@ -34,6 +35,19 @@ def _mc_set(key: str, val, ttl: int = 10):
         _MICROCACHE[key] = (_now() + max(1, int(ttl)), val)
     except Exception:
         pass
+def _get_cached_settings():
+    """Cache settings برای 60 ثانیه"""
+    cache_key = "settings"
+    cached = _mc_get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        from ..utils.storage import load_settings
+        settings = load_settings()
+        _mc_set(cache_key, settings, ttl=60)
+        return settings
+    except Exception:
+        return {}
 # ثابت‌ها
 FIRST_VISIT_COOKIE = "vinor_first_visit_done"
 
@@ -103,62 +117,69 @@ def index():
         return redirect(url_for("express_partner.dashboard"))
     
     # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین)
-    # بررسی referer برای جلوگیری از tracking درخواست‌های داخلی
+    # بررسی referer برای جلوگیری از tracking درخواست‌های داخلی و رفرش
     referer = request.headers.get('Referer', '') or ''
+    is_refresh = referer and (request.url in referer or request.path in referer)
     should_track = (
         not is_logged_in and 
+        not is_refresh and  # جلوگیری از tracking در رفرش
         '/admin' not in referer and 
         '/express/partner' not in referer
     )
     
+    # Tracking فقط برای بازدیدهای جدید (نه رفرش)
     if should_track:
         try:
-            views = load_landing_views() or []
-            if not isinstance(views, list):
-                views = []
-            
-            # بررسی اینکه آیا این IP در امروز قبلاً بازدید داشته یا نه
             visitor_ip = request.remote_addr or ''
-            now = datetime.utcnow()
-            today_str = now.strftime('%Y-%m-%d')
-            
-            # بررسی بازدیدهای امروز برای این IP
-            already_viewed_today = False
-            for v in views:
-                try:
-                    v_ip = v.get('ip', '')
-                    v_ts_str = v.get('timestamp', '')
-                    if v_ip == visitor_ip and v_ts_str:
-                        v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
-                        if v_dt.tzinfo:
-                            v_dt = v_dt.replace(tzinfo=None)
-                        v_date_str = v_dt.strftime('%Y-%m-%d')
-                        if v_date_str == today_str:
-                            already_viewed_today = True
-                            break
-                except Exception:
-                    continue
-            
-            # اگر این IP امروز بازدید نداشته، ثبت کن
-            if not already_viewed_today and visitor_ip:
-                views.append({
-                    'timestamp': now.isoformat(),
-                    'ip': visitor_ip,
-                    'user_agent': request.headers.get('User-Agent', '')[:200]
-                })
-                # نگه داشتن فقط 10000 بازدید اخیر (برای جلوگیری از رشد بی‌حد فایل)
-                if len(views) > 10000:
-                    views = views[-10000:]
-                save_landing_views(views)
+            if visitor_ip:
+                # بررسی سریع با cache برای جلوگیری از I/O غیرضروری
+                cache_track_key = f"tracked:{visitor_ip}:{datetime.utcnow().strftime('%Y-%m-%d')}"
+                if _mc_get(cache_track_key):
+                    # قبلاً امروز track شده، skip
+                    pass
+                else:
+                    views = load_landing_views() or []
+                    if not isinstance(views, list):
+                        views = []
+                    
+                    now = datetime.utcnow()
+                    today_str = now.strftime('%Y-%m-%d')
+                    
+                    # بررسی بازدیدهای امروز برای این IP
+                    already_viewed_today = False
+                    for v in views:
+                        try:
+                            v_ip = v.get('ip', '')
+                            v_ts_str = v.get('timestamp', '')
+                            if v_ip == visitor_ip and v_ts_str:
+                                v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
+                                if v_dt.tzinfo:
+                                    v_dt = v_dt.replace(tzinfo=None)
+                                v_date_str = v_dt.strftime('%Y-%m-%d')
+                                if v_date_str == today_str:
+                                    already_viewed_today = True
+                                    break
+                        except Exception:
+                            continue
+                    
+                    # اگر این IP امروز بازدید نداشته، ثبت کن
+                    if not already_viewed_today:
+                        views.append({
+                            'timestamp': now.isoformat(),
+                            'ip': visitor_ip,
+                            'user_agent': request.headers.get('User-Agent', '')[:200]
+                        })
+                        # نگه داشتن فقط 10000 بازدید اخیر
+                        if len(views) > 10000:
+                            views = views[-10000:]
+                        save_landing_views(views)
+                        # Cache برای جلوگیری از track مجدد در همان روز
+                        _mc_set(cache_track_key, True, ttl=86400)  # 24 ساعت
         except Exception as e:
             current_app.logger.error(f"Error tracking landing view: {e}", exc_info=True)
     
-    # بارگذاری تنظیمات
-    try:
-        from ..utils.storage import load_settings
-        _settings = load_settings()
-    except Exception:
-        _settings = {}
+    # بارگذاری تنظیمات با cache
+    _settings = _get_cached_settings()
     
     # Microcache فقط برای کاربران مهمان (غیرلاگین)
     # برای کاربران لاگین شده cache نمی‌کنیم چون ممکن است محتوای شخصی‌سازی شده داشته باشند
@@ -167,7 +188,9 @@ def index():
         cached = _mc_get(cache_key)
         if cached:
             resp = make_response(cached)
-            resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+            # استفاده از cache برای رفرش سریع‌تر
+            resp.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+            resp.headers["ETag"] = f'"{hash(cached) % 1000000}"'
             return resp
     
     # رندر صفحه لندینگ
@@ -182,12 +205,18 @@ def index():
     # ذخیره در cache فقط برای کاربران مهمان
     if not is_logged_in:
         try:
-            _mc_set("page:index", html, ttl=15)
+            # افزایش TTL برای رفرش سریع‌تر
+            _mc_set("page:index", html, ttl=30)
         except Exception:
             pass
     
     resp = make_response(html)
-    resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+    # بهبود cache headers برای رفرش سریع‌تر
+    if not is_logged_in:
+        resp.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+        resp.headers["ETag"] = f'"{hash(html) % 1000000}"'
+    else:
+        resp.headers["Cache-Control"] = "no-cache, must-revalidate"
     return resp
 
 @main_bp.route("/partners", endpoint="partners")
