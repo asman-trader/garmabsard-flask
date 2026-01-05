@@ -120,9 +120,11 @@ def index():
             resp = redirect(url_for("express_partner.dashboard"))
         
         # اضافه کردن cache headers برای redirect سریع‌تر
-        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        # مهم: نباید cache شود چون redirect بر اساس session است
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
         resp.headers["Pragma"] = "no-cache"
         resp.headers["Expires"] = "0"
+        resp.headers["Vary"] = "Cookie"  # برای Service Worker که نباید cache کند
         return resp
     
     # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین)

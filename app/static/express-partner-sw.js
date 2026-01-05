@@ -157,11 +157,19 @@ self.addEventListener('fetch', (event) => {
         // استفاده از preloaded response اگر موجود باشد
         const preload = await event.preloadResponse;
         const resp = preload || await fetch(request);
-        // به‌روزرسانی cache
-        const cache = await caches.open(PRECACHE);
-        try {
-          cache.put(request, resp.clone());
-        } catch (_) {}
+        // نباید redirect responses (302/301) یا responses با Vary: Cookie را cache کنیم
+        // چون redirect بر اساس session است و نباید cache شود
+        const isRedirect = resp.status >= 300 && resp.status < 400;
+        const hasVaryCookie = resp.headers.get('Vary') && resp.headers.get('Vary').includes('Cookie');
+        const noCache = resp.headers.get('Cache-Control') && resp.headers.get('Cache-Control').includes('no-store');
+        
+        if (!isRedirect && !hasVaryCookie && !noCache) {
+          // به‌روزرسانی cache
+          const cache = await caches.open(PRECACHE);
+          try {
+            cache.put(request, resp.clone());
+          } catch (_) {}
+        }
         return resp;
       } catch (_) {
         const cache = await caches.open(PRECACHE);
