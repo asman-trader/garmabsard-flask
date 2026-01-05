@@ -50,29 +50,7 @@
     }
   </style>
 
-  <!-- اعلان‌های سیستم -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="fixed top-20 inset-x-0 z-50 flex flex-col items-center gap-3 px-4 pointer-events-none">
-        {% for category, msg in messages %}
-          {% set _icon = 'fa-info-circle text-blue-500' %}
-          {% if category in ['success', 'ok'] %}
-            {% set _icon = 'fa-check-circle text-emerald-500' %}
-          {% elif category == 'warning' %}
-            {% set _icon = 'fa-exclamation-triangle text-amber-500' %}
-          {% elif category in ['danger', 'error', 'alert'] %}
-            {% set _icon = 'fa-times-circle text-rose-500' %}
-          {% endif %}
-          <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
-               x-transition.opacity.duration.300ms
-               class="pointer-events-auto inline-flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg border backdrop-blur bg-white/90 dark:bg-gray-900/90 text-sm font-medium text-gray-800 dark:text-gray-100 border-gray-200/70 dark:border-gray-700/70">
-            <i class="fas {{ _icon }} text-xs"></i>
-            <span class="whitespace-nowrap">{{ msg|safe }}</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+  {# Flash messages removed by request #}
 
   {% if not is_approved %}
     <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-4 rounded-xl mb-4">
