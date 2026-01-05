@@ -302,8 +302,29 @@
         return d.toLocaleDateString('fa-IR', { year:'numeric', month:'2-digit', day:'2-digit' });
       } catch(_){ return ''; }
     }
-    fetch('/api/app/version', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : Promise.reject())
+    async function fetchVersionWithFallback() {
+      const headers = {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache',
+        'X-Requested-With': 'XMLHttpRequest'
+      };
+      const urls = [
+        // ابتدا مسیر سازگار با SW اکسپرس
+        '/api/express/app-version',
+        (function(){ try { return new URL('/api/express/app-version', window.location.origin).toString(); } catch(_){ return '/api/express/app-version'; } })(),
+        // سپس مسیر عمومی
+        '/api/app/version',
+        (function(){ try { return new URL('/api/app/version', window.location.origin).toString(); } catch(_){ return '/api/app/version'; } })()
+      ];
+      for (const u of urls) {
+        try {
+          const res = await fetch(u, { headers, credentials: 'same-origin', cache: 'no-store' });
+          if (res && res.ok) return await res.json();
+        } catch(_) { /* try next */ }
+      }
+      throw new Error('unavailable');
+    }
+    fetchVersionWithFallback()
       .then(d => {
         if (!d || d.success !== true) throw new Error();
         const v = String(d.android_apk_version || '').trim();
