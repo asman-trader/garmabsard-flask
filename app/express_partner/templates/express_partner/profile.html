@@ -111,8 +111,7 @@
           </div>
           <div id="appUpdateMeta" class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
             {% if android_apk_version %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">نسخه {{ android_apk_version }}</span>{% endif %}
-            {% if android_apk_updated_at %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">{{ android_apk_updated_at }}</span>{% endif %}
-            {% if android_apk_size_bytes %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">{{ android_apk_size_bytes }} بایت</span>{% endif %}
+            {# تاریخ و اندازه حذف شد به درخواست کاربر #}
           </div>
         </div>
         <button type="button"
@@ -337,12 +336,8 @@
         if (!d || d.success !== true) throw new Error();
         const v = String(d.android_apk_version || '').trim();
         const url = String(d.android_apk_url || '').trim();
-        const size = d.android_apk_size_bytes;
-        const updated = d.android_apk_updated_at;
         const items = [];
-        if (v) items.push(`نسخه ${v}`);
-        if (updated) items.push(`تاریخ ${faDate(updated)}`);
-        if (size) { const hs = humanSize(size); if (hs) items.push(hs); }
+        if (v) items.push(`نسخه ${v}`); // فقط نسخه نمایش داده شود
         if (items.length && meta) {
           meta.innerHTML = items.map(t => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">${t}</span>`).join(' ');
         }
