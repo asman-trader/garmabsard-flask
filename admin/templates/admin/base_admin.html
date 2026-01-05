@@ -40,7 +40,6 @@
     <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <button @click="menuOpen = !menuOpen" 
-                onclick="event.preventDefault(); event.stopPropagation();"
                 class="lg:hidden focusable p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 aria-label="باز کردن منو">
           <i class="fa-solid fa-bars text-lg text-gray-600 dark:text-gray-400"></i>
@@ -68,8 +67,7 @@
        x-transition:leave-start="opacity-100"
        x-transition:leave-end="opacity-0"
        class="fixed inset-0 z-40 bg-black/40 lg:hidden" 
-       x-cloak
-       style="display: none;"></div>
+       x-cloak></div>
 
   <!-- Sidebar - Mobile Drawer -->
   <aside x-show="menuOpen"
@@ -81,8 +79,7 @@
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full"
          class="fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-50 lg:hidden overflow-y-auto" 
-         x-cloak
-         style="display: none; transform: translateX(100%);">
+         x-cloak>
     {% include 'admin/partials/sidebar.html' %}
   </aside>
 
@@ -154,7 +151,6 @@
         <span class="text-xs">آگهی‌ها</span>
       </a>
       <button @click="menuOpen = !menuOpen" 
-              onclick="event.preventDefault(); event.stopPropagation();"
               class="flex flex-col items-center gap-1 p-2 rounded-lg focusable text-gray-600 dark:text-gray-400"
               aria-label="باز کردن منو">
         <i class="fa-solid fa-bars text-lg"></i>
@@ -176,28 +172,36 @@
     (function() {
       let menuOpen = false;
       let fallbackInitialized = false;
+      let alpineReady = false;
+      
+      // بررسی لود شدن Alpine.js
+      function checkAlpine() {
+        if (typeof Alpine !== 'undefined') {
+          // صبر کن تا Alpine.js initialize شود
+          if (Alpine && typeof Alpine.start === 'function') {
+            alpineReady = true;
+            return true;
+          }
+        }
+        return false;
+      }
       
       function initMenuFallback() {
         if (fallbackInitialized) return;
         
-        // اگر Alpine.js لود شده باشد، صبر کن تا initialize شود
-        if (typeof Alpine !== 'undefined') {
-          // Alpine.js موجود است، اما ممکن است هنوز initialize نشده باشد
-          setTimeout(function() {
-            // بررسی اینکه آیا Alpine.js واقعاً کار می‌کند
-            const testElement = document.querySelector('[x-data*="menuOpen"]');
-            if (testElement && Alpine && Alpine.$data && typeof Alpine.$data === 'function') {
-              // Alpine.js کار می‌کند، fallback لازم نیست
-              return;
-            } else {
-              // Alpine.js لود شده اما کار نمی‌کند، fallback را فعال کن
-              setupFallback();
-            }
-          }, 1000);
-        } else {
-          // Alpine.js لود نشده، فوراً fallback را فعال کن
-          setupFallback();
+        // بررسی Alpine.js
+        if (checkAlpine()) {
+          // Alpine.js کار می‌کند، fallback لازم نیست
+          console.log('Alpine.js is working, menu should work');
+          return;
         }
+        
+        // Alpine.js کار نمی‌کند، fallback را فعال کن
+        setTimeout(function() {
+          if (!checkAlpine() && !fallbackInitialized) {
+            setupFallback();
+          }
+        }, 2000); // صبر 2 ثانیه برای Alpine.js
       }
       
       function setupFallback() {
@@ -223,59 +227,59 @@
           document.body.style.overflow = menuOpen ? 'hidden' : '';
         }
         
-        // اضافه کردن event listener به دکمه‌ها
-        document.querySelectorAll('button[onclick*="menuOpen"], button[aria-label*="منو"]').forEach(btn => {
-          // حذف event listener قبلی
-          const newBtn = btn.cloneNode(true);
-          btn.parentNode.replaceChild(newBtn, btn);
-          
-          newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMenu();
-          }, true);
+        // اضافه کردن event listener به دکمه‌ها (فقط اگر Alpine.js کار نمی‌کند)
+        document.querySelectorAll('button[aria-label*="منو"]').forEach(btn => {
+          if (!btn.hasAttribute('data-fallback-added')) {
+            btn.setAttribute('data-fallback-added', 'true');
+            btn.addEventListener('click', function(e) {
+              // فقط اگر Alpine.js کار نمی‌کند
+              if (!alpineReady) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMenu();
+              }
+            }, false);
+          }
         });
         
         // بستن منو با کلیک روی overlay
-        if (menuOverlay) {
+        if (menuOverlay && !menuOverlay.hasAttribute('data-fallback-added')) {
+          menuOverlay.setAttribute('data-fallback-added', 'true');
           menuOverlay.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMenu();
-          }, true);
+            if (!alpineReady) {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleMenu();
+            }
+          }, false);
         }
         
         // بستن منو با کلیک روی دکمه بستن
         const closeBtn = document.querySelector('button[onclick*="menuOpen = false"]');
-        if (closeBtn) {
+        if (closeBtn && !closeBtn.hasAttribute('data-fallback-added')) {
+          closeBtn.setAttribute('data-fallback-added', 'true');
           closeBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMenu();
-          }, true);
+            if (!alpineReady) {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleMenu();
+            }
+          }, false);
         }
-        
-        // بستن منو با کلیک روی لینک‌های منو
-        const menuLinks = document.querySelectorAll('aside[x-show="menuOpen"] a');
-        menuLinks.forEach(link => {
-          link.addEventListener('click', function() {
-            setTimeout(toggleMenu, 100);
-          });
-        });
       }
       
       // اجرا بعد از لود DOM
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-          setTimeout(initMenuFallback, 500);
+          setTimeout(initMenuFallback, 1000);
         });
       } else {
-        setTimeout(initMenuFallback, 500);
+        setTimeout(initMenuFallback, 1000);
       }
       
       // اجرا بعد از لود کامل صفحه
       window.addEventListener('load', function() {
-        setTimeout(initMenuFallback, 1000);
+        setTimeout(initMenuFallback, 2000);
       });
     })();
   </script>
