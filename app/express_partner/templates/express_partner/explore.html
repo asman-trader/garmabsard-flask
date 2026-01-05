@@ -2,7 +2,8 @@
 {% block title %}اکسپلور | وینور اکسپرس{% endblock %}
 {% block content %}
 
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
+  <!-- Header - Fixed برای اپلیکیشن -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 py-2.5 flex items-center gap-2">
       <!-- دکمه برگشت -->
       <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
@@ -39,7 +40,7 @@
   </div>
   </header>
 
-<div class="max-w-5xl mx-auto pt-0 px-4 pb-16" id="exploreContainer">
+<div class="max-w-5xl mx-auto pt-14 px-4 pb-16" id="exploreContainer">
 
 
   <!-- Grid اینستاگرام - 3 ستون -->
