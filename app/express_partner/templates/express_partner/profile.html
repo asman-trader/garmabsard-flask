@@ -94,11 +94,12 @@
     </a>
 
     <!-- بروزرسانی اپلیکیشن -->
-    <a href="#"
+    <a href="{{ android_apk_url or '#' }}"
        id="appUpdateCard"
        data-tour="app-update-link"
        aria-label="بروزرسانی اپلیکیشن اندروید"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors {{ '' if android_apk_version else 'opacity-80 pointer-events-none' }}"
+       {% if android_apk_url %} download {% endif %}>
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
           <i class="fas fa-download text-amber-600 dark:text-amber-400"></i>
@@ -106,18 +107,20 @@
         <div class="flex-1 min-w-0">
           <div class="text-sm font-semibold text-gray-900 dark:text-white">بروزرسانی اپلیکیشن</div>
           <div id="appUpdateSubtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-            بررسی نسخه جدید...
+            {% if android_apk_version and android_apk_url %}نسخه جدید برای دانلود آماده است{% elif android_apk_version %}آخرین نسخه: {{ android_apk_version }}{% else %}نسخه جدید در حال حاضر موجود نیست{% endif %}
           </div>
           <div id="appUpdateMeta" class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
-            <!-- متا (نسخه/تاریخ/حجم) با جاوااسکریپت پر می‌شود -->
+            {% if android_apk_version %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">نسخه {{ android_apk_version }}</span>{% endif %}
+            {% if android_apk_updated_at %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">{{ android_apk_updated_at }}</span>{% endif %}
+            {% if android_apk_size_bytes %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">{{ android_apk_size_bytes }} بایت</span>{% endif %}
           </div>
         </div>
         <button type="button"
                 id="appUpdateAction"
-                class="shrink-0 px-2.5 py-1.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold transition-colors"
+                class="shrink-0 px-2.5 py-1.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold transition-colors {{ '' if android_apk_url else 'hidden' }}"
                 aria-label="دانلود آخرین نسخه"
                 title="دانلود آخرین نسخه"
-                style="display:none">
+                onclick="if ('{{ android_apk_url }}') window.location.assign('{{ android_apk_url }}')">
           دانلود
         </button>
       </div>

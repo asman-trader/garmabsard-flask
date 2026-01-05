@@ -1451,7 +1451,29 @@ def profile_page():
     me_phone = (session.get('user_phone') or '').strip()
     profile = getattr(g, 'express_partner_profile', None) or {}
     me_name = (profile.get('name') or '').strip()
-    return render_template('express_partner/profile.html', me_phone=me_phone, me_name=me_name, profile=profile)
+    # Inject latest APK info from settings for direct rendering
+    try:
+        from app.utils.storage import load_settings
+        _settings = load_settings()
+        android_apk_url = _settings.get('android_apk_url') or ''
+        android_apk_version = _settings.get('android_apk_version') or ''
+        android_apk_updated_at = _settings.get('android_apk_updated_at') or ''
+        android_apk_size_bytes = _settings.get('android_apk_size_bytes') or ''
+    except Exception:
+        android_apk_url = ''
+        android_apk_version = ''
+        android_apk_updated_at = ''
+        android_apk_size_bytes = ''
+    return render_template(
+        'express_partner/profile.html',
+        me_phone=me_phone,
+        me_name=me_name,
+        profile=profile,
+        android_apk_url=android_apk_url,
+        android_apk_version=android_apk_version,
+        android_apk_updated_at=android_apk_updated_at,
+        android_apk_size_bytes=android_apk_size_bytes
+    )
 
 @express_partner_bp.route('/profile/edit', methods=['GET', 'POST'], endpoint='profile_edit')
 @require_partner_access()
