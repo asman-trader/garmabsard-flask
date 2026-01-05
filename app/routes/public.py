@@ -91,30 +91,39 @@ def index():
     لندینگ همکاران وینور – معرفی فرصت‌های همکاری
     اگر کاربر وارد شده باشد، مستقیم به داشبورد همکاران می‌رود.
     """
-    # بررسی اینکه آیا کاربر در پنل ادمین است یا نه
-    # فقط بر اساس session بررسی می‌کنیم (referer قابل اعتماد نیست)
-    is_admin = bool(session.get('logged_in'))
-    
-    # بررسی session برای کاربران لاگین شده
+    # بررسی سریع session برای redirect فوری (قبل از هر کار دیگری)
+    # این بررسی باید در ابتدا انجام شود تا redirect فوراً انجام شود
     user_phone = session.get("user_phone")
     user_id = session.get("user_id")
+    is_admin = bool(session.get('logged_in'))
     is_logged_in = bool(user_phone or user_id or is_admin)
     
-    # اگر کاربر لاگین شده باشد، به داشبورد مناسب redirect می‌کنیم
+    # اگر کاربر لاگین شده باشد، فوراً redirect می‌کنیم (بدون اجرای کدهای بعدی)
     if is_logged_in:
         # بررسی next parameter برای redirect به مسیر هدف
         nxt = request.args.get('next')
         if nxt and nxt.startswith('/') and not nxt.startswith('//'):
             # اطمینان از اینکه next یک مسیر معتبر است
-            return redirect(nxt)
+            resp = redirect(nxt)
+            # اضافه کردن cache headers برای redirect سریع‌تر
+            resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+            return resp
         
         # Redirect به داشبورد مناسب
         if is_admin:
-            return redirect(url_for("admin.dashboard"))
+            resp = redirect(url_for("admin.dashboard"))
+        else:
+            # برای همکاران اکسپرس، به داشبورد همکاران redirect می‌کنیم
+            # اگر session معتبر نباشد، require_partner_access در داشبورد handle می‌کند
+            resp = redirect(url_for("express_partner.dashboard"))
         
-        # برای همکاران اکسپرس، به داشبورد همکاران redirect می‌کنیم
-        # اگر session معتبر نباشد، require_partner_access در داشبورد handle می‌کند
-        return redirect(url_for("express_partner.dashboard"))
+        # اضافه کردن cache headers برای redirect سریع‌تر
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     
     # ثبت بازدید لندینگ (فقط برای کاربران غیرلاگین و غیرادمین)
     # بررسی referer برای جلوگیری از tracking درخواست‌های داخلی و رفرش
