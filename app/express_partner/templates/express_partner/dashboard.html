@@ -577,13 +577,20 @@
   // تابع رفرش محتوا بدون reload صفحه
   async function performRefresh() {
     try {
-      // رفرش صفحه با no-cache
-      const response = await fetch(window.location.href, {
+      // رفرش صفحه با no-cache و timestamp برای جلوگیری از cache
+      const url = new URL(window.location.href);
+      url.searchParams.set('_refresh', Date.now().toString());
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
         headers: {
           'Accept': 'text/html',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
           'X-Requested-With': 'XMLHttpRequest'
-        }
+        },
+        cache: 'no-store',
+        credentials: 'same-origin'
       });
       
       if (response.ok) {
@@ -602,14 +609,159 @@
             currentCardsTrack.innerHTML = newCardsTrack.innerHTML;
             currentCardsTrack.style.opacity = '1';
             currentCardsTrack.style.transition = 'opacity 0.3s ease';
+            
+            // دوباره attach کردن event listenerها و منطق‌ها
+            reinitializeCards();
           });
         }
       }
     } catch (error) {
       console.error('Error refreshing content:', error);
-      throw error;
+      // در صورت خطا، reload کامل صفحه
+      window.location.reload();
     }
   }
+  
+  // تابع برای re-initialize کردن کارت‌ها بعد از refresh
+  function reinitializeCards() {
+    // 1. Image/video loading logic
+    document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
+      const img = wrap.querySelector('[data-card-img]');
+      const vid = wrap.querySelector('video');
+      const loader = wrap.querySelector('.card-img-loading');
+      
+      function hideLoader(){
+        if (loader){
+          loader.classList.add('opacity-0','pointer-events-none');
+          setTimeout(()=>loader.remove(),250);
+        }
+      }
+      
+      function showMedia(el){
+        if (el) el.classList.remove('opacity-0');
+        hideLoader();
+      }
+
+      if (img){
+        if (img.complete && img.naturalWidth > 0) showMedia(img);
+        else {
+          img.addEventListener('load', ()=>showMedia(img), { once:true });
+          img.addEventListener('error', hideLoader, { once:true });
+        }
+      }
+      if (vid){
+        const ready = () => showMedia(vid);
+        if (vid.readyState >= 2) ready();
+        else {
+          vid.addEventListener('loadeddata', ready, { once:true });
+          vid.addEventListener('error', hideLoader, { once:true });
+        }
+      }
+      // fail-safe to avoid stuck loader
+      setTimeout(hideLoader, 3000);
+    });
+    
+    // 2. Card click handlers
+    document.querySelectorAll('.express-card[data-href]').forEach((card) => {
+      // حذف event listenerهای قبلی (clone node)
+      const newCard = card.cloneNode(true);
+      card.parentNode.replaceChild(newCard, card);
+      
+      newCard.addEventListener('click', () => {
+        const href = newCard.getAttribute('data-href');
+        if (href) window.location.assign(href);
+      });
+      newCard.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const href = newCard.getAttribute('data-href');
+          if (href) window.location.assign(href);
+        }
+      });
+    });
+    
+    // 3. Repost buttons
+    document.querySelectorAll('.repost-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = btn.getAttribute('data-code') || '';
+        const isActive = btn.getAttribute('data-active') === '1';
+        
+        function activateGreen() {
+          try {
+            const icon = btn.querySelector('i');
+            if (icon) {
+              icon.classList.add('text-emerald-600');
+              icon.classList.remove('text-gray-500','dark:text-gray-300');
+            }
+            btn.setAttribute('aria-pressed', 'true');
+            btn.title = 'بازنشر شد';
+            btn.setAttribute('data-active','1');
+          } catch(_) {}
+        }
+        
+        function deactivateGreen() {
+          try {
+            const icon = btn.querySelector('i');
+            if (icon) {
+              icon.classList.remove('text-emerald-600');
+              icon.classList.add('text-gray-500','dark:text-gray-300');
+            }
+            btn.removeAttribute('aria-pressed');
+            btn.title = 'بازنشر در اکسپلور با کارت شما';
+            btn.setAttribute('data-active','0');
+          } catch(_) {}
+        }
+        
+        if (!code) return;
+        try {
+          const endpoint = isActive ? '/express/partner/api/repost/remove' : '/express/partner/api/repost';
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-CSRFToken': __getCookie('XSRF-TOKEN') || __getCookie('csrf_token') || ''
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ code })
+          });
+          if (res.ok) {
+            if (isActive) {
+              toast('بازنشر برداشته شد');
+              deactivateGreen();
+            } else {
+              toast('بازنشر شد');
+              activateGreen();
+            }
+          } else {
+            toast('خطا در بازنشر');
+          }
+        } catch(_) { toast('خطا در بازنشر'); }
+      }, { passive: false });
+    });
+    
+    // 4. Jalali date conversion
+    document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
+      const raw = el.getAttribute('data-dt')||'';
+      const formatted = fmt(raw);
+      el.textContent = formatted || '—';
+    });
+    
+    function fmt(dt){
+      try{
+        const d = new Date(String(dt||'').replace(' ','T'));
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('fa-IR', {
+          timeZone: 'Asia/Tehran',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      }catch(_){ return ''; }
+    }
+  }
+  
   window.performRefresh = performRefresh;
 </script>
 {% endblock %}

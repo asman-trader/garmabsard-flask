@@ -684,7 +684,8 @@ def dashboard():
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
     training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")  # مثال: "https://www.youtube.com/watch?v=VIDEO_ID"
-    return render_template(
+    from flask import make_response
+    resp = make_response(render_template(
         "express_partner/dashboard.html",
         profile=profile,
         is_approved=is_approved,
@@ -702,7 +703,13 @@ def dashboard():
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
         domain="vinor.ir",
-    )
+    ))
+    # جلوگیری از cache شدن dashboard (محتوا بر اساس session است)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Vary"] = "Cookie"
+    return resp
 
 
 @express_partner_bp.post('/api/repost')

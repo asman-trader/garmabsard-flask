@@ -23,11 +23,14 @@ async function trimCache(name, maxEntries) {
 }
 
 // URLs برای precache در نصب (مختص Express Partner)
+// توجه: dashboard و صفحات session-based را precache نمی‌کنیم
 const PRECACHE_URLS = [
   '/express/partner/login',
-  '/express/partner/dashboard',
-  '/express/partner/profile',
-  '/express/partner/commissions',
+  // dashboard را precache نمی‌کنیم چون محتوای آن session-based است
+  // '/express/partner/dashboard',
+  // profile و commissions هم session-based هستند
+  // '/express/partner/profile',
+  // '/express/partner/commissions',
   '/express/partner/notes',
   '/express/partner/apply',
   '/express/partner/thanks',
@@ -153,6 +156,9 @@ self.addEventListener('fetch', (event) => {
   // Navigation requests: Network-first با offline fallback
   if (request.mode === 'navigate' && isExpressPartnerRoute(url)) {
     event.respondWith((async () => {
+      // اگر درخواست AJAX است (X-Requested-With header)، از cache استفاده نکن
+      const isAjaxRequest = request.headers.get('X-Requested-With') === 'XMLHttpRequest';
+      
       try {
         // استفاده از preloaded response اگر موجود باشد
         const preload = await event.preloadResponse;
@@ -161,9 +167,13 @@ self.addEventListener('fetch', (event) => {
         // چون redirect بر اساس session است و نباید cache شود
         const isRedirect = resp.status >= 300 && resp.status < 400;
         const hasVaryCookie = resp.headers.get('Vary') && resp.headers.get('Vary').includes('Cookie');
-        const noCache = resp.headers.get('Cache-Control') && resp.headers.get('Cache-Control').includes('no-store');
+        const noCache = resp.headers.get('Cache-Control') && (
+          resp.headers.get('Cache-Control').includes('no-store') || 
+          resp.headers.get('Cache-Control').includes('no-cache')
+        );
         
-        if (!isRedirect && !hasVaryCookie && !noCache) {
+        // برای AJAX requests یا responses با no-cache، cache نکن
+        if (!isAjaxRequest && !isRedirect && !hasVaryCookie && !noCache) {
           // به‌روزرسانی cache
           const cache = await caches.open(PRECACHE);
           try {
@@ -172,6 +182,10 @@ self.addEventListener('fetch', (event) => {
         }
         return resp;
       } catch (_) {
+        // برای AJAX requests، از cache استفاده نکن و خطا برگردان
+        if (isAjaxRequest) {
+          return new Response('Network error', { status: 503 });
+        }
         const cache = await caches.open(PRECACHE);
         // جستجوی cached page
         const cached = await cache.match(request);
