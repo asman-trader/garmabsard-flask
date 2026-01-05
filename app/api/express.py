@@ -5,47 +5,12 @@ Express Listings API endpoints for Vinor Express feature
 """
 
 from flask import Blueprint, jsonify, request, current_app, make_response, session, url_for
-from app.utils.storage import load_express_lands_cached, get_lands_file_stats, load_express_reposts, load_express_partners, load_settings
+from app.utils.storage import load_express_lands_cached, get_lands_file_stats, load_express_reposts, load_express_partners
 from app.utils.images import prepare_variants_dict
 from app.services.notifications import add_notification
 from app.utils.share_tokens import encode_partner_ref
 
 express_api_bp = Blueprint('express_api', __name__, url_prefix='/api')
-
-@express_api_bp.route('/app/version', methods=['GET'])
-def get_app_version():
-    """
-    نسخه آخر اپلیکیشن اندروید که در پنل ادمین ثبت/آپلود شده است.
-    خروجی:
-      {
-        success: true,
-        android_apk_version: "1.2.3",
-        android_apk_url: "/uploads/apk/vinor_YYYYMMDDHHMMSS.apk",
-        android_apk_updated_at: "2025-01-01T00:00:00Z",
-        android_apk_size_bytes: 12345678,
-        android_apk_sha256: "...",
-        android_apk_original_name: "Vinor.apk"
-      }
-    """
-    try:
-        settings = load_settings() or {}
-        payload = {
-            "success": True,
-            "android_apk_version": settings.get("android_apk_version") or "",
-            "android_apk_url": settings.get("android_apk_url") or "",
-            "android_apk_updated_at": settings.get("android_apk_updated_at") or "",
-            "android_apk_size_bytes": settings.get("android_apk_size_bytes") or "",
-            "android_apk_sha256": settings.get("android_apk_sha256") or "",
-            "android_apk_original_name": settings.get("android_apk_original_name") or "",
-        }
-        resp = make_response(jsonify(payload))
-        # کوتاه‌مدت کش عمومی؛ نسخه با تغییر settings تغییر می‌کند
-        resp.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
-        resp.headers["Vary"] = "Accept-Encoding"
-        return resp
-    except Exception as e:
-        current_app.logger.error("Error reading app version: %s", e, exc_info=True)
-        return jsonify({"success": False, "error": "version_unavailable"}), 500
 
 @express_api_bp.route('/express-listings')
 def get_express_listings():
