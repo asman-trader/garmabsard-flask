@@ -1058,13 +1058,8 @@ def verify():
         nxt = session.pop('next', None)
         if nxt:
             return redirect(nxt)
-        if is_approved:
-            return redirect(url_for('express_partner.dashboard'))
-        # کاربر عادی: به پروفایل عمومی
-        try:
-            return redirect(url_for('main.profile'))
-        except Exception:
-            return redirect(url_for('express_partner.dashboard'))
+        # همکار تاییدشده یا کاربر عادی: هر دو به داشبورد (برای کاربر عادی، دسترسی محدود است)
+        return redirect(url_for('express_partner.dashboard'))
 
     flash('کد تأیید نادرست است. لطفاً دوباره تلاش کنید.', 'error')
     return redirect(url_for('express_partner.login'))
