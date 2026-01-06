@@ -48,10 +48,7 @@
           <span class="text-[12px]">معامله</span>
         </label>
       </div>
-      <div class="mt-2 flex items-center justify-between">
-        <p class="text-[10px] text-gray-500 dark:text-gray-400">تیک‌ها محلی‌اند؛ انجام امروز در سرور ذخیره می‌شود.</p>
-        <a href="{{ url_for('express_partner.training') }}" class="text-[11px] text-blue-600 dark:text-blue-300 hover:underline">آموزش ۳ مرحله‌ای</a>
-      </div>
+      <!-- لینک آموزش در این کارت حذف شد؛ گزینه جداگانه زیر تقویم قرار دارد -->
     </div>
   </div>
 
@@ -87,6 +84,22 @@
   </div>
 
   {# یادداشت آمار رسمی حذف شد به درخواست کاربر #}
+
+  <!-- گزینه آموزشی زیر تقویم -->
+  <div class="mt-3">
+    <a href="{{ url_for('express_partner.training') }}" class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+          <i class="fas fa-graduation-cap text-indigo-600 dark:text-indigo-400"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">آموزش ۳ مرحله‌ای</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">مشاهده راهنمای کوتاه مراحل</div>
+        </div>
+        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+      </div>
+    </a>
+  </div>
 
   {% set bottom_nav_active = 'routine' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
