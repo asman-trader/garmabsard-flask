@@ -587,13 +587,21 @@ def apply_cancel():
 
 
 @express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def dashboard():
     me_phone = (session.get("user_phone") or "").strip()
     profile = getattr(g, 'express_partner_profile', None)
 
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
+    # آیا کاربر درخواست همکاری ثبت کرده و در وضعیت بررسی است؟
+    def _norm_status(v):
+        try:
+            s = str(v or '').strip().lower()
+        except Exception:
+            s = ''
+        return s
+    has_pending_app = any(_norm_status(a.get('status')) in ('pending','under_review','waiting','review') for a in my_apps)
 
     notes = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
     sales = [s for s in (load_partner_sales() or []) if str(s.get('phone')) == me_phone]
@@ -689,6 +697,7 @@ def dashboard():
         "express_partner/dashboard.html",
         profile=profile,
         is_approved=is_approved,
+        has_pending_app=has_pending_app,
         my_apps=my_apps,
         training_video_url=training_video_url,
         notes=notes,
@@ -713,7 +722,7 @@ def dashboard():
 
 
 @express_partner_bp.post('/api/repost')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def api_repost():
     """
     ثبت بازنشر یک فایل توسط همکار.
@@ -748,7 +757,7 @@ def api_repost():
 
 
 @express_partner_bp.post('/api/repost/remove')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def api_repost_remove():
     """
     حذف بازنشر یک فایل توسط همکار (برداشت بازنشر).
@@ -772,7 +781,7 @@ def api_repost_remove():
         return jsonify({'ok': False, 'error': 'persist_failed'}), 500
 
 @express_partner_bp.get('/notes', endpoint='notes')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def notes_page():
     me_phone = (session.get("user_phone") or "").strip()
     items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
@@ -782,7 +791,7 @@ def notes_page():
 
 
 @express_partner_bp.get('/commissions', endpoint='commissions')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def commissions_page():
     me_phone = (session.get("user_phone") or "").strip()
     try:
@@ -824,7 +833,7 @@ def commissions_page():
 
 
 @express_partner_bp.post('/notes/add')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def add_note():
     me_phone = (session.get("user_phone") or "").strip()
     content = (request.form.get("content") or "").strip()
@@ -894,7 +903,7 @@ def explore_page():
 
 
 @express_partner_bp.post('/notes/<int:nid>/delete')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def delete_note(nid: int):
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_notes() or []
@@ -913,7 +922,7 @@ def delete_note(nid: int):
 
 
 @express_partner_bp.post('/sales/add')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def add_sale():
     me_phone = (session.get("user_phone") or "").strip()
     title = (request.form.get("title") or "").strip()
@@ -940,7 +949,7 @@ def add_sale():
 
 
 @express_partner_bp.post('/files/upload')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def upload_file():
     me_phone = (session.get("user_phone") or "").strip()
     f = request.files.get('file')
@@ -960,7 +969,7 @@ def upload_file():
 
 
 @express_partner_bp.get('/files/<int:fid>/download')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def download_file(fid: int):
     me_phone = (session.get("user_phone") or "").strip()
     metas = load_partner_files_meta() or []
@@ -1035,28 +1044,48 @@ def verify():
         except Exception:
             pass
         flash('ورود شما با موفقیت انجام شد.', 'success')
-        return redirect(session.pop('next', None) or url_for('express_partner.dashboard'))
+        # اگر همکار تاییدشده نیست → به پروفایل عمومی هدایت شود تا بتواند درخواست همکاری ثبت کند
+        try:
+            partners = load_express_partners() or []
+        except Exception:
+            partners = []
+        prof = next((p for p in partners if str(p.get('phone') or '').strip() == phone), None)
+        is_approved = False
+        try:
+            is_approved = (str((prof or {}).get('status') or '').lower() == 'approved') or ((prof or {}).get('status') is True)
+        except Exception:
+            is_approved = False
+        nxt = session.pop('next', None)
+        if nxt:
+            return redirect(nxt)
+        if is_approved:
+            return redirect(url_for('express_partner.dashboard'))
+        # کاربر عادی: به پروفایل عمومی
+        try:
+            return redirect(url_for('main.profile'))
+        except Exception:
+            return redirect(url_for('express_partner.dashboard'))
 
     flash('کد تأیید نادرست است. لطفاً دوباره تلاش کنید.', 'error')
     return redirect(url_for('express_partner.login'))
 
 
 @express_partner_bp.route('/support', methods=['GET'], endpoint='support')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def support():
     """صفحه پشتیبانی مجزا برای Express Partner"""
     return render_template('express_partner/support.html', hide_header=True)
 
 
 @express_partner_bp.route('/help', methods=['GET'], endpoint='help')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def help():
     """صفحه راهنمای داخلی برای Express Partner"""
     return render_template('express_partner/help.html')
 
 
 @express_partner_bp.route('/training', methods=['GET'], endpoint='training')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def training():
     """صفحه آموزش مینیمال برای همکاران"""
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی خوانده شود
@@ -1446,10 +1475,15 @@ def otp_resend():
 
 
 @express_partner_bp.route('/profile', methods=['GET'], endpoint='profile')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def profile_page():
     me_phone = (session.get('user_phone') or '').strip()
     profile = getattr(g, 'express_partner_profile', None) or {}
+    # تعیین وضعیت تایید همکاری
+    try:
+        is_approved = bool(profile and ((str(profile.get('status') or '').lower() == 'approved') or (profile.get('status') is True)))
+    except Exception:
+        is_approved = False
     me_name = (profile.get('name') or '').strip()
     # Inject latest APK info from settings for direct rendering
     try:
@@ -1469,6 +1503,7 @@ def profile_page():
         me_phone=me_phone,
         me_name=me_name,
         profile=profile,
+        is_approved=is_approved,
         android_apk_url=android_apk_url,
         android_apk_version=android_apk_version,
         android_apk_updated_at=android_apk_updated_at,
@@ -1476,7 +1511,7 @@ def profile_page():
     )
 
 @express_partner_bp.route('/profile/edit', methods=['GET', 'POST'], endpoint='profile_edit')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def profile_edit_page():
     """
     ویرایش مشخصات کاربر (نام، شهر، توضیحات کوتاه)
@@ -1528,7 +1563,7 @@ def profile_edit_page():
                            cities=cities)
 
 @express_partner_bp.post('/profile/avatar')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def profile_avatar_upload():
     """
     آپلود و تنظیم آواتار پروفایل همکار
@@ -1627,7 +1662,7 @@ def profile_avatar_upload():
 
 
 @express_partner_bp.route('/top-sellers', methods=['GET'], endpoint='top_sellers')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def top_sellers_page():
     """صفحه فروشنده‌های برتر"""
     try:
@@ -1683,7 +1718,7 @@ def top_sellers_page():
 
 
 @express_partner_bp.post('/files/<int:fid>/delete')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def delete_file(fid: int):
     me_phone = (session.get("user_phone") or "").strip()
     metas = load_partner_files_meta() or []
@@ -1710,7 +1745,7 @@ def delete_file(fid: int):
 
 
 @express_partner_bp.post('/sales/<int:sid>/update')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def update_sale(sid: int):
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_sales() or []
@@ -1733,7 +1768,7 @@ def update_sale(sid: int):
 
 
 @express_partner_bp.post('/sales/<int:sid>/delete')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def delete_sale(sid: int):
     me_phone = (session.get("user_phone") or "").strip()
     items = load_partner_sales() or []
@@ -2009,7 +2044,7 @@ def check_status():
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
-@require_partner_access()
+@require_partner_access(allow_pending=True)
 def land_detail(code: str):
     """Express land detail page within partner panel."""
     lands = load_ads_cached() or []

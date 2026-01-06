@@ -865,3 +865,40 @@ def help_page():
     )
 
 
+@main_bp.route("/profile", methods=["GET"], endpoint="profile")
+def profile():
+    """
+    پروفایل عمومی کاربر (نقش کاربر عادی).
+    - اگر وارد نشده باشد → صفحه ورود همکار (OTP) برای احراز شماره
+    - اگر وارد شده باشد:
+        - وضعیت همکاری (تایید/درحال بررسی/غیرفعال) نمایش داده می‌شود
+        - دکمه «درخواست همکاری» برای شروع فرآیند apply
+    """
+    me_phone = (session.get("user_phone") or "").strip()
+    if not me_phone:
+        nxt = request.args.get("next") or url_for("main.profile")
+        return redirect(url_for("express_partner.login", next=nxt))
+
+    # وضعیت همکاری
+    try:
+        partners = load_express_partners() or []
+    except Exception:
+        partners = []
+    prof = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
+    status = str((prof or {}).get("status") or "").lower() if prof else ""
+    is_approved = (status == "approved") or ((prof or {}).get("status") is True)
+    is_pending = status in ("pending", "waiting", "review")
+
+    html = render_template(
+        "account/profile.html",
+        me_phone=me_phone,
+        partner_status=("approved" if is_approved else ("pending" if is_pending else "none")),
+        profile=prof or {},
+    )
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Vary"] = "Cookie"
+    return resp
+

@@ -40,7 +40,9 @@
           {{ me_name or 'همکار وینور' }}
         </div>
         <div class="mt-0.5 text-xs text-gray-600 dark:text-gray-400">{{ me_phone }}</div>
-        <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-500">نقش: همکار</div>
+        <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-500">
+          {% if is_approved %}همکار تایید شده{% else %}کاربر عادی{% endif %}
+        </div>
       </div>
       <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0 pointer-events-auto">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -55,6 +57,22 @@
 
   <!-- Quick Links - سبک دیوار -->
   <div class="mt-3 space-y-2">
+    {% if not is_approved %}
+    <a href="{{ url_for('express_partner.apply_step1') }}" 
+       data-tour="apply-link"
+       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <i class="fas fa-user-plus text-blue-600 dark:text-blue-300"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">درخواست همکاری</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">برای تبدیل به همکار اکسپرس درخواست دهید</div>
+        </div>
+        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
+      </div>
+    </a>
+    {% endif %}
     <a href="{{ url_for('express_partner.notes') }}" 
        data-tour="notes-link"
        class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">

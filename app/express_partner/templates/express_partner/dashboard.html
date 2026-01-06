@@ -52,7 +52,7 @@
 
   {# Flash messages removed by request #}
 
-  {% if not is_approved %}
+{% if (not is_approved) and has_pending_app %}
     <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-4 rounded-xl mb-4">
       <div class="flex items-start gap-3">
         <div class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-200 dark:bg-amber-800 flex items-center justify-center mt-0.5">
@@ -215,7 +215,7 @@
             <div class="text-lg font-bold text-gray-900 dark:text-white">
               {{ (land.price_total or 0)|toman }}
             </div>
-            {% if land._commission_amount %}
+            {% if is_approved and land._commission_amount %}
             <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
               پورسانت شما: {{ (land._commission_amount or 0)|toman }}
               {% if land._commission_pct %}
