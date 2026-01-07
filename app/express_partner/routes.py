@@ -144,12 +144,16 @@ def _is_partner_approved(profile: Dict[str, Any] | None) -> bool:
     return profile.get("status") is True or status in APPROVED_PARTNER_STATUSES
 
 
-def require_partner_access(json_response: bool = False, allow_pending: bool = False):
+def require_partner_access(json_response: bool = False, allow_pending: bool = False, allow_guest: bool = False):
     """Decorator to ensure the user is an approved Express partner before accessing a route."""
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             if not session.get("user_phone"):
+                if allow_guest:
+                    # اجازه دسترسی مهمان (فقط نمایش) - بدون پروفایل
+                    g.express_partner_profile = None
+                    return fn(*args, **kwargs)
                 if json_response:
                     return jsonify({"success": False, "error": "unauthorized"}), 401
                 nxt = request.full_path.rstrip("?") if request.full_path else request.path
@@ -587,7 +591,7 @@ def apply_cancel():
 
 
 @express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def dashboard():
     me_phone = (session.get("user_phone") or "").strip()
     profile = getattr(g, 'express_partner_profile', None)
@@ -781,7 +785,7 @@ def api_repost_remove():
         return jsonify({'ok': False, 'error': 'persist_failed'}), 500
 
 @express_partner_bp.get('/notes', endpoint='notes')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def notes_page():
     me_phone = (session.get("user_phone") or "").strip()
     items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
@@ -791,7 +795,7 @@ def notes_page():
 
 
 @express_partner_bp.get('/commissions', endpoint='commissions')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def commissions_page():
     me_phone = (session.get("user_phone") or "").strip()
     try:
@@ -859,7 +863,7 @@ def add_note():
 # Explore (اکسپلور) - داخلی و شبیه به سایر صفحات پنل
 # -----------------------------------------------------------------------------
 @express_partner_bp.get('/explore', endpoint='explore')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def explore_page():
     try:
         express_lands = load_express_lands_cached() or []
@@ -1066,21 +1070,21 @@ def verify():
 
 
 @express_partner_bp.route('/support', methods=['GET'], endpoint='support')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def support():
     """صفحه پشتیبانی مجزا برای Express Partner"""
     return render_template('express_partner/support.html', hide_header=True)
 
 
 @express_partner_bp.route('/help', methods=['GET'], endpoint='help')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def help():
     """صفحه راهنمای داخلی برای Express Partner"""
     return render_template('express_partner/help.html')
 
 
 @express_partner_bp.route('/training', methods=['GET'], endpoint='training')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def training():
     """صفحه آموزش مینیمال برای همکاران"""
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی خوانده شود
@@ -1095,7 +1099,7 @@ def training():
 
 
 @express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def routine():
     """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
     return render_template('express_partner/routine.html', hide_header=True)
@@ -2039,7 +2043,7 @@ def check_status():
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def land_detail(code: str):
     """Express land detail page within partner panel."""
     lands = load_ads_cached() or []
@@ -2121,8 +2125,11 @@ def land_detail(code: str):
             pct = 0.0
         land['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
 
-    share_token = encode_partner_ref(me_phone)
-    share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True)
+    share_token = encode_partner_ref(me_phone) if me_phone else ''
+    try:
+        share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True) if share_token else url_for("main.express_detail", code=code, _external=True)
+    except Exception:
+        share_url = ''
 
     return render_template(
         'express/detail.html',

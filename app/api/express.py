@@ -396,22 +396,22 @@ def get_menu():
         ]
         
         # همیشه منوی همکار را نمایش بده (در هر دو حالت وارد شده و وارد نشده)
-            # تبدیل endpoint به URL
-            menu_items = []
-            for item in partner_menu:
-                menu_item = dict(item)
-                try:
-                    # استفاده از url_for برای ساخت URL از endpoint
-                    # request context از قبل موجود است
-                    menu_item['url'] = url_for(item['endpoint'])
-                except Exception as url_error:
-                    # در صورت خطا، از endpoint به عنوان URL استفاده کن
-                    current_app.logger.debug(f"Error generating URL for {item['endpoint']}: {url_error}")
-                    menu_item['url'] = f"/express/partner/{item['key']}"
-                # حذف endpoint از دیکشنری نهایی (فقط url را نگه دار)
-                if 'endpoint' in menu_item:
-                    del menu_item['endpoint']
-                menu_items.append(menu_item)
+        # تبدیل endpoint به URL
+        menu_items = []
+        for item in partner_menu:
+            menu_item = dict(item)
+            try:
+                # استفاده از url_for برای ساخت URL از endpoint
+                # request context از قبل موجود است
+                menu_item['url'] = url_for(item['endpoint'])
+            except Exception as url_error:
+                # در صورت خطا، از endpoint به عنوان URL استفاده کن
+                current_app.logger.debug(f"Error generating URL for {item['endpoint']}: {url_error}")
+                menu_item['url'] = f"/express/partner/{item['key']}"
+            # حذف endpoint از دیکشنری نهایی (فقط url را نگه دار)
+            if 'endpoint' in menu_item:
+                del menu_item['endpoint']
+            menu_items.append(menu_item)
         
         response = make_response(jsonify({
             'success': True,
