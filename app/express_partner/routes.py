@@ -2125,12 +2125,14 @@ def land_detail(code: str):
     share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True)
 
     return render_template(
-        'express_partner/land_detail.html',
+        'express/detail.html',
         land=land,
         share_url=share_url,
         share_token=share_token,
         partner_profile=partner_profile,
         is_approved=is_approved,
+        is_partner_context=True,
+        ref_partner=None,
         brand="وینور",
         domain="vinor.ir"
     )

@@ -677,14 +677,14 @@ def express_detail(code):
             return r
 
     html = render_template(
-        "public/express_public_detail.html",
+        "express/detail.html",
         land=land,
         ref_partner=ref_partner,
-        ref_token=ref_token,
-        show_back_button=show_back_button,
+        is_partner_context=False,
+        is_approved=False,
         next_land=next_land,
         prev_land=prev_land,
-        all_lands=express_lands,  # برای infinite scroll
+        all_lands=express_lands,
         current_index=current_index,
         seo={
             'title': f"{land.get('title', 'فایل اکسپرس')} | وینور",
