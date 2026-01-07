@@ -340,12 +340,14 @@ def express_public_list():
     """
     صفحه عمومی لیست فایل‌های اکسپرس - سبک دیوار (بهینه شده برای سرعت)
     """
+    # مقادیر پیش‌فرض ایمن برای جلوگیری از خطا در صورت بروز استثناء
+    lands_min = []
+    search_query = (request.args.get('q', '') or '').strip().lower()
     try:
         # استفاده از کش بهینه شده
         express_lands = load_express_lands_cached() or []
         
         # جستجو (فقط در صورت نیاز)
-        search_query = request.args.get('q', '').strip().lower()
         if search_query:
             search_terms = search_query.split()
             def _matches(land):
@@ -445,6 +447,7 @@ def express_public_list():
         page = 1
         pages = 1
         total = 0
+        lands_min = []
     
     # آماده‌سازی داده‌های SEO
     base_url = request.url_root.rstrip('/')
@@ -530,7 +533,7 @@ def express_detail(code):
     """
     صفحهٔ جزئیات آگهی اکسپرس (بهینه شده)
     """
-    express_lands = load_express_lands_cached()
+    express_lands = load_express_lands_cached() or []
     land = next((l for l in express_lands if l.get('code') == code), None)
 
     if not land:

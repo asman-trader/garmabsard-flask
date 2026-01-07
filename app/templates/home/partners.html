@@ -28,11 +28,6 @@
         <span class="text-lg font-extrabold text-gray-900 dark:text-white">وینور اکسپرس</span>
       </a>
       <nav class="flex items-center gap-2">
-        <a href="{{ url_for('main.express_public_list') }}"
-           class="flex items-center gap-1 text-xs font-medium text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-          <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
-          <span>اکسپلور</span>
-        </a>
         <a href="{{ url_for('express_partner.login') }}"
            class="flex items-center gap-1 text-xs font-medium text-white px-3 py-1.5 rounded-full bg-gray-900 dark:bg-white dark:text-gray-900 hover:opacity-90 transition">
           <i class="fa-solid fa-user text-[11px]"></i>
@@ -149,43 +144,11 @@
       </div>
     </div>
 
-    <!-- FAQ - سبک دیوار -->
-    <section class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 space-y-2">
-      <h2 class="text-sm font-bold text-gray-900 dark:text-white mb-1">سوالات پرتکرار</h2>
-      <details class="group border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-        <summary class="flex items-center justify-between cursor-pointer list-none">
-          <span class="text-sm text-gray-800 dark:text-gray-100">چطور همکار اکسپرس شوم؟</span>
-          <i class="fa-solid fa-chevron-left text-gray-400 group-open:rotate-90 transition-transform"></i>
-        </summary>
-        <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">از بخش «درخواست همکاری» ثبت‌نام کنید و پس از تأیید وارد پنل شوید.</div>
-      </details>
-      <details class="group border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-        <summary class="flex items-center justify-between cursor-pointer list-none">
-          <span class="text-sm text-gray-800 dark:text-gray-100">پورسانت‌ها چگونه محاسبه می‌شود؟</span>
-          <i class="fa-solid fa-chevron-left text-gray-400 group-open:rotate-90 transition-transform"></i>
-        </summary>
-        <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">پس از ثبت معامله و تأیید پشتیبانی، پورسانت طبق درصد تعیین‌شده قابل مشاهده است.</div>
-      </details>
-    </section>
 
-    <!-- Apply Link - Divar Style -->
-    <div class="text-center">
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-        هنوز همکار اکسپرس نیستید؟
-      </p>
-      <a href="{{ url_for('express_partner.apply') }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium focusable text-sm transition">
-        <span>درخواست همکاری</span>
-        <i class="fa-solid fa-arrow-left text-xs"></i>
-      </a>
-    </div>
 
-    <!-- Info Badge - Divar Style -->
-    <div class="text-center">
-      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
-        <i class="fa-solid fa-info-circle"></i>
-        <span>همکاری فقط در زمینه ملک فعال است</span>
-      </span>
-    </div>
+
+
+
 
   </div>
 
