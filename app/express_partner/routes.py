@@ -2099,6 +2099,12 @@ def land_detail(code: str):
     # محاسبه پورسانت از assignments
     assignments = load_express_assignments() or []
     assignment = next((a for a in assignments if a.get('land_code') == code and a.get('partner_phone') == me_phone), None)
+
+    # وضعیت تایید همکاری برای نمایش مشروط پورسانت
+    try:
+        is_approved = _is_partner_approved(partner_profile)
+    except Exception:
+        is_approved = False
     
     if assignment:
         land['_assignment_id'] = assignment.get('id')
@@ -2124,6 +2130,7 @@ def land_detail(code: str):
         share_url=share_url,
         share_token=share_token,
         partner_profile=partner_profile,
+        is_approved=is_approved,
         brand="وینور",
         domain="vinor.ir"
     )
