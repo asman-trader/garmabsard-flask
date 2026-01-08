@@ -36,6 +36,37 @@ def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]
     return sorted(items, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
 
 
+# -------------------------
+# My Properties - helpers
+# -------------------------
+def _my_props_path() -> str:
+    base = os.path.join(current_app.instance_path, 'data')
+    os.makedirs(base, exist_ok=True)
+    return os.path.join(base, 'my_properties.json')
+
+def _load_my_props() -> Dict[str, List[Dict[str, Any]]]:
+    try:
+        fp = _my_props_path()
+        if os.path.isfile(fp):
+            import json
+            with open(fp, 'r', encoding='utf-8') as f:
+                data = json.load(f) or {}
+                if isinstance(data, dict):
+                    return data
+        return {}
+    except Exception:
+        return {}
+
+def _save_my_props(data: Dict[str, List[Dict[str, Any]]]) -> None:
+    try:
+        import json
+        fp = _my_props_path()
+        with open(fp, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        current_app.logger.error("Failed to save my_properties.json", exc_info=True)
+
+
 def _normalize_phone(phone: str) -> str:
     """Normalize phone number - استفاده از همان تابع notifications"""
     from app.services.notifications import _normalize_user_id
@@ -1097,6 +1128,108 @@ def training():
                          hide_header=True,
                          training_video_url=training_video_url)
 
+
+@express_partner_bp.get('/my-properties', endpoint='my_properties')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def my_properties_page():
+    """
+    صفحه «ملک من»:
+    - مشاهده لیست ملک‌های ثبت‌شده کاربر (حداکثر ۳ مورد)
+    - مهمان می‌تواند صفحه را ببیند ولی برای ثبت نیاز به ورود دارد
+    """
+    me_phone = (session.get("user_phone") or "").strip()
+    store = _load_my_props()
+    items = store.get(me_phone, []) if me_phone else []
+    # مرتب‌سازی جدید به قدیم
+    try:
+        items.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    except Exception:
+        pass
+    return render_template('express_partner/my_properties.html',
+                           items=items,
+                           me_phone=me_phone,
+                           hide_header=True,
+                           SHOW_SUBMIT_BUTTON=False,
+                           brand="وینور",
+                           domain="vinor.ir")
+
+
+@express_partner_bp.post('/my-properties/upload')
+@require_partner_access(allow_pending=True)
+def my_properties_upload():
+    """
+    ثبت ملک جدید برای کاربر جاری (حداکثر ۳ ملک در مجموع).
+    فیلدها: title, location, price
+    """
+    me_phone = (session.get("user_phone") or "").strip()
+    title = (request.form.get('title') or '').strip()
+    location = (request.form.get('location') or '').strip()
+    price_raw = (request.form.get('price') or '').strip()
+    try:
+        price = int(str(price_raw).replace(',', '').replace(' ', '') or '0')
+    except Exception:
+        price = 0
+
+    if not title:
+        flash('عنوان ملک الزامی است.', 'error')
+        return redirect(url_for('express_partner.my_properties'))
+
+    store = _load_my_props()
+    user_items = store.get(me_phone, [])
+    if len(user_items) >= 3:
+        flash('حداکثر ۳ ملک می‌توانید ثبت کنید.', 'warning')
+        return redirect(url_for('express_partner.my_properties'))
+
+    new_item = {
+        'id': (max([int(x.get('id',0) or 0) for x in user_items], default=0) or 0) + 1,
+        'title': title,
+        'location': location,
+        'price': price,
+        'created_at': datetime.utcnow().isoformat() + 'Z'
+    }
+    user_items.append(new_item)
+    store[me_phone] = user_items
+    _save_my_props(store)
+    flash('ملک با موفقیت ثبت شد.', 'success')
+    return redirect(url_for('express_partner.my_properties'))
+
+
+@express_partner_bp.get('/api/my-properties/prices')
+@require_partner_access(json_response=True, allow_pending=True, allow_guest=True)
+def api_my_properties_prices():
+    """
+    برگرداندن قیمت لحظه‌ای (ساده‌سازی شده) برای ملک‌های کاربر.
+    - اگر کاربر لاگین باشد: بر اساس قیمت هر ملک با نوسان جزئی
+    - اگر مهمان باشد: داده نمایشی
+    """
+    me_phone = (session.get("user_phone") or "").strip()
+    if me_phone:
+        items = _load_my_props().get(me_phone, [])
+    else:
+        # داده نمونه برای مهمان
+        items = [
+            {'id': 1, 'title': 'نمونه ۱', 'price': 100000000},
+            {'id': 2, 'title': 'نمونه ۲', 'price': 150000000},
+        ]
+    # تولید قیمت لحظه‌ای ساده: نوسان کوچک حول قیمت پایه
+    result = []
+    now_ts = int(datetime.utcnow().timestamp())
+    for it in items[:5]:
+        base = int(it.get('price') or 0)
+        if base <= 0:
+            base = 100000000
+        # نوسان ±۱٪
+        jitter = int(base * random.uniform(-0.01, 0.01))
+        price_now = max(0, base + jitter)
+        result.append({
+            'id': it.get('id'),
+            'title': it.get('title'),
+            'price': price_now,
+            'ts': now_ts
+        })
+    resp = make_response(jsonify({'success': True, 'items': result, 'ts': now_ts}))
+    resp.headers['Cache-Control'] = 'no-store'
+    return resp
 
 @express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')
 @require_partner_access(allow_pending=True, allow_guest=True)

@@ -1,0 +1,158 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}ملک من | وینور{% endblock %}
+{% block content %}
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
+    <div class="w-full px-4 h-14 flex items-center justify-between">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+      </a>
+      <h1 class="text-sm font-bold text-gray-900 dark:text-white">ملک من</h1>
+      <div class="w-9"></div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto pt-0 px-3 sm:px-4 pb-16">
+
+    <!-- Chart: قیمت لحظه‌ای -->
+    <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">قیمت لحظه‌ای ملک‌ها</h2>
+        <span id="liveTs" class="text-[11px] text-gray-500 dark:text-gray-400"></span>
+      </div>
+      <div class="mt-3">
+        <canvas id="priceChart" height="120"></canvas>
+      </div>
+      <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">داده‌ها هر ۵ ثانیه بروزرسانی می‌شوند.</p>
+    </section>
+
+    <!-- List -->
+    <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">لیست ملک‌های من</h2>
+      {% if items and items|length > 0 %}
+        <ul class="mt-3 space-y-2">
+          {% for it in items %}
+            <li class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ it.title }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                  {{ it.location or '—' }} • {{ (it.price or 0)|toman }}
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">هنوز ملکی ثبت نکرده‌اید.</div>
+      {% endif %}
+    </section>
+
+    <!-- Form -->
+    <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">افزودن ملک جدید</h2>
+      {% if not me_phone %}
+        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+          برای ثبت ملک ابتدا وارد شوید.
+          <a class="text-blue-600 dark:text-blue-300 hover:underline" href="{{ url_for('express_partner.login', next=url_for('express_partner.my_properties')) }}">ورود</a>
+        </p>
+      {% else %}
+        {% if items|length >= 3 %}
+          <p class="mt-2 text-xs text-amber-600 dark:text-amber-300">حداکثر ۳ ملک می‌توانید ثبت کنید.</p>
+        {% else %}
+          <form class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3" method="post" action="{{ url_for('express_partner.my_properties_upload') }}">
+            <div>
+              <label class="block text-[11px] text-gray-600 dark:text-gray-400 mb-1">عنوان</label>
+              <input type="text" name="title" required class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-600 dark:text-gray-400 mb-1">موقعیت</label>
+              <input type="text" name="location" class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-600 dark:text-gray-400 mb-1">قیمت (تومان)</label>
+              <input type="text" inputmode="numeric" name="price" class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30">
+            </div>
+            <div class="sm:col-span-3">
+              <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
+                <i class="fa-solid fa-plus"></i>
+                ثبت ملک
+              </button>
+            </div>
+          </form>
+        {% endif %}
+      {% endif %}
+    </section>
+
+    {% set bottom_nav_active = 'my_props' %}
+    {% include 'express_partner/partials/bottom_nav.html' %}
+  </main>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('priceChart')?.getContext('2d');
+  if (!ctx) return;
+  const colors = ['#22c55e','#f59e0b','#6366f1','#06b6d4','#ef4444'];
+  const datasets = [];
+  const labels = [];
+  const maxPoints = 20;
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      animation: false,
+      plugins: { legend: { labels: { font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  function upsertDataset(item, idx) {
+    let ds = chart.data.datasets.find(d => d.label === item.title);
+    if (!ds) {
+      ds = {
+        label: item.title,
+        data: [],
+        borderColor: colors[idx % colors.length],
+        backgroundColor: 'transparent',
+        pointRadius: 0,
+        tension: 0.25
+      };
+      chart.data.datasets.push(ds);
+    }
+    ds.data.push(item.price);
+    if (ds.data.length > maxPoints) ds.data.shift();
+  }
+
+  async function tick() {
+    try {
+      const r = await fetch('{{ url_for("express_partner.api_my_properties_prices") }}', { headers: { 'Cache-Control': 'no-cache' } });
+      const j = await r.json();
+      if (!j.success) return;
+      const ts = j.ts || Math.floor(Date.now()/1000);
+      const d = new Date(ts*1000);
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      document.getElementById('liveTs').textContent = `${hh}:${mm}:${ss}`;
+      labels.push(`${hh}:${mm}:${ss}`);
+      if (labels.length > maxPoints) labels.shift();
+      (j.items || []).forEach((it, i) => upsertDataset(it, i));
+      chart.update('none');
+    } catch(_){}
+  }
+  tick();
+  setInterval(tick, 5000);
+});
+</script>
+{% endblock %}
+
+
