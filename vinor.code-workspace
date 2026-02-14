@@ -7,6 +7,8 @@
       "path": "C:\\Users\\Aseman\\OneDrive\\Desktop\\py-code\\vinor-webview-android"
     }
   ],
-  "settings": {}
+  "settings": {
+    "liveServer.settings.multiRootWorkspaceName": "vinor-webview-android"
+  }
 }
 

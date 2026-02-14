@@ -391,7 +391,6 @@ def get_menu():
             {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'خانه'},
             {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
             {'key': 'express', 'endpoint': 'express_partner.explore', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
-            {'key': 'my_props', 'endpoint': 'express_partner.my_properties', 'icon': 'fa-building', 'label': 'ملک من'},
             {'key': 'profile', 'endpoint': 'express_partner.profile', 'icon': 'fa-user', 'label': 'من'}
         ]
         
@@ -434,7 +433,6 @@ def get_menu():
                 {'key': 'dashboard', 'url': '/express/partner/dashboard', 'icon': 'fa-home', 'label': 'خانه'},
                 {'key': 'commissions', 'url': '/express/partner/commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
                 {'key': 'express', 'url': '/express/partner/express', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
-                {'key': 'my_props', 'url': '/express/partner/my-properties', 'icon': 'fa-building', 'label': 'ملک من'},
                 {'key': 'profile', 'url': '/express/partner/profile', 'icon': 'fa-user', 'label': 'من'}
             ],
             'is_logged_in': False,
