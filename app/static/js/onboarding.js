@@ -58,10 +58,9 @@ class OnboardingTour {
       return;
     }
 
-    // بررسی اینکه آیا کاربر قبلاً تور را دیده است
+    // تور فقط در اولین ورود به‌صورت خودکار نمایش داده می‌شود (بعد از بستن یا اتمام، دیگر تکرار نمی‌شود)
     const hasSeenTour = localStorage.getItem('vinor_onboarding_completed');
     if (!hasSeenTour) {
-      // تاخیر کوتاه برای اطمینان از لود شدن صفحه
       setTimeout(() => {
         this.startTour();
       }, 2000);
@@ -1053,15 +1052,13 @@ class OnboardingTour {
   }
 
   closeTour() {
-    // بستن تور بدون ذخیره کردن completion (کاربر می‌تواند دوباره ببیند)
-    this.completeTour(false);
+    // بستن تور و ذخیرهٔ «دیده‌شدن» تا فقط بار اول به‌صورت خودکار نمایش داده شود
+    this.completeTour(true);
   }
 
   completeTour(saveCompletion = true) {
-    // ذخیره اینکه کاربر تور را دیده است (فقط اگر saveCompletion true باشد)
-    if (saveCompletion) {
-      localStorage.setItem('vinor_onboarding_completed', 'true');
-    }
+    // همیشه ذخیره کن که کاربر تور را دیده (اولین ورود تمام شد)؛ اجرای مجدد از پروفایل امکان‌پذیر است
+    localStorage.setItem('vinor_onboarding_completed', 'true');
     
     // حذف backdrop
     const backdrop = document.querySelector('.onboarding-backdrop');
