@@ -9,7 +9,11 @@
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
       <h1 class="text-sm font-bold text-gray-900 dark:text-white">پروفایل</h1>
+      {% if me_phone %}
+      {% include 'express_partner/partials/notifications_button.html' %}
+      {% else %}
       <div class="w-9"></div>
+      {% endif %}
     </div>
   </header>
 
@@ -109,29 +113,6 @@
         <div class="flex-1">
           <div class="text-sm font-semibold text-gray-900 dark:text-white">یادداشت‌ها</div>
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">یادداشت‌های خصوصی</div>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
-      </div>
-    </a>
-
-    <!-- اعلان‌ها -->
-    <a href="{{ url_for('express_partner.notifications') }}" 
-       data-tour="notifications-link"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors relative"
-       x-data="vinorNotifyBadge()">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center relative">
-          <i class="fas fa-bell text-indigo-600 dark:text-indigo-400"></i>
-          <span x-show="unreadCount > 0"
-                x-text="badgeLabel()"
-                class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900"></span>
-        </div>
-        <div class="flex-1">
-          <div class="text-sm font-semibold text-gray-900 dark:text-white">اعلان‌ها</div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            <span x-show="unreadCount > 0" x-text="unreadCount + ' اعلان خوانده نشده'"></span>
-            <span x-show="unreadCount === 0">مشاهده و مدیریت اعلان‌ها</span>
-          </div>
         </div>
         <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm"></i>
       </div>
