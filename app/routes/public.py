@@ -474,8 +474,7 @@ def express_public_list():
         except Exception:
             is_partner = False
     
-    # اگر کاربر همکار است، از قالب express_partner استفاده کن
-    template_name = 'express_partner/explore.html' if is_partner else 'public/express_list.html'
+    template_name = 'public/express_list.html'
     
     # Microcache only for guests (no session, not partner)
     if not session.get('user_phone'):

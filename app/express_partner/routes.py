@@ -859,53 +859,6 @@ def add_note():
     return redirect(url_for("express_partner.dashboard"))
 
 
-# -----------------------------------------------------------------------------
-# Explore (اکسپلور) - داخلی و شبیه به سایر صفحات پنل
-# -----------------------------------------------------------------------------
-@express_partner_bp.get('/explore', endpoint='explore')
-@require_partner_access(allow_pending=True, allow_guest=True)
-def explore_page():
-    try:
-        express_lands = load_express_lands_cached() or []
-        search_query = (request.args.get('q') or '').strip().lower()
-        if search_query:
-            terms = search_query.split()
-            def _matches(land):
-                txt = ' '.join([
-                    str(land.get('title', '')),
-                    str(land.get('location', '')),
-                    str(land.get('category', '')),
-                    str(land.get('description', '')),
-                ]).lower()
-                return all(t in txt for t in terms)
-            express_lands = [l for l in express_lands if _matches(l)]
-        # (بازنشر فقط برای اکسپلور عمومی اعمال می‌شود)
-        page = int(request.args.get('page', 1) or 1)
-        per_page = 20
-        total = len(express_lands)
-        pages = max(1, (total + per_page - 1) // per_page)
-        page = max(1, min(page, pages))
-        start_idx = (page - 1) * per_page
-        end_idx = start_idx + per_page
-        paginated_lands = express_lands[start_idx:end_idx]
-    except Exception:
-        paginated_lands = []
-        page = 1
-        pages = 1
-        total = 0
-
-    return render_template(
-        "express_partner/explore.html",
-        lands=paginated_lands,
-        pagination={'page': page, 'pages': pages, 'total': total},
-        search_query=search_query,
-        hide_header=True,
-        SHOW_SUBMIT_BUTTON=False,
-        brand="وینور",
-        domain="vinor.ir",
-    )
-
-
 @express_partner_bp.post('/notes/<int:nid>/delete')
 @require_partner_access(allow_pending=True)
 def delete_note(nid: int):

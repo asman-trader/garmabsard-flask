@@ -314,7 +314,7 @@
                   {% if land._share_url %}
                   <button type="button"
                           class="repost-btn p-0 m-0 bg-transparent hover:text-emerald-600 transition"
-                          title="بازنشر در اکسپلور با کارت شما"
+                          title="بازنشر در فایل‌ها با کارت شما"
                           data-url="{{ land._share_url }}"
                           data-code="{{ land.code }}"
                           data-active="{{ '1' if land._reposted_by_me else '0' }}"
@@ -361,10 +361,6 @@
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-3">میانبرها</h3>
           <div class="grid grid-cols-2 gap-2">
-            <a href="{{ url_for('express_partner.explore') }}" class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
-              <i class="fas fa-magnifying-glass text-gray-600 dark:text-gray-300"></i>
-              <span class="text-sm">اکسپلور</span>
-            </a>
             <a href="{{ url_for('express_partner.commissions') }}" class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
               <i class="fas fa-receipt text-gray-600 dark:text-gray-300"></i>
               <span class="text-sm">پورسانت‌ها</span>
@@ -541,7 +537,7 @@
               {% if land._share_url %}
               <button type="button"
                       class="repost-btn p-0 m-0 bg-transparent hover:text-emerald-600 transition"
-                      title="بازنشر در اکسپلور با کارت شما"
+                      title="بازنشر در فایل‌ها با کارت شما"
                       data-url="{{ land._share_url }}"
                       data-code="{{ land.code }}"
                       data-active="{{ '1' if land._reposted_by_me else '0' }}"
@@ -671,7 +667,7 @@
               icon.classList.add('text-gray-500','dark:text-gray-300');
             }
             btn.removeAttribute('aria-pressed');
-            btn.title = 'بازنشر در اکسپلور با کارت شما';
+            btn.title = 'بازنشر در فایل‌ها با کارت شما';
             btn.setAttribute('data-active','0');
           } catch(_) {}
         }
@@ -964,7 +960,7 @@
               icon.classList.add('text-gray-500','dark:text-gray-300');
             }
             btn.removeAttribute('aria-pressed');
-            btn.title = 'بازنشر در اکسپلور با کارت شما';
+            btn.title = 'بازنشر در فایل‌ها با کارت شما';
             btn.setAttribute('data-active','0');
           } catch(_) {}
         }

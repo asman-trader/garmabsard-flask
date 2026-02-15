@@ -815,7 +815,7 @@
       if (!{{ 'true' if not is_partner_context else 'false' }}) return;
       try {
         const referer = document.referrer || '';
-        if (referer && (referer.includes('/public') || referer.includes('/express/partner/explore'))) {
+        if (referer && referer.includes('/public')) {
           const saved = sessionStorage.getItem('express_detail_referer');
           if (!saved) sessionStorage.setItem('express_detail_referer', referer);
         }
@@ -823,14 +823,8 @@
     })();
 
     function goToExplore() {
-      const savedReferer = sessionStorage.getItem('express_detail_referer') || '';
-      const isFromPartnerExplore = savedReferer.includes('/express/partner/explore');
       sessionStorage.removeItem('express_detail_referer');
-      if (isFromPartnerExplore) {
-        window.location.href = '/express/partner/explore';
-      } else {
-        window.location.href = '{{ url_for("main.express_public_list") }}';
-      }
+      window.location.href = '{{ url_for("main.express_public_list") }}';
     }
 
     document.addEventListener('DOMContentLoaded', function() {

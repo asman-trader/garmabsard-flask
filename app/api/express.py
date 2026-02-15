@@ -390,7 +390,6 @@ def get_menu():
         partner_menu = [
             {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'وینور'},
             {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
-            {'key': 'express', 'endpoint': 'express_partner.explore', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
             {'key': 'routine', 'endpoint': 'express_partner.routine', 'icon': 'fa-list-check', 'label': 'روتین'},
             {'key': 'profile', 'endpoint': 'express_partner.profile', 'icon': 'fa-user', 'label': 'من'}
         ]
@@ -433,7 +432,6 @@ def get_menu():
             'menu': [
                 {'key': 'dashboard', 'url': '/express/partner/dashboard', 'icon': 'fa-home', 'label': 'وینور'},
                 {'key': 'commissions', 'url': '/express/partner/commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
-                {'key': 'express', 'url': '/express/partner/express', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
                 {'key': 'routine', 'url': '/express/partner/routine', 'icon': 'fa-list-check', 'label': 'روتین'},
                 {'key': 'profile', 'url': '/express/partner/profile', 'icon': 'fa-user', 'label': 'من'}
             ],
