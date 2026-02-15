@@ -183,12 +183,6 @@
           <a href="{{ _detail_url }}" 
              class="instagram-item"
              data-code="{{ land.code }}">
-            {% if land._share_token %}
-            <div class="absolute top-1 left-1 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/85 dark:bg-gray-900/85 border border-gray-200 dark:border-gray-700 text-[10px] text-emerald-700 dark:text-emerald-400">
-              <i class="fas fa-retweet text-[10px]"></i>
-              <span class="hidden sm:inline max-w-[90px] truncate">بازنشر توسط {{ land._repost_by_name or 'همکار' }}</span>
-            </div>
-            {% endif %}
             {% if video %}
               {% if "://" in (video|string) %}
                 {% set video_src = video %}
@@ -239,12 +233,6 @@
               <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                 <i class="fas fa-image text-2xl text-gray-400 dark:text-gray-500"></i>
               </div>
-            {% endif %}
-            {% if land._repost_count and land._repost_count > 0 %}
-            <div class="absolute bottom-1 left-1 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/85 dark:bg-gray-900/85 border border-gray-200 dark:border-gray-700 text-[10px] text-gray-700 dark:text-gray-300">
-              <i class="fas fa-retweet text-[10px]"></i>
-              <span>{{ land._repost_count }}</span>
-            </div>
             {% endif %}
           </a>
         {% endfor %}
@@ -480,12 +468,6 @@
           <a href="${detailUrl}" 
              class="instagram-item"
              data-code="${land.code || ''}">
-            ${land._share_token ? `
-              <div class="absolute top-1 left-1 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/85 dark:bg-gray-900/85 border border-gray-200 dark:border-gray-700 text-[10px] text-emerald-700 dark:text-emerald-400">
-                <i class="fas fa-retweet text-[10px]"></i>
-                <span class="hidden sm:inline max-w-[90px] truncate">بازنشر توسط ${land._repost_by_name || 'همکار'}</span>
-              </div>
-            ` : ''}
             ${mediaHtml}
           </a>
         `;
