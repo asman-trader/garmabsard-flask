@@ -388,7 +388,7 @@ def get_menu():
         # منوی همکار اکسپرس - نمایش در هر دو حالت (وارد شده و وارد نشده)
         # دسترسی‌ها بعداً تنظیم می‌شوند
         partner_menu = [
-            {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'خانه'},
+            {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'وینور'},
             {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
             {'key': 'express', 'endpoint': 'express_partner.explore', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
             {'key': 'routine', 'endpoint': 'express_partner.routine', 'icon': 'fa-list-check', 'label': 'روتین'},
@@ -431,7 +431,7 @@ def get_menu():
         return jsonify({
             'success': True,
             'menu': [
-                {'key': 'dashboard', 'url': '/express/partner/dashboard', 'icon': 'fa-home', 'label': 'خانه'},
+                {'key': 'dashboard', 'url': '/express/partner/dashboard', 'icon': 'fa-home', 'label': 'وینور'},
                 {'key': 'commissions', 'url': '/express/partner/commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت'},
                 {'key': 'express', 'url': '/express/partner/express', 'icon': 'fa-magnifying-glass', 'label': 'اکسپلور'},
                 {'key': 'routine', 'url': '/express/partner/routine', 'icon': 'fa-list-check', 'label': 'روتین'},
