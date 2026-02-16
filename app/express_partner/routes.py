@@ -1606,6 +1606,70 @@ def profile_edit_page():
                            profile=profile,
                            cities=cities)
 
+
+@express_partner_bp.get('/profile/edit/data', endpoint='profile_edit_data')
+@require_partner_access(allow_pending=True)
+def profile_edit_data():
+    """API JSON برای اپ اندروید: داده فرم ویرایش پروفایل."""
+    me_phone = (session.get('user_phone') or '').strip()
+    partners = load_express_partners() or []
+    profile = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
+    if not profile:
+        profile = {"phone": me_phone}
+    me_name = (profile.get('name') or '').strip()
+    me_city = (profile.get('city') or '').strip()
+    me_bio = (profile.get('bio') or '').strip()
+    avatar = (profile.get('avatar') or '').strip()
+    avatar_url = (f"/uploads/{avatar}" if avatar else None)
+    try:
+        cities = load_active_cities() or []
+    except Exception:
+        cities = []
+    return jsonify({
+        'success': True,
+        'me_name': me_name,
+        'me_city': me_city,
+        'me_bio': me_bio,
+        'avatar_url': avatar_url,
+        'cities': cities if isinstance(cities, list) else [],
+    })
+
+
+@express_partner_bp.post('/api/profile/update')
+def api_profile_update():
+    """به‌روزرسانی نام، شهر، درباره من برای اپ اندروید (بدون CSRF)."""
+    if not session.get('user_phone'):
+        return jsonify({'success': False, 'error': 'unauthorized'}), 401
+    me_phone = (session.get('user_phone') or '').strip()
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    city = (data.get('city') or '').strip()
+    bio = (data.get('bio') or '').strip()
+    partners = load_express_partners() or []
+    profile = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
+    if not profile:
+        profile = {"phone": me_phone}
+        partners.append(profile)
+    if name:
+        profile['name'] = name
+    else:
+        profile.pop('name', None)
+    if city:
+        profile['city'] = city
+    else:
+        profile.pop('city', None)
+    if bio:
+        profile['bio'] = bio[:200]
+    else:
+        profile.pop('bio', None)
+    try:
+        save_express_partners(partners)
+        return jsonify({'success': True})
+    except Exception:
+        current_app.logger.error("Failed to save partner profile edits", exc_info=True)
+        return jsonify({'success': False, 'error': 'save_failed'}), 500
+
+
 @express_partner_bp.post('/profile/avatar')
 @require_partner_access(allow_pending=True)
 def profile_avatar_upload():

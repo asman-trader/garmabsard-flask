@@ -392,13 +392,14 @@ def create_app() -> Flask:
             except Exception:
                 pass
 
-        # خروج اپ اندروید (POST با کوکی، بدون CSRF)
-        try:
-            f = app.view_functions.get("express_partner.api_logout")
-            if f is not None:
-                csrf.exempt(f)
-        except Exception:
-            pass
+        # خروج و به‌روزرسانی پروفایل اپ اندروید (POST با کوکی، بدون CSRF)
+        for endpoint in ("express_partner.api_logout", "express_partner.api_profile_update"):
+            try:
+                f = app.view_functions.get(endpoint)
+                if f is not None:
+                    csrf.exempt(f)
+            except Exception:
+                pass
 
         # API v1 removed
 
