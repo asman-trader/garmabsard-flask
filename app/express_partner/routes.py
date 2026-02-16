@@ -725,6 +725,129 @@ def dashboard():
     return resp
 
 
+def _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, total_commission, pending_commission, sold_count, expired_count, is_approved):
+    """ساخت خروجی JSON داشبورد برای اپ اندروید."""
+    def _img_url(land):
+        imgs = land.get('images') or []
+        if isinstance(imgs, str):
+            imgs = [imgs] if imgs else []
+        first = imgs[0] if imgs else None
+        if not first:
+            return None
+        if isinstance(first, str) and (first.startswith('http') or first.startswith('/')):
+            return first if first.startswith('/') else None
+        return f"/uploads/{first}" if first else None
+
+    lands_json = []
+    for land in assigned_lands:
+        code = land.get('code') or ''
+        try:
+            detail_url = url_for('express_partner.land_detail', code=code, _external=True)
+        except Exception:
+            detail_url = ''
+        lands_json.append({
+            'code': code,
+            'title': (land.get('title') or '—').strip(),
+            'price_total': int(land.get('price_total') or land.get('price') or 0),
+            'commission_amount': int(land.get('_commission_amount') or 0),
+            'commission_pct': land.get('_commission_pct'),
+            'assignment_status': (land.get('_assignment_status') or 'active').strip(),
+            'is_expired': bool(land.get('_is_expired')),
+            'size': (land.get('size') or '').strip(),
+            'location': (land.get('location') or '').strip(),
+            'city': (land.get('city') or '').strip(),
+            'category': (land.get('category') or '').strip(),
+            'created_at': (land.get('created_at') or '').strip(),
+            'image_url': _img_url(land),
+            'detail_url': detail_url,
+        })
+    return {
+        'success': True,
+        'profile': profile is not None,
+        'is_approved': is_approved,
+        'has_pending_app': has_pending_app,
+        'total_commission': total_commission,
+        'pending_commission': pending_commission,
+        'sold_count': sold_count,
+        'expired_count': expired_count or 0,
+        'assigned_lands': lands_json,
+    }
+
+
+@express_partner_bp.get('/dashboard/data', endpoint='dashboard_data')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def dashboard_data():
+    """API JSON برای اپ اندروید: داده داشبورد (فایل‌های ارسالی، آمار، وضعیت)."""
+    me_phone = (session.get("user_phone") or "").strip()
+    profile = getattr(g, 'express_partner_profile', None)
+    apps = load_express_partner_apps() or []
+    my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
+    def _norm_status(v):
+        try:
+            return str(v or '').strip().lower()
+        except Exception:
+            return ''
+    has_pending_app = any(_norm_status(a.get('status')) in ('pending', 'under_review', 'waiting', 'review') for a in my_apps)
+
+    try:
+        assignments = load_express_assignments() or []
+        _auto_release_expired_transactions(assignments)
+    except Exception:
+        assignments = []
+    my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None, 'active', 'pending', 'approved', 'in_transaction', 'sold')]
+    lands_all = load_ads_cached() or []
+    code_to_land = {str(l.get('code')): l for l in lands_all}
+    assigned_lands = []
+    expired_count = 0
+    from ..utils.dates import is_ad_expired
+    try:
+        my_reposts = [r for r in (load_express_reposts() or []) if str(r.get('partner_phone')) == me_phone]
+        my_reposted_codes = {str(r.get('code')) for r in my_reposts}
+    except Exception:
+        my_reposted_codes = set()
+
+    for a in my_assignments:
+        land = code_to_land.get(str(a.get('land_code')))
+        if not land:
+            continue
+        is_expired = is_ad_expired(land)
+        if is_expired:
+            expired_count += 1
+        item = dict(land)
+        item['_assignment_id'] = a.get('id')
+        item['_assignment_status'] = a.get('status', 'active')
+        item['_commission_pct'] = a.get('commission_pct')
+        item['_is_expired'] = is_expired
+        if not item.get('created_at'):
+            item['created_at'] = land.get('created_at') or '1970-01-01'
+        try:
+            total_price_str = str(item.get('price_total') or item.get('price') or '0').replace(',', '').strip()
+            total_price = int(total_price_str) if total_price_str else 0
+        except Exception:
+            total_price = 0
+        try:
+            pct = float(item.get('_commission_pct') or 0)
+        except Exception:
+            pct = 0.0
+        item['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
+        if not item.get('created_at'):
+            item['created_at'] = land.get('created_at') or '1970-01-01'
+        assigned_lands.append(item)
+
+    assigned_lands = _sort_by_created_at_desc(assigned_lands)
+    try:
+        comms = load_express_commissions() or []
+        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
+    except Exception:
+        my_comms = []
+    total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+    pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+    is_approved = bool(profile and (profile.get("status") in ("approved", True)))
+    payload = _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, total_commission, pending_commission, sold_count, expired_count, is_approved)
+    return jsonify(payload)
+
+
 @express_partner_bp.post('/api/repost')
 @require_partner_access(allow_pending=True)
 def api_repost():
