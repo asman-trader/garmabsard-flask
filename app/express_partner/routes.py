@@ -836,6 +836,52 @@ def commissions_page():
                            brand="وینور", domain="vinor.ir")
 
 
+@express_partner_bp.get('/commissions/data', endpoint='commissions_data')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def commissions_data():
+    """API JSON برای اپ اندروید: خلاصه و لیست پورسانت‌های همکار جاری."""
+    me_phone = (session.get("user_phone") or "").strip()
+    try:
+        comms = load_express_commissions() or []
+        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
+    except Exception:
+        my_comms = []
+
+    def _i(v):
+        try:
+            return int(str(v).replace(',', '').strip() or '0')
+        except Exception:
+            return 0
+
+    total_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '') in ('approved', 'paid'))
+    pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
+    paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '').strip() == 'paid')
+    sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+    try:
+        my_comms = sorted(my_comms, key=lambda x: x.get('created_at', ''), reverse=True)
+    except Exception:
+        pass
+
+    items = []
+    for c in my_comms:
+        items.append({
+            'land_code': c.get('land_code') or '—',
+            'created_at': c.get('created_at') or '',
+            'sale_amount': _i(c.get('sale_amount')),
+            'commission_pct': c.get('commission_pct'),
+            'commission_amount': _i(c.get('commission_amount')),
+            'status': (c.get('status') or 'pending').strip(),
+        })
+    return jsonify({
+        'success': True,
+        'total_commission': total_commission,
+        'pending_commission': pending_commission,
+        'paid_commission': paid_commission,
+        'sold_count': sold_count,
+        'items': items,
+    })
+
+
 @express_partner_bp.post('/notes/add')
 @require_partner_access(allow_pending=True)
 def add_note():
@@ -1411,6 +1457,14 @@ def logout():
     return redirect(url_for('express_partner.login'))
 
 
+@express_partner_bp.post('/api/logout')
+def api_logout():
+    """خروج برای اپ اندروید (بدون CSRF؛ با کوکی سشن)."""
+    session.clear()
+    session.permanent = False
+    return jsonify({'success': True})
+
+
 @express_partner_bp.route('/otp/resend', methods=['POST'], endpoint='otp_resend')
 def otp_resend():
     phone = _normalize_phone(request.form.get('phone') or (session.get('otp_phone') or ''))
@@ -1461,6 +1515,44 @@ def profile_page():
         android_apk_updated_at=android_apk_updated_at,
         android_apk_size_bytes=android_apk_size_bytes
     )
+
+
+@express_partner_bp.get('/profile/data', endpoint='profile_data')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def profile_data():
+    """API JSON برای اپ اندروید: داده پروفایل همکار (برای صفحه من نیتیو)."""
+    me_phone = (session.get('user_phone') or '').strip()
+    profile = getattr(g, 'express_partner_profile', None) or {}
+    try:
+        is_approved = bool(profile and ((str(profile.get('status') or '').lower() == 'approved') or (profile.get('status') is True)))
+    except Exception:
+        is_approved = False
+    me_name = (profile.get('name') or '').strip()
+    avatar = (profile.get('avatar') or '').strip()
+    avatar_url = (f"/uploads/{avatar}" if avatar else None)
+    try:
+        _settings = load_settings()
+        android_apk_url = (_settings.get('android_apk_url') or '').strip()
+        android_apk_version = (_settings.get('android_apk_version') or '').strip()
+    except Exception:
+        android_apk_url = ''
+        android_apk_version = ''
+    try:
+        from flask_wtf.csrf import generate_csrf
+        csrf_token = generate_csrf()
+    except Exception:
+        csrf_token = ''
+    return jsonify({
+        'success': True,
+        'me_phone': me_phone,
+        'me_name': me_name or 'همکار وینور',
+        'avatar_url': avatar_url,
+        'is_approved': is_approved,
+        'android_apk_url': android_apk_url,
+        'android_apk_version': android_apk_version,
+        'csrf_token': csrf_token,
+    })
+
 
 @express_partner_bp.route('/profile/edit', methods=['GET', 'POST'], endpoint='profile_edit')
 @require_partner_access(allow_pending=True)
