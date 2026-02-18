@@ -1047,6 +1047,68 @@ def delete_note(nid: int):
     return redirect(url_for("express_partner.dashboard"))
 
 
+@express_partner_bp.get('/api/notes')
+@require_partner_access(json_response=True, allow_pending=True)
+def api_notes_list():
+    """JSON API: فهرست یادداشت‌های همکار جاری برای اپ اندروید."""
+    me_phone = (session.get("user_phone") or "").strip()
+    items = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
+    items = _sort_by_created_at_desc(items)
+    payload = []
+    for n in items:
+        try:
+            payload.append({
+                'id': int(n.get('id') or 0),
+                'content': (n.get('content') or '').strip(),
+                'created_at': (n.get('created_at') or '').strip(),
+            })
+        except Exception:
+            continue
+    return jsonify({'success': True, 'items': payload})
+
+
+@express_partner_bp.post('/api/notes')
+@require_partner_access(json_response=True, allow_pending=True)
+def api_add_note():
+    """JSON API: افزودن یک یادداشت جدید برای همکار جاری."""
+    me_phone = (session.get("user_phone") or "").strip()
+    data = request.get_json(silent=True) or {}
+    content = (data.get("content") or "").strip()
+    if not content:
+        return jsonify({'success': False, 'error': 'empty'}), 400
+    items = load_partner_notes() or []
+    new_id = (max([int(x.get('id', 0) or 0) for x in items if isinstance(x, dict)], default=0) or 0) + 1
+    rec = {
+        "id": new_id,
+        "phone": me_phone,
+        "content": content,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+    }
+    items.append(rec)
+    save_partner_notes(items)
+    return jsonify({
+        'success': True,
+        'item': {
+            'id': rec["id"],
+            'content': rec["content"],
+            'created_at': rec["created_at"],
+        },
+    })
+
+
+@express_partner_bp.post('/api/notes/<int:nid>/delete')
+@require_partner_access(json_response=True, allow_pending=True)
+def api_delete_note(nid: int):
+    """JSON API: حذف یک یادداشت کاربر جاری بر اساس id."""
+    me_phone = (session.get("user_phone") or "").strip()
+    items = load_partner_notes() or []
+    before = len(items)
+    items = [n for n in items if not (int(n.get('id', 0) or 0) == int(nid) and str(n.get('phone')) == me_phone)]
+    save_partner_notes(items)
+    deleted = len(items) != before
+    return jsonify({'success': deleted})
+
+
 @express_partner_bp.post('/sales/add')
 @require_partner_access(allow_pending=True)
 def add_sale():
