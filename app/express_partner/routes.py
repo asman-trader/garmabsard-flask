@@ -1711,6 +1711,49 @@ def api_logout():
     return jsonify({'success': True})
 
 
+@express_partner_bp.post('/api/login-request')
+def api_login_request():
+    """درخواست ارسال کد OTP برای اپ اندروید (ورود نیتیو). ورودی JSON: {"phone": "09..."}."""
+    data = request.get_json(silent=True) or {}
+    phone_raw = (data.get('phone') or '').strip()
+    phone = _normalize_phone(phone_raw)
+    if not phone or len(phone) != 11:
+        return jsonify({'success': False, 'error': 'شماره موبایل معتبر نیست.'}), 400
+    code = f"{random.randint(10000, 99999)}"
+    session.update({'otp_code': code, 'otp_phone': phone})
+    session.permanent = True
+    try:
+        from ..services.sms import send_sms_code
+        send_sms_code(phone, code)
+    except Exception:
+        pass
+    return jsonify({'success': True, 'message': 'کد تأیید ارسال شد.'})
+
+
+@express_partner_bp.post('/api/verify')
+def api_verify():
+    """تأیید کد OTP برای اپ اندروید. ورودی JSON: {"code": "123456", "phone": "09..."}. سشن باید از مرحله login-request باشد."""
+    data = request.get_json(silent=True) or {}
+    code = (data.get('code') or '').strip()
+    phone = _normalize_phone((data.get('phone') or '').strip())
+    if not code or not phone:
+        return jsonify({'success': False, 'error': 'کد و شماره را وارد کنید.'}), 400
+    if session.get('otp_code') != code or session.get('otp_phone') != phone:
+        return jsonify({'success': False, 'error': 'کد تأیید نادرست است.'}), 400
+    session['user_id'] = phone
+    session['user_phone'] = phone
+    session.permanent = True
+    try:
+        from ..utils.storage import load_users, save_users
+        users = load_users()
+        if not any(u.get('phone') == phone for u in users):
+            users.append({'phone': phone, 'registered_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+            save_users(users)
+    except Exception:
+        pass
+    return jsonify({'success': True, 'message': 'ورود با موفقیت انجام شد.'})
+
+
 @express_partner_bp.route('/otp/resend', methods=['POST'], endpoint='otp_resend')
 def otp_resend():
     phone = _normalize_phone(request.form.get('phone') or (session.get('otp_phone') or ''))
