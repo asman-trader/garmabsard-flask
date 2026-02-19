@@ -761,7 +761,7 @@ def _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, 
             'image_url': _img_url(land),
             'detail_url': detail_url,
         })
-    return {
+    out = {
         'success': True,
         'profile': profile is not None,
         'is_approved': is_approved,
@@ -772,6 +772,52 @@ def _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, 
         'expired_count': expired_count or 0,
         'assigned_lands': lands_json,
     }
+    return out
+
+
+def _public_lands_payload(limit=50):
+    """لیست فایل‌های عمومی اکسپرس برای نمایش به مهمان در اپ (بدون لاگین)."""
+    def _img_url(land):
+        imgs = land.get('images') or []
+        if isinstance(imgs, str):
+            imgs = [imgs] if imgs else []
+        first = imgs[0] if imgs else None
+        if not first:
+            return None
+        if isinstance(first, str) and (first.startswith('http') or first.startswith('/')):
+            return first if first.startswith('/') else None
+        return f"/uploads/{first}" if first else None
+
+    try:
+        express_lands = load_express_lands_cached() or []
+    except Exception:
+        express_lands = []
+    lands_json = []
+    for land in express_lands[:limit]:
+        code = (land.get('code') or '').strip()
+        if not code:
+            continue
+        try:
+            detail_url = url_for('main.express_detail', code=code, _external=True)
+        except Exception:
+            detail_url = ''
+        lands_json.append({
+            'code': code,
+            'title': (land.get('title') or '—').strip(),
+            'price_total': int(land.get('price_total') or land.get('price') or 0),
+            'commission_amount': 0,
+            'commission_pct': None,
+            'assignment_status': 'active',
+            'is_expired': False,
+            'size': (land.get('size') or '').strip(),
+            'location': (land.get('location') or '').strip(),
+            'city': (land.get('city') or '').strip(),
+            'category': (land.get('category') or '').strip(),
+            'created_at': (land.get('created_at') or '').strip(),
+            'image_url': _img_url(land),
+            'detail_url': detail_url,
+        })
+    return lands_json
 
 
 @express_partner_bp.get('/dashboard/data', endpoint='dashboard_data')
@@ -845,6 +891,11 @@ def dashboard_data():
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     payload = _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, total_commission, pending_commission, sold_count, expired_count, is_approved)
+    # برای مهمان (بدون لاگین) لیست عمومی فایل‌های اکسپرس را هم بفرست تا در اپ نمایش داده شود
+    if not me_phone:
+        payload['public_lands'] = _public_lands_payload(limit=50)
+    else:
+        payload['public_lands'] = []
     return jsonify(payload)
 
 
