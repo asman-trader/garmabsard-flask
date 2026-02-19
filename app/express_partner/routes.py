@@ -891,12 +891,22 @@ def dashboard_data():
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     payload = _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, total_commission, pending_commission, sold_count, expired_count, is_approved)
-    # برای مهمان (بدون لاگین) لیست عمومی فایل‌های اکسپرس را هم بفرست تا در اپ نمایش داده شود
-    if not me_phone:
-        payload['public_lands'] = _public_lands_payload(limit=50)
-    else:
+    # برای مهمان یا در هر حالت، لیست عمومی را هم بفرست تا اپ در صورت خطا بتواند فایل‌ها را نشان دهد
+    try:
+        payload['public_lands'] = _public_lands_payload(limit=50) if not me_phone else []
+    except Exception:
         payload['public_lands'] = []
     return jsonify(payload)
+
+
+@express_partner_bp.get('/api/public-lands')
+def api_public_lands():
+    """لیست فایل‌های عمومی اکسپرس برای اپ - بدون نیاز به لاگین یا کوکی."""
+    try:
+        payload = _public_lands_payload(limit=50)
+    except Exception:
+        payload = []
+    return jsonify({'success': True, 'public_lands': payload})
 
 
 @express_partner_bp.post('/api/repost')
