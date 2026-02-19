@@ -891,9 +891,9 @@ def dashboard_data():
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     payload = _dashboard_data_payload(me_phone, profile, has_pending_app, assigned_lands, total_commission, pending_commission, sold_count, expired_count, is_approved)
-    # برای مهمان یا در هر حالت، لیست عمومی را هم بفرست تا اپ در صورت خطا بتواند فایل‌ها را نشان دهد
+    # همیشه لیست عمومی را بفرست تا اپ در صورت خالی بودن assigned_lands هم کارت‌ها را نشان دهد
     try:
-        payload['public_lands'] = _public_lands_payload(limit=50) if not me_phone else []
+        payload['public_lands'] = _public_lands_payload(limit=50)
     except Exception:
         payload['public_lands'] = []
     return jsonify(payload)
