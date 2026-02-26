@@ -596,6 +596,10 @@ def dashboard():
     me_phone = (session.get("user_phone") or "").strip()
     profile = getattr(g, 'express_partner_profile', None)
 
+    # فیلتر جستجو و شهر برای نمایش نتایج در همان داشبورد
+    search_query = (request.args.get('q', '') or '').strip().lower()
+    selected_city = (request.args.get('city', '') or '').strip()
+
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
     # آیا کاربر درخواست همکاری ثبت کرده و در وضعیت بررسی است؟
@@ -675,6 +679,26 @@ def dashboard():
         if not item.get('created_at'):
             item['created_at'] = land.get('created_at') or '1970-01-01'
         assigned_lands.append(item)
+
+    # فیلتر بر اساس شهر انتخاب‌شده
+    if selected_city:
+        assigned_lands = [item for item in assigned_lands if str(item.get('city') or '').strip() == selected_city]
+
+    # فیلتر بر اساس عبارت جستجو (عنوان، موقعیت، دسته‌بندی، توضیحات)
+    if search_query:
+        terms = search_query.split()
+
+        def _matches_item(item):
+            text = ' '.join([
+                str(item.get('title') or ''),
+                str(item.get('location') or ''),
+                str(item.get('city') or ''),
+                str(item.get('category') or ''),
+                str(item.get('description') or ''),
+            ]).lower()
+            return all(t in text for t in terms)
+
+        assigned_lands = [it for it in assigned_lands if _matches_item(it)]
 
     # مرتب‌سازی از جدید به قدیمی بر اساس تاریخ و زمان ثبت آگهی
     assigned_lands = _sort_by_created_at_desc(assigned_lands)
