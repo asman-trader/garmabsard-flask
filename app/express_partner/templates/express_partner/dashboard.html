@@ -21,7 +21,7 @@
                       class="h-8 px-2 rounded-md bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 border-0 focus:outline-none focus:ring-0">
                 <option value="">همه شهرها</option>
                 {% for c in cities %}
-                <option value="{{ c }}" {% if request.args.get('city') == c %}selected{% endif %}>{{ c }}</option>
+                <option value="{{ c }}" {% if (request.args.get('city') or (profile.city if profile else '')) == c %}selected{% endif %}>{{ c }}</option>
                 {% endfor %}
               </select>
               {% endif %}

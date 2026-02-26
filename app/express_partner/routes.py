@@ -599,6 +599,8 @@ def dashboard():
     # فیلتر جستجو و شهر برای نمایش نتایج در همان داشبورد
     search_query = (request.args.get('q', '') or '').strip().lower()
     selected_city = (request.args.get('city', '') or '').strip()
+    if not selected_city and profile:
+        selected_city = str(profile.get('city') or '').strip()
 
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
