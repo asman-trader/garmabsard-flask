@@ -696,6 +696,11 @@ def dashboard():
     is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
     training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")  # مثال: "https://www.youtube.com/watch?v=VIDEO_ID"
+    # شهرهای فعال برای فیلتر جستجو (قابل مدیریت در پنل ادمین)
+    try:
+        cities = load_active_cities() or []
+    except Exception:
+        cities = []
     from flask import make_response
     resp = make_response(render_template(
         "express_partner/dashboard.html",
@@ -704,6 +709,7 @@ def dashboard():
         has_pending_app=has_pending_app,
         my_apps=my_apps,
         training_video_url=training_video_url,
+        cities=cities,
         notes=notes,
         sales=sales,
         files=files,
