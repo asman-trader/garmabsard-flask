@@ -91,13 +91,27 @@
                    placeholder="مثال: زمین باغی 1000 متری">
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              موقعیت <span class="text-red-500">*</span>
-            </label>
-            <input type="text" name="location" required 
-                   class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                   placeholder="مثال: دشت اول، گرمابسرد">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                شهر آگهی <span class="text-red-500">*</span>
+              </label>
+              <select name="city" required
+                      class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">انتخاب شهر</option>
+                {% for c in cities or [] %}
+                  <option value="{{ c }}" {% if (request.form.get('city') or '') == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                موقعیت دقیق‌تر (محله، محدوده) <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="location" required 
+                     class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     placeholder="مثال: دشت اول">
+            </div>
           </div>
 
           <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">

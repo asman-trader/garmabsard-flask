@@ -2515,6 +2515,7 @@ def express_transfer():
 @login_required
 def add_express_listing():
     """افزودن آگهی اکسپرس جدید"""
+    cities = load_active_cities() or []
     if request.method == 'POST':
         form = request.form
         files = request.files
@@ -2522,6 +2523,7 @@ def add_express_listing():
         # اعتبارسنجی فیلدهای اجباری
         title = form.get('title', '').strip()
         location = form.get('location', '').strip()
+        city = (form.get('city') or '').strip()
         size_raw = form.get('size', '').strip()
         price_total_raw = form.get('price_total', '').strip()
         
@@ -2529,15 +2531,23 @@ def add_express_listing():
         size_clean = re.sub(r'[^\d]', '', size_raw) if size_raw else ''
         price_total_clean = re.sub(r'[^\d]', '', price_total_raw) if price_total_raw else ''
         
-        if not all([title, location, size_clean, price_total_clean]):
+        if not all([title, location, city, size_clean, price_total_clean]):
             flash('لطفاً فیلدهای اجباری را پر کنید.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
+
+        if cities and city not in cities:
+            flash('شهر آگهی باید از بین شهرهای فعال انتخاب شود.', 'error')
+            return render_template('admin/add_express_listing.html',
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         
         if len(title) < 10:
             flash('عنوان باید حداقل ۱۰ کاراکتر باشد.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         
         # تبدیل به عدد
         try:
@@ -2546,12 +2556,14 @@ def add_express_listing():
         except (ValueError, TypeError):
             flash('متراژ و قیمت باید عدد معتبر باشند.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         
         if size <= 0 or price_total <= 0:
             flash('متراژ و قیمت باید بیشتر از صفر باشند.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         
         # بارگذاری لیست آگهی‌ها برای تولید کد
         lands = load_json(_lands_path())
@@ -2585,7 +2597,8 @@ def add_express_listing():
         if not pct_raw:
             flash('درصد پورسانت الزامی است.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         try:
             express_commission_pct = float(pct_raw)
             if express_commission_pct <= 0 or express_commission_pct > 100:
@@ -2595,7 +2608,8 @@ def add_express_listing():
         except (ValueError, TypeError):
             flash('درصد پورسانت باید یک عدد معتبر باشد.', 'error')
             return render_template('admin/add_express_listing.html',
-                                  pending_count=0, approved_count=0, rejected_count=0)
+                                  pending_count=0, approved_count=0, rejected_count=0,
+                                  cities=cities)
         # محاسبه قیمت در متر
         price_per_meter_raw = form.get('price_per_meter', '').strip()
         price_per_meter_clean = re.sub(r'[^\d]', '', price_per_meter_raw) if price_per_meter_raw else ''
@@ -2661,6 +2675,7 @@ def add_express_listing():
             'code': new_code,
             'title': title,
             'location': location,
+            'city': city,
             'size': size,  # حالا int است
             'price_total': price_total,  # حالا int است
             'price_per_meter': price_per_meter,
@@ -2746,7 +2761,8 @@ def add_express_listing():
     lands = load_json(_lands_path())
     p, a, r = counts_by_status(lands if isinstance(lands, list) else [])
     return render_template('admin/add_express_listing.html',
-                          pending_count=p, approved_count=a, rejected_count=r)
+                          pending_count=p, approved_count=a, rejected_count=r,
+                          cities=cities)
 
 @admin_bp.route('/express/<string:code>/edit', methods=['GET', 'POST'])
 @login_required
@@ -2755,6 +2771,7 @@ def edit_express_listing(code):
     cleanup_expired_ads()
     lands_data = load_json(_lands_path())
     lands_list = lands_data if isinstance(lands_data, list) else []
+    cities = load_active_cities() or []
     
     land = find_by_code(lands_list, code)
     if not land or not land.get('is_express', False):
@@ -2768,6 +2785,7 @@ def edit_express_listing(code):
         # به‌روزرسانی فیلدها
         land['title'] = form.get('title', '').strip()
         land['location'] = form.get('location', '').strip()
+        land['city'] = (form.get('city') or '').strip()
         land['size'] = form.get('size', '').strip()
         land['price_total'] = int(form.get('price_total', 0) or 0)
         land['price_per_meter'] = int(form.get('price_per_meter', 0) or 0)
@@ -2879,7 +2897,8 @@ def edit_express_listing(code):
     p, a, r = counts_by_status(lands_list)
     return render_template('admin/edit_express_listing.html',
                           land=land,
-                          pending_count=p, approved_count=a, rejected_count=r)
+                          pending_count=p, approved_count=a, rejected_count=r,
+                          cities=cities)
 
 @admin_bp.post('/express/<string:code>/delete')
 @login_required
