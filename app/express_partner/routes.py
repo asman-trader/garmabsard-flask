@@ -1832,16 +1832,27 @@ def api_verify():
 
 @express_partner_bp.route('/otp/resend', methods=['POST'], endpoint='otp_resend')
 def otp_resend():
-    phone = _normalize_phone(request.form.get('phone') or (session.get('otp_phone') or ''))
+    # پشتیبانی از JSON (اپ) و form (وب)
+    data = request.get_json(silent=True) or {}
+    phone = _normalize_phone(
+        (data.get('phone') or request.form.get('phone') or session.get('otp_phone') or '').strip()
+    )
     if not phone or len(phone) != 11:
+        if request.is_json:
+            return jsonify({'ok': False, 'error': 'شماره معتبر نیست.'}), 400
         return {'ok': False, 'error': 'شماره معتبر نیست.'}, 400
     try:
         code = f"{random.randint(10000, 99999)}"
         session.update({'otp_code': code, 'otp_phone': phone})
+        session.permanent = True
         from ..services.sms import send_sms_code
         send_sms_code(phone, code)
+        if request.is_json:
+            return jsonify({'ok': True, 'message': 'کد تأیید مجدد ارسال شد.'})
         return {'ok': True}
     except Exception:
+        if request.is_json:
+            return jsonify({'ok': True, 'message': 'کد تأیید مجدد ارسال شد.'})
         return {'ok': True}
 
 
