@@ -682,28 +682,56 @@ def dashboard():
             item['created_at'] = land.get('created_at') or '1970-01-01'
         assigned_lands.append(item)
 
-    # فیلتر بر اساس شهر انتخاب‌شده
-    if selected_city:
-        assigned_lands = [item for item in assigned_lands if str(item.get('city') or '').strip() == selected_city]
+    is_approved = bool(profile and (profile.get("status") in ("approved", True)))
 
-    # فیلتر بر اساس عبارت جستجو (عنوان، موقعیت، دسته‌بندی، توضیحات)
+    # همه فایل‌های اکسپرس برای همه کاربران (وارد نشده، تاییدنشده، تاییدشده) در داشبورد نمایش داده می‌شود.
+    try:
+        display_lands = load_express_lands_cached() or []
+    except Exception:
+        display_lands = []
+    if selected_city:
+        display_lands = [l for l in display_lands if str(l.get('city') or '').strip() == selected_city]
     if search_query:
         terms = search_query.split()
-
-        def _matches_item(item):
+        def _matches(l):
             text = ' '.join([
-                str(item.get('title') or ''),
-                str(item.get('location') or ''),
-                str(item.get('city') or ''),
-                str(item.get('category') or ''),
-                str(item.get('description') or ''),
+                str(l.get('title') or ''),
+                str(l.get('location') or ''),
+                str(l.get('city') or ''),
+                str(l.get('category') or ''),
+                str(l.get('description') or ''),
             ]).lower()
             return all(t in text for t in terms)
+        display_lands = [l for l in display_lands if _matches(l)]
+    display_lands = _sort_by_created_at_desc(display_lands)
 
-        assigned_lands = [it for it in assigned_lands if _matches_item(it)]
-
-    # مرتب‌سازی از جدید به قدیمی بر اساس تاریخ و زمان ثبت آگهی
-    assigned_lands = _sort_by_created_at_desc(assigned_lands)
+    # برای همکاران تاییدشده: روی کارت‌هایی که به آن‌ها اختصاص داده شده پورسانت و لینک اشتراک تزریق کن
+    code_to_assigned = {str(item.get('code')): item for item in assigned_lands}
+    assigned_lands = []
+    for land in display_lands:
+        code = str(land.get('code') or '')
+        item = dict(land)
+        assigned_item = code_to_assigned.get(code)
+        if assigned_item and is_approved:
+            item['_assignment_id'] = assigned_item.get('_assignment_id')
+            item['_assignment_status'] = assigned_item.get('_assignment_status', 'active')
+            item['_commission_pct'] = assigned_item.get('_commission_pct')
+            item['_commission_amount'] = assigned_item.get('_commission_amount', 0)
+            item['_is_expired'] = assigned_item.get('_is_expired', False)
+            item['_share_url'] = assigned_item.get('_share_url', '')
+            item['_share_token'] = assigned_item.get('_share_token', '')
+            item['_reposted_by_me'] = assigned_item.get('_reposted_by_me', False)
+            try:
+                item['_detail_url'] = url_for('express_partner.land_detail', code=code)
+            except Exception:
+                item['_detail_url'] = url_for('main.express_detail', code=code)
+        else:
+            item.setdefault('created_at', land.get('created_at') or '1970-01-01')
+            try:
+                item['_detail_url'] = url_for('main.express_detail', code=code)
+            except Exception:
+                item['_detail_url'] = url_for('express_partner.land_detail', code=code)
+        assigned_lands.append(item)
 
     try:
         comms = load_express_commissions() or []
@@ -719,7 +747,6 @@ def dashboard():
     # فروش‌های تایید شده: تعداد پورسانت‌هایی که status='approved' یا 'paid' دارند
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
 
-    is_approved = bool(profile and (profile.get("status") in ("approved", True)))
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
     training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")  # مثال: "https://www.youtube.com/watch?v=VIDEO_ID"
     # شهرهای فعال برای فیلتر جستجو (قابل مدیریت در پنل ادمین)
@@ -727,6 +754,16 @@ def dashboard():
         cities = load_active_cities() or []
     except Exception:
         cities = []
+    # سئو: عنوان و توضیح برای موتورهای جستجو (صفحه فایل‌ها برای همه در دسترس است)
+    count = len(assigned_lands)
+    seo_title = "فایل‌های اکسپرس وینور | خرید و فروش ملک و زمین"
+    seo_description = f"لیست فایل‌های اکسپرس وینور. {count} فایل معتبر برای خرید و فروش ملک، زمین، ویلا و آپارتمان. مشاهده قیمت و جزئیات."
+    try:
+        canonical_url = url_for('express_partner.dashboard', _external=True)
+        if request.args.get('q') or request.args.get('city'):
+            canonical_url = url_for('express_partner.dashboard', q=request.args.get('q') or None, city=request.args.get('city') or None, _external=True)
+    except Exception:
+        canonical_url = ''
     from flask import make_response
     resp = make_response(render_template(
         "express_partner/dashboard.html",
@@ -748,12 +785,19 @@ def dashboard():
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
         domain="vinor.ir",
+        seo_title=seo_title,
+        seo_description=seo_description,
+        canonical_url=canonical_url,
     ))
-    # جلوگیری از cache شدن dashboard (محتوا بر اساس session است)
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    resp.headers["Vary"] = "Cookie"
+    # برای کاربران مهمان: کش عمومی کوتاه برای سئو و سرعت
+    if not me_phone and not profile:
+        resp.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
+        resp.headers["Vary"] = "Accept-Encoding"
+    else:
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        resp.headers["Vary"] = "Cookie"
     return resp
 
 

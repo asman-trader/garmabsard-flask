@@ -1,5 +1,16 @@
 {% extends 'express_partner/base.html' %}
-{% block title %}پنل همکاری وینور اکسپرس{% endblock %}
+{% block title %}{{ seo_title | default('پنل همکاری وینور اکسپرس') }}{% endblock %}
+{% block head %}
+  {{ super() }}
+  <meta name="description" content="{{ seo_description | default('فایل‌های اکسپرس وینور | خرید و فروش ملک و زمین') }}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  {% if canonical_url %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% endif %}
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ seo_title | default('فایل‌های اکسپرس وینور') }}">
+  <meta property="og:description" content="{{ seo_description | default('لیست فایل‌های اکسپرس وینور برای خرید و فروش ملک') }}">
+{% endblock %}
 {% block content %}
 
   <!-- Header - باکس جستجو (منتقل‌شده از اکسپلور) -->
@@ -216,7 +227,7 @@
           {% set img = (land.images[0] if land.images and land.images[0] else None) %}
           {% set _st = (land._assignment_status|default('active')) %}
           <article class="group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
-                   data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
+                   data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
             <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden" data-img-wrap>
               <div class="card-img-loading absolute inset-0 z-10 flex items-center justify-center bg-black/10 dark:bg-black/30 transition-opacity">
                 <div class="w-8 h-8 rounded-full border-2 border-white/50 border-t-transparent animate-spin"></div>
@@ -389,7 +400,7 @@
 
     <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-4 pb-4 sm:overflow-x-auto sm:snap-x sm:snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article {% if loop.first %}data-tour="land-card"{% endif %} class="snap-start shrink-0 w-full sm:w-[320px] group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md" data-href="{{ url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
+      <article {% if loop.first %}data-tour="land-card"{% endif %} class="snap-start shrink-0 w-full sm:w-[320px] group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md" data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
         {% set img = (land.images[0] if land.images and land.images[0] else None) %}
         {% set _st = (land._assignment_status|default('active')) %}
         
