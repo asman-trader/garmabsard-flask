@@ -6,7 +6,7 @@
   <header data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 py-2.5 flex items-center gap-2">
       <form method="GET" action="{{ url_for('main.express_public_list') }}" class="flex-1 min-w-0" id="searchForm">
-        <div class="relative w-full space-y-2">
+        <div class="relative w-full">
           <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
             <input type="text"
                    name="q"
@@ -15,7 +15,16 @@
                    placeholder="جستجو در فایل‌ها..."
                    autocomplete="off"
                    class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-2.5 px-4 min-w-0">
-            <div class="flex items-center gap-1 pr-2">
+            <div class="flex items-center gap-2 pr-2">
+              {% if cities %}
+              <select name="city"
+                      class="h-8 px-2 rounded-md bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 border-0 focus:outline-none focus:ring-0">
+                <option value="">همه شهرها</option>
+                {% for c in cities %}
+                <option value="{{ c }}" {% if request.args.get('city') == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
               <button type="submit"
                       class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                       aria-label="جستجو">
@@ -23,18 +32,6 @@
               </button>
             </div>
           </div>
-          {% if cities %}
-          <div class="flex items-center gap-2 text-xs sm:text-sm">
-            <span class="text-gray-500 dark:text-gray-400">شهر:</span>
-            <select name="city"
-                    class="h-9 px-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent">
-              <option value="">همه شهرها</option>
-              {% for c in cities %}
-              <option value="{{ c }}" {% if request.args.get('city') == c %}selected{% endif %}>{{ c }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          {% endif %}
         </div>
       </form>
     </div>
