@@ -513,6 +513,7 @@ def create_app() -> Flask:
             "/partners",
             # Express Partner auth paths (public)
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
+            "/express/partner/api/login-request", "/express/partner/api/verify",
             # Express listings (public)
             "/express",
             "/public",  # صفحه اکسپلور عمومی - بدون نیاز به ورود
