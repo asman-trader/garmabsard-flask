@@ -4,7 +4,8 @@ from urllib.parse import quote
 
 from flask import (
     render_template, send_from_directory, request, abort,
-    redirect, url_for, session, make_response, current_app, flash
+    redirect, url_for, session, make_response, current_app, flash,
+    has_app_context, has_request_context,
 )
 
 from . import main_bp
@@ -59,10 +60,12 @@ def inject_vinor_globals():
     """
     متغیرهای عمومیِ وینور برای استفاده در تمپلیت‌ها
     """
+    if not has_app_context() or not has_request_context():
+        return {}
     # همکار اکسپرس تأییدشده
     try:
         me = str(session.get("user_phone") or "").strip()
-        _partners = load_express_partners()
+        _partners = load_express_partners(current_app._get_current_object())
         is_express_partner = any(
             isinstance(p, dict)
             and str(p.get("phone") or "").strip() == me

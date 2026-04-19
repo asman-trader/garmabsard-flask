@@ -1,14 +1,47 @@
 # app/utils/storage.py
-import os, json, shutil
+import os, json, shutil, logging
 from flask import current_app
+
+_log = logging.getLogger(__name__)
+
+
+def _package_app_root() -> str:
+    """مسیر پکیج Flask روی دیسک (…/project/app)."""
+    return os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
+
+def _standalone_instance_path() -> str:
+    """
+    پوشهٔ instance وقتی هنوز به Flask app متصل نیستیم.
+    Passenger معمولاً INSTANCE_PATH را ست می‌کند؛ در غیر این صورت ../instance کنار پروژه.
+    """
+    envp = os.environ.get("INSTANCE_PATH")
+    if envp:
+        return os.path.abspath(envp)
+    project_root = os.path.dirname(_package_app_root())
+    return os.path.abspath(os.path.join(project_root, "instance"))
+
+
+def _resolve_app(app):
+    """برگرداندن app صریح یا current_app؛ در نبود context مقدار None."""
+    if app is not None:
+        return app
+    try:
+        return current_app._get_current_object()
+    except RuntimeError:
+        return None
+
 
 # -------- مسیرهای داده --------
 def data_dir(app=None):
     """
     مسیر امن و قابل‌نوشتن: <instance>/data  (داخل instance_path)
     """
-    app = app or current_app
-    base = app.instance_path
+    app = _resolve_app(app)
+    if app is not None:
+        base = app.instance_path
+    else:
+        base = _standalone_instance_path()
     os.makedirs(base, exist_ok=True)
     path = os.path.join(base, 'data')
     os.makedirs(path, exist_ok=True)
@@ -17,8 +50,10 @@ def data_dir(app=None):
 
 def legacy_dir(app=None):
     """مسیر قدیمی کنار کد: <root>/data"""
-    app = app or current_app
-    return os.path.join(app.root_path, 'data')
+    app = _resolve_app(app)
+    if app is not None:
+        return os.path.join(app.root_path, 'data')
+    return os.path.join(_package_app_root(), 'data')
 
 # -------- اطمینان از وجود فایل و مهاجرت --------
 def ensure_file(config_key: str, filename: str, default_content, app=None):
@@ -28,10 +63,13 @@ def ensure_file(config_key: str, filename: str, default_content, app=None):
       2) در غیر این صورت ایجاد فایل با محتوای پیش‌فرض
     همچنین مسیر به app.config[config_key] ست می‌شود.
     """
-    app = app or current_app
+    app = _resolve_app(app)
     d = data_dir(app)
-    fpath = app.config.get(config_key) or os.path.join(d, filename)
-    app.config[config_key] = fpath
+    if app is not None:
+        fpath = app.config.get(config_key) or os.path.join(d, filename)
+        app.config[config_key] = fpath
+    else:
+        fpath = os.path.join(d, filename)
 
     os.makedirs(os.path.dirname(fpath), exist_ok=True)
     if not os.path.exists(fpath):
@@ -53,7 +91,7 @@ def migrate_legacy(app=None):
     """
     کپی فایل‌های قدیمی از <root>/data به <instance>/data در اولین اجرا
     """
-    app = app or current_app
+    app = _resolve_app(app)
     inst = data_dir(app)
     legacy = legacy_dir(app)
     try:
@@ -69,8 +107,13 @@ def migrate_legacy(app=None):
                 try: shutil.copytree(old_up, new_up, dirs_exist_ok=True)
                 except Exception: pass
     except Exception as e:
-        try: app.logger.warning("Legacy migration issue: %s", e)
-        except Exception: pass
+        try:
+            if app is not None:
+                app.logger.warning("Legacy migration issue: %s", e)
+            else:
+                _log.warning("Legacy migration issue: %s", e)
+        except Exception:
+            pass
 
 # -------- IO ساده JSON --------
 def _load(path):
@@ -93,7 +136,7 @@ def load_ads(app=None):        return _load(ensure_file('LANDS_FILE','lands.json
 
 def load_ads_cached(app=None):
     """لود آگهی‌ها با کش ساده مبتنی بر mtime/size فایل."""
-    app = app or current_app
+    app = _resolve_app(app)
     path = ensure_file('LANDS_FILE','lands.json',[],app)
     try:
         st = os.stat(path)
@@ -115,7 +158,7 @@ def load_ads_cached(app=None):
 
 def load_express_lands_cached(app=None):
     """لود فایل‌های اکسپرس فیلتر شده با کش جداگانه برای سرعت بیشتر."""
-    app = app or current_app
+    app = _resolve_app(app)
     path = ensure_file('LANDS_FILE','lands.json',[],app)
     try:
         st = os.stat(path)
@@ -146,7 +189,7 @@ def get_lands_file_stats(app=None):
     آمار فایل آگهی‌ها برای ساخت ETag/Last-Modified سریع.
     خروجی: {"path": str, "mtime": int|None, "size": int|None, "etag": str}
     """
-    app = app or current_app
+    app = _resolve_app(app)
     path = ensure_file('LANDS_FILE','lands.json',[],app)
     try:
         st = os.stat(path)
@@ -268,7 +311,7 @@ def load_partner_routines(app=None):
 
 def load_partner_routines_cached(app=None):
     """Load partner routines with a small in-memory cache based on file mtime/size."""
-    app = app or current_app
+    app = _resolve_app(app)
     path = ensure_file('EXPRESS_PARTNER_ROUTINES_FILE','express_partner_routines.json',[],app)
     try:
         st = os.stat(path)

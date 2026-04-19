@@ -115,24 +115,11 @@ function isSameOrigin(url) {
   try { return new URL(url, self.location.origin).origin === self.location.origin; } catch { return false; }
 }
 
-// Whitelisted external origins to cache (CDN scripts/fonts)
-const EXTERNAL_ORIGINS = [
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com',
-  'https://unpkg.com',
-  'https://cdn.jsdelivr.net',
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com'
-];
+// External CDNs are disabled in offline-first mode.
+const EXTERNAL_ORIGINS = [];
 
-// External assets to prewarm/cache for offline icons/fonts (best-effort)
-const EXTERNAL_WARM = [
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-solid-900.woff2',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-regular-400.woff2',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-brands-400.woff2',
-  'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap'
-];
+// No external warmup in full local/offline mode.
+const EXTERNAL_WARM = [];
 
 function isAPI(request) {
   const url = new URL(request.url);
