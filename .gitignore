@@ -10,7 +10,7 @@ instance/data/
 instance/logs/
 logs/
 *.log
-
+000
 # آپلودها (در زمان اجرا تولید می‌شوند)
 app/data/uploads/
 app/static/uploads/
