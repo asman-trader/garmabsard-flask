@@ -7,16 +7,33 @@ TEMPLATE_ID = 878451
 # شماره خط اختصاصی پیش‌فرض
 DEFAULT_LINE_NUMBER = "300089930616"
 
-def send_sms_code(phone: str, code: str):
+def send_sms_code(phone: str, code: str) -> dict:
     url = "https://api.sms.ir/v1/send/verify"
     headers = {"Content-Type":"application/json","Accept":"application/json","x-api-key":SMS_API_KEY}
     # Note: parameter name must match the template variable in sms.ir panel
     data = {"mobile": phone, "templateId": TEMPLATE_ID, "parameters":[{"name":"CODE","value":str(code)}]}
     try:
-        requests.post(url, headers=headers, json=data, timeout=10)
+        resp = requests.post(url, headers=headers, json=data, timeout=10)
+        content_type = resp.headers.get("content-type", "")
+        body = resp.json() if content_type.lower().startswith("application/json") else {"raw": resp.text}
+        ok = 200 <= resp.status_code < 300
+        if not ok:
+            try:
+                current_app.logger.error(
+                    "OTP SMS failed | status=%s | phone=%s | body=%s",
+                    resp.status_code,
+                    phone,
+                    body,
+                )
+            except Exception:
+                pass
+        return {"ok": ok, "status": resp.status_code, "body": body}
     except Exception as e:
-        try: current_app.logger.error("❌ SMS error: %s", e)
-        except Exception: print("❌ SMS error:", e)
+        try:
+            current_app.logger.error("❌ SMS error: %s", e)
+        except Exception:
+            print("❌ SMS error:", e)
+        return {"ok": False, "status": 0, "body": {"error": str(e)}}
 
 
 def send_sms_template(mobile: str, template_id: int, parameters: dict | None = None, api_key: str | None = None) -> dict:

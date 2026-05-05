@@ -23,9 +23,10 @@ app/static/uploads/
 # ----------------------------
 # فایل‌های محیطی و کلیدها
 # ----------------------------
-.env
-.env.*
-*.env
+# NOTE: in current test mode, env files are intentionally tracked.
+# .env
+# .env.*
+# *.env
 *.pem
 *.key
 *.crt

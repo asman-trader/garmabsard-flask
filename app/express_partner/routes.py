@@ -1334,10 +1334,19 @@ def login():
         # Try sending SMS; ignore errors in dev
         try:
             from ..services.sms import send_sms_code
-            send_sms_code(phone, code)
-            flash('کد تأیید ارسال شد.', 'info')
+            sms_result = send_sms_code(phone, code)
+            if sms_result.get('ok'):
+                flash('کد تأیید ارسال شد.', 'info')
+            else:
+                current_app.logger.error(
+                    "OTP send failed in login | phone=%s | status=%s | body=%s",
+                    phone,
+                    sms_result.get('status'),
+                    sms_result.get('body'),
+                )
+                flash('ارسال کد تأیید با خطا مواجه شد. لطفاً دوباره تلاش کنید.', 'warning')
         except Exception:
-            flash('کد تأیید ارسال شد.', 'info')
+            flash('ارسال کد تأیید با خطا مواجه شد. لطفاً دوباره تلاش کنید.', 'warning')
 
         nxt = request.args.get('next')
         if nxt:
@@ -1800,9 +1809,16 @@ def api_login_request():
     session.permanent = True
     try:
         from ..services.sms import send_sms_code
-        send_sms_code(phone, code)
+        sms_result = send_sms_code(phone, code)
+        if not sms_result.get('ok'):
+            return jsonify({
+                'success': False,
+                'error': 'ارسال کد ناموفق بود.',
+                'status': sms_result.get('status'),
+                'details': sms_result.get('body'),
+            }), 502
     except Exception:
-        pass
+        return jsonify({'success': False, 'error': 'خطا در ارسال کد تأیید.'}), 502
     return jsonify({'success': True, 'message': 'کد تأیید ارسال شد.'})
 
 
@@ -1846,14 +1862,23 @@ def otp_resend():
         session.update({'otp_code': code, 'otp_phone': phone})
         session.permanent = True
         from ..services.sms import send_sms_code
-        send_sms_code(phone, code)
+        sms_result = send_sms_code(phone, code)
+        if not sms_result.get('ok'):
+            if request.is_json:
+                return jsonify({
+                    'ok': False,
+                    'error': 'ارسال مجدد کد ناموفق بود.',
+                    'status': sms_result.get('status'),
+                    'details': sms_result.get('body'),
+                }), 502
+            return {'ok': False, 'error': 'ارسال مجدد کد ناموفق بود.'}, 502
         if request.is_json:
             return jsonify({'ok': True, 'message': 'کد تأیید مجدد ارسال شد.'})
         return {'ok': True}
     except Exception:
         if request.is_json:
-            return jsonify({'ok': True, 'message': 'کد تأیید مجدد ارسال شد.'})
-        return {'ok': True}
+            return jsonify({'ok': False, 'error': 'خطا در ارسال مجدد کد.'}), 502
+        return {'ok': False, 'error': 'خطا در ارسال مجدد کد.'}, 502
 
 
 @express_partner_bp.route('/profile', methods=['GET'], endpoint='profile')
