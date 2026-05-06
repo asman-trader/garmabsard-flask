@@ -1,11 +1,26 @@
 # app/services/sms.py
-import os, requests
+"""
+sms.ir — ارسال OTP و پیامک قالب‌دار/مستقیم.
+
+اعتبارسنجی ورود همکار (کد OTP) از همین فایل با کلید و قالب زیر انجام می‌شود.
+اگر روی سرور متغیر SMS_API_KEY ست باشد، همان اولویت دارد.
+"""
+import os
+import requests
 from flask import current_app
-SMS_API_KEY = os.environ.get("SMS_API_KEY") or "AcEcwFoGsqya9QdAii8QWhU51eie84sEbB9I4mJ0gknvm7lg"
-# Updated template to the new requested one (WebOTP-friendly template configured in panel)
-TEMPLATE_ID = 878451
-# شماره خط اختصاصی پیش‌فرض
-DEFAULT_LINE_NUMBER = "300089930616"
+
+# ---------------------------------------------------------------------------
+# کلید API و قالب پیامک اعتبارسنجی (OTP) — تعریف در کد (حالت تست / پیش‌فرض)
+# پنل: sms.ir | اندپوینت: POST https://api.sms.ir/v1/send/verify
+# پارامتر قالب باید با نام CODE در پنل هماهنگ باشد.
+# ---------------------------------------------------------------------------
+SMS_IR_OTP_API_KEY = "AcEcwFoGsqya9QdAii8QWhU51eie84sEbB9I4mJ0gknvm7lg"
+SMS_IR_OTP_TEMPLATE_ID = 878451
+SMS_IR_DEFAULT_LINE_NUMBER = "300089930616"
+
+SMS_API_KEY = os.environ.get("SMS_API_KEY") or SMS_IR_OTP_API_KEY
+TEMPLATE_ID = SMS_IR_OTP_TEMPLATE_ID
+DEFAULT_LINE_NUMBER = SMS_IR_DEFAULT_LINE_NUMBER
 
 def send_sms_code(phone: str, code: str) -> dict:
     url = "https://api.sms.ir/v1/send/verify"

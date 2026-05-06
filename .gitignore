@@ -1,0 +1,123 @@
+# ============================
+# Vinor Project - .gitignore
+# جلوگیری از پوش شدن فایل‌های تولیدی/حساس
+# ============================
+
+# ----------------------------
+# داده‌های زمان اجرا (Persist)
+# ----------------------------
+instance/data/
+instance/logs/
+logs/
+*.log
+000
+# آپلودها (در زمان اجرا تولید می‌شوند)
+app/data/uploads/
+app/static/uploads/
+
+# دیتابیس‌های لوکال
+*.db
+*.sqlite
+*.sqlite3
+
+# ----------------------------
+# فایل‌های محیطی و کلیدها
+# ----------------------------
+# NOTE (test mode): اگر خواستی .env به گیت برود، خطوط زیر را کامنت کن.
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+
+# ----------------------------
+# پایتون – کش و خروجی‌های بیلد
+# ----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+
+# ----------------------------
+# پوشه‌های ویرچوال‌ان‌وایرونمنت
+# ----------------------------
+venv/
+env/
+.venv/
+virtualenv/
+
+# ----------------------------
+# سیستم‌عامل/ادیتورها
+# ----------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# ----------------------------
+# سایر کش‌ها/موقت‌ها
+# ----------------------------
+tmp/
+.cache/
+
+# ----------------------------
+# فایل‌های لوکال که نباید به هاست برن
+# ----------------------------
+config.local.py
+settings.local.py
+local_settings.py
+*.local.json
+*.local.yaml
+*.local.yml
+
+# بکاپ‌ها
+*.bak
+*.backup
+*.old
+*~
+
+# فایل‌های تست لوکال
+test_data/
+fixtures/local/
+
+# داکر لوکال
+docker-compose.override.yml
+docker-compose.local.yml
+.docker/
+
+# Node (اگر فرانت دارید)
+node_modules/
+package-lock.json
+yarn.lock
+
+# فایل‌های IDE و دیباگ
+*.swp
+*.swo
+.history/
+*.sublime-*
+
+# سکرت‌ها و کردنشیال‌ها
+secrets/
+credentials/
+*.secret
+service-account*.json
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
