@@ -17,31 +17,50 @@
   <header data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
     <div class="w-full px-4 py-2.5 flex items-center gap-2">
       {# جستجو و فیلتر شهر در همان داشبورد (نتیجه در همین صفحه) #}
+      {% set selected_city = request.args.get('city') or (profile.city if profile else '') %}
       <form method="GET" action="{{ url_for('express_partner.dashboard') }}" class="flex-1 min-w-0" id="searchForm">
+        <input type="hidden" name="city" id="cityInputHidden" value="{{ selected_city }}">
         <div class="relative w-full">
-          <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:shadow-sm transition-all">
+          <div class="flex items-center bg-white dark:bg-gray-800 rounded-full border border-gray-300 dark:border-gray-600 focus-within:border-gray-500 dark:focus-within:border-gray-400 transition-colors">
+            <button type="submit"
+                    class="flex-shrink-0 w-9 h-9 mr-1 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    aria-label="جستجو">
+              <i class="fas fa-magnifying-glass text-sm"></i>
+            </button>
             <input type="text"
                    name="q"
                    id="searchInput"
                    value="{{ request.args.get('q', '') }}"
-                   placeholder="جستجو در فایل‌ها..."
+                   placeholder="جستجو در آگهی‌ها"
                    autocomplete="off"
-                   class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 py-2.5 px-4 min-w-0">
-            <div class="flex items-center gap-2 pr-2">
+                   class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 py-2.5 pl-2 min-w-0">
+            <div class="flex items-center gap-1 pl-1">
               {% if cities %}
-              <select name="city"
-                      class="h-8 px-2 rounded-md bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 border-0 focus:outline-none focus:ring-0">
-                <option value="">همه شهرها</option>
-                {% for c in cities %}
-                <option value="{{ c }}" {% if (request.args.get('city') or (profile.city if profile else '')) == c %}selected{% endif %}>{{ c }}</option>
-                {% endfor %}
-              </select>
+              <div class="relative" id="cityFilterRoot">
+                <button type="button"
+                        id="cityFilterToggle"
+                        class="h-8 pr-3 pl-2 rounded-full bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 inline-flex items-center gap-1.5"
+                        aria-haspopup="listbox"
+                        aria-expanded="false">
+                  <span id="cityFilterLabel">{{ selected_city or 'همه شهرها' }}</span>
+                  <i class="fa-solid fa-chevron-down text-[10px] text-gray-500 dark:text-gray-400"></i>
+                </button>
+                <div id="cityFilterMenu"
+                     class="hidden absolute left-0 top-10 z-20 min-w-36 max-h-60 overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-1">
+                  <button type="button" data-city="" class="city-option w-full text-right px-2.5 py-1.5 rounded-lg text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">همه شهرها</button>
+                  {% for c in cities %}
+                  <button type="button" data-city="{{ c }}" class="city-option w-full text-right px-2.5 py-1.5 rounded-lg text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{{ c }}</button>
+                  {% endfor %}
+                </div>
+              </div>
               {% endif %}
-              <button type="submit"
-                      class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                      aria-label="جستجو">
-                <i class="fas fa-magnifying-glass text-sm"></i>
-              </button>
+              {% if request.args.get('q') %}
+              <a href="{{ url_for('express_partner.dashboard', city=selected_city) }}"
+                 class="flex-shrink-0 w-7 h-7 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                 aria-label="پاک کردن جستجو">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </a>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -87,6 +106,44 @@
       transform:translateY(-1px);
     }
   </style>
+  <script>
+    (function() {
+      const root = document.getElementById('cityFilterRoot');
+      if (!root) return;
+      const toggle = document.getElementById('cityFilterToggle');
+      const menu = document.getElementById('cityFilterMenu');
+      const label = document.getElementById('cityFilterLabel');
+      const input = document.getElementById('cityInputHidden');
+      const options = root.querySelectorAll('.city-option');
+
+      function closeMenu() {
+        menu?.classList.add('hidden');
+        toggle?.setAttribute('aria-expanded', 'false');
+      }
+      function openMenu() {
+        menu?.classList.remove('hidden');
+        toggle?.setAttribute('aria-expanded', 'true');
+      }
+
+      toggle?.addEventListener('click', function() {
+        if (menu?.classList.contains('hidden')) openMenu();
+        else closeMenu();
+      });
+
+      options.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const city = btn.getAttribute('data-city') || '';
+          if (input) input.value = city;
+          if (label) label.textContent = city || 'همه شهرها';
+          closeMenu();
+        });
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!root.contains(e.target)) closeMenu();
+      });
+    })();
+  </script>
 
   {# Flash messages removed by request #}
 
