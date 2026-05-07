@@ -188,7 +188,7 @@
                 </form>
                 {% endif %}
                 
-                <form method="post" action="{{ url_for('admin.delete_express_listing', code=land.code) }}" onsubmit="return confirm('آیا مطمئن هستید که می‌خواهید این آگهی را حذف کنید؟');" class="inline">
+                <form method="post" action="{{ url_for('admin.delete_express_listing', code=land.code) }}" class="inline js-delete-listing-form" data-listing-title="{{ land.title or 'بدون عنوان' }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="w-full flex items-center justify-center gap-1.5 bg-white dark:bg-gray-900 border border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600 text-red-600 dark:text-red-400 text-sm px-3 py-2 rounded-lg transition focusable">
                     <i class="fa-solid fa-trash text-xs"></i>
@@ -284,8 +284,72 @@
 <div class="h-20"></div>
 {% endblock %}
 
+<!-- Delete confirmation modal -->
+<div id="deleteListingModal" class="hidden fixed inset-0 z-[70]">
+  <div class="absolute inset-0 bg-black/50"></div>
+  <div class="relative h-full w-full flex items-end sm:items-center justify-center p-3 sm:p-4">
+    <div class="w-full max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-xl p-4 sm:p-5">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 grid place-items-center flex-shrink-0">
+          <i class="fa-solid fa-trash"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">تایید حذف آگهی</h3>
+          <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            مطمئن هستید که می‌خواهید آگهی
+            <span id="deleteListingTitle" class="font-semibold text-gray-800 dark:text-gray-200"></span>
+            را حذف کنید؟
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" id="deleteListingCancelBtn"
+                class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:border-gray-400 dark:hover:border-gray-500 transition">
+          انصراف
+        </button>
+        <button type="button" id="deleteListingConfirmBtn"
+                class="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+          حذف آگهی
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
+  let pendingDeleteForm = null;
+  const modal = document.getElementById('deleteListingModal');
+  const titleEl = document.getElementById('deleteListingTitle');
+  const cancelBtn = document.getElementById('deleteListingCancelBtn');
+  const confirmBtn = document.getElementById('deleteListingConfirmBtn');
+
+  function closeDeleteModal() {
+    if (!modal) return;
+    modal.classList.add('hidden');
+    pendingDeleteForm = null;
+  }
+
+  document.querySelectorAll('.js-delete-listing-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      pendingDeleteForm = form;
+      if (titleEl) titleEl.textContent = form.dataset.listingTitle || 'بدون عنوان';
+      modal?.classList.remove('hidden');
+    });
+  });
+
+  cancelBtn?.addEventListener('click', closeDeleteModal);
+  modal?.addEventListener('click', function(e) {
+    if (e.target === modal || e.target.classList.contains('bg-black/50')) closeDeleteModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeDeleteModal();
+  });
+  confirmBtn?.addEventListener('click', function() {
+    if (pendingDeleteForm) pendingDeleteForm.submit();
+  });
+
   function fmt(dt){
     try{
       const d = new Date(String(dt||'').replace(' ','T'));
