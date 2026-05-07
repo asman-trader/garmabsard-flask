@@ -452,11 +452,17 @@
             <i class="fa-solid fa-arrow-right text-xs"></i>
             <span>قبلی</span>
           </button>
-          <button type="submit" 
+          <button id="finalSubmitBtn" type="submit" 
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition focusable flex items-center gap-2">
             <i class="fa-solid fa-check text-xs"></i>
             <span>ثبت آگهی</span>
           </button>
+        </div>
+        <div id="submitProgressWrap" class="hidden mt-3">
+          <div class="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+            <div id="submitProgressBar" class="h-full w-0 bg-blue-600 transition-[width] duration-300 ease-linear"></div>
+          </div>
+          <p class="mt-2 text-xs text-gray-600 dark:text-gray-300">از شکیبایی شما ممنونیم</p>
         </div>
       </div>
     </div>
@@ -732,6 +738,28 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
       commissionAmountEl.value = '';
       commissionAmountEl.dataset.rawValue = '';
     }
+  }
+
+  // نمایش وضعیت ثبت در مرحله نهایی
+  const submitBtn = document.getElementById('finalSubmitBtn');
+  const progressWrap = document.getElementById('submitProgressWrap');
+  const progressBar = document.getElementById('submitProgressBar');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+  }
+  if (progressWrap) progressWrap.classList.remove('hidden');
+  if (progressBar) {
+    let p = 8;
+    progressBar.style.width = p + '%';
+    const timer = setInterval(() => {
+      if (p >= 92) {
+        clearInterval(timer);
+        return;
+      }
+      p += 7;
+      progressBar.style.width = p + '%';
+    }, 140);
   }
 });
 
