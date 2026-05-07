@@ -680,7 +680,7 @@ def login():
                 session['admin_otp_expires_at'] = (datetime.utcnow() + timedelta(hours=1)).timestamp()
                 session['admin_otp_last_sent_at'] = datetime.utcnow().timestamp()
                 cooldown_seconds = ADMIN_OTP_COOLDOWN_SECONDS
-                flash(f'کد ورود به شماره {ADMIN_LOGIN_OTP_PHONE} ارسال شد.', 'info')
+                flash('با اشتیاق منتظرتیم', 'info')
             else:
                 current_app.logger.error(
                     "Admin login OTP auto-send failed | phone=%s | status=%s | body=%s",
@@ -709,7 +709,7 @@ def login():
             session['admin_otp_expires_at'] = (datetime.utcnow() + timedelta(hours=1)).timestamp()
             session['admin_otp_last_sent_at'] = datetime.utcnow().timestamp()
             cooldown_seconds = ADMIN_OTP_COOLDOWN_SECONDS
-            flash('کد جدید ارسال شد.', 'info')
+            flash('با اشتیاق منتظرتیم', 'info')
             return _render_login()
 
         # مرحله ۲: تایید کد پیامکی
