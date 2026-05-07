@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import json
 import re
+import random
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import List, Dict, Any, Optional
@@ -49,7 +50,7 @@ def _save_express_document(file, land_code):
     file.save(file_path)
     return filename
 from app.api.push import _load_subs, _send_one, _save_subs
-from app.services.sms import send_sms_template, send_sms_direct
+from app.services.sms import send_sms_template, send_sms_direct, send_sms_code
 from app.utils.storage import load_users, load_reports, save_reports, save_ads
 from app.utils.storage import (
     load_express_partner_apps,
@@ -237,7 +238,9 @@ except Exception:
 # -----------------------------------------------------------------------------
 # نکته امنیتی: پس از استقرار، این‌ها را از config/DB بخوانید یا به سیستم کاربران/نقش‌ها مهاجرت کنید.
 ADMIN_USERNAME = 'masood1528014@gmail.com'
-ADMIN_PASSWORD = 'm430128185'
+ADMIN_PASSWORD = '09121471301'
+ADMIN_LOGIN_OTP_PHONE = '09121471301'
+ADMIN_OTP_COOLDOWN_SECONDS = 60
 
 # پیش‌فرض صفحه‌بندی برای گرید 3 ستونه
 PER_PAGE_DEFAULT = 9
@@ -655,17 +658,85 @@ def login():
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     - تا قبل از اضافه شدن توکن در فرم، می‌توانید موقتاً این روت را CSRF-exempt کنید.
     """
+    now_ts = datetime.utcnow().timestamp()
+    last_sent_at = float(session.get('admin_otp_last_sent_at') or 0)
+    cooldown_seconds = max(0, ADMIN_OTP_COOLDOWN_SECONDS - int(now_ts - last_sent_at)) if last_sent_at else 0
+
+    def _render_login():
+        return render_template(
+            'admin/login.html',
+            otp_phone=ADMIN_LOGIN_OTP_PHONE,
+            otp_cooldown_seconds=max(0, int(cooldown_seconds)),
+        )
+
+    # ورود به صفحه لاگین: ارسال خودکار OTP به شماره پیش‌فرض
+    if request.method == 'GET' and not session.get('logged_in'):
+        if cooldown_seconds == 0:
+            code = f"{random.randint(10000, 99999)}"
+            sms_result = send_sms_code(ADMIN_LOGIN_OTP_PHONE, code)
+            if sms_result.get('ok'):
+                session['admin_otp_pending'] = True
+                session['admin_otp_code'] = code
+                session['admin_otp_expires_at'] = (datetime.utcnow() + timedelta(hours=1)).timestamp()
+                session['admin_otp_last_sent_at'] = datetime.utcnow().timestamp()
+                cooldown_seconds = ADMIN_OTP_COOLDOWN_SECONDS
+                flash(f'کد ورود به شماره {ADMIN_LOGIN_OTP_PHONE} ارسال شد.', 'info')
+            else:
+                current_app.logger.error(
+                    "Admin login OTP auto-send failed | phone=%s | status=%s | body=%s",
+                    ADMIN_LOGIN_OTP_PHONE,
+                    sms_result.get('status'),
+                    sms_result.get('body'),
+                )
+                flash('ارسال کد ورود ناموفق بود. صفحه را تازه کنید.', 'danger')
+        return _render_login()
+
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session['logged_in'] = True
-            session['username'] = username
-            session.permanent = True  # ماندگاری session برای PWA
-            flash('خوش آمدید؛ ورود موفق.', 'success')
-            return redirect(url_for('admin.dashboard'))
-        flash('نام کاربری یا رمز عبور اشتباه است.', 'danger')
-    return render_template('admin/login.html')
+        action = (request.form.get('action') or '').strip().lower()
+        otp_code = (request.form.get('otp_code') or '').strip()
+
+        if action == 'send':
+            if cooldown_seconds > 0:
+                flash(f'امکان ارسال مجدد تا {cooldown_seconds} ثانیه دیگر فعال می‌شود.', 'warning')
+                return _render_login()
+            code = f"{random.randint(10000, 99999)}"
+            sms_result = send_sms_code(ADMIN_LOGIN_OTP_PHONE, code)
+            if not sms_result.get('ok'):
+                flash('ارسال مجدد کد ناموفق بود.', 'danger')
+                return _render_login()
+            session['admin_otp_pending'] = True
+            session['admin_otp_code'] = code
+            session['admin_otp_expires_at'] = (datetime.utcnow() + timedelta(hours=1)).timestamp()
+            session['admin_otp_last_sent_at'] = datetime.utcnow().timestamp()
+            cooldown_seconds = ADMIN_OTP_COOLDOWN_SECONDS
+            flash('کد جدید ارسال شد.', 'info')
+            return _render_login()
+
+        # مرحله ۲: تایید کد پیامکی
+        if otp_code:
+            expected_code = str(session.get('admin_otp_code') or '')
+            expires_at = session.get('admin_otp_expires_at')
+            now_ts = datetime.utcnow().timestamp()
+
+            if (not expires_at) or (now_ts > float(expires_at)):
+                for k in ('admin_otp_pending', 'admin_otp_code', 'admin_otp_expires_at'):
+                    session.pop(k, None)
+                flash('کد ورود منقضی شده است. دوباره وارد شوید.', 'warning')
+                return _render_login()
+
+            if otp_code == expected_code:
+                session['logged_in'] = True
+                session['username'] = ADMIN_USERNAME
+                session.permanent = True  # ماندگاری session برای PWA
+                for k in ('admin_otp_pending', 'admin_otp_code', 'admin_otp_expires_at'):
+                    session.pop(k, None)
+                flash('خوش آمدید؛ ورود موفق.', 'success')
+                return redirect(url_for('admin.dashboard'))
+
+            flash('کد ورود اشتباه است.', 'danger')
+            return _render_login()
+        flash('کد ورود را وارد کنید.', 'warning')
+    return _render_login()
 
 # معافیت موقت CSRF فقط برای لاگین (پس از افزودن توکن، این را حذف کنید)
 if csrf is not None:

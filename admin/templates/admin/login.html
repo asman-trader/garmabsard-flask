@@ -47,8 +47,7 @@
 
       <!-- Header - Divar Style -->
       <div class="text-center space-y-2">
-        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">پنل مدیریت</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">ورود به سیستم مدیریتی</p>
+        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">VINOR</h1>
       </div>
 
       <!-- Messages - Divar Style -->
@@ -78,44 +77,29 @@
         {% endif %}
       {% endwith %}
 
-      <!-- Username -->
       <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">نام کاربری</label>
-        <input name="username" type="text" autocomplete="username" dir="ltr"
-               placeholder="نام کاربری"
+        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">کد ورود پیامکی</label>
+        <input name="otp_code" type="text" inputmode="numeric" dir="ltr"
+               placeholder="مثلا 12345"
                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                       placeholder:text-gray-400 dark:placeholder:text-gray-400
-                      focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable"
-               required>
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable">
       </div>
-
-      <!-- Password -->
       <div>
-        <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">رمز عبور</label>
-        <input name="password" type="password" autocomplete="current-password"
-               placeholder="رمز عبور"
-               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
-                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                      placeholder:text-gray-400 dark:placeholder:text-gray-400
-                      focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable"
-               required>
+        <button type="submit" name="action" value="verify"
+                class="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors focusable">
+          تایید کد و ورود
+        </button>
       </div>
-
-      <!-- Submit Button -->
-      <button type="submit"
-              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors focusable">
-        ورود
-      </button>
-
-      <!-- Help Info -->
-      <div class="text-center pt-2">
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          بعد از ورود، به صفحه انتخاب پنل هدایت می‌شوید
-        </p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          برای دسترسی به پنل همکاران: وینور اکسپرس → همکاران
-        </p>
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-3 py-2 text-xs text-gray-600 dark:text-gray-300 text-center">
+        <span id="otpCooldownText" class="font-semibold text-blue-600 dark:text-blue-400"></span>
+      </div>
+      <div id="resendWrap" class="hidden">
+        <button type="submit" name="action" value="send"
+                class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors focusable">
+          ارسال مجدد کد
+        </button>
       </div>
 
       <!-- Dark Mode Toggle -->
@@ -150,6 +134,35 @@
       const icon = document.querySelector('#darkToggle i');
       if (icon) icon.className = 'fa-solid fa-sun';
     }
+
+    const cooldownText = document.getElementById('otpCooldownText');
+    const resendWrap = document.getElementById('resendWrap');
+    const form = document.querySelector('form[action="{{ url_for("admin.login") }}"]');
+    const otpInput = document.querySelector('input[name="otp_code"]');
+    let remaining = Number({{ otp_cooldown_seconds|default(0) }}) || 0;
+
+    function renderTimer() {
+      if (remaining > 0) {
+        if (cooldownText) cooldownText.textContent = `ارسال مجدد تا ${remaining} ثانیه دیگر`;
+        resendWrap?.classList.add('hidden');
+        remaining -= 1;
+      } else {
+        if (cooldownText) cooldownText.textContent = 'ارسال مجدد فعال شد';
+        resendWrap?.classList.remove('hidden');
+      }
+    }
+
+    renderTimer();
+    setInterval(renderTimer, 1000);
+
+    form?.addEventListener('submit', function(e) {
+      const action = (e.submitter?.value || '').toLowerCase();
+      if (action === 'send') {
+        otpInput?.removeAttribute('required');
+      } else {
+        otpInput?.setAttribute('required', 'required');
+      }
+    });
   </script>
 </body>
 </html>
