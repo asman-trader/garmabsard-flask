@@ -12,18 +12,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="وینور ادمین" />
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind (local) -->
+  <script src="{{ url_for('static', filename='vendor/tailwind/tailwindcdn-3.4.17.js') }}"></script>
   <script>
     tailwind.config = { darkMode: 'class' };
   </script>
 
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" onerror="this.parentNode.removeChild(this)">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
   
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet" />
+  <!-- Fonts (local) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/vazirmatn.css') }}">
 
   <style>
     html, body { font-family: 'Vazirmatn', sans-serif; }
@@ -164,8 +163,8 @@
 
   {% block bottom_footer %}{% endblock %}
 
-  <!-- Alpine.js -->
-  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- Alpine.js (local) -->
+  <script src="{{ url_for('static', filename='vendor/alpine/alpine-3.14.1.min.js') }}" defer></script>
   
   <!-- Fallback برای منو در موبایل (در صورت عدم لود شدن Alpine.js) -->
   <script>
