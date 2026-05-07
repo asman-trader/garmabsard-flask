@@ -458,7 +458,11 @@
             <span>ثبت آگهی</span>
           </button>
         </div>
-        <div id="submitProgressWrap" class="hidden mt-3">
+        <div id="submitProgressWrap" class="hidden mt-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-900/20 p-3">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span id="submitProgressStatus" class="text-blue-700 dark:text-blue-300">در حال آماده‌سازی اطلاعات...</span>
+            <span id="submitProgressPercent" class="font-semibold text-blue-700 dark:text-blue-300">0%</span>
+          </div>
           <div class="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
             <div id="submitProgressBar" class="h-full w-0 bg-blue-600 transition-[width] duration-300 ease-linear"></div>
           </div>
@@ -651,7 +655,12 @@ function updateSummary() {
 }
 
 // Form validation
+let isSubmittingExpressForm = false;
 document.getElementById('expressForm').addEventListener('submit', (e) => {
+  if (isSubmittingExpressForm) {
+    e.preventDefault();
+    return;
+  }
   const title = document.querySelector('input[name="title"]').value.trim();
   const location = document.querySelector('input[name="location"]').value.trim();
   const sizeEl = document.querySelector('input[name="size"]');
@@ -744,22 +753,45 @@ document.getElementById('expressForm').addEventListener('submit', (e) => {
   const submitBtn = document.getElementById('finalSubmitBtn');
   const progressWrap = document.getElementById('submitProgressWrap');
   const progressBar = document.getElementById('submitProgressBar');
+  const progressPercent = document.getElementById('submitProgressPercent');
+  const progressStatus = document.getElementById('submitProgressStatus');
+  const statusSteps = [
+    { to: 22, text: 'در حال آماده‌سازی اطلاعات...' },
+    { to: 48, text: 'در حال آپلود فایل‌ها...' },
+    { to: 72, text: 'در حال پردازش تصاویر...' },
+    { to: 90, text: 'در حال نهایی‌سازی ثبت آگهی...' },
+  ];
+  isSubmittingExpressForm = true;
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>در حال ثبت...</span>';
   }
   if (progressWrap) progressWrap.classList.remove('hidden');
   if (progressBar) {
-    let p = 8;
+    let p = 0;
+    let stepIdx = 0;
     progressBar.style.width = p + '%';
+    if (progressPercent) progressPercent.textContent = `${p}%`;
+    if (progressStatus) progressStatus.textContent = statusSteps[0].text;
     const timer = setInterval(() => {
-      if (p >= 92) {
+      if (p >= 94) {
         clearInterval(timer);
         return;
       }
-      p += 7;
+      const target = statusSteps[Math.min(stepIdx, statusSteps.length - 1)].to;
+      if (p < target) {
+        p += Math.max(1, Math.ceil((target - p) / 4));
+      } else if (stepIdx < statusSteps.length - 1) {
+        stepIdx += 1;
+        if (progressStatus) progressStatus.textContent = statusSteps[stepIdx].text;
+      } else {
+        p += 1;
+      }
+      p = Math.min(p, 94);
       progressBar.style.width = p + '%';
-    }, 140);
+      if (progressPercent) progressPercent.textContent = `${p}%`;
+    }, 180);
   }
 });
 
