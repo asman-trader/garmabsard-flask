@@ -670,7 +670,7 @@ def login():
         )
 
     # ورود به صفحه لاگین: ارسال خودکار OTP به شماره پیش‌فرض
-    if request.method == 'GET' and not session.get('logged_in'):
+    if request.method == 'GET':
         if cooldown_seconds == 0:
             code = f"{random.randint(10000, 99999)}"
             sms_result = send_sms_code(ADMIN_LOGIN_OTP_PHONE, code)
