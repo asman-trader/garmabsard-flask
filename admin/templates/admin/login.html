@@ -55,6 +55,7 @@
         {% if messages %}
           <div class="space-y-2">
             {% for category, msg in messages %}
+              {% if 'کد ورود به شماره' not in (msg|string) %}
               <div class="rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-start gap-2
                           {% if category in ['success', 'ok'] %}
                             text-green-700 dark:text-green-400
@@ -72,6 +73,7 @@
                           {% else %}fa-times-circle{% endif %}"></i>
                 <span class="flex-1 text-sm">{{ msg }}</span>
               </div>
+              {% endif %}
             {% endfor %}
           </div>
         {% endif %}
