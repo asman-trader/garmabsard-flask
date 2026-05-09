@@ -1,28 +1,20 @@
 {# نوار پایین همکار — الهام از منوی پایین تلگرام اندروید #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 <style>
-  /* نوار پایین نزدیک تلگرام اخیر: پس‌زمینه ملایم، جداکننده ظریف، کپسول پشت آیکن فعال */
+  /* نوار پایین همیشه تاریک — مستقل از تم روشن/تاریک صفحه */
   .tg-tabbar {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
-    background-color: rgba(247, 247, 248, 0.92);
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.03);
+    background-color: rgba(28, 28, 29, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
     -webkit-backdrop-filter: saturate(180%) blur(18px);
     backdrop-filter: saturate(180%) blur(18px);
   }
-  html.dark .tg-tabbar {
-    background-color: rgba(28, 28, 29, 0.92);
-    border-top-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
-  }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .tg-tabbar {
-      background-color: #f7f7f8;
+      background-color: #1c1c1d;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-    }
-    html.dark .tg-tabbar {
-      background-color: #1c1c1d;
     }
   }
   .tg-tab {
@@ -53,38 +45,24 @@
     transition: color 0.26s cubic-bezier(0.33, 1, 0.68, 1);
   }
   .tg-tab-active .tg-tab-pill {
-    background-color: rgba(51, 144, 236, 0.16);
-  }
-  html.dark .tg-tab-active .tg-tab-pill {
     background-color: rgba(51, 144, 236, 0.28);
   }
   .tg-tab-active .tg-tab-icon {
-    color: #3390ec;
+    color: #5eaaf7;
     transform: translateZ(0);
   }
   .tg-tab-active .tg-tab-label {
-    color: #3390ec;
+    color: #5eaaf7;
     font-weight: 600;
   }
-  html.dark .tg-tab-active .tg-tab-icon,
-  html.dark .tg-tab-active .tg-tab-label {
-    color: #5eaaf7;
-  }
   .tg-tab:not(.tg-tab-active) .tg-tab-icon {
-    color: #707579;
+    color: #9aa1a9;
   }
   .tg-tab:not(.tg-tab-active) .tg-tab-label {
-    color: #707579;
-  }
-  html.dark .tg-tab:not(.tg-tab-active) .tg-tab-icon,
-  html.dark .tg-tab:not(.tg-tab-active) .tg-tab-label {
     color: #9aa1a9;
   }
   .tg-tab:focus-visible {
     border-radius: 0.5rem;
-    box-shadow: 0 0 0 2px rgba(51, 144, 236, 0.45);
-  }
-  html.dark .tg-tab:focus-visible {
     box-shadow: 0 0 0 2px rgba(94, 170, 247, 0.55);
   }
 </style>
