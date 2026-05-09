@@ -280,6 +280,25 @@
                   <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.price_per_meter|toman }}</span>
                 </div>
                 {% endif %}
+                {% if is_partner_context and land.payment_method %}
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">نحوه پرداخت</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.payment_method }}</span>
+                </div>
+                {% if land.payment_method == 'اقساطی' and land.payment_terms and land.payment_terms|length > 0 %}
+                <div class="pt-3 border-t border-gray-100 dark:border-gray-800">
+                  <span class="text-sm text-gray-600 dark:text-gray-400 block mb-2">جزئیات اقساط</span>
+                  <div class="space-y-2">
+                    {% for t in land.payment_terms %}
+                    <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ (t.months or 0) }} ماهه</span>
+                      <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ (t.amount or 0)|toman }}</span>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+                {% endif %}
                 {% if is_partner_context and is_approved and land._commission_amount %}
                 <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
                   <div class="flex items-center gap-2">
@@ -436,6 +455,25 @@
             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.price_per_meter|toman }}</span>
           </div>
           {% endif %}
+          {% if is_partner_context and land.payment_method %}
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400">نحوه پرداخت</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.payment_method }}</span>
+          </div>
+          {% if land.payment_method == 'اقساطی' and land.payment_terms and land.payment_terms|length > 0 %}
+          <div class="pb-3 border-b border-gray-100 dark:border-gray-800">
+            <span class="text-sm text-gray-600 dark:text-gray-400 block mb-2">جزئیات اقساط</span>
+            <div class="space-y-2">
+              {% for t in land.payment_terms %}
+              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ (t.months or 0) }} ماهه</span>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ (t.amount or 0)|toman }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endif %}
           {% if is_partner_context and is_approved and land._commission_amount %}
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -459,11 +497,11 @@
       {% endif %}
 
       <!-- جزئیات -->
-      {% if land.payment_method or (land.payment_terms and land.payment_terms|length > 0) or land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
+      {% if ((not is_partner_context) and (land.payment_method or (land.payment_terms and land.payment_terms|length > 0))) or land.rooms or land.floor or land.year_built or land.docs_status or land.features %}
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">جزئیات</h3>
         <div class="space-y-2">
-          {% if land.payment_method %}
+          {% if (not is_partner_context) and land.payment_method %}
           <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
             <span class="text-sm text-gray-600 dark:text-gray-400">نحوه پرداخت</span>
             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ land.payment_method }}</span>
