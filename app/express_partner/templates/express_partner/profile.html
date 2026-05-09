@@ -17,7 +17,22 @@
     </div>
   </header>
 
-<div class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-32 lg:pb-10">
+  <style>
+    @media (max-width: 1023px) {
+      #profilePage {
+        padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #profileSupportLink {
+        margin-bottom: calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #profileBottomSpacer {
+        display: block !important;
+        height: calc(10rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+  </style>
+
+<div id="profilePage" class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-40 lg:pb-10">
 
   {% if not me_phone %}
   <!-- Guest View: Login CTA -->
@@ -202,7 +217,8 @@
     </div>
 
     <!-- تماس با پشتیبانی -->
-    <a href="{{ url_for('express_partner.support') }}" 
+    <a id="profileSupportLink"
+       href="{{ url_for('express_partner.support') }}" 
        data-tour="support-link"
        class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
       <div class="flex items-center gap-3 sm:gap-4">
@@ -220,7 +236,7 @@
   </div>
   {% endif %}
 
-  <div class="h-28 lg:hidden" aria-hidden="true"></div>
+  <div id="profileBottomSpacer" class="h-40 lg:hidden" aria-hidden="true"></div>
 
   {% set bottom_nav_active = 'profile' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
