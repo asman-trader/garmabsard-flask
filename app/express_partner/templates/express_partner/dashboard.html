@@ -749,42 +749,57 @@
   (function() {
     const container = document.getElementById('cardsTrack');
     if (!container) return;
+    try {
+      document.documentElement.style.overscrollBehaviorY = 'contain';
+      document.body.style.overscrollBehaviorY = 'contain';
+    } catch (_) {}
 
-    let startY = 0;
-    let currentY = 0;
+    let startY = null;
+    let currentY = null;
     let isPulling = false;
     let isRefreshing = false;
     const PULL_THRESHOLD = 60; // حداقل فاصله برای رفرش
     const MAX_PULL = 80; // حداکثر فاصله کشیدن
 
+    function resetPullState() {
+      isPulling = false;
+      startY = null;
+      currentY = null;
+      container.style.transition = 'transform 0.3s ease-out';
+      container.style.transform = 'translateY(0)';
+    }
+
     function handleTouchStart(e) {
       // فقط اگر در بالای صفحه هستیم
-      if (window.scrollY > 5 || isRefreshing) return;
+      if (window.scrollY > 5 || isRefreshing || !e.touches || e.touches.length !== 1) return;
       
       startY = e.touches[0].clientY;
+      currentY = startY;
       isPulling = false;
     }
 
     function handleTouchMove(e) {
-      if (window.scrollY > 5 || isRefreshing) return;
+      if (startY === null || window.scrollY > 5 || isRefreshing || !e.touches || e.touches.length !== 1) return;
       
       currentY = e.touches[0].clientY;
       const pullDistance = currentY - startY;
 
-      if (pullDistance > 0 && pullDistance < MAX_PULL) {
+      if (pullDistance > 0) {
         isPulling = true;
         e.preventDefault();
         
         // اسکرول کارت‌ها به پایین
         container.style.transform = `translateY(${Math.min(pullDistance * 0.3, 30)}px)`;
         container.style.transition = 'none';
+      } else if (isPulling) {
+        resetPullState();
       }
     }
 
     function handleTouchEnd(e) {
       if (!isPulling || isRefreshing) return;
       
-      const pullDistance = currentY - startY;
+      const pullDistance = (currentY || 0) - (startY || 0);
       
       if (pullDistance >= PULL_THRESHOLD) {
         // شروع رفرش بدون reload صفحه
@@ -802,10 +817,7 @@
             isRefreshing = false;
           });
         } else {
-          // Fallback: reload صفحه
-          setTimeout(() => {
-            window.location.reload();
-          }, 200);
+          isRefreshing = false;
         }
       } else {
         // بازگشت به حالت اولیه با انیمیشن
@@ -814,8 +826,8 @@
       }
       
       isPulling = false;
-      startY = 0;
-      currentY = 0;
+      startY = null;
+      currentY = null;
     }
 
     // Event listeners
@@ -867,8 +879,6 @@
       }
     } catch (error) {
       console.error('Error refreshing content:', error);
-      // در صورت خطا، reload کامل صفحه
-      window.location.reload();
     }
   }
   
