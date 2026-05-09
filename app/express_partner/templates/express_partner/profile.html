@@ -17,7 +17,7 @@
     </div>
   </header>
 
-<div class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-10">
+<div class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-32 lg:pb-10">
 
   {% if not me_phone %}
   <!-- Guest View: Login CTA -->
@@ -219,6 +219,8 @@
   </div>
   </div>
   {% endif %}
+
+  <div class="h-28 lg:hidden" aria-hidden="true"></div>
 
   {% set bottom_nav_active = 'profile' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
