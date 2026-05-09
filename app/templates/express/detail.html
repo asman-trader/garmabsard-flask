@@ -339,26 +339,28 @@
                 </div>
                 {% endif %}
 
-                {% if _st != 'sold' %}
-                <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}">
-                  {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-                  {% if _st == 'in_transaction' %}
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition">
-                      <i class="fas fa-check-circle"></i>
-                      رفع معامله
-                    </button>
+                {% if is_approved %}
+                  {% if _st != 'sold' %}
+                  <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}">
+                    {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                    {% if _st == 'in_transaction' %}
+                      <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition">
+                        <i class="fas fa-check-circle"></i>
+                        رفع معامله
+                      </button>
+                    {% else %}
+                      <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800 hover:bg-orange-100 transition">
+                        <i class="fas fa-handshake"></i>
+                        معامله
+                      </button>
+                    {% endif %}
+                  </form>
                   {% else %}
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800 hover:bg-orange-100 transition">
-                      <i class="fas fa-handshake"></i>
-                      معامله
-                    </button>
+                  <div class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                    <i class="fas fa-check-double"></i>
+                    فروخته شد
+                  </div>
                   {% endif %}
-                </form>
-                {% else %}
-                <div class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
-                  <i class="fas fa-check-double"></i>
-                  فروخته شد
-                </div>
                 {% endif %}
               </div>
 
@@ -713,7 +715,7 @@
       </div>
 
       {% set _st = (land._assignment_status|default('active')) %}
-      {% if _st != 'sold' %}
+      {% if is_approved and _st != 'sold' %}
       <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="hidden sm:block lg:hidden">
         {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
         {% if _st == 'in_transaction' %}
@@ -728,7 +730,7 @@
           </button>
         {% endif %}
       </form>
-      {% else %}
+      {% elif is_approved %}
       <div class="hidden sm:flex lg:hidden items-center justify-center gap-2 px-4 py-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 mt-3">
         <i class="fas fa-check-double"></i>
         <span class="text-sm font-medium">فروخته شد</span>
@@ -749,7 +751,7 @@
   <!-- دکمه‌های ثابت پایین (Partner - فقط موبایل) -->
   {% set _st = (land._assignment_status|default('active')) %}
   <div class="fixed bottom-0 inset-x-0 p-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 sm:hidden z-50">
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid {{ 'grid-cols-2' if is_approved else 'grid-cols-1' }} gap-3">
       {% if contact_phone %}
       <button type="button" onclick="openContactModal()"
          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">
@@ -763,7 +765,7 @@
       </div>
       {% endif %}
 
-      {% if _st != 'sold' %}
+      {% if is_approved and _st != 'sold' %}
       <form method="POST" action="{{ url_for('express_partner.mark_in_transaction', code=land.code) }}" class="h-full">
         {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
         {% if _st == 'in_transaction' %}
@@ -778,7 +780,7 @@
         </button>
         {% endif %}
       </form>
-      {% else %}
+      {% elif is_approved %}
       <div class="flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500 text-white font-bold">
         <i class="fas fa-check-double"></i>
         فروخته شد
