@@ -2,79 +2,112 @@
 {% block title %}آموزش و دستورالعمل‌ها | روتین ۳ مرحله‌ای{% endblock %}
 {% block content %}
 
-  <!-- Header - سبک دیوار (تمام‌عرض) -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-    <div class="w-full px-4 h-14 flex items-center justify-between">
-      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 w-full shadow-sm shadow-gray-900/5 dark:shadow-none">
+    <div class="w-full px-4 h-14 flex items-center justify-between max-w-4xl mx-auto">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition" aria-label="بازگشت">
         <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
       </a>
-      <h1 class="text-sm font-bold text-gray-900 dark:text-white">آموزش و دستورالعمل‌ها</h1>
-      <div class="w-9"></div>
+      <div class="text-center min-w-0 flex-1 px-2">
+        <h1 class="text-sm font-bold text-gray-900 dark:text-white truncate">آموزش و دستورالعمل‌ها</h1>
+      </div>
+      <div class="w-10 h-10 shrink-0" aria-hidden="true"></div>
     </div>
   </header>
 
-<div class="max-w-4xl mx-auto pt-0 px-3 sm:px-4 pb-16">
+  <main class="max-w-4xl mx-auto px-3 sm:px-5 pb-24 pt-2">
 
+    <!-- معرفی -->
+    <section class="mt-4 rounded-2xl border border-emerald-200/60 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50/90 via-white to-white dark:from-emerald-950/40 dark:via-gray-900 dark:to-gray-950 p-4 sm:p-5 shadow-sm" aria-labelledby="training-intro-title">
+      <div class="flex items-start gap-3">
+        <div class="shrink-0 w-11 h-11 rounded-xl bg-emerald-500/15 dark:bg-emerald-400/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <i class="fas fa-route text-lg" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 id="training-intro-title" class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white leading-snug">
+            آموزش ۳ مرحله‌ای موفقیت در همکاری
+          </h2>
+          <p class="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            روش سریع و کاربردی برای جذب مشتری، مدیریت بازدید و بستن قرارداد. روتین آماری در صفحه جداگانه ثبت می‌شود.
+          </p>
+        </div>
+      </div>
+    </section>
 
-
-  <!-- ویدیو یا تصویر آموزشی -->
-  {% if training_video_url %}
-  <div class="mt-4">
-    <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-black aspect-video">
-      <iframe src="{{ training_video_url }}" class="w-full h-full" allowfullscreen loading="lazy" title="ویدیو آموزش همکاری"></iframe>
+    {% if training_video_url %}
+  <div class="mt-6">
+    <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-black aspect-video shadow-lg shadow-gray-900/15 ring-1 ring-black/5 dark:ring-white/10">
+      <iframe src="{{ training_video_url }}" class="w-full h-full min-h-[180px]" allowfullscreen loading="lazy" title="ویدیو آموزش همکاری"></iframe>
     </div>
   </div>
-  {% endif %}
+    {% endif %}
 
-  <!-- Main Content: ۳ مرحله موفقیت (مینیمال و سریع) -->
-  <section class="mt-4">
-    <h2 class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white">
-      آموزش ۳ مرحله‌ای موفقیت در همکاری
-    </h2>
-    <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-      روش سریع و کاربردی برای جذب مشتری، مدیریت بازدید و بستن قرارداد. روتین آماری در صفحه جداگانه ثبت می‌شود.
-    </p>
+    <!-- مراحل -->
+    <section class="mt-8 mb-2">
+      <div class="relative">
+        <!-- خط اتصال عمودی (RTL: سمت راست) -->
+        <div class="absolute top-8 bottom-8 right-[1.15rem] sm:right-[1.25rem] w-px bg-gradient-to-b from-emerald-200 via-gray-200 to-indigo-200 dark:from-emerald-900 dark:via-gray-700 dark:to-indigo-900 hidden sm:block pointer-events-none" aria-hidden="true"></div>
 
-    <ol class="mt-3 space-y-2 text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
-      <li class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-3">
-        <div class="flex items-start gap-2">
-          <span class="mt-0.5 text-emerald-600 dark:text-emerald-300 font-bold">۱️⃣ بازاریابی</span>
-        </div>
-        <p class="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-          وظیفه مشاور این است که فایل را به‌صورت کامل و دقیق مطالعه کرده و آن را به‌صورت تلفنی و شفاف به مشتری معرفی کند تا مشتری واقعی جذب شود.
-          این مرحله شامل مطالعه کامل فایل، انتشار آگهی و پاسخ‌گویی سریع به مشتریان است.
-        </p>
-      </li>
+        <ol class="space-y-5 sm:space-y-6 list-none p-0 m-0">
+          <li>
+            <article class="relative flex gap-3 sm:gap-4 rounded-2xl border border-gray-200/90 dark:border-gray-700/90 bg-white dark:bg-gray-900/70 p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-emerald-200/80 dark:hover:border-emerald-800/60 transition duration-200">
+              <div class="shrink-0 relative z-10 flex flex-col items-center">
+                <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-black shadow-md shadow-emerald-900/20 ring-4 ring-white dark:ring-gray-950">۱</span>
+              </div>
+              <div class="min-w-0 flex-1 pt-0.5">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug">
+                  <span class="text-emerald-600 dark:text-emerald-300">۱️⃣ بازاریابی</span>
+                </h3>
+                <p class="mt-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                  وظیفه مشاور این است که فایل را به‌صورت کامل و دقیق مطالعه کرده و آن را به‌صورت تلفنی و شفاف به مشتری معرفی کند تا مشتری واقعی جذب شود.
+                  این مرحله شامل مطالعه کامل فایل، انتشار آگهی و پاسخ‌گویی سریع به مشتریان است.
+                </p>
+              </div>
+            </article>
+          </li>
 
-      <li class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-3">
-        <div class="flex items-start gap-2">
-          <span class="mt-0.5 text-amber-600 dark:text-amber-300 font-bold">۲️⃣ بازدید</span>
-        </div>
-        <p class="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-          در این مرحله مشاور باید با ناظر معامله هماهنگی‌های لازم را به‌صورت تلفنی انجام دهد و بازدید را حرفه‌ای مدیریت کند تا مشتری به تصمیم نزدیک شود.
-          هدف بازدید فقط دیدن ملک نیست، بلکه سنجش میزان علاقه و ثبت نتیجه بازدید است.
-        </p>
-      </li>
+          <li>
+            <article class="relative flex gap-3 sm:gap-4 rounded-2xl border border-gray-200/90 dark:border-gray-700/90 bg-white dark:bg-gray-900/70 p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-amber-200/80 dark:hover:border-amber-900/50 transition duration-200">
+              <div class="shrink-0 relative z-10 flex flex-col items-center">
+                <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-black shadow-md shadow-amber-900/20 ring-4 ring-white dark:ring-gray-950">۲</span>
+              </div>
+              <div class="min-w-0 flex-1 pt-0.5">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug">
+                  <span class="text-amber-600 dark:text-amber-300">۲️⃣ بازدید</span>
+                </h3>
+                <p class="mt-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                  در این مرحله مشاور باید با ناظر معامله هماهنگی‌های لازم را به‌صورت تلفنی انجام دهد و بازدید را حرفه‌ای مدیریت کند تا مشتری به تصمیم نزدیک شود.
+                  هدف بازدید فقط دیدن ملک نیست، بلکه سنجش میزان علاقه و ثبت نتیجه بازدید است.
+                </p>
+              </div>
+            </article>
+          </li>
 
-      <li class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-3">
-        <div class="flex items-start gap-2">
-          <span class="mt-0.5 text-indigo-600 dark:text-indigo-300 font-bold">۳️⃣ معامله 💰</span>
-        </div>
-        <p class="mt-1 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-          پس از بازدید، مشاور با پیگیری مؤثر و مذاکره اصولی، معامله را به قرارداد تبدیل می‌کند.
-          نتیجه این مرحله بستن قرارداد و دریافت پورسانت است.
-        </p>
-      </li>
-    </ol>
-  </section>
+          <li>
+            <article class="relative flex gap-3 sm:gap-4 rounded-2xl border border-gray-200/90 dark:border-gray-700/90 bg-white dark:bg-gray-900/70 p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-indigo-200/80 dark:hover:border-indigo-900/50 transition duration-200">
+              <div class="shrink-0 relative z-10 flex flex-col items-center">
+                <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center text-sm font-black shadow-md shadow-indigo-900/30 ring-4 ring-white dark:ring-gray-950">۳</span>
+              </div>
+              <div class="min-w-0 flex-1 pt-0.5">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug">
+                  <span class="text-indigo-600 dark:text-indigo-300">۳️⃣ معامله 💰</span>
+                </h3>
+                <p class="mt-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                  پس از بازدید، مشاور با پیگیری مؤثر و مذاکره اصولی، معامله را به قرارداد تبدیل می‌کند.
+                  نتیجه این مرحله بستن قرارداد و دریافت پورسانت است.
+                </p>
+              </div>
+            </article>
+          </li>
+        </ol>
+      </div>
+    </section>
 
   {% set bottom_nav_active = 'training' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
 
-</div>
+  </main>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 {% endblock %}
-
