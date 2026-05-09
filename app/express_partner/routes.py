@@ -1478,7 +1478,7 @@ def help():
 
 
 @express_partner_bp.route('/training', methods=['GET'], endpoint='training')
-@require_partner_access(allow_pending=True, allow_guest=True)
+@require_partner_access()
 def training():
     """صفحه آموزش مینیمال برای همکاران"""
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی خوانده شود
@@ -1490,6 +1490,13 @@ def training():
     return render_template('express_partner/training.html', 
                          hide_header=True,
                          training_video_url=training_video_url)
+
+
+@express_partner_bp.route('/cooperation-terms', methods=['GET'], endpoint='cooperation_terms')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def cooperation_terms():
+    """شرایط همکاری برای کاربران عادی و متقاضیان همکاری."""
+    return render_template('express_partner/cooperation_terms.html', hide_header=True)
 
 
 @express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')

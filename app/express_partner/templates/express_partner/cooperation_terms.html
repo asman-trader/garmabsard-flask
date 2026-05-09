@@ -1,0 +1,99 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}شرایط همکاری با وینور{% endblock %}
+{% block content %}
+
+  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 w-full shadow-sm shadow-gray-900/5 dark:shadow-none">
+    <div class="w-full px-4 h-14 flex items-center justify-between max-w-4xl mx-auto">
+      <a href="{{ url_for('express_partner.dashboard') }}" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition" aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+      </a>
+      <div class="text-center min-w-0 flex-1 px-2">
+        <h1 class="text-sm font-bold text-gray-900 dark:text-white truncate">شرایط همکاری</h1>
+      </div>
+      <div class="w-10 h-10 shrink-0" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-3 sm:px-5 pb-24 pt-2">
+    <section class="mt-4 rounded-2xl border border-emerald-200/70 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-gray-900 dark:to-gray-950 p-5 shadow-sm">
+      <div class="flex items-start gap-3">
+        <div class="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center">
+          <i class="fas fa-handshake text-lg"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white leading-snug">تو هم می‌تونی همکار ما باشی</h2>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            اگر به معرفی فایل، پیگیری مشتری و همکاری حرفه‌ای در بازار ملک علاقه داری، می‌تونی درخواست همکاری با وینور را ثبت کنی.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-5 grid gap-3">
+      <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <div class="flex gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
+            <i class="fas fa-check text-sm"></i>
+          </span>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">شرایط اصلی</h3>
+            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              شماره تماس معتبر، امکان پیگیری منظم مشتری، تعهد به اطلاعات فایل‌ها و رعایت اصول همکاری با تیم وینور.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <div class="flex gap-3">
+          <span class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0">
+            <i class="fas fa-list-check text-sm"></i>
+          </span>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">مراحل شروع</h3>
+            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              ثبت درخواست، بررسی توسط پشتیبانی، تأیید همکاری و فعال شدن دسترسی کامل به فایل‌ها، آموزش‌ها و ابزارهای پیگیری.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <div class="flex gap-3">
+          <span class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <i class="fas fa-coins text-sm"></i>
+          </span>
+          <div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">درآمد همکاری</h3>
+            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              پس از تأیید، پورسانت هر فایل در پنل مشخص می‌شود و با پیگیری موفق و انجام معامله، درآمد شما ثبت و پیگیری خواهد شد.
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="mt-5 rounded-2xl bg-gray-50 dark:bg-gray-800/70 border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+        ثبت درخواست به معنی تأیید نهایی نیست. تیم وینور پس از بررسی اطلاعات، نتیجه را از طریق پنل یا پیامک اطلاع‌رسانی می‌کند.
+      </p>
+    </div>
+
+    <div class="mt-5 flex flex-col sm:flex-row gap-2">
+      {% if session.get('user_phone') %}
+        <a href="{{ url_for('express_partner.apply') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition">
+          <i class="fas fa-user-plus text-xs"></i>
+          ثبت درخواست همکاری
+        </a>
+      {% else %}
+        <a href="{{ url_for('express_partner.login', next=url_for('express_partner.apply')) }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition">
+          <i class="fas fa-right-to-bracket text-xs"></i>
+          ورود و ثبت درخواست
+        </a>
+      {% endif %}
+      <a href="{{ url_for('express_partner.dashboard') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+        مشاهده فایل‌ها
+      </a>
+    </div>
+  </main>
+{% endblock %}
