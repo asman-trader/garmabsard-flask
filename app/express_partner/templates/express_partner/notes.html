@@ -89,18 +89,21 @@
   {% endif %}
 </div>
 
-<!-- مودال تایید حذف یادداشت -->
+<!-- مودال تایید حذف یادداشت — z بالاتر از منوی پایین (z-[60]) در صورت افزودن فوتر -->
 <div id="deleteNoteModal"
-     class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
+     class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteNoteModalTitle">
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideDeleteConfirm()"></div>
-  <div class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden transform transition-all">
-    <div class="p-4 sm:p-5">
+  <div class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden transform transition-all max-sm:pb-[env(safe-area-inset-bottom,0px)]">
+    <div class="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:pb-5">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 grid place-items-center flex-shrink-0">
           <i class="fas fa-trash text-lg"></i>
         </div>
         <div class="flex-1">
-          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">حذف یادداشت</p>
+          <p id="deleteNoteModalTitle" class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">حذف یادداشت</p>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">آیا مطمئن هستید که می‌خواهید این یادداشت را حذف کنید؟</p>
           <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">این عمل قابل بازگشت نیست.</p>
         </div>

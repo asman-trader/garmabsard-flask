@@ -160,8 +160,19 @@
 
   <script>
     (function hoistExpressPartnerShell() {
+      /* مودال‌های پرتال: خارج از #tg-page-shell تا z-index بالاتر از نوار پایین باشد (transform روی shell لایهٔ ترکیبی جدا می‌سازد) */
+      var bodyModalRoots = Array.prototype.slice.call(document.querySelectorAll('[data-tg-body-modal]'));
+      function hoistBodyModalsToTail() {
+        bodyModalRoots.forEach(function (el) {
+          document.body.appendChild(el);
+        });
+      }
+
       var nav = document.getElementById('bottomNavMenu');
-      if (!nav || nav.getAttribute('data-tg-shell-done') === '1') return;
+      if (!nav || nav.getAttribute('data-tg-shell-done') === '1') {
+        hoistBodyModalsToTail();
+        return;
+      }
       nav.setAttribute('data-tg-shell-done', '1');
       document.body.appendChild(nav);
       var shell = document.createElement('div');
@@ -170,6 +181,7 @@
         shell.appendChild(document.body.firstChild);
       }
       document.body.insertBefore(shell, nav);
+      hoistBodyModalsToTail();
     })();
   </script>
 
