@@ -20,19 +20,19 @@
   <style>
     @media (max-width: 1023px) {
       #profilePage {
-        padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(28rem + env(safe-area-inset-bottom, 0px)) !important;
       }
       #profileSupportLink {
-        margin-bottom: calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+        margin-bottom: calc(20rem + env(safe-area-inset-bottom, 0px)) !important;
       }
       #profileBottomSpacer {
         display: block !important;
-        height: calc(10rem + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(24rem + env(safe-area-inset-bottom, 0px)) !important;
       }
     }
   </style>
 
-<div id="profilePage" class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-40 lg:pb-10">
+<div id="profilePage" class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 pb-96 lg:pb-10">
 
   {% if not me_phone %}
   <!-- Guest View: Login CTA -->
@@ -236,7 +236,7 @@
   </div>
   {% endif %}
 
-  <div id="profileBottomSpacer" class="h-40 lg:hidden" aria-hidden="true"></div>
+  <div id="profileBottomSpacer" class="h-96 lg:hidden" aria-hidden="true"></div>
 
   {% set bottom_nav_active = 'profile' %}
   {% include 'express_partner/partials/bottom_nav.html' %}
