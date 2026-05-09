@@ -1107,6 +1107,8 @@ def notes_page():
 @require_partner_access(allow_pending=True, allow_guest=True)
 def commissions_page():
     me_phone = (session.get("user_phone") or "").strip()
+    profile = getattr(g, 'express_partner_profile', None)
+    is_approved = _is_partner_approved(profile)
     try:
         comms = load_express_commissions() or []
         my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
@@ -1146,8 +1148,10 @@ def commissions_page():
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
         domain="vinor.ir",
+        is_approved=is_approved,
     ))
-    _append_partner_tab_prefetch(resp)
+    if is_approved:
+        _append_partner_tab_prefetch(resp)
     return resp
 
 
