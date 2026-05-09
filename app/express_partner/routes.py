@@ -2042,9 +2042,9 @@ def profile_edit_page():
         partners.append(profile)
 
     if request.method == 'POST':
-        name = (request.form.get('name') or '').strip()
-        city = (request.form.get('city') or '').strip()
-        bio = (request.form.get('bio') or '').strip()
+        name = (request.form.get('name') or '').strip()[:60]
+        city = (request.form.get('city') or '').strip()[:60]
+        bio = (request.form.get('bio') or '').strip()[:200]
         if name:
             profile['name'] = name
         else:
