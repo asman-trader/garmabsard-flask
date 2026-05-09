@@ -1503,8 +1503,15 @@ def cooperation_terms():
 @require_partner_access(allow_pending=True, allow_guest=True)
 def routine():
     """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
-    resp = make_response(render_template('express_partner/routine.html', hide_header=True))
-    _append_partner_tab_prefetch(resp)
+    profile = getattr(g, 'express_partner_profile', None)
+    is_approved = _is_partner_approved(profile)
+    resp = make_response(render_template(
+        'express_partner/routine.html',
+        hide_header=True,
+        is_approved=is_approved,
+    ))
+    if is_approved:
+        _append_partner_tab_prefetch(resp)
     return resp
 
 
