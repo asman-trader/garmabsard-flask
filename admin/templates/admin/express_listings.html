@@ -155,17 +155,11 @@
 
             <!-- دکمه‌های عملیات - سبک دیوار -->
             <div class="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-1 gap-2">
                 <a href="{{ url_for('admin.edit_express_listing', code=land.code) }}"
                    class="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 text-sm px-3 py-2 rounded-lg transition focusable">
                   <i class="fa-regular fa-pen-to-square text-xs"></i>
                   ویرایش
-                </a>
-                
-                <a href="{{ url_for('main.express_detail', code=land.code) }}" target="_blank"
-                   class="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 text-sm px-3 py-2 rounded-lg transition focusable">
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                  مشاهده
                 </a>
               </div>
               

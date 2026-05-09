@@ -4,17 +4,14 @@ from urllib.parse import quote
 
 from flask import (
     render_template, send_from_directory, request, abort,
-    redirect, url_for, session, make_response, current_app, flash,
+    redirect, url_for, session, make_response, current_app,
     has_app_context, has_request_context,
 )
 
 from . import main_bp
-from ..utils.storage import data_dir, legacy_dir, load_express_lands_cached
-from ..utils.storage import load_express_partners, load_landing_views, save_landing_views, load_express_reposts
-from ..utils.storage import load_express_views, save_express_views, load_express_assignments
-from ..utils.share_tokens import decode_partner_ref
+from ..utils.storage import data_dir, legacy_dir
+from ..utils.storage import load_express_partners, load_landing_views, save_landing_views
 from ..utils.images import (
-    prepare_variants_dict,
     variant_headers_for_width,
 )
 from datetime import datetime
@@ -352,183 +349,10 @@ def express_public_list():
 @main_bp.route("/express/<code>", endpoint="express_detail")
 def express_detail(code):
     """
-    صفحهٔ جزئیات آگهی اکسپرس (بهینه شده)
+    صفحه عمومی جزئیات فایل حذف شده است.
+    لینک‌های قدیمی به صفحه جزئیات داخل پنل همکار هدایت می‌شوند.
     """
-    express_lands = load_express_lands_cached() or []
-    land = next((l for l in express_lands if l.get('code') == code), None)
-
-    if not land:
-        flash('آگهی اکسپرس یافت نشد.', 'warning')
-        return redirect(url_for('main.index'))
-
-    # ثبت بازدید فایل اکسپرس (هر IP در هر روز فقط یک بازدید)
-    try:
-        views = load_express_views() or []
-        if not isinstance(views, list):
-            views = []
-        
-        visitor_ip = request.remote_addr or ''
-        now = datetime.utcnow()
-        today_str = now.strftime('%Y-%m-%d')
-        
-        # بررسی اینکه آیا این IP در امروز برای این فایل قبلاً بازدید داشته یا نه
-        already_viewed_today = False
-        for v in views:
-            try:
-                v_ip = v.get('ip', '')
-                v_code = v.get('code', '')
-                v_ts_str = v.get('timestamp', '')
-                if v_ip == visitor_ip and v_code == code and v_ts_str:
-                    v_dt = datetime.fromisoformat(v_ts_str.replace('Z', '+00:00'))
-                    if v_dt.tzinfo:
-                        v_dt = v_dt.replace(tzinfo=None)
-                    v_date_str = v_dt.strftime('%Y-%m-%d')
-                    if v_date_str == today_str:
-                        already_viewed_today = True
-                        break
-            except Exception:
-                continue
-        
-        # اگر این IP امروز برای این فایل بازدید نداشته، ثبت کن
-        if not already_viewed_today and visitor_ip and code:
-            views.append({
-                'timestamp': now.isoformat(),
-                'code': code,
-                'ip': visitor_ip,
-                'user_agent': request.headers.get('User-Agent', '')[:200]
-            })
-            # نگه داشتن فقط 50000 بازدید اخیر
-            if len(views) > 50000:
-                views = views[-50000:]
-            save_express_views(views)
-    except Exception as e:
-        current_app.logger.error(f"Error tracking express listing view: {e}", exc_info=True)
-
-    # آماده‌سازی واریانت‌های تصویر (thumb/full)
-    try:
-        imgs = land.get('images') or []
-        images_v2 = [prepare_variants_dict(i) for i in imgs]
-        land['images_v2'] = images_v2
-        if images_v2:
-            land['image_thumb'] = images_v2[0].get('thumb')
-            land['image_full'] = images_v2[0].get('full')
-            land['image_raw'] = images_v2[0].get('raw')
-    except Exception:
-        pass
-
-    ref_token = request.args.get('ref', '').strip()
-    ref_phone = decode_partner_ref(ref_token)
-    ref_partner = None
-    if ref_phone:
-        partners = load_express_partners() or []
-        ref_partner = next((p for p in partners if str(p.get('phone')) == ref_phone), None)
-    
-    # اگر ref_partner وجود نداشت، از assignments استفاده کنیم تا ببینیم کدام همکار این فایل را دارد
-    if not ref_partner:
-        try:
-            assignments = load_express_assignments() or []
-            # پیدا کردن assignment فعال برای این فایل
-            assignment = next((a for a in assignments if a.get('land_code') == code and a.get('status') in (None, 'active', 'pending', 'approved', 'in_transaction')), None)
-            if assignment:
-                partner_phone = assignment.get('partner_phone')
-                if partner_phone:
-                    partners = load_express_partners() or []
-                    ref_partner = next((p for p in partners if str(p.get('phone')) == str(partner_phone)), None)
-        except Exception as e:
-            current_app.logger.error(f"Error loading assignments for contact info: {e}", exc_info=True)
-
-    # بررسی اینکه آیا کاربر از پنل همکاران آمده یا نه
-    referer = request.headers.get('Referer', '')
-    show_back_button = '/express/partner/' in referer or session.get('user_phone')
-
-    # آماده‌سازی داده‌های SEO
-    base_url = request.url_root.rstrip('/')
-    canonical_url = f"{base_url}/express/{land.get('code', '')}"
-    
-    # تصویر اصلی برای OG
-    images = land.get('images', [])
-    og_image = None
-    if images:
-        if isinstance(images, list) and len(images) > 0:
-            img = images[0]
-        elif isinstance(images, str):
-            img = images
-        else:
-            img = None
-        
-        if img:
-            if "://" in str(img):
-                og_image = str(img)
-            elif str(img).startswith('/uploads/'):
-                og_image = f"{base_url}{img}"
-            elif str(img).startswith('uploads/'):
-                og_image = f"{base_url}/uploads/{str(img)[8:]}"
-            else:
-                og_image = f"{base_url}/uploads/{img}"
-    
-    if not og_image:
-        og_image = f"{base_url}/static/icons/icon-512.png"
-    
-    # ساخت description از اطلاعات فایل
-    desc_parts = []
-    if land.get('location'):
-        desc_parts.append(f"موقعیت: {land.get('location')}")
-    if land.get('size'):
-        desc_parts.append(f"متراژ: {land.get('size')} متر")
-    if land.get('price_total'):
-        desc_parts.append(f"قیمت: {land.get('price_total'):,} تومان")
-    description = f"{land.get('title', 'فایل اکسپرس')} - {' | '.join(desc_parts)}" if desc_parts else f"{land.get('title', 'فایل اکسپرس')} - خرید و فروش ملک در وینور"
-    
-    # پیدا کردن فایل‌های قبلی و بعدی برای infinite scroll (حلقه‌ای - نامحدود)
-    
-    current_index = next((i for i, l in enumerate(express_lands) if l.get('code') == code), -1)
-    
-    # حلقه‌ای کردن: وقتی به آخر رسید به اول برگردد و برعکس
-    if current_index >= 0 and len(express_lands) > 0:
-        next_land = express_lands[(current_index + 1) % len(express_lands)]
-        prev_land = express_lands[(current_index - 1) % len(express_lands)]
-    else:
-        next_land = None
-        prev_land = None
-    
-    # Microcache detail for guests (short TTL)
-    if not session.get('user_phone'):
-        _k = f"page:public:detail:{code}"
-        _c = _mc_get(_k)
-        if _c:
-            r = make_response(_c)
-            r.headers["Cache-Control"] = "public, max-age=10"
-            return r
-
-    html = render_template(
-        "express/detail.html",
-        land=land,
-        ref_partner=ref_partner,
-        is_partner_context=False,
-        is_approved=False,
-        next_land=next_land,
-        prev_land=prev_land,
-        all_lands=express_lands,
-        current_index=current_index,
-        seo={
-            'title': f"{land.get('title', 'فایل اکسپرس')} | وینور",
-            'description': description,
-            'keywords': f"فایل اکسپرس, {land.get('location', '')}, {land.get('category', '')}, خرید ملک, فروش ملک, وینور",
-            'canonical': canonical_url,
-            'og_type': 'product',
-            'og_image': og_image,
-            'price': land.get('price_total'),
-            'currency': 'IRR'
-        }
-    )
-    try:
-        if not session.get('user_phone'):
-            _mc_set(_k, html, ttl=10)
-    except Exception:
-        pass
-    r = make_response(html)
-    r.headers["Cache-Control"] = "public, max-age=10"
-    return r
+    return redirect(url_for('express_partner.land_detail', code=code), code=302)
 
 @main_bp.route("/uploads/<path:filename>", endpoint="uploaded_file")
 def uploaded_file(filename):

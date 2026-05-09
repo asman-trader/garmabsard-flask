@@ -2830,7 +2830,7 @@ def add_express_listing():
                                 body=f"کد فایل: {new_code} - {title}",
                                 ntype='info',
                                 ad_id=new_code,
-                                action_url=url_for('main.express_detail', code=new_code, _external=True)
+                                action_url=url_for('express_partner.land_detail', code=new_code, _external=True)
                             )
                     except Exception as e:
                         current_app.logger.error(f"Error sending file assignment notification to {phone}: {e}", exc_info=True)

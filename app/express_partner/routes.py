@@ -25,7 +25,6 @@ from ..utils.storage import (
     load_express_partner_views, save_express_partner_views,
     load_partner_routines, load_partner_routines_cached, save_partner_routines,
 )
-from ..utils.share_tokens import encode_partner_ref
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
 from ..services.sms import send_sms_direct
 from flask import jsonify, make_response
@@ -731,12 +730,8 @@ def dashboard():
         except Exception:
             pct = 0.0
         item['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
-        share_token = encode_partner_ref(me_phone)
-        try:
-            item['_share_url'] = url_for('main.express_detail', code=item.get('code'), ref=share_token, _external=True)
-        except Exception:
-            item['_share_url'] = ''
-        item['_share_token'] = share_token
+        item['_share_url'] = ''
+        item['_share_token'] = ''
         item['_reposted_by_me'] = str(item.get('code')) in my_reposted_codes
         # اطمینان از وجود created_at برای مرتب‌سازی (بر اساس تاریخ ثبت آگهی)
         # item از dict(land) ساخته شده، پس created_at باید از land بیاید
@@ -783,16 +778,10 @@ def dashboard():
             item['_share_url'] = assigned_item.get('_share_url', '')
             item['_share_token'] = assigned_item.get('_share_token', '')
             item['_reposted_by_me'] = assigned_item.get('_reposted_by_me', False)
-            try:
-                item['_detail_url'] = url_for('express_partner.land_detail', code=code)
-            except Exception:
-                item['_detail_url'] = url_for('main.express_detail', code=code)
+            item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         else:
             item.setdefault('created_at', land.get('created_at') or '1970-01-01')
-            try:
-                item['_detail_url'] = url_for('main.express_detail', code=code)
-            except Exception:
-                item['_detail_url'] = url_for('express_partner.land_detail', code=code)
+            item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         assigned_lands.append(item)
 
     try:
@@ -934,7 +923,7 @@ def _public_lands_payload(limit=50):
         if not code:
             continue
         try:
-            detail_url = url_for('main.express_detail', code=code, _external=True)
+            detail_url = url_for('express_partner.land_detail', code=code, _external=True)
         except Exception:
             detail_url = ''
         lands_json.append({
@@ -2619,7 +2608,7 @@ def check_status():
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
-@require_partner_access(allow_pending=True, allow_guest=True)
+@require_partner_access(allow_pending=True)
 def land_detail(code: str):
     """Express land detail page within partner panel."""
     lands = load_ads_cached() or []
@@ -2701,11 +2690,8 @@ def land_detail(code: str):
             pct = 0.0
         land['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
 
-    share_token = encode_partner_ref(me_phone) if me_phone else ''
-    try:
-        share_url = url_for("main.express_detail", code=code, ref=share_token, _external=True) if share_token else url_for("main.express_detail", code=code, _external=True)
-    except Exception:
-        share_url = ''
+    share_token = ''
+    share_url = ''
 
     return render_template(
         'express/detail.html',
