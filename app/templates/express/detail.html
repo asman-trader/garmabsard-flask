@@ -156,6 +156,7 @@
             <video id="landVideo"
                    class="w-full h-full object-cover block"
                    controls
+                   {% if is_partner_context %}autoplay muted playsinline{% endif %}
                    onclick="openLightbox('{{ video_src }}')">
               <source src="{{ video_src }}" type="video/mp4">
               مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
@@ -837,6 +838,18 @@
         const mainVideo = document.getElementById('landVideo');
         const loadingEl = document.getElementById('landMediaLoading');
         const hasVideo = !!mainVideo;
+        const partnerDetailAutoplay = {{ 'true' if is_partner_context else 'false' }};
+
+        function partnerTryPlayVideo() {
+          if (!partnerDetailAutoplay || !mainVideo) return;
+          try {
+            mainVideo.muted = true;
+          } catch (_) {}
+          try {
+            const p = mainVideo.play();
+            if (p && typeof p.catch === 'function') p.catch(function () {});
+          } catch (_) {}
+        }
 
         const images = [
           {% if images_v2 %}
@@ -948,6 +961,7 @@
               mainImg.classList.add('hidden');
               mainImg.classList.remove('block');
             }
+            partnerTryPlayVideo();
             waitForVideoLoad();
           } else {
             const idx = hasVideo ? currentIndex - 1 : currentIndex;
@@ -1058,9 +1072,15 @@
         bindSwipeListeners(mainImg);
         bindSwipeListeners(mainVideo);
 
+        if (partnerDetailAutoplay && mainVideo) {
+          mainVideo.addEventListener('loadeddata', partnerTryPlayVideo, { once: true });
+          mainVideo.addEventListener('canplay', partnerTryPlayVideo, { once: true });
+        }
+
         updateDots();
         setLoading(true);
         if (hasVideo && currentIndex === 0) {
+          partnerTryPlayVideo();
           waitForVideoLoad();
         } else {
           waitForImageLoad();
