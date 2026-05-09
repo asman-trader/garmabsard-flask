@@ -764,14 +764,35 @@ def dashboard():
 
     # برای همکاران تاییدشده: روی کارت‌هایی که به آن‌ها اختصاص داده شده پورسانت و لینک اشتراک تزریق کن
     code_to_assigned = {str(item.get('code')): item for item in assigned_lands}
+    code_to_global_status = {}
+    status_priority = {
+        'sold': 5,
+        'in_transaction': 4,
+        'closed': 3,
+        'pending': 2,
+        'approved': 1,
+        'active': 0,
+        '': 0,
+    }
+    for a in assignments:
+        code_key = str(a.get('land_code') or '')
+        if not code_key:
+            continue
+        status = str(a.get('status') or 'active').strip()
+        if a.get('transaction_holder'):
+            status = 'in_transaction'
+        current = code_to_global_status.get(code_key, 'active')
+        if status_priority.get(status, 0) > status_priority.get(current, 0):
+            code_to_global_status[code_key] = status
     assigned_lands = []
     for land in display_lands:
         code = str(land.get('code') or '')
         item = dict(land)
         assigned_item = code_to_assigned.get(code)
+        global_status = code_to_global_status.get(code, item.get('_assignment_status') or 'active')
         if assigned_item and is_approved:
             item['_assignment_id'] = assigned_item.get('_assignment_id')
-            item['_assignment_status'] = assigned_item.get('_assignment_status', 'active')
+            item['_assignment_status'] = global_status
             item['_commission_pct'] = assigned_item.get('_commission_pct')
             item['_commission_amount'] = assigned_item.get('_commission_amount', 0)
             item['_is_expired'] = assigned_item.get('_is_expired', False)
@@ -781,6 +802,7 @@ def dashboard():
             item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         else:
             item.setdefault('created_at', land.get('created_at') or '1970-01-01')
+            item['_assignment_status'] = global_status
             item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         assigned_lands.append(item)
 
@@ -2686,6 +2708,24 @@ def land_detail(code: str):
     # محاسبه پورسانت از assignments
     assignments = load_express_assignments() or []
     assignment = next((a for a in assignments if a.get('land_code') == code and a.get('partner_phone') == me_phone), None)
+    global_assignment_status = 'active'
+    status_priority = {
+        'sold': 5,
+        'in_transaction': 4,
+        'closed': 3,
+        'pending': 2,
+        'approved': 1,
+        'active': 0,
+        '': 0,
+    }
+    for a in assignments:
+        if str(a.get('land_code')) != str(code):
+            continue
+        status = str(a.get('status') or 'active').strip()
+        if a.get('transaction_holder'):
+            status = 'in_transaction'
+        if status_priority.get(status, 0) > status_priority.get(global_assignment_status, 0):
+            global_assignment_status = status
 
     # وضعیت تایید همکاری برای نمایش مشروط پورسانت
     try:
@@ -2695,7 +2735,7 @@ def land_detail(code: str):
     
     if assignment:
         land['_assignment_id'] = assignment.get('id')
-        land['_assignment_status'] = assignment.get('status', 'active')
+        land['_assignment_status'] = global_assignment_status
         land['_commission_pct'] = assignment.get('commission_pct')
         # محاسبه مبلغ پورسانت
         try:
@@ -2707,6 +2747,8 @@ def land_detail(code: str):
         except Exception:
             pct = 0.0
         land['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
+    else:
+        land['_assignment_status'] = global_assignment_status
 
     share_token = ''
     share_url = ''
