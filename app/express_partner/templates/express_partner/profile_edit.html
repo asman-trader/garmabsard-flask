@@ -3,16 +3,16 @@
 {% block content %}
 
 <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-  <div class="w-full px-4 h-14 flex items-center justify-between">
-    <a href="{{ url_for('express_partner.profile') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-      <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+    <a href="{{ url_for('express_partner.profile') }}" class="w-9 h-9 sm:w-10 sm:h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
+      <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400 sm:text-lg"></i>
     </a>
-    <h1 class="text-sm font-bold text-gray-900 dark:text-white">ویرایش پروفایل</h1>
-    <div class="w-9"></div>
+    <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">ویرایش پروفایل</h1>
+    <div class="w-9 sm:w-10"></div>
   </div>
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-  <div class="px-4 py-2">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-2">
     {% for category, message in messages %}
       <div class="text-xs rounded-lg px-3 py-2
                   {% if category == 'success' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800
@@ -26,16 +26,16 @@
   {% endwith %}
 </header>
 
-<div class="max-w-3xl mx-auto pt-0 px-4 pb-16">
+<div class="max-w-3xl lg:max-w-4xl mx-auto pt-0 px-4 sm:px-6 pb-20 lg:pb-10">
   <!-- Intro - Divar style -->
-  <section class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-    <div class="flex items-start gap-3">
-      <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 grid place-items-center flex-shrink-0">
-        <i class="fas fa-user-cog"></i>
+  <section class="mt-4 sm:mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
+    <div class="flex items-start gap-3 sm:gap-4">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 grid place-items-center flex-shrink-0">
+        <i class="fas fa-user-cog sm:text-lg"></i>
       </div>
-      <div class="flex-1">
-        <h2 class="text-sm font-bold text-gray-900 dark:text-white">تنظیمات پروفایل</h2>
-        <p class="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-400">
+      <div class="flex-1 min-w-0">
+        <h2 class="text-sm sm:text-base lg:text-lg font-bold text-gray-900 dark:text-white">تنظیمات پروفایل</h2>
+        <p class="mt-1 text-xs sm:text-sm leading-relaxed text-gray-600 dark:text-gray-400">
           لطفاً اطلاعات خود را دقیق و خوانا وارد کنید. این اطلاعات در کارت معرفی شما نمایش داده می‌شود.
         </p>
       </div>
@@ -43,22 +43,22 @@
   </section>
 
   <!-- Avatar change (Divar-style minimal) -->
-  <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+  <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="mt-3 sm:mt-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="next" value="{{ url_for('express_partner.profile_edit') }}">
     <!-- دو ورودی برای موبایل: دوربین و گالری -->
     <input id="avatarInputCamera" name="avatar" type="file" accept="image/*" capture="environment" class="hidden" />
     <input id="avatarInputLibrary" name="avatar" type="file" accept="image/*" class="hidden" />
-    <div class="flex items-center sm:items-start gap-4 flex-col sm:flex-row">
+    <div class="flex items-center lg:items-start gap-4 sm:gap-6 flex-col sm:flex-row">
       <button type="button" id="avatarEditTrigger"
-              class="relative w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center mx-auto sm:mx-0 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition"
+              class="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center mx-auto sm:mx-0 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition shrink-0"
               title="تغییر عکس پروفایل">
         {% if profile and profile.get('avatar') %}
           <img id="avatarPreviewImg" src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
                alt="عکس پروفایل"
                class="w-full h-full object-cover" referrerpolicy="no-referrer" />
         {% else %}
-          <span id="avatarPreviewFallback" class="text-gray-600 dark:text-gray-400 text-xl font-semibold">
+          <span id="avatarPreviewFallback" class="text-gray-600 dark:text-gray-400 text-2xl sm:text-3xl font-semibold">
             {{ (me_name or (me_phone or '')[-4:])[:2] }}
           </span>
         {% endif %}
@@ -67,30 +67,30 @@
           <div class="w-7 h-7 rounded-full border-2 border-white/50 border-t-white animate-spin"></div>
         </div>
       </button>
-      <div class="flex-1 text-center sm:text-right w-full">
-        <div class="text-sm font-semibold text-gray-900 dark:text-white mb-1">عکس پروفایل</div>
-        <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">تصویر واضح از صورت یا لوگو. اندازه پیشنهادی مربعی (۱:۱).</p>
+      <div class="flex-1 text-center sm:text-right w-full min-w-0">
+        <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">عکس پروفایل</div>
+        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 mb-2 max-w-md sm:max-w-none sm:mx-0 mx-auto">تصویر واضح از صورت یا لوگو. اندازه پیشنهادی مربعی (۱:۱).</p>
         
       </div>
     </div>
   </form>
 
-  <form method="post" action="{{ url_for('express_partner.profile_edit') }}" class="mt-3 space-y-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+  <form method="post" action="{{ url_for('express_partner.profile_edit') }}" class="mt-3 sm:mt-4 space-y-3 sm:space-y-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">نام و نام خانوادگی</label>
-      <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">نامی که کاربران می‌بینند. بهتر است واقعی و کامل باشد.</p>
+      <label class="block text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">نام و نام خانوادگی</label>
+      <p class="mt-1 text-[11px] sm:text-sm text-gray-500 dark:text-gray-400">نامی که کاربران می‌بینند. بهتر است واقعی و کامل باشد.</p>
       <input type="text" name="name" value="{{ me_name }}"
-             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+             class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
              placeholder="مثال: علی رضایی" maxlength="60" />
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">شهر</label>
-      <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">شهر فعالیت اصلی شما برای پیشنهادهای دقیق‌تر.</p>
+      <label class="block text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">شهر</label>
+      <p class="mt-1 text-[11px] sm:text-sm text-gray-500 dark:text-gray-400">شهر فعالیت اصلی شما برای پیشنهادهای دقیق‌تر.</p>
       <select name="city"
-              class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <option value="">انتخاب شهر</option>
         {% for c in (cities or []) %}
           <option value="{{ c }}" {% if me_city == c %}selected{% endif %}>{{ c }}</option>
@@ -99,23 +99,23 @@
     </div>
 
     <div>
-      <label class="block text-xs font-medium text-gray-600 dark:text-gray-300">درباره من</label>
-      <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between">
+      <label class="block text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">درباره من</label>
+      <div class="mt-1 text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-between gap-2">
         <span>توضیح کوتاه و حرفه‌ای درباره‌ی شما (حداکثر ۲۰۰ کاراکتر).</span>
-        <span id="bioCounter" class="text-gray-400">0/200</span>
+        <span id="bioCounter" class="text-gray-400 tabular-nums shrink-0">0/200</span>
       </div>
       <textarea name="bio" id="bioInput" rows="4" maxlength="200"
-                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                class="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 mt-1.5 min-h-[7rem] sm:min-h-[8rem] focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="توضیحات کوتاه درباره‌ی شما (اختیاری)">{{ me_bio }}</textarea>
     </div>
 
-    <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <a href="{{ url_for('express_partner.profile') }}"
-         class="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition text-center">
+         class="w-full py-3 sm:py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm sm:text-base font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition text-center">
         انصراف
       </a>
       <button type="submit"
-              class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+              class="w-full py-3 sm:py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-semibold transition">
         ذخیره تغییرات
       </button>
     </div>

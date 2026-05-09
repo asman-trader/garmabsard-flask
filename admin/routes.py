@@ -72,7 +72,6 @@ from app.utils.storage import (
     load_express_partner_views,
     load_partner_routines, load_partner_routines_cached,
 )
-from app.services.notifications import add_notification
 
 def _ad_owner_id(ad: Dict[str, Any]) -> Optional[str]:
     """شناسه کاربر آگهی‌دهنده از فیلدهای رایج."""
@@ -658,6 +657,10 @@ def login():
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     - تا قبل از اضافه شدن توکن در فرم، می‌توانید موقتاً این روت را CSRF-exempt کنید.
     """
+    # سشن هنوز معتبر است (همان مرورگر/دستگاه، کوکی در مدت PERMANENT_SESSION_LIFETIME)
+    if session.get('logged_in'):
+        return redirect(url_for('admin.dashboard'))
+
     now_ts = datetime.utcnow().timestamp()
     last_sent_at = float(session.get('admin_otp_last_sent_at') or 0)
     cooldown_seconds = max(0, ADMIN_OTP_COOLDOWN_SECONDS - int(now_ts - last_sent_at)) if last_sent_at else 0
@@ -744,9 +747,18 @@ if csrf is not None:
 
 @admin_bp.route('/logout', methods=['POST', 'GET'])
 def logout():
-    # پاک کردن کامل session برای خروج کامل از حساب
-    session.clear()
-    session.permanent = False
+    # فقط کلیدهای ادمین؛ ورود همکار (user_phone) روی همان مرورگر حفظ می‌ماند
+    for k in (
+        'logged_in',
+        'username',
+        'admin_otp_pending',
+        'admin_otp_code',
+        'admin_otp_expires_at',
+        'admin_otp_last_sent_at',
+    ):
+        session.pop(k, None)
+    if not session.get('user_phone'):
+        session.permanent = False
     flash('خروج انجام شد.', 'info')
     return redirect(url_for('admin.login'))
 
@@ -1310,9 +1322,12 @@ def notifications_colleagues():
     
     # بررسی درخواست تست
     if request.method == 'POST' and request.form.get('test_action') == 'test':
+        # add_notification در سطح ماژول import شده؛ اینجا دوباره import نشود (UnboundLocalError در مسیر ارسال به همکاران)
         from app.services.notifications import (
-            add_notification, get_user_notifications, get_all_notifications_stats,
-            _load_all, _normalize_user_id
+            get_user_notifications,
+            get_all_notifications_stats,
+            _load_all,
+            _normalize_user_id,
         )
         test_phone = (request.form.get('test_phone') or '').strip()
         if not test_phone:

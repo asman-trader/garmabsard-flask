@@ -4,7 +4,7 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.1-2025-12-23';
+const VERSION = 'v1.0.3-tab-perf';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
@@ -38,7 +38,9 @@ const PRECACHE_URLS = [
   '/express/partner/manifest.webmanifest',
   // Icons (استفاده از آیکون‌های مشترک)
   '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png'
+  '/static/icons/icon-512.png',
+  /* اسکلت آفلاین / fallback ناوبری */
+  '/static/express-partner/skeleton-shell.html'
 ];
 
 // Assets محلی برای offline
@@ -193,7 +195,8 @@ self.addEventListener('fetch', (event) => {
         // Fallback به dashboard shell
         const dashboardShell = await cache.match('/express/partner/dashboard');
         if (dashboardShell) return dashboardShell;
-        // بدون صفحه آفلاین: خطای شبکه
+        const skeletonShell = await cache.match('/static/express-partner/skeleton-shell.html');
+        if (skeletonShell) return skeletonShell.clone();
         return new Response('Offline', { status: 503 });
       }
     })());

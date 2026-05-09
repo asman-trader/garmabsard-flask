@@ -9,7 +9,7 @@ from flask import (
     send_from_directory, current_app, abort, flash, g
 )
 from functools import wraps
-import random, re
+import random, re, time
 
 from . import express_partner_bp
 from ..utils.storage import (
@@ -34,6 +34,61 @@ from flask import jsonify, make_response
 def _sort_by_created_at_desc(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     from ..utils.dates import parse_datetime_safe
     return sorted(items, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+
+
+def _express_partners_cached() -> List[Dict[str, Any]]:
+    """در هر درخواست فقط یک‌بار لیست همکاران از دیسک خوانده می‌شود."""
+    cached = getattr(g, '_express_partners_list_cached', None)
+    if cached is not None:
+        return cached
+    try:
+        lst = load_express_partners() or []
+    except Exception:
+        lst = []
+    g._express_partners_list_cached = lst
+    return lst
+
+
+def _express_settings_cached() -> Dict[str, Any]:
+    """در هر درخواست یک‌بار تنظیمات (برای پروفایل و غیره)."""
+    if getattr(g, '_express_settings_loaded', False):
+        return getattr(g, '_express_settings_data', {}) or {}
+    g._express_settings_loaded = True
+    try:
+        data = load_settings() or {}
+    except Exception:
+        data = {}
+    g._express_settings_data = data
+    return data
+
+
+def _append_partner_tab_prefetch(resp):
+    """برای همکار واردشده: پیشنهاد prefetch به مرورگر برای سایر تب‌های اصلی."""
+    try:
+        if not (session.get('user_phone') or '').strip():
+            return resp
+        here = (request.path or '').rstrip('/') or '/'
+        if not here.startswith('/express/partner'):
+            return resp
+        peers = (
+            '/express/partner/dashboard',
+            '/express/partner/commissions',
+            '/express/partner/routine',
+            '/express/partner/profile',
+        )
+        links = [
+            f'<{p}>; rel=prefetch; as=document'
+            for p in peers
+            if p.rstrip('/') != here
+        ]
+        if not links:
+            return resp
+        chunk = ', '.join(links)
+        prev = resp.headers.get('Link')
+        resp.headers['Link'] = f'{prev}, {chunk}' if prev else chunk
+    except Exception:
+        pass
+    return resp
 
 
 def _normalize_phone(phone: str) -> str:
@@ -98,6 +153,20 @@ def _auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> Non
         save_express_assignments(assignments)
 
 
+_AUTO_RELEASE_LAST_MONO = 0.0
+_AUTO_RELEASE_MIN_INTERVAL_S = 120.0
+
+
+def _maybe_auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> None:
+    """همان رفع خودکار معاملات منقضی، حداکثر یک‌بار در چند ثانیه (سبک‌تر برای داشبورد پرتکرار)."""
+    global _AUTO_RELEASE_LAST_MONO
+    now = time.monotonic()
+    if now - _AUTO_RELEASE_LAST_MONO < _AUTO_RELEASE_MIN_INTERVAL_S:
+        return
+    _AUTO_RELEASE_LAST_MONO = now
+    _auto_release_expired_transactions(assignments)
+
+
 def _get_my_last_application(phone: str) -> Dict[str, Any] | None:
     """Return latest Express Partner application for a phone, if any."""
     try:
@@ -160,10 +229,7 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
                 return redirect(url_for("express_partner.login", next=nxt))
 
             me_phone = (session.get("user_phone") or "").strip()
-            try:
-                partners = load_express_partners() or []
-            except Exception:
-                partners = []
+            partners = _express_partners_cached()
             profile = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
 
             approved = _is_partner_approved(profile)
@@ -195,12 +261,13 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
 def track_online_partner():
     """به‌روزرسانی timestamp آخرین فعالیت همکار در تمام route‌های express_partner"""
     if session.get("user_phone"):
+        session.permanent = True
         try:
             phone = (session.get("user_phone") or "").strip()
             if phone:
                 # دریافت نام همکار از profile
                 try:
-                    partners = load_express_partners() or []
+                    partners = _express_partners_cached()
                     profile = next((p for p in partners if str(p.get("phone") or "").strip() == phone), None)
                     name = profile.get('name') if profile else None
                 except Exception:
@@ -249,7 +316,7 @@ def inject_role_flags():
     except Exception:
         me = ""
     try:
-        partners = load_express_partners() or []
+        partners = _express_partners_cached()
         is_express_partner = any(
             isinstance(p, dict)
             and str(p.get("phone") or "").strip() == me
@@ -613,14 +680,9 @@ def dashboard():
         return s
     has_pending_app = any(_norm_status(a.get('status')) in ('pending','under_review','waiting','review') for a in my_apps)
 
-    notes = [n for n in (load_partner_notes() or []) if str(n.get('phone')) == me_phone]
-    sales = [s for s in (load_partner_sales() or []) if str(s.get('phone')) == me_phone]
-    files = [f for f in (load_partner_files_meta() or []) if str(f.get('phone')) == me_phone]
-
     try:
         assignments = load_express_assignments() or []
-        # رفع خودکار معاملات بعد از ۵ روز
-        _auto_release_expired_transactions(assignments)
+        _maybe_auto_release_expired_transactions(assignments)
     except Exception:
         assignments = []
     my_assignments = [a for a in assignments if str(a.get('partner_phone')) == me_phone and a.get('status') in (None,'active','pending','approved','in_transaction','sold')]
@@ -773,9 +835,6 @@ def dashboard():
         my_apps=my_apps,
         training_video_url=training_video_url,
         cities=cities,
-        notes=notes,
-        sales=sales,
-        files=files,
         assigned_lands=assigned_lands,
         total_commission=total_commission,
         pending_commission=pending_commission,
@@ -798,6 +857,7 @@ def dashboard():
         resp.headers["Pragma"] = "no-cache"
         resp.headers["Expires"] = "0"
         resp.headers["Vary"] = "Cookie"
+        _append_partner_tab_prefetch(resp)
     return resp
 
 
@@ -1086,14 +1146,20 @@ def commissions_page():
     except Exception:
         pass
 
-    return render_template("express_partner/commissions.html",
-                           items=my_comms,
-                           total_commission=total_commission,
-                           pending_commission=pending_commission,
-                           paid_commission=paid_commission,
-                           sold_count=sold_count,
-                           hide_header=True, SHOW_SUBMIT_BUTTON=False,
-                           brand="وینور", domain="vinor.ir")
+    resp = make_response(render_template(
+        "express_partner/commissions.html",
+        items=my_comms,
+        total_commission=total_commission,
+        pending_commission=pending_commission,
+        paid_commission=paid_commission,
+        sold_count=sold_count,
+        hide_header=True,
+        SHOW_SUBMIT_BUTTON=False,
+        brand="وینور",
+        domain="vinor.ir",
+    ))
+    _append_partner_tab_prefetch(resp)
+    return resp
 
 
 @express_partner_bp.get('/commissions/data', endpoint='commissions_data')
@@ -1311,10 +1377,19 @@ def download_file(fid: int):
 # -------------------------
 # Auth (Express Partner themed)
 # -------------------------
+def _clear_express_partner_auth_session() -> None:
+    """فقط خروج از حساب همکار؛ سشن ادمین یا پیش‌نویس apply_data حذف نمی‌شود."""
+    for k in ('user_id', 'user_phone', 'otp_code', 'otp_phone', 'next'):
+        session.pop(k, None)
+    if not session.get('logged_in'):
+        session.permanent = False
+
+
 @express_partner_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     # اگر از قبل لاگین است، مستقیم به داشبورد (یا مسیر هدف) برود
     if session.get("user_phone"):
+        session.permanent = True
         nxt = request.args.get('next') or session.get('next')
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
@@ -1432,7 +1507,9 @@ def training():
 @require_partner_access(allow_pending=True, allow_guest=True)
 def routine():
     """روتین روزانه/هفتگی برای ثبت پیشرفت (جدا از آموزش)"""
-    return render_template('express_partner/routine.html', hide_header=True)
+    resp = make_response(render_template('express_partner/routine.html', hide_header=True))
+    _append_partner_tab_prefetch(resp)
+    return resp
 
 
 @express_partner_bp.route('/routine/data', methods=['GET'], endpoint='routine_data')
@@ -1782,8 +1859,7 @@ def mark_in_transaction(code: str):
 @express_partner_bp.route('/logout', methods=['POST'], endpoint='logout')
 def logout():
     """خروج امن با درخواست POST (محافظت‌شده با CSRF)."""
-    session.clear()
-    session.permanent = False
+    _clear_express_partner_auth_session()
     flash('از حساب خارج شدید.', 'info')
     return redirect(url_for('express_partner.login'))
 
@@ -1791,8 +1867,7 @@ def logout():
 @express_partner_bp.post('/api/logout')
 def api_logout():
     """خروج برای اپ اندروید (بدون CSRF؛ با کوکی سشن)."""
-    session.clear()
-    session.permanent = False
+    _clear_express_partner_auth_session()
     return jsonify({'success': True})
 
 
@@ -1893,19 +1968,12 @@ def profile_page():
         is_approved = False
     me_name = (profile.get('name') or '').strip()
     # Inject latest APK info from settings for direct rendering
-    try:
-        from app.utils.storage import load_settings
-        _settings = load_settings()
-        android_apk_url = _settings.get('android_apk_url') or ''
-        android_apk_version = _settings.get('android_apk_version') or ''
-        android_apk_updated_at = _settings.get('android_apk_updated_at') or ''
-        android_apk_size_bytes = _settings.get('android_apk_size_bytes') or ''
-    except Exception:
-        android_apk_url = ''
-        android_apk_version = ''
-        android_apk_updated_at = ''
-        android_apk_size_bytes = ''
-    return render_template(
+    _settings = _express_settings_cached()
+    android_apk_url = _settings.get('android_apk_url') or ''
+    android_apk_version = _settings.get('android_apk_version') or ''
+    android_apk_updated_at = _settings.get('android_apk_updated_at') or ''
+    android_apk_size_bytes = _settings.get('android_apk_size_bytes') or ''
+    resp = make_response(render_template(
         'express_partner/profile.html',
         me_phone=me_phone,
         me_name=me_name,
@@ -1914,8 +1982,10 @@ def profile_page():
         android_apk_url=android_apk_url,
         android_apk_version=android_apk_version,
         android_apk_updated_at=android_apk_updated_at,
-        android_apk_size_bytes=android_apk_size_bytes
-    )
+        android_apk_size_bytes=android_apk_size_bytes,
+    ))
+    _append_partner_tab_prefetch(resp)
+    return resp
 
 
 @express_partner_bp.get('/profile/data', endpoint='profile_data')
@@ -1931,13 +2001,9 @@ def profile_data():
     me_name = (profile.get('name') or '').strip()
     avatar = (profile.get('avatar') or '').strip()
     avatar_url = (f"/uploads/{avatar}" if avatar else None)
-    try:
-        _settings = load_settings()
-        android_apk_url = (_settings.get('android_apk_url') or '').strip()
-        android_apk_version = (_settings.get('android_apk_version') or '').strip()
-    except Exception:
-        android_apk_url = ''
-        android_apk_version = ''
+    _settings = _express_settings_cached()
+    android_apk_url = (_settings.get('android_apk_url') or '').strip()
+    android_apk_version = (_settings.get('android_apk_version') or '').strip()
     try:
         from flask_wtf.csrf import generate_csrf
         csrf_token = generate_csrf()

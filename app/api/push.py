@@ -7,7 +7,8 @@ import json
 from typing import List, Dict, Any
 from flask import Blueprint, current_app, request, jsonify
 
-# اگر pywebpush ندارید: pip install pywebpush cryptography
+# اگر pywebpush ندارید: pip install pywebpush cryptography aiohttp
+# نسخه‌های قدییم pywebpush با cryptography≥۴۵ هشدار SECP256R1 می‌دادند؛ pywebpush≥۲ اصلاح شده است.
 try:
     from pywebpush import webpush, WebPushException
 except Exception:

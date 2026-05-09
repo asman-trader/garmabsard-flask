@@ -1,0 +1,147 @@
+{# اسکلت اولیهٔ پنل همکار — CSS فقط بدون Tailwind تا قبل از رندر محتوا نمایش داده شود؛ SW همانند skeleton-shell.html کش می‌کند #}
+<style id="vinor-partner-sk-styles">
+  #vinorPartnerSkeletonRoot {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    background: #f9fafb;
+    transition: opacity 0.28s ease, visibility 0.28s ease;
+  }
+  html.dark #vinorPartnerSkeletonRoot {
+    background: #030712;
+  }
+  #vinorPartnerSkeletonRoot.vinor-sk-hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-head {
+    flex-shrink: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  html.dark #vinorPartnerSkeletonRoot .vinor-sk-head {
+    background: rgba(17, 24, 39, 0.96);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-main {
+    flex: 1;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-bar {
+    border-radius: 10px;
+    background: #e5e7eb;
+  }
+  html.dark #vinorPartnerSkeletonRoot .vinor-sk-bar {
+    background: #374151;
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-card {
+    border-radius: 16px;
+    background: #e5e7eb;
+    min-height: 100px;
+  }
+  html.dark #vinorPartnerSkeletonRoot .vinor-sk-card {
+    background: #1f2937;
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-tabs {
+    flex-shrink: 0;
+    height: calc(54px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(247, 247, 248, 0.94);
+  }
+  html.dark #vinorPartnerSkeletonRoot .vinor-sk-tabs {
+    background: rgba(28, 28, 29, 0.94);
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-tab {
+    width: 48px;
+    height: 30px;
+    border-radius: 999px;
+    background: #dfe3e6;
+  }
+  html.dark #vinorPartnerSkeletonRoot .vinor-sk-tab {
+    background: #374151;
+  }
+  @keyframes vinorPartnerSkPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.48; }
+  }
+  #vinorPartnerSkeletonRoot .vinor-sk-pulse {
+    animation: vinorPartnerSkPulse 1.15s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #vinorPartnerSkeletonRoot .vinor-sk-pulse {
+      animation: none;
+      opacity: 0.85;
+    }
+  }
+</style>
+<div id="vinorPartnerSkeletonRoot" aria-hidden="true" data-vinor-partner-skeleton="1">
+  <header class="vinor-sk-head">
+    <span class="vinor-sk-bar vinor-sk-pulse" style="width:36px;height:36px;border-radius:50%"></span>
+    <span class="vinor-sk-bar vinor-sk-pulse" style="flex:1;max-width:42%;height:13px"></span>
+    <span class="vinor-sk-bar vinor-sk-pulse" style="width:36px;height:36px;border-radius:50%"></span>
+  </header>
+  <div class="vinor-sk-main">
+    <div class="vinor-sk-card vinor-sk-pulse" style="min-height:132px"></div>
+    <div class="vinor-sk-card vinor-sk-pulse" style="min-height:96px"></div>
+    <div class="vinor-sk-card vinor-sk-pulse" style="min-height:96px"></div>
+  </div>
+  <nav class="vinor-sk-tabs">
+    <span class="vinor-sk-tab vinor-sk-pulse"></span>
+    <span class="vinor-sk-tab vinor-sk-pulse"></span>
+    <span class="vinor-sk-tab vinor-sk-pulse"></span>
+    <span class="vinor-sk-tab vinor-sk-pulse"></span>
+  </nav>
+</div>
+<script>
+(function () {
+  function hidePartnerSkeleton() {
+    var root = document.getElementById('vinorPartnerSkeletonRoot');
+    if (!root || root.getAttribute('data-vinor-sk-dismissed') === '1') return;
+    root.setAttribute('data-vinor-sk-dismissed', '1');
+    root.classList.add('vinor-sk-hidden');
+    window.setTimeout(function () {
+      try {
+        root.remove();
+      } catch (_) {}
+      var st = document.getElementById('vinor-partner-sk-styles');
+      if (st && st.parentNode) st.parentNode.removeChild(st);
+    }, 320);
+  }
+
+  function scheduleHide() {
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(hidePartnerSkeleton);
+    });
+  }
+
+  window.hideVinorPartnerSkeleton = hidePartnerSkeleton;
+
+  window.addEventListener('pageshow', function (ev) {
+    if (ev.persisted) hidePartnerSkeleton();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleHide);
+  } else {
+    scheduleHide();
+  }
+})();
+</script>

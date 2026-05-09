@@ -61,8 +61,92 @@
       -webkit-touch-callout:none;
     }
     .no-scrollbar{scrollbar-width:none}
-    .no-scrollbar::-webkit-scrollbar{display:none}
+    .no-scrollbar::-webkit-scrollbar{display:none;width:0;height:0}
     [x-cloak] { display: none !important; }
+
+    /* موبایل: بدون نوار اسکرول افقی (سطح صفحه + نوار افقی داخل محتوا در WebKit) */
+    @media (max-width: 1023px) {
+      html {
+        overflow-x: hidden;
+        width: 100%;
+      }
+      body {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+      }
+      html,
+      body {
+        overscroll-behavior-x: none;
+      }
+      #tg-page-shell ::-webkit-scrollbar {
+        height: 0;
+      }
+      #tg-page-shell .overflow-x-auto,
+      #tg-page-shell .overflow-x-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      #tg-page-shell .overflow-x-auto::-webkit-scrollbar,
+      #tg-page-shell .overflow-x-scroll::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+    }
+
+    /* انیمیشن فقط روی #tg-page-shell تا نوار پایین fixed به viewport بچسبد (transform روی body آن را با محتوا جابه‌جا می‌کرد) */
+    #tg-page-shell {
+      min-height: 100%;
+      transform: translateZ(0);
+    }
+    html[class*="tg-page-leave-"] #tg-page-shell,
+    html[class*="tg-page-enter-"] #tg-page-shell {
+      backface-visibility: hidden;
+    }
+    @keyframes tgLeaveRtlFwd {
+      to { opacity: 0.9; transform: translate3d(11px, 0, 0); }
+    }
+    @keyframes tgEnterRtlFwd {
+      from { opacity: 0.93; transform: translate3d(-13px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes tgLeaveRtlBack {
+      to { opacity: 0.9; transform: translate3d(-11px, 0, 0); }
+    }
+    @keyframes tgEnterRtlBack {
+      from { opacity: 0.93; transform: translate3d(13px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes tgLeaveLtrFwd {
+      to { opacity: 0.9; transform: translate3d(-11px, 0, 0); }
+    }
+    @keyframes tgEnterLtrFwd {
+      from { opacity: 0.93; transform: translate3d(13px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes tgLeaveLtrBack {
+      to { opacity: 0.9; transform: translate3d(11px, 0, 0); }
+    }
+    @keyframes tgEnterLtrBack {
+      from { opacity: 0.93; transform: translate3d(-13px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    html.tg-page-leave-rtl-forward #tg-page-shell { animation: tgLeaveRtlFwd 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-rtl-forward #tg-page-shell { animation: tgEnterRtlFwd 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-rtl-back #tg-page-shell { animation: tgLeaveRtlBack 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-rtl-back #tg-page-shell { animation: tgEnterRtlBack 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-ltr-forward #tg-page-shell { animation: tgLeaveLtrFwd 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-ltr-forward #tg-page-shell { animation: tgEnterLtrFwd 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-ltr-back #tg-page-shell { animation: tgLeaveLtrBack 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-ltr-back #tg-page-shell { animation: tgEnterLtrBack 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-nav-transitioning #bottomNavMenu {
+      pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html[class*="tg-page-leave-"] #tg-page-shell,
+      html[class*="tg-page-enter-"] #tg-page-shell { animation: none !important; opacity: 1 !important; transform: none !important; }
+    }
     {% block styles %}{% endblock %}
   </style>
 
@@ -70,7 +154,24 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100">
 
+  {% include 'express_partner/partials/app_skeleton_shell.html' %}
+
   {% block content %}{% endblock %}
+
+  <script>
+    (function hoistExpressPartnerShell() {
+      var nav = document.getElementById('bottomNavMenu');
+      if (!nav || nav.getAttribute('data-tg-shell-done') === '1') return;
+      nav.setAttribute('data-tg-shell-done', '1');
+      document.body.appendChild(nav);
+      var shell = document.createElement('div');
+      shell.id = 'tg-page-shell';
+      while (document.body.firstChild && document.body.firstChild !== nav) {
+        shell.appendChild(document.body.firstChild);
+      }
+      document.body.insertBefore(shell, nav);
+    })();
+  </script>
 
   <script>
     (function(){
@@ -95,7 +196,8 @@
                 '/express/partner/profile',
                 '/express/partner/commissions',
                 '/express/partner/notes',
-                '/express/partner/apply'
+                '/express/partner/apply',
+                '/static/express-partner/skeleton-shell.html'
               ];
               
               if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
@@ -378,6 +480,39 @@
     };
   </script>
 
+  <!-- صدای کوتاه اعلان (Web Audio) — بدون فایل خارجی؛ پس از اولین همگام‌سازی فقط برای اعلان جدید پخش می‌شود -->
+  <script>
+    (function () {
+      window.playVinorNotificationSound = function playVinorNotificationSound() {
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return;
+          var ctx = new Ctx();
+          if (ctx.state === 'suspended') ctx.resume().catch(function () {});
+          var t0 = ctx.currentTime;
+          var notes = [
+            [880, 0, 0.1, 0.1],
+            [1108.73, 0.08, 0.12, 0.08]
+          ];
+          notes.forEach(function (spec) {
+            var freq = spec[0], delay = spec[1], dur = spec[2], vol = spec[3];
+            var osc = ctx.createOscillator();
+            var g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t0 + delay);
+            g.gain.setValueAtTime(0.001, t0 + delay);
+            g.gain.linearRampToValueAtTime(vol, t0 + delay + 0.012);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + delay + dur);
+            osc.connect(g);
+            g.connect(ctx.destination);
+            osc.start(t0 + delay);
+            osc.stop(t0 + delay + dur + 0.03);
+          });
+        } catch (_) {}
+      };
+    })();
+  </script>
+
   <script>
     (function(){
       const cfg = window.VINOR_NOTIFY_CFG || {};
@@ -398,6 +533,31 @@
       };
       let pollTimer = null;
       let bootstrapped = false;
+      const knownNotificationIds = new Set();
+      let notificationSoundBaselineReady = false;
+
+      function maybePlaySoundForNewNotifications(incomingList) {
+        const list = Array.isArray(incomingList) ? incomingList : [];
+        if (!notificationSoundBaselineReady) {
+          list.forEach(function (n) {
+            if (n && n.id != null && n.id !== '') knownNotificationIds.add(String(n.id));
+          });
+          notificationSoundBaselineReady = true;
+          return;
+        }
+        var shouldPlay = false;
+        list.forEach(function (n) {
+          if (!n || n.id == null || n.id === '') return;
+          var id = String(n.id);
+          if (knownNotificationIds.has(id)) return;
+          knownNotificationIds.add(id);
+          if (!n.is_read) shouldPlay = true;
+        });
+        if (shouldPlay && typeof window.playVinorNotificationSound === 'function') {
+          window.playVinorNotificationSound();
+        }
+      }
+      window.__vinorNotifyIngestForSound = maybePlaySoundForNewNotifications;
 
       function cloneState() {
         return {
@@ -435,7 +595,9 @@
           }
           const data = await res.json();
           if (!data.success) return [];
-          state.notifications = Array.isArray(data.notifications) ? data.notifications : [];
+          const incoming = Array.isArray(data.notifications) ? data.notifications : [];
+          maybePlaySoundForNewNotifications(incoming);
+          state.notifications = incoming;
           state.unread = Number(data.unread_count || 0);
           dispatch('vinor:notifications:update', cloneState());
           bootstrapped = true;
@@ -685,6 +847,9 @@
                 const data = await res.json();
                 console.debug('Direct fetch response:', data);
                 if (data.success && Array.isArray(data.notifications)) {
+                  if (typeof window.__vinorNotifyIngestForSound === 'function') {
+                    window.__vinorNotifyIngestForSound(data.notifications);
+                  }
                   this.items = data.notifications;
                   this.unreadCount = Number(data.unread_count || 0);
                   this.loading = false;
@@ -770,6 +935,145 @@
           }
         }));
       });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'vinor_express_tab_nav_dir';
+      var PREFIX = '/express/partner/';
+
+      function stripNavClasses(el) {
+        if (!el || !el.classList) return;
+        var rm = [];
+        el.classList.forEach(function (c) {
+          if (c.indexOf('tg-page-leave-') === 0 || c.indexOf('tg-page-enter-') === 0) rm.push(c);
+        });
+        rm.forEach(function (c) { el.classList.remove(c); });
+        el.classList.remove('tg-nav-transitioning');
+      }
+
+      function prefersReducedMotion() {
+        try {
+          return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function firstAnimName(ev) {
+        try {
+          var raw = ev.animationName || '';
+          var i = raw.indexOf(',');
+          return (i === -1 ? raw : raw.slice(0, i)).trim();
+        } catch (_) {
+          return '';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (!raw || prefersReducedMotion()) {
+            sessionStorage.removeItem(STORAGE_KEY);
+            return;
+          }
+          sessionStorage.removeItem(STORAGE_KEY);
+          var dir = parseInt(raw, 10);
+          if (!dir) return;
+          var shell = document.getElementById('tg-page-shell');
+          if (!shell) return;
+          var rtl = document.documentElement.getAttribute('dir') === 'rtl';
+          var enter = rtl
+            ? (dir > 0 ? 'tg-page-enter-rtl-forward' : 'tg-page-enter-rtl-back')
+            : (dir > 0 ? 'tg-page-enter-ltr-forward' : 'tg-page-enter-ltr-back');
+          document.documentElement.classList.add(enter);
+          var finished = false;
+          function done() {
+            if (finished) return;
+            finished = true;
+            stripNavClasses(document.documentElement);
+          }
+          function onEnterEnd(ev) {
+            if (ev.target !== shell) return;
+            if (!/^tgEnter/i.test(firstAnimName(ev))) return;
+            shell.removeEventListener('animationend', onEnterEnd);
+            done();
+          }
+          shell.addEventListener('animationend', onEnterEnd);
+          setTimeout(function () {
+            shell.removeEventListener('animationend', onEnterEnd);
+            done();
+          }, 500);
+        } catch (_) {}
+      });
+
+      document.addEventListener(
+        'click',
+        function (e) {
+          if (prefersReducedMotion()) return;
+          if (typeof e.button === 'number' && e.button !== 0) return;
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+          var nav = document.getElementById('bottomNavMenu');
+          if (!nav) return;
+          var a = e.target.closest('a[data-nav-key][href]');
+          if (!a || !nav.contains(a)) return;
+          var href = a.getAttribute('href');
+          if (!href || href === '#' || a.getAttribute('download')) return;
+          try {
+            var u = new URL(href, window.location.origin);
+            if (u.origin !== window.location.origin) return;
+            if (u.pathname.indexOf(PREFIX) !== 0) return;
+          } catch (_) {
+            return;
+          }
+
+          var tabs = Array.prototype.slice.call(
+            nav.querySelectorAll('#bottomNavItems > a[data-nav-key]')
+          );
+          var ti = tabs.indexOf(a);
+          var activeEl = nav.querySelector('.tg-tab-active[data-nav-key]');
+          var fi = activeEl ? tabs.indexOf(activeEl) : -1;
+          var dir = fi >= 0 && ti >= 0 && fi !== ti ? (ti > fi ? 1 : -1) : 0;
+          if (!dir) return;
+
+          try {
+            sessionStorage.setItem(STORAGE_KEY, String(dir));
+          } catch (_) {}
+
+          e.preventDefault();
+          stripNavClasses(document.documentElement);
+          var rtl = document.documentElement.getAttribute('dir') === 'rtl';
+          var leave = rtl
+            ? (dir > 0 ? 'tg-page-leave-rtl-forward' : 'tg-page-leave-rtl-back')
+            : (dir > 0 ? 'tg-page-leave-ltr-forward' : 'tg-page-leave-ltr-back');
+          var shell = document.getElementById('tg-page-shell');
+          if (!shell) {
+            window.location.href = href;
+            return;
+          }
+          document.documentElement.classList.add('tg-nav-transitioning', leave);
+          var navigated = false;
+          function go() {
+            if (navigated) return;
+            navigated = true;
+            document.documentElement.classList.remove('tg-nav-transitioning');
+            window.location.href = href;
+          }
+          function onLeave(ev) {
+            if (ev.target !== shell) return;
+            if (!/^tgLeave/i.test(firstAnimName(ev))) return;
+            shell.removeEventListener('animationend', onLeave);
+            go();
+          }
+          shell.addEventListener('animationend', onLeave);
+          setTimeout(function () {
+            shell.removeEventListener('animationend', onLeave);
+            go();
+          }, 360);
+        },
+        true
+      );
     })();
   </script>
 
