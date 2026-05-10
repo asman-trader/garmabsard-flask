@@ -177,7 +177,6 @@
   <script>
     (function(){
       const IS_LOGGED_IN = {{ 'true' if __is_logged_in else 'false' }};
-      const IS_HOME = {{ 'true' if request.endpoint in ['main.index'] else 'false' }};
       const LOGIN_URL    = "{{ __login_url }}";
 
       // گارد لاگین برای لینک‌هایی که ورود لازم دارند
@@ -210,9 +209,14 @@
       }
 
       function openMenu(){
-        try{ sideMenu?.classList.add('open'); }catch(_){ }
+        if (!sideMenu) return;
+        try {
+          const st = window.getComputedStyle(sideMenu);
+          if (st.display === 'none' || st.visibility === 'hidden') return;
+        } catch (_) { return; }
+        try { sideMenu.classList.add('open'); } catch (_) {}
         setOverlay(true);
-        try { document.body.style.overflow = 'hidden'; } catch(_){ }
+        try { document.body.style.overflow = 'hidden'; } catch (_) {}
       }
       function closeMenu(){
         try{ sideMenu?.classList.remove('open'); }catch(_){ }
@@ -367,16 +371,12 @@
           const target = ev.target || null;
           const menuIsOpen = sideMenu?.classList.contains('open');
           // وقتی منو باز است، حتی روی المان‌های تعاملی هم ژست بستن فعال است
-          // وقتی منو بسته است: در صفحه اصلی، از هرجا (به جز المان‌های تعاملی) شروع شود؛
-          // در سایر صفحات، هم از لبه راست و هم خارج از نواحی حساس.
+          // وقتی منو بسته است: فقط از لبهٔ راست (RTL) و خارج از المان‌های تعاملی/نواحی حساس
+          // تا با اسکرول عمودی روی لندینگ و کارت‌ها تداخل نگیرد.
           if (!menuIsOpen) {
-            if (IS_HOME) {
-              // در صفحه اصلی: اجازه شروع ژست از هر جا (بدون استثنا)
-            } else {
-              if (isInteractive(target) || isSwipeExcluded(target)) return;
-              const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
-              if (vw && t.clientX < (vw - EDGE)) return;
-            }
+            if (isInteractive(target) || isSwipeExcluded(target)) return;
+            const vw = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
+            if (vw && t.clientX < (vw - EDGE)) return;
           }
           // باز کردن/بستن از هر جای صفحه
           startX = t.clientX; startY = t.clientY; dx = 0; dy = 0; tracking = true;

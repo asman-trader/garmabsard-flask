@@ -176,12 +176,9 @@
       }
     });
 
-    // Disable slide-out menu behavior on landing (mobile)
+    // دکمهٔ منو را مخفی می‌کنیم؛ قطع کردن touch روی window با stopImmediatePropagation
+    // کل زنجیرهٔ رویداد تا document/کارت‌ها را می‌بُرد و اسکرول لمسی از روی کارت‌ها از کار می‌افتد.
     try { localStorage.setItem('vinor_show_sidebar','0'); } catch(_){}
-    // Prevent swipe-to-open listeners from base on this page
-    ['touchstart','touchmove','touchend','pointerdown','pointermove','pointerup'].forEach(evt => {
-      window.addEventListener(evt, function(e){ e.stopImmediatePropagation(); }, true);
-    });
     // Update icon on load
     if (savedTheme === 'light') {
       const icon = document.querySelector('#darkToggle i');
