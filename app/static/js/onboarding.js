@@ -485,6 +485,7 @@ class OnboardingTour {
       bottom: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 9998;
+      pointer-events: none;
       transition: opacity 0.3s;
     `;
     document.body.appendChild(this.overlay);
@@ -496,6 +497,7 @@ class OnboardingTour {
     this.tooltip.style.cssText = `
       position: fixed;
       z-index: 9999;
+      pointer-events: auto;
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: ${isMobile ? '16px' : '12px'};
@@ -543,6 +545,9 @@ class OnboardingTour {
         }
         .onboarding-highlight {
           animation: highlightPulse 2s ease-in-out infinite;
+        }
+        .onboarding-overlay {
+          pointer-events: none !important;
         }
         /* استایل‌های موبایل */
         @media (max-width: 640px) {
