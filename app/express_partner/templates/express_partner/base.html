@@ -10,23 +10,44 @@
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   {# مانیفست جداگانه برای Express Partner #}
   <link rel="manifest" href="{{ url_for('express_partner.manifest') }}">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#030712">
 
   <script>
     (function(){
+      /* پرتال روی موبایل/تبلت کوچک همیشه تم تاریک (کلاس dark) تا با نوار پایین و اسکلت یکی باشد */
       try {
-        var root = document.documentElement;
-        var saved = localStorage.getItem('theme');
-        if (!saved) {
-          var prefersDark = false;
-          try { prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; } catch(_) {}
-          saved = prefersDark ? 'dark' : 'light';
-          try { localStorage.setItem('theme', saved); } catch(_) {}
+        var MOBILE_MQ = '(max-width: 1023px)';
+        function isMobileViewport(){
+          try { return window.matchMedia(MOBILE_MQ).matches; } catch(_) { return window.innerWidth <= 1023; }
         }
-        if (saved === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
-        var meta = document.querySelector('meta[name="theme-color"]');
-        /* موبایل: نوار وضعیت/کروم هم‌رنگ تم کلاس‌محور (نه فقط prefers-color-scheme) */
-        if (meta) meta.setAttribute('content', root.classList.contains('dark') ? '#030712' : '#2563eb');
+        function vinorExpressViewportTheme(){
+          var root = document.documentElement;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (isMobileViewport()) {
+            root.classList.add('dark');
+            root.setAttribute('data-vinor-express-mobile-dark', '1');
+            if (meta) meta.setAttribute('content', '#030712');
+            return;
+          }
+          root.removeAttribute('data-vinor-express-mobile-dark');
+          var saved = localStorage.getItem('theme');
+          if (!saved) {
+            var prefersDark = false;
+            try { prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; } catch(_) {}
+            saved = prefersDark ? 'dark' : 'light';
+            try { localStorage.setItem('theme', saved); } catch(_) {}
+          }
+          if (saved === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+          if (meta) meta.setAttribute('content', root.classList.contains('dark') ? '#030712' : '#2563eb');
+        }
+        vinorExpressViewportTheme();
+        try {
+          var mq = window.matchMedia(MOBILE_MQ);
+          if (mq.addEventListener) mq.addEventListener('change', vinorExpressViewportTheme);
+          else if (mq.addListener) mq.addListener(vinorExpressViewportTheme);
+        } catch(_) {
+          window.addEventListener('resize', vinorExpressViewportTheme);
+        }
       } catch(_) {}
     })();
   </script>
@@ -304,11 +325,20 @@
         }
       });
 
-      // Dark mode toggle
+      // Dark mode toggle (روی موبایل تم همیشه تاریک می‌ماند)
       document.addEventListener('DOMContentLoaded', function() {
+        function mobileVp(){
+          try { return window.matchMedia('(max-width: 1023px)').matches; } catch(_) { return window.innerWidth <= 1023; }
+        }
         const darkToggle = document.getElementById('darkToggle');
         if (darkToggle) {
           darkToggle.addEventListener('click', function() {
+            if (mobileVp()) {
+              document.documentElement.classList.add('dark');
+              var meta = document.querySelector('meta[name="theme-color"]');
+              if (meta) meta.setAttribute('content', '#030712');
+              return;
+            }
             const root = document.documentElement;
             root.classList.toggle('dark');
             const isDark = root.classList.contains('dark');
