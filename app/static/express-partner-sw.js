@@ -4,11 +4,14 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.3-tab-perf';
+const VERSION = 'v1.0.4-no-nav-html-cache';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
 const ICONS_CACHE = `express-partner-icons-${VERSION}`;
+
+/** کش کردن پاسخ navigate برای HTML باعث می‌شود پس از خروج، PWA همان صفحهٔ لاگین‌شدهٔ قبلی را نشان دهد. */
+const KEEP_CACHE_NAMES = new Set([PRECACHE, RUNTIME, API_CACHE, ICONS_CACHE]);
 
 // تابع برای محدود کردن اندازه cache
 async function trimCache(name, maxEntries) {
@@ -69,10 +72,8 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    // فقط cache های مربوط به Express Partner را نگه دار
-    await Promise.all(
-      keys.filter((k) => !k.startsWith('express-partner-')).map((k) => caches.delete(k))
-    );
+    // نسخه‌های قبلی express-partner-* را حذف کن (قبلاً هرگز پاک نمی‌شدند و HTML کهنه می‌ماند)
+    await Promise.all(keys.filter((k) => !KEEP_CACHE_NAMES.has(k)).map((k) => caches.delete(k)));
     // فعال‌سازی Navigation Preload برای سرعت بیشتر
     try {
       if (self.registration.navigationPreload) {
@@ -165,23 +166,8 @@ self.addEventListener('fetch', (event) => {
         // استفاده از preloaded response اگر موجود باشد
         const preload = await event.preloadResponse;
         const resp = preload || await fetch(request);
-        // نباید redirect responses (302/301) یا responses با Vary: Cookie را cache کنیم
-        // چون redirect بر اساس session است و نباید cache شود
-        const isRedirect = resp.status >= 300 && resp.status < 400;
-        const hasVaryCookie = resp.headers.get('Vary') && resp.headers.get('Vary').includes('Cookie');
-        const noCache = resp.headers.get('Cache-Control') && (
-          resp.headers.get('Cache-Control').includes('no-store') || 
-          resp.headers.get('Cache-Control').includes('no-cache')
-        );
-        
-        // برای AJAX requests یا responses با no-cache، cache نکن
-        if (!isAjaxRequest && !isRedirect && !hasVaryCookie && !noCache) {
-          // به‌روزرسانی cache
-          const cache = await caches.open(PRECACHE);
-          try {
-            cache.put(request, resp.clone());
-          } catch (_) {}
-        }
+        /* عمداً پاسخ navigate را در runtime cache نمی‌گذاریم؛ صفحات همکار وابسته به کوکی‌اند
+           و کش باعث می‌شود بعد از خروج هنوز UI لاگین دیده شود مگر با چند بار تلاش/رفرش. */
         return resp;
       } catch (_) {
         // برای AJAX requests، از cache استفاده نکن و خطا برگردان
@@ -189,12 +175,9 @@ self.addEventListener('fetch', (event) => {
           return new Response('Network error', { status: 503 });
         }
         const cache = await caches.open(PRECACHE);
-        // جستجوی cached page
+        // فقط همان URLهایی که در install به precache اضافه شده‌اند (مثلاً login)
         const cached = await cache.match(request);
         if (cached) return cached;
-        // Fallback به dashboard shell
-        const dashboardShell = await cache.match('/express/partner/dashboard');
-        if (dashboardShell) return dashboardShell;
         const skeletonShell = await cache.match('/static/express-partner/skeleton-shell.html');
         if (skeletonShell) return skeletonShell.clone();
         return new Response('Offline', { status: 503 });
