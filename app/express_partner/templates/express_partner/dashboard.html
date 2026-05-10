@@ -216,12 +216,10 @@
         min-height: calc(100dvh + 120px);
       }
     }
-    #cardsTrack{
-      min-height:calc(100vh - 150px);
-    }
-    @media (max-width:640px){
-      #cardsTrack{
-        min-height:calc(100vh - {% if is_approved %}272{% else %}320{% endif %}px);
+    /* موبایل ستونی: بدون min-height روی ترک؛ قبلاً در چیدمان ستونی اسکرول صفحه را در برخی مرورگرها مسدود می‌کرد */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      #dashboardMobileCardsRoot #cardsTrack {
+        min-height: calc(100vh - 150px);
       }
     }
     .express-card{
@@ -260,18 +258,31 @@
     #dashboardMobileCardsRoot #cardsTrack{
       overflow-y: visible !important;
     }
-    /* لایه‌های مطلق متن/آمار داخل کارت با pe:auto مانع رسیدن لمسی عمودی به اسکرول سند می‌شوند */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      #dashboardMobileCardsRoot #cardsTrack {
+        touch-action: pan-x pan-y;
+      }
+    }
+    /*
+      لمست روی ناحیهٔ کارت: article قبلاً pe:none بود اما div.snap-start والد همچنان hit می‌گرفت → اسکرول سند قطع می‌شد
+      (از نوار پایین اسکرول درست بود چون لمس به محتوای زیرین می‌رسید).
+      هر دو لایه + فرزندان مستقیم ترک را از hit-test حذف می‌کنیم؛ دکمه/برچسب با pe:auto همچنان فعال‌اند.
+    */
+    @media (max-width: 1023px) {
+      #dashboardMobileCardsRoot #cardsTrack > * {
+        pointer-events: none;
+      }
+      #dashboardMobileCardsRoot .express-card.vinor-premium-card[data-href] {
+        pointer-events: none;
+      }
+    }
+    /* لایه‌های مطلق داخل تصویر؛ دکمه علاقه‌مندی و برچسب‌ها با pe:auto */
     #expressDashboardMain .vinor-premium-card [data-img-wrap] * {
       pointer-events: none !important;
     }
     #expressDashboardMain .vinor-premium-card [data-img-wrap] button,
     #expressDashboardMain .vinor-premium-card [data-img-wrap] .pointer-events-auto {
       pointer-events: auto !important;
-    }
-    @media (max-width:640px){
-      #dashboardMobileCardsRoot .express-card{
-        touch-action:pan-y;
-      }
     }
   </style>
   <script>
@@ -513,7 +524,7 @@
       <i class="fas fa-chevron-left"></i>
     </button>
 
-    <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory no-scrollbar">
+    <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory sm:overscroll-x-contain sm:[-webkit-overflow-scrolling:touch] no-scrollbar">
     {% for land in assigned_lands %}
       <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
         {% set tour_land_card = loop.first %}
@@ -662,8 +673,78 @@
     vinorSyncFavButtons();
   }, true);
 
-  // Make entire cards clickable with keyboard support
+  // موبایل: کارت‌ها pointer-events:none دارند؛ کلیک/ضربهٔ کوتاه از روی ناحیهٔ زیرین با مختصات به همان کارت نسبت داده می‌شود
+  (function () {
+    const mobileRoot = document.getElementById('dashboardMobileCardsRoot');
+    if (!mobileRoot) return;
+
+    function premiumCardUnderPoint(clientX, clientY) {
+      const cards = mobileRoot.querySelectorAll('.express-card.vinor-premium-card[data-href]');
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        const r = card.getBoundingClientRect();
+        if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) return card;
+      }
+      return null;
+    }
+
+    let touchStart = null;
+    let suppressClickUntil = 0;
+
+    mobileRoot.addEventListener(
+      'touchstart',
+      function (e) {
+        if (e.touches.length !== 1) {
+          touchStart = null;
+          return;
+        }
+        const t = e.touches[0];
+        touchStart = { x: t.clientX, y: t.clientY };
+      },
+      { passive: true }
+    );
+
+    mobileRoot.addEventListener(
+      'touchend',
+      function (e) {
+        if (!touchStart || e.changedTouches.length !== 1) return;
+        const t = e.changedTouches[0];
+        const dx = Math.abs(t.clientX - touchStart.x);
+        const dy = Math.abs(t.clientY - touchStart.y);
+        touchStart = null;
+        if (dx > 14 || dy > 14) return;
+        const stack = document.elementsFromPoint(t.clientX, t.clientY);
+        if (stack.some(function (el) { return el.closest && el.closest('[data-fav-code]'); })) return;
+        const card = premiumCardUnderPoint(t.clientX, t.clientY);
+        if (!card) return;
+        const href = card.getAttribute('data-href');
+        if (!href) return;
+        suppressClickUntil = Date.now() + 450;
+        window.location.assign(href);
+      },
+      { passive: true }
+    );
+
+    mobileRoot.addEventListener(
+      'click',
+      function (ev) {
+        if (Date.now() < suppressClickUntil) return;
+        if (ev.defaultPrevented) return;
+        if (typeof ev.button === 'number' && ev.button !== 0) return;
+        if (ev.target.closest && ev.target.closest('[data-fav-code]')) return;
+        const card = premiumCardUnderPoint(ev.clientX, ev.clientY);
+        if (!card) return;
+        const href = card.getAttribute('data-href');
+        if (!href) return;
+        window.location.assign(href);
+      },
+      false
+    );
+  })();
+
+  // دسکتاپ و گرید: کلیک روی خود کارت؛ زیر #dashboardMobileCardsRoot از بالا هندل می‌شود
   document.querySelectorAll('.express-card[data-href]').forEach((card) => {
+    if (card.closest('#dashboardMobileCardsRoot')) return;
     card.addEventListener('click', (e) => {
       if (e.target.closest && e.target.closest('[data-fav-code]')) return;
       const href = card.getAttribute('data-href');
@@ -862,17 +943,19 @@
       setTimeout(hideLoader, 3000);
     });
     
-    // 2. Card click handlers
+    // 2. Card handlers (موبایل: کلیک از روی #dashboardMobileCardsRoot دیلیگیت می‌شود)
     document.querySelectorAll('.express-card[data-href]').forEach((card) => {
-      // حذف event listenerهای قبلی (clone node)
       const newCard = card.cloneNode(true);
       card.parentNode.replaceChild(newCard, card);
-      
-      newCard.addEventListener('click', (e) => {
-        if (e.target.closest && e.target.closest('[data-fav-code]')) return;
-        const href = newCard.getAttribute('data-href');
-        if (href) window.location.assign(href);
-      });
+      const inMobileStrip = !!newCard.closest('#dashboardMobileCardsRoot');
+
+      if (!inMobileStrip) {
+        newCard.addEventListener('click', (e) => {
+          if (e.target.closest && e.target.closest('[data-fav-code]')) return;
+          const href = newCard.getAttribute('data-href');
+          if (href) window.location.assign(href);
+        });
+      }
       newCard.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
