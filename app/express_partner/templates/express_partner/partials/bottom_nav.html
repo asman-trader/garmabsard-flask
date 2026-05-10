@@ -1,7 +1,8 @@
-{# نوار پایین همکار — کپسول شناور مشابه تلگرام اندروید #}
+{# نوار پایین همکار — کپسول شناور، هماهنگ با برند وینور اکسپرس (بنفش #7c3aed + خاکستری‌های تم) #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 {% set bottom_nav_unread_url = url_for('express_partner.get_unread_count') %}
 <style>
+  /* هم‌رنگ با theme-color پرتال و body: bg-gray-50 dark:bg-gray-950 */
   .tg-tabbar-shell {
     pointer-events: none;
     padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
@@ -9,19 +10,27 @@
     padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
   }
   .tg-tabbar-pill {
+    --vn-pill-bg: rgba(255, 255, 255, 0.93);
+    --vn-pill-bg-solid: #f9fafb;
+    --vn-pill-border: rgba(229, 231, 235, 0.98);
+    --vn-shadow: 0 10px 38px rgba(15, 23, 42, 0.08), 0 2px 10px rgba(15, 23, 42, 0.04);
     pointer-events: auto;
-    background-color: rgba(36, 37, 39, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background-color: var(--vn-pill-bg);
+    border: 1px solid var(--vn-pill-border);
     border-radius: 9999px;
-    box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.42),
-      0 1px 0 rgba(255, 255, 255, 0.05) inset;
-    -webkit-backdrop-filter: saturate(160%) blur(20px);
-    backdrop-filter: saturate(160%) blur(20px);
+    box-shadow: var(--vn-shadow);
+    -webkit-backdrop-filter: saturate(160%) blur(18px);
+    backdrop-filter: saturate(160%) blur(18px);
+  }
+  .dark .tg-tabbar-pill {
+    --vn-pill-bg: rgba(17, 24, 39, 0.94);
+    --vn-pill-bg-solid: #111827;
+    --vn-pill-border: rgba(55, 65, 81, 0.92);
+    --vn-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .tg-tabbar-pill {
-      background-color: #242527;
+      background-color: var(--vn-pill-bg-solid);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
@@ -50,8 +59,12 @@
     margin-right: auto;
   }
   .tg-tab-active .tg-tab-stack {
-    background-color: rgba(0, 0, 0, 0.42);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    background-color: rgba(124, 58, 237, 0.12);
+    box-shadow: none;
+  }
+  .dark .tg-tab-active .tg-tab-stack {
+    background-color: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
   }
   .tg-tab-icon-wrap {
     position: relative;
@@ -70,17 +83,23 @@
     letter-spacing: -0.01em;
   }
   .tg-tab-active .tg-tab-icon {
-    color: #5eaaf7;
+    color: #7c3aed;
   }
   .tg-tab-active .tg-tab-label {
-    color: #5eaaf7;
+    color: #7c3aed;
     font-weight: 600;
   }
   .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-icon {
-    color: rgba(255, 255, 255, 0.96);
+    color: #6b7280;
   }
   .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-label {
-    color: rgba(255, 255, 255, 0.94);
+    color: #4b5563;
+  }
+  .dark .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-icon {
+    color: #9ca3af;
+  }
+  .dark .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-label {
+    color: #d1d5db;
   }
   .tg-tab-disabled .tg-tab-stack {
     opacity: 0.45;
@@ -91,7 +110,7 @@
     opacity: 0.45;
   }
   .tg-tab:focus-visible .tg-tab-stack {
-    box-shadow: 0 0 0 2px rgba(94, 170, 247, 0.55);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.45);
   }
   .tg-tab-badge {
     position: absolute;
@@ -101,16 +120,19 @@
     height: 1.05rem;
     padding: 0 0.28rem;
     border-radius: 9999px;
-    background: #3390ec;
+    background: #7c3aed;
     color: #fff;
     font-size: 0.62rem;
     font-weight: 700;
     line-height: 1.05rem;
     text-align: center;
-    box-shadow: 0 0 0 2px rgba(36, 37, 39, 0.96);
+    box-shadow: 0 0 0 2px var(--vn-pill-bg, #f9fafb);
     display: none;
     align-items: center;
     justify-content: center;
+  }
+  .dark .tg-tab-badge {
+    box-shadow: 0 0 0 2px var(--vn-pill-bg, #111827);
   }
   .tg-tab-badge.is-visible {
     display: inline-flex;
