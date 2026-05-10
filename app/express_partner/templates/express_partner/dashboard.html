@@ -228,10 +228,16 @@
       transition:box-shadow .2s ease, border-color .2s ease;
       display:flex;
       flex-direction:column;
+      min-height:0;
+    }
+    /* ارتفاع یکسان فقط در گرید دسکتاپ؛ روی ترک موبایل stretch + min-height ترک، اسکرول سند را می‌خورد */
+    #cardsGrid > .express-card{
       height:100%;
     }
-    .express-card:hover{
-      transform:translateY(-2px);
+    @media (hover:hover) and (pointer:fine){
+      .express-card:hover{
+        transform:translateY(-2px);
+      }
     }
     .vinor-premium-card .vinor-fav-icon.text-red-400{
       font-weight:900;
@@ -251,12 +257,8 @@
       gap:0;
       padding-bottom:0.375rem;
     }
-    /* ترک موبایل: manipulation = پَن عمودی/افقی برای صفحه و ردیف؛ بدون اسکرول‌بار عمودی داخلی */
-    #dashboardMobileCardsRoot #cardsTrack,
-    #dashboardMobileCardsRoot .snap-start {
-      touch-action: manipulation;
+    #dashboardMobileCardsRoot #cardsTrack{
       overflow-y: visible !important;
-      overscroll-behavior-y: auto;
     }
   </style>
   <script>
@@ -498,7 +500,7 @@
       <i class="fas fa-chevron-left"></i>
     </button>
 
-    <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory no-scrollbar">
+    <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
       <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
         {% set tour_land_card = loop.first %}
