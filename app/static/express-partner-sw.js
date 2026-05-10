@@ -4,7 +4,7 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.5-nav-preload-off';
+const VERSION = 'v1.0.6-post-redirect-manual';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
@@ -141,11 +141,12 @@ self.addEventListener('fetch', (event) => {
           })());
           return;
         }
-        // Form posts (بدون multipart uploads)
-        if (isExpressPartnerRoute(url) && !ct.includes('multipart/form-data')) {
+        /* فرم‌های وب (شامل خروج): redirect: manual تا مرورگر خودش 302 را دنبال کند.
+           با redirect: follow پاسخ نهایی ۲۰۰ برمی‌گردد و URL/کوکی گاهی با UI هم‌خوان نمی‌ماند. */
+        if (isExpressPartnerRoute(url)) {
           event.respondWith((async () => {
             try {
-              return await fetch(request);
+              return await fetch(request, { redirect: 'manual', credentials: 'include' });
             } catch (_) {
               return new Response('Offline', { status: 503 });
             }

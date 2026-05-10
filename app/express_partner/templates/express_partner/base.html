@@ -186,6 +186,16 @@
   </script>
 
   <script>
+    (function () {
+      window.addEventListener('pageshow', function (ev) {
+        try {
+          if (ev.persisted) window.location.reload();
+        } catch (_) {}
+      });
+    })();
+  </script>
+
+  <script>
     (function(){
       // ثبت Service Worker جداگانه برای Express Partner
       if ('serviceWorker' in navigator) {

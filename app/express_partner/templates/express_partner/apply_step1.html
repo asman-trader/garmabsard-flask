@@ -151,36 +151,26 @@
       enableScroll();
     };
     const loginUrlFallback = "{{ url_for('express_partner.login') }}";
+    let logoutBusy = false;
     window.confirmLogout = async function() {
-      if (!modal) return;
+      if (!modal || logoutBusy) return;
       const formId = modal.dataset.targetForm;
       const form = formId ? document.getElementById(formId) : null;
       hideLogoutConfirm();
       if (!form) return;
+      logoutBusy = true;
       try {
-        const r = await fetch(form.action, {
-          method: 'POST',
-          body: new FormData(form),
-          credentials: 'same-origin',
-          redirect: 'follow',
-          cache: 'no-store',
-          headers: { Accept: 'text/html,application/xhtml+xml' },
-        });
-        if (r.redirected || r.ok) {
-          try {
-            const u = new URL(r.url || loginUrlFallback, window.location.origin);
-            u.searchParams.set('_nc', String(Date.now()));
-            window.location.replace(u.pathname + u.search + (u.hash || ''));
-          } catch (_) {
-            window.location.replace(loginUrlFallback + '?_nc=' + Date.now());
-          }
-          return;
+        if (window.caches && window.caches.keys) {
+          var keys = await window.caches.keys();
+          await Promise.all(keys.filter(function (k) {
+            return k.indexOf('express-partner-') === 0;
+          }).map(function (k) { return window.caches.delete(k); }));
         }
-      } catch (_) { /* fallback زیر */ }
+      } catch (_) {}
       try {
         form.submit();
       } catch (_) {
-        window.location.href = loginUrlFallback;
+        window.location.href = loginUrlFallback + '?_nc=' + Date.now();
       }
     };
   })();

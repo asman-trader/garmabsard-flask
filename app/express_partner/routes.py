@@ -255,6 +255,19 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
     return decorator
 
 
+@express_partner_bp.after_request
+def _express_partner_no_store_html(resp):
+    """جلوگیری از کش HTML در مرورگر/PWA؛ بعد از خروج صفحهٔ کهنه «همچنان لاگین» دیده نشود."""
+    try:
+        ct = (resp.headers.get('Content-Type') or '').lower()
+        if 'text/html' in ct:
+            resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+            resp.headers['Pragma'] = 'no-cache'
+    except Exception:
+        pass
+    return resp
+
+
 # به‌روزرسانی خودکار timestamp همکاران آنلاین در تمام route‌های express_partner
 @express_partner_bp.before_request
 def track_online_partner():
@@ -1398,6 +1411,10 @@ def _clear_express_partner_auth_session() -> None:
         session.pop(k, None)
     if not session.get('logged_in'):
         session.permanent = False
+    try:
+        session.modified = True
+    except Exception:
+        pass
 
 
 @express_partner_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
@@ -1890,7 +1907,10 @@ def logout():
     """خروج با POST؛ اعتبار از کوکی سشن (در اپ CSRF معاف است تا توکن کهنه خروج را نشکند)."""
     _clear_express_partner_auth_session()
     flash('از حساب خارج شدید.', 'info')
-    return redirect(url_for('express_partner.login'))
+    r = redirect(url_for('express_partner.login'))
+    r.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+    r.headers['Pragma'] = 'no-cache'
+    return r
 
 
 @express_partner_bp.post('/api/logout')
