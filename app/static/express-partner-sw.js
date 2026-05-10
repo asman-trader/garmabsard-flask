@@ -4,7 +4,7 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.4-no-nav-html-cache';
+const VERSION = 'v1.0.5-nav-preload-off';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
@@ -74,10 +74,10 @@ self.addEventListener('activate', (event) => {
     const keys = await caches.keys();
     // نسخه‌های قبلی express-partner-* را حذف کن (قبلاً هرگز پاک نمی‌شدند و HTML کهنه می‌ماند)
     await Promise.all(keys.filter((k) => !KEEP_CACHE_NAMES.has(k)).map((k) => caches.delete(k)));
-    // فعال‌سازی Navigation Preload برای سرعت بیشتر
+    /* Navigation preload با صفحات وابسته به سشن گاهی پاسخ نامرتبط می‌دهد؛ غیرفعال */
     try {
       if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
+        await self.registration.navigationPreload.disable();
       }
     } catch (_) {}
     await self.clients.claim();
@@ -163,9 +163,7 @@ self.addEventListener('fetch', (event) => {
       const isAjaxRequest = request.headers.get('X-Requested-With') === 'XMLHttpRequest';
       
       try {
-        // استفاده از preloaded response اگر موجود باشد
-        const preload = await event.preloadResponse;
-        const resp = preload || await fetch(request);
+        const resp = await fetch(request);
         /* عمداً پاسخ navigate را در runtime cache نمی‌گذاریم؛ صفحات همکار وابسته به کوکی‌اند
            و کش باعث می‌شود بعد از خروج هنوز UI لاگین دیده شود مگر با چند بار تلاش/رفرش. */
         return resp;

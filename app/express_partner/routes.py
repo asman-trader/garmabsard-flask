@@ -1887,7 +1887,7 @@ def mark_in_transaction(code: str):
 
 @express_partner_bp.route('/logout', methods=['POST'], endpoint='logout')
 def logout():
-    """خروج امن با درخواست POST (محافظت‌شده با CSRF)."""
+    """خروج با POST؛ اعتبار از کوکی سشن (در اپ CSRF معاف است تا توکن کهنه خروج را نشکند)."""
     _clear_express_partner_auth_session()
     flash('از حساب خارج شدید.', 'info')
     return redirect(url_for('express_partner.login'))

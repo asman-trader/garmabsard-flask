@@ -393,7 +393,12 @@ def create_app() -> Flask:
                 pass
 
         # خروج و به‌روزرسانی پروفایل اپ اندروید (POST با کوکی، بدون CSRF)
-        for endpoint in ("express_partner.api_logout", "express_partner.api_profile_update"):
+        # خروج وب همکار: بدون CSRF تا با توکن کهنه در تب باز طولانی یا PWA خراب نشود
+        for endpoint in (
+            "express_partner.api_logout",
+            "express_partner.api_profile_update",
+            "express_partner.logout",
+        ):
             try:
                 f = app.view_functions.get(endpoint)
                 if f is not None:
