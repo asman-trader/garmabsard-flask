@@ -118,9 +118,9 @@ class OnboardingTour {
         position: 'bottom'
       },
       {
-        element: '[data-tour="training-bar"]',
-        title: 'نوار آموزش',
-        description: 'برای یادگیری نحوه کار با پنل، روی این نوار کلیک کنید و آموزش‌های کامل را مشاهده کنید.',
+        element: '[data-tour="dashboard-filters"]',
+        title: 'فیلترهای سریع',
+        description: 'با این چیپ‌ها و دسته‌های زیرین می‌توانید آگهی‌ها را محدود کنید؛ مثلاً استخر، جنگلی، زمین و باغ یا فوری.',
         position: 'bottom'
       },
       {
@@ -286,11 +286,11 @@ class OnboardingTour {
         position: 'bottom',
         page: 'dashboard'
       },
-      // مرحله 2: نوار آموزش
+      // مرحله 2: فیلترها
       {
-        element: '[data-tour="training-bar"]',
-        title: 'نوار آموزش',
-        description: 'برای یادگیری نحوه کار با پنل، روی این نوار کلیک کنید و آموزش‌های کامل را مشاهده کنید.',
+        element: '[data-tour="dashboard-filters"]',
+        title: 'فیلترهای سریع',
+        description: 'با این چیپ‌ها و دسته‌های زیرین می‌توانید آگهی‌ها را محدود کنید؛ مثلاً استخر، جنگلی، زمین و باغ یا فوری.',
         position: 'bottom',
         page: 'dashboard'
       },

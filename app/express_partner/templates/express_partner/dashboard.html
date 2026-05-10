@@ -73,22 +73,8 @@
       </form>
       </div>
 
-      {# بین جستجو و فیلترها: آموزش (همکار تأییدشده) یا دعوت همکاری #}
-      {% if is_approved %}
-        <a href="{{ url_for('express_partner.training') }}"
-           data-tour="training-bar"
-           class="flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 px-3 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group shrink-0">
-          <div class="flex items-center gap-2 flex-1 min-w-0">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-              <i class="fas fa-graduation-cap text-emerald-600 dark:text-emerald-400 text-sm"></i>
-            </div>
-            <p class="text-[11px] sm:text-xs font-medium text-gray-900 dark:text-white truncate leading-snug">
-              آموزش ۳ مرحله‌ای موفقیت در همکاری
-            </p>
-          </div>
-          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-[10px] flex-shrink-0 group-hover:translate-x-[-2px] transition-transform"></i>
-        </a>
-      {% else %}
+      {# بین جستجو و فیلترها: فقط دعوت همکاری برای کاربر غیرتأییدشده #}
+      {% if not is_approved %}
         <a href="{{ url_for('express_partner.cooperation_terms') }}"
            class="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-l from-emerald-50/90 via-white to-white dark:from-emerald-950/35 dark:via-gray-900 dark:to-gray-900 py-2 px-3 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group shrink-0">
           <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -105,7 +91,7 @@
       {% endif %}
 
       {# ردیف چیپ‌ها — اسکرول افقی در موبایل #}
-      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1 snap-x snap-mandatory">
+      <div data-tour="dashboard-filters" class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1 snap-x snap-mandatory">
         <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none) }}"
            class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors
                   {% if not ftag and not fcat %}
@@ -213,7 +199,7 @@
     </div>
   </header>
 
-<div class="max-w-6xl mx-auto pt-[17.25rem] sm:pt-[16.75rem] px-3 sm:px-4 pb-16">
+<div class="max-w-6xl mx-auto {% if is_approved %}pt-[14.25rem] sm:pt-[13.75rem]{% else %}pt-[17.25rem] sm:pt-[16.75rem]{% endif %} px-3 sm:px-4 pb-16">
 
   <style>
     #cardsTrack{
@@ -221,7 +207,7 @@
     }
     @media (max-width:640px){
       #cardsTrack{
-        min-height:calc(100vh - 320px);
+        min-height:calc(100vh - {% if is_approved %}272{% else %}320{% endif %}px);
       }
     }
     .express-card{
