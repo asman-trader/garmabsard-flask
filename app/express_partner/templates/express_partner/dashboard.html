@@ -251,9 +251,10 @@
       gap:0;
       padding-bottom:0.375rem;
     }
-    /* ترک موبایل: بدون اسکرول عمودی داخلی تا کشیدن همیشه صفحه را حرکت دهد؛ افقی فقط در محور x */
-    #dashboardMobileCardsRoot #cardsTrack {
-      touch-action: auto;
+    /* ترک موبایل: manipulation = پَن عمودی/افقی برای صفحه و ردیف؛ بدون اسکرول‌بار عمودی داخلی */
+    #dashboardMobileCardsRoot #cardsTrack,
+    #dashboardMobileCardsRoot .snap-start {
+      touch-action: manipulation;
       overflow-y: visible !important;
       overscroll-behavior-y: auto;
     }
@@ -497,7 +498,7 @@
       <i class="fas fa-chevron-left"></i>
     </button>
 
-    <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory no-scrollbar touch-auto">
+    <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
       <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
         {% set tour_land_card = loop.first %}
