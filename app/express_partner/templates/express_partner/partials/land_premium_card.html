@@ -11,7 +11,7 @@
          data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}"
          role="link"
          tabindex="0">
-  <div class="relative aspect-[3/4] min-h-[260px] sm:min-h-[300px] bg-neutral-800" data-img-wrap>
+  <div class="relative aspect-[3/4] min-h-[260px] sm:min-h-[300px] bg-neutral-800 pointer-events-none" data-img-wrap>
     <div class="card-img-loading pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30 transition-opacity">
       <div class="w-8 h-8 rounded-full border-2 border-white/40 border-t-transparent animate-spin"></div>
     </div>

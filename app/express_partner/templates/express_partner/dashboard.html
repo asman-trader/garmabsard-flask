@@ -260,6 +260,14 @@
     #dashboardMobileCardsRoot #cardsTrack{
       overflow-y: visible !important;
     }
+    /* لایه‌های مطلق متن/آمار داخل کارت با pe:auto مانع رسیدن لمسی عمودی به اسکرول سند می‌شوند */
+    #expressDashboardMain .vinor-premium-card [data-img-wrap] * {
+      pointer-events: none !important;
+    }
+    #expressDashboardMain .vinor-premium-card [data-img-wrap] button,
+    #expressDashboardMain .vinor-premium-card [data-img-wrap] .pointer-events-auto {
+      pointer-events: auto !important;
+    }
     @media (max-width:640px){
       #dashboardMobileCardsRoot .express-card{
         touch-action:pan-y;

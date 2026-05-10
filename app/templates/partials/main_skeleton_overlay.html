@@ -1,12 +1,16 @@
 {# اسکلت اولیهٔ سایت عمومی وینور — بدون وابستگی به Tailwind برای اولین فریم #}
 <style id="vinor-main-sk-styles">
+  /* ریشه pointer-events:none به تنهایی کافی نیست — فرزندان HTML پیش‌فرض auto دارند و کل وسط viewport را از اسکرول می‌اندازند */
+  #vinorMainSkeletonRoot,
+  #vinorMainSkeletonRoot * {
+    pointer-events: none !important;
+  }
   #vinorMainSkeletonRoot {
     position: fixed;
     inset: 0;
     z-index: 45;
     display: flex;
     flex-direction: column;
-    pointer-events: none;
     background: #f3f4f6;
     transition: opacity 0.26s ease, visibility 0.26s ease;
   }
@@ -16,6 +20,7 @@
   #vinorMainSkeletonRoot.vinor-sk-hidden {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none !important;
   }
   #vinorMainSkeletonRoot .vinor-m-sk-header {
     flex-shrink: 0;
