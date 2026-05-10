@@ -251,6 +251,12 @@
       gap:0;
       padding-bottom:0.375rem;
     }
+    /* اسکرول صفحه از روی ناحیه کارت: ژست عمودی به document برسد؛ افقی در sm هنوز روی #cardsTrack با overflow-x-auto */
+    @media (max-width: 1023px) {
+      #dashboardMobileCardsRoot .express-card {
+        touch-action: manipulation;
+      }
+    }
   </style>
   <script>
     (function() {
@@ -482,8 +488,8 @@
     </aside>
   </div>
 
-  <!-- موبایل: PTR فقط روی این ناحیه؛ رویداد سراسری روی document اسکرول عمودی را نمی‌گیرد -->
-  <div id="dashboardMobileCardsRoot" class="mt-2 -mx-3 relative lg:hidden max-sm:[touch-action:pan-y]">
+  <!-- موبایل: بدون PTR با preventDefault تا اسکرول عمودی از روی کارت‌ها هم آزاد باشد -->
+  <div id="dashboardMobileCardsRoot" class="mt-2 -mx-3 relative lg:hidden">
     <button type="button" id="cardsPrev" class="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
       <i class="fas fa-chevron-right"></i>
     </button>
@@ -755,108 +761,7 @@
     });
   })();
 
-  // Pull to Refresh — فقط روی #dashboardMobileCardsRoot؛ موقعیت اسکرول با scrollingElement (نه فقط window.scrollY)
-  (function() {
-    const root = document.getElementById('dashboardMobileCardsRoot');
-    const container = document.getElementById('cardsTrack');
-    if (!container || !root) return;
-
-    function pageScrollTop() {
-      if (typeof window.scrollY === 'number' && !Number.isNaN(window.scrollY)) return window.scrollY;
-      if (typeof window.pageYOffset === 'number' && !Number.isNaN(window.pageYOffset)) return window.pageYOffset;
-      const se = document.scrollingElement;
-      if (se && typeof se.scrollTop === 'number') return se.scrollTop;
-      return 0;
-    }
-
-    let startY = null;
-    let currentY = null;
-    let isPulling = false;
-    let isRefreshing = false;
-    const PULL_THRESHOLD = 60;
-    const PREVENT_DEFAULT_PULL = 22;
-
-    function resetPullState() {
-      isPulling = false;
-      startY = null;
-      currentY = null;
-      container.style.transition = 'transform 0.3s ease-out';
-      container.style.transform = 'translateY(0)';
-    }
-
-    function handleTouchStart(e) {
-      if (isRefreshing || !e.touches || e.touches.length !== 1) return;
-      if (pageScrollTop() > 8) return;
-
-      startY = e.touches[0].clientY;
-      currentY = startY;
-      isPulling = false;
-    }
-
-    function handleTouchMove(e) {
-      if (startY === null || isRefreshing || !e.touches || e.touches.length !== 1) return;
-
-      if (pageScrollTop() > 8) {
-        resetPullState();
-        return;
-      }
-
-      currentY = e.touches[0].clientY;
-      const pullDistance = currentY - startY;
-
-      if (pullDistance > PREVENT_DEFAULT_PULL) {
-        isPulling = true;
-        try {
-          e.preventDefault();
-        } catch (_) {}
-        container.style.transform = `translateY(${Math.min((pullDistance - PREVENT_DEFAULT_PULL) * 0.35, 28)}px)`;
-        container.style.transition = 'none';
-      } else if (pullDistance <= 0 && isPulling) {
-        resetPullState();
-      }
-    }
-
-    function handleTouchEnd() {
-      if (!isPulling || isRefreshing) {
-        startY = null;
-        currentY = null;
-        isPulling = false;
-        return;
-      }
-
-      const pullDistance = (currentY || 0) - (startY || 0);
-
-      if (pullDistance >= PULL_THRESHOLD) {
-        isRefreshing = true;
-        container.style.transition = 'transform 0.3s ease-out';
-        container.style.transform = 'translateY(0)';
-
-        if (window.performRefresh) {
-          window.performRefresh().then(() => {
-            isRefreshing = false;
-          }).catch(() => {
-            isRefreshing = false;
-          });
-        } else {
-          isRefreshing = false;
-        }
-      } else {
-        container.style.transition = 'transform 0.3s ease-out';
-        container.style.transform = 'translateY(0)';
-      }
-
-      isPulling = false;
-      startY = null;
-      currentY = null;
-    }
-
-    root.addEventListener('touchstart', handleTouchStart, { passive: true });
-    root.addEventListener('touchmove', handleTouchMove, { passive: false });
-    root.addEventListener('touchend', handleTouchEnd, { passive: true });
-    root.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-  })();
-
-  // تابع رفرش محتوا بدون reload صفحه
+  // تابع رفرش محتوا بدون reload صفحه (بدون pull-to-refresh لمسی — تا اسکرول روی کارت‌ها قطع نشود)
   async function performRefresh() {
     try {
       // رفرش صفحه با no-cache و timestamp برای جلوگیری از cache
