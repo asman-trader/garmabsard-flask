@@ -39,8 +39,7 @@
       </div>
       <form id="logoutApplyForm" method="post" action="{{ url_for('express_partner.logout') }}" class="m-0">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit"
-                type="button"
+        <button type="button"
                 onclick="showLogoutConfirm('logoutApplyForm')"
                 class="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-[11px] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
           <i class="fas fa-pen"></i>
