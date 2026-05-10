@@ -17,7 +17,7 @@
   {% set ftag = (request.args.get('tag', '') or '')|lower %}
   {% set fcat = request.args.get('cat', '') %}
 
-  <!-- Header - باکس جستجو + فیلترهای سریع (فیلترها با اسکرول به بالا جمع می‌شوند) -->
+  <!-- Header — کشیدن محتوا به سمت بالا (رفتن به پایین لیست) فیلترها را جمع می‌کند -->
   <header id="expressDashboardHeader" data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full shadow-sm dark:shadow-black/20 transition-shadow duration-300">
     <div class="express-dash-header-inner w-full px-3 sm:px-4 pt-2.5 pb-2 flex flex-col gap-2 transition-[gap,padding-bottom] duration-300 ease-out max-w-6xl mx-auto">
       {# جستجو و فیلتر شهر #}
@@ -512,15 +512,24 @@
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
 
-  /* هدر داشبورد: اسکرول به بالا ← فقط جستجو؛ اسکرول به پایین ← فیلترها باز؛ نزدیک ابتدای صفحه همیشه باز */
+  /* هدر: کشیدن لیست به بالا (= scrollY بیشتر) → فشرده؛ کشیدن به پایین (= برگشت به بالای صفحه) → باز؛ نزدیک ابتدا همیشه باز */
   (function () {
     const header = document.getElementById('expressDashboardHeader');
     const main = document.getElementById('expressDashboardMain');
     const fold = document.getElementById('dashHeaderFoldable');
     if (!header || !main || !fold) return;
 
-    let lastY = window.scrollY || 0;
-    let scrollScheduled = false;
+    function scrollTopNow() {
+      return (
+        window.scrollY ||
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0
+      );
+    }
+
+    let lastY = scrollTopNow();
 
     function syncMainPadding() {
       const h = header.getBoundingClientRect().height;
@@ -532,9 +541,8 @@
       syncMainPadding();
     }
 
-    function handleScrollFrame() {
-      scrollScheduled = false;
-      const y = window.scrollY || 0;
+    function onScroll() {
+      const y = scrollTopNow();
       const dy = y - lastY;
       lastY = y;
 
@@ -542,14 +550,8 @@
         setCompact(false);
         return;
       }
-      if (dy < -4) setCompact(true);
-      else if (dy > 4) setCompact(false);
-    }
-
-    function onScroll() {
-      if (scrollScheduled) return;
-      scrollScheduled = true;
-      requestAnimationFrame(handleScrollFrame);
+      if (dy > 2) setCompact(true);
+      else if (dy < -2) setCompact(false);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -561,7 +563,7 @@
     } catch (_) {}
 
     syncMainPadding();
-    lastY = window.scrollY || 0;
+    lastY = scrollTopNow();
   })();
 
   // علاقه‌مندی‌ها (محلی)
