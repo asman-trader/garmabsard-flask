@@ -482,8 +482,8 @@
     </aside>
   </div>
 
-  <!-- Current horizontal carousel preserved for mobile/tablet -->
-  <div class="mt-2 -mx-3 relative lg:hidden">
+  <!-- موبایل: PTR فقط روی این ناحیه؛ رویداد سراسری روی document اسکرول عمودی را نمی‌گیرد -->
+  <div id="dashboardMobileCardsRoot" class="mt-2 -mx-3 relative lg:hidden max-sm:[touch-action:pan-y]">
     <button type="button" id="cardsPrev" class="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
       <i class="fas fa-chevron-right"></i>
     </button>
@@ -755,21 +755,26 @@
     });
   })();
 
-  // Pull to Refresh - مینیمال و سریع (بدون آیکون، فقط اسکرول کارت‌ها)
+  // Pull to Refresh — فقط روی #dashboardMobileCardsRoot؛ موقعیت اسکرول با scrollingElement (نه فقط window.scrollY)
   (function() {
+    const root = document.getElementById('dashboardMobileCardsRoot');
     const container = document.getElementById('cardsTrack');
-    if (!container) return;
-    try {
-      document.documentElement.style.overscrollBehaviorY = 'contain';
-      document.body.style.overscrollBehaviorY = 'contain';
-    } catch (_) {}
+    if (!container || !root) return;
+
+    function pageScrollTop() {
+      if (typeof window.scrollY === 'number' && !Number.isNaN(window.scrollY)) return window.scrollY;
+      if (typeof window.pageYOffset === 'number' && !Number.isNaN(window.pageYOffset)) return window.pageYOffset;
+      const se = document.scrollingElement;
+      if (se && typeof se.scrollTop === 'number') return se.scrollTop;
+      return 0;
+    }
 
     let startY = null;
     let currentY = null;
     let isPulling = false;
     let isRefreshing = false;
-    const PULL_THRESHOLD = 60; // حداقل فاصله برای رفرش
-    const MAX_PULL = 80; // حداکثر فاصله کشیدن
+    const PULL_THRESHOLD = 60;
+    const PREVENT_DEFAULT_PULL = 22;
 
     function resetPullState() {
       isPulling = false;
@@ -780,46 +785,52 @@
     }
 
     function handleTouchStart(e) {
-      // فقط اگر در بالای صفحه هستیم
-      if (window.scrollY > 5 || isRefreshing || !e.touches || e.touches.length !== 1) return;
-      
+      if (isRefreshing || !e.touches || e.touches.length !== 1) return;
+      if (pageScrollTop() > 8) return;
+
       startY = e.touches[0].clientY;
       currentY = startY;
       isPulling = false;
     }
 
     function handleTouchMove(e) {
-      if (startY === null || window.scrollY > 5 || isRefreshing || !e.touches || e.touches.length !== 1) return;
-      
+      if (startY === null || isRefreshing || !e.touches || e.touches.length !== 1) return;
+
+      if (pageScrollTop() > 8) {
+        resetPullState();
+        return;
+      }
+
       currentY = e.touches[0].clientY;
       const pullDistance = currentY - startY;
 
-      if (pullDistance > 0) {
+      if (pullDistance > PREVENT_DEFAULT_PULL) {
         isPulling = true;
-        e.preventDefault();
-        
-        // اسکرول کارت‌ها به پایین
-        container.style.transform = `translateY(${Math.min(pullDistance * 0.3, 30)}px)`;
+        try {
+          e.preventDefault();
+        } catch (_) {}
+        container.style.transform = `translateY(${Math.min((pullDistance - PREVENT_DEFAULT_PULL) * 0.35, 28)}px)`;
         container.style.transition = 'none';
-      } else if (isPulling) {
+      } else if (pullDistance <= 0 && isPulling) {
         resetPullState();
       }
     }
 
-    function handleTouchEnd(e) {
-      if (!isPulling || isRefreshing) return;
-      
+    function handleTouchEnd() {
+      if (!isPulling || isRefreshing) {
+        startY = null;
+        currentY = null;
+        isPulling = false;
+        return;
+      }
+
       const pullDistance = (currentY || 0) - (startY || 0);
-      
+
       if (pullDistance >= PULL_THRESHOLD) {
-        // شروع رفرش بدون reload صفحه
         isRefreshing = true;
-        
-        // انیمیشن smooth برای کارت‌ها
         container.style.transition = 'transform 0.3s ease-out';
         container.style.transform = 'translateY(0)';
-        
-        // رفرش محتوا بدون reload صفحه - استفاده از تابع performRefresh
+
         if (window.performRefresh) {
           window.performRefresh().then(() => {
             isRefreshing = false;
@@ -830,20 +841,19 @@
           isRefreshing = false;
         }
       } else {
-        // بازگشت به حالت اولیه با انیمیشن
         container.style.transition = 'transform 0.3s ease-out';
         container.style.transform = 'translateY(0)';
       }
-      
+
       isPulling = false;
       startY = null;
       currentY = null;
     }
 
-    // Event listeners
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    root.addEventListener('touchstart', handleTouchStart, { passive: true });
+    root.addEventListener('touchmove', handleTouchMove, { passive: false });
+    root.addEventListener('touchend', handleTouchEnd, { passive: true });
+    root.addEventListener('touchcancel', handleTouchEnd, { passive: true });
   })();
 
   // تابع رفرش محتوا بدون reload صفحه
