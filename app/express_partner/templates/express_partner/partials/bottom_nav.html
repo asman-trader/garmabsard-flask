@@ -1,83 +1,124 @@
-{# نوار پایین همکار — الهام از منوی پایین تلگرام اندروید #}
+{# نوار پایین همکار — کپسول شناور مشابه تلگرام اندروید #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
+{% set bottom_nav_unread_url = url_for('express_partner.get_unread_count') %}
 <style>
-  /* نوار پایین همیشه تاریک — مستقل از تم روشن/تاریک صفحه */
-  .tg-tabbar {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
-    background-color: rgba(28, 28, 29, 0.94);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
-    -webkit-backdrop-filter: saturate(180%) blur(18px);
-    backdrop-filter: saturate(180%) blur(18px);
+  .tg-tabbar-shell {
+    pointer-events: none;
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+  }
+  .tg-tabbar-pill {
+    pointer-events: auto;
+    background-color: rgba(36, 37, 39, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 9999px;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.42),
+      0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    backdrop-filter: saturate(160%) blur(20px);
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .tg-tabbar {
-      background-color: #1c1c1d;
+    .tg-tabbar-pill {
+      background-color: #242527;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
   }
   .tg-tab {
-    min-height: 50px;
+    min-height: 48px;
     touch-action: manipulation;
     outline: none;
     -webkit-tap-highlight-color: transparent;
     transition:
-      color 0.24s cubic-bezier(0.33, 1, 0.68, 1),
-      opacity 0.2s ease,
-      transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
+      color 0.22s ease,
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    text-decoration: none;
   }
-  .tg-tab:active {
-    opacity: 0.94;
-    transform: scale(0.972);
+  .tg-tab:active:not(.tg-tab-disabled) {
+    opacity: 0.92;
+    transform: scale(0.97);
   }
-  .tg-tab-pill {
+  .tg-tab-stack {
+    border-radius: 9999px;
+    transition: background-color 0.26s cubic-bezier(0.33, 1, 0.68, 1);
+    width: 100%;
+    max-width: 5.5rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .tg-tab-active .tg-tab-stack {
+    background-color: rgba(0, 0, 0, 0.42);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  }
+  .tg-tab-icon-wrap {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
-    padding: 5px 17px;
-    min-height: 32px;
-    transition: background-color 0.28s cubic-bezier(0.33, 1, 0.68, 1);
+    min-height: 1.55rem;
   }
-  .tg-tab-icon,
+  .tg-tab-icon {
+    font-size: 1.28rem;
+    line-height: 1;
+    transition: color 0.22s ease;
+  }
   .tg-tab-label {
-    transition: color 0.26s cubic-bezier(0.33, 1, 0.68, 1);
-  }
-  .tg-tab-active .tg-tab-pill {
-    background-color: rgba(51, 144, 236, 0.28);
+    transition: color 0.22s ease;
+    letter-spacing: -0.01em;
   }
   .tg-tab-active .tg-tab-icon {
     color: #5eaaf7;
-    transform: translateZ(0);
   }
   .tg-tab-active .tg-tab-label {
     color: #5eaaf7;
     font-weight: 600;
   }
-  .tg-tab:not(.tg-tab-active) .tg-tab-icon {
-    color: #9aa1a9;
+  .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-icon {
+    color: rgba(255, 255, 255, 0.96);
   }
-  .tg-tab:not(.tg-tab-active) .tg-tab-label {
-    color: #9aa1a9;
+  .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-label {
+    color: rgba(255, 255, 255, 0.94);
   }
-  .tg-tab:focus-visible {
-    border-radius: 0.5rem;
-    box-shadow: 0 0 0 2px rgba(94, 170, 247, 0.55);
-  }
-  .tg-tab-disabled {
-    opacity: 0.42;
-    filter: grayscale(1);
+  .tg-tab-disabled .tg-tab-stack {
+    opacity: 0.45;
+    filter: grayscale(0.35);
   }
   .tg-tab-disabled:active {
-    opacity: 0.42;
     transform: none;
+    opacity: 0.45;
+  }
+  .tg-tab:focus-visible .tg-tab-stack {
+    box-shadow: 0 0 0 2px rgba(94, 170, 247, 0.55);
+  }
+  .tg-tab-badge {
+    position: absolute;
+    top: -0.2rem;
+    inset-inline-end: -0.35rem;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.28rem;
+    border-radius: 9999px;
+    background: #3390ec;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+    box-shadow: 0 0 0 2px rgba(36, 37, 39, 0.96);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .tg-tab-badge.is-visible {
+    display: inline-flex;
   }
 </style>
-<nav id="bottomNavMenu" data-tour="bottom-nav" class="tg-tabbar fixed inset-x-0 bottom-0 z-[60]" role="navigation" aria-label="منوی اصلی">
-  <div class="max-w-lg mx-auto w-full">
-    <div id="bottomNavItems" class="grid grid-cols-4 gap-0 min-h-[54px] w-full">
-      {# پیش‌فرض تا بارگذاری API #}
+<nav id="bottomNavMenu" data-tour="bottom-nav" class="tg-tabbar-shell fixed inset-x-0 bottom-0 z-[60]" role="navigation" aria-label="منوی اصلی">
+  <div class="tg-tabbar-pill mx-auto w-full max-w-md px-1 py-1">
+    <div id="bottomNavItems" class="grid grid-cols-4 gap-0 min-h-[52px] w-full items-center">
       {% set nav_items = [
         {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'وینور'},
         {'key': 'commissions', 'endpoint': 'express_partner.commissions', 'icon': 'fa-chart-line', 'label': 'پورسانت', 'disabled': not VINOR_IS_EXPRESS_PARTNER},
@@ -87,16 +128,21 @@
       {% for item in nav_items %}
         {% set is_active = (bottom_nav_active == item.key) %}
         <a href="{% if item.url %}{{ item.url }}{% else %}{{ url_for(item.endpoint) }}{% endif %}"
-           class="tg-tab flex flex-col items-center justify-center gap-0.5 px-1 py-1 {{ 'tg-tab-active' if is_active else '' }} {{ 'tg-tab-disabled' if item.disabled else '' }}"
+           class="tg-tab flex flex-col items-center justify-center px-0.5 py-0.5 {{ 'tg-tab-active' if is_active else '' }} {{ 'tg-tab-disabled' if item.disabled else '' }}"
            aria-current="{{ 'page' if is_active else 'false' }}"
            aria-disabled="{{ 'true' if item.disabled else 'false' }}"
            data-nav-key="{{ item.key }}">
-          <span class="tg-tab-pill" aria-hidden="true">
-            <span class="tg-tab-icon flex items-center justify-center text-[1.32rem] leading-none">
-              <i class="fas {{ item.icon }}"></i>
+          <span class="tg-tab-stack flex flex-col items-center justify-center gap-0.5 px-2 py-1">
+            <span class="tg-tab-icon-wrap" aria-hidden="true">
+              <span class="tg-tab-icon flex items-center justify-center">
+                <i class="fas {{ item.icon }}"></i>
+              </span>
+              {% if item.key == 'profile' %}
+              <span class="tg-tab-badge" data-role="nav-badge" aria-hidden="true"></span>
+              {% endif %}
             </span>
+            <span class="tg-tab-label text-[10px] leading-none max-w-full truncate text-center px-0.5">{{ item.label }}</span>
           </span>
-          <span class="tg-tab-label text-[10px] leading-none tracking-tight max-w-full truncate px-0.5">{{ item.label }}</span>
         </a>
       {% endfor %}
     </div>
@@ -106,11 +152,56 @@
 <script>
 (function() {
   const activeKey = '{{ bottom_nav_active }}';
+  const unreadUrl = '{{ bottom_nav_unread_url }}';
   const navContainer = document.getElementById('bottomNavItems');
   if (!navContainer) return;
 
+  function formatBadgeCount(n) {
+    const x = Math.max(0, Number(n) || 0);
+    if (x <= 0) return '';
+    if (x > 99) return '۹۹+';
+    try {
+      return String(x).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+    } catch (_) {
+      return String(x);
+    }
+  }
+
+  function setProfileBadge(count) {
+    const tab = navContainer.querySelector('[data-nav-key="profile"]');
+    if (!tab) return;
+    const el = tab.querySelector('[data-role="nav-badge"]');
+    if (!el) return;
+    const n = Math.max(0, Number(count) || 0);
+    if (n <= 0) {
+      el.textContent = '';
+      el.classList.remove('is-visible');
+      el.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    el.textContent = formatBadgeCount(n);
+    el.classList.add('is-visible');
+    el.setAttribute('aria-hidden', 'false');
+  }
+
+  async function refreshUnreadBadge() {
+    try {
+      const res = await fetch(unreadUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.success) setProfileBadge(data.unread_count || 0);
+    } catch (_) {}
+  }
+
+  window.addEventListener('vinor:notifications:update', function (ev) {
+    try {
+      const u = ev && ev.detail && typeof ev.detail.unread !== 'undefined' ? ev.detail.unread : null;
+      if (u !== null) setProfileBadge(u);
+    } catch (_) {}
+  });
+
   function tgTabClass(isActive, isDisabled) {
-    const base = 'tg-tab flex flex-col items-center justify-center gap-0.5 px-1 py-1 ';
+    const base = 'tg-tab flex flex-col items-center justify-center px-0.5 py-0.5 ';
     return base + (isActive ? 'tg-tab-active ' : '') + (isDisabled ? 'tg-tab-disabled' : '');
   }
 
@@ -133,6 +224,7 @@
       const data = await response.json();
       if (data.success && data.menu && Array.isArray(data.menu)) {
         renderMenu(data.menu);
+        refreshUnreadBadge();
       }
     } catch (error) {
       console.warn('Error loading menu from API:', error);
@@ -144,7 +236,7 @@
 
     navContainer.innerHTML = '';
     var n = menuItems.length;
-    navContainer.className = 'grid gap-0 min-h-[54px] w-full';
+    navContainer.className = 'grid gap-0 min-h-[52px] w-full items-center';
     navContainer.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
 
     menuItems.forEach(item => {
@@ -157,30 +249,49 @@
       link.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
       link.setAttribute('data-nav-key', item.key);
 
-      const pill = document.createElement('span');
-      pill.className = 'tg-tab-pill';
-      pill.setAttribute('aria-hidden', 'true');
+      const stack = document.createElement('span');
+      stack.className = 'tg-tab-stack flex flex-col items-center justify-center gap-0.5 px-2 py-1';
+
       const iconWrap = document.createElement('span');
-      iconWrap.className = 'tg-tab-icon flex items-center justify-center text-[1.32rem] leading-none';
+      iconWrap.className = 'tg-tab-icon-wrap';
+      iconWrap.setAttribute('aria-hidden', 'true');
+
+      const iconOuter = document.createElement('span');
+      iconOuter.className = 'tg-tab-icon flex items-center justify-center';
       const icon = document.createElement('i');
       icon.className = `fas ${item.icon || 'fa-circle'}`;
-      iconWrap.appendChild(icon);
-      pill.appendChild(iconWrap);
-      link.appendChild(pill);
+      iconOuter.appendChild(icon);
+      iconWrap.appendChild(iconOuter);
+
+      if (item.key === 'profile') {
+        const badge = document.createElement('span');
+        badge.className = 'tg-tab-badge';
+        badge.setAttribute('data-role', 'nav-badge');
+        badge.setAttribute('aria-hidden', 'true');
+        iconWrap.appendChild(badge);
+      }
+
+      stack.appendChild(iconWrap);
 
       const label = document.createElement('span');
-      label.className = 'tg-tab-label text-[10px] leading-none tracking-tight max-w-full truncate px-0.5';
+      label.className = 'tg-tab-label text-[10px] leading-none max-w-full truncate text-center px-0.5';
       label.textContent = item.label || '';
-      link.appendChild(label);
+      stack.appendChild(label);
 
+      link.appendChild(stack);
       navContainer.appendChild(link);
     });
+    refreshUnreadBadge();
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadMenuFromAPI);
+    document.addEventListener('DOMContentLoaded', function () {
+      loadMenuFromAPI();
+      refreshUnreadBadge();
+    });
   } else {
     loadMenuFromAPI();
+    refreshUnreadBadge();
   }
 
   window.addEventListener('storage', (e) => {
