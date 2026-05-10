@@ -12,14 +12,20 @@
   <meta property="og:description" content="{{ seo_description | default('لیست فایل‌های اکسپرس وینور برای خرید و فروش ملک') }}">
 {% endblock %}
 {% block content %}
+  {% set selected_city = request.args.get('city') or (profile.city if profile else '') %}
+  {% set fq = request.args.get('q', '') %}
+  {% set ftag = (request.args.get('tag', '') or '')|lower %}
+  {% set fcat = request.args.get('cat', '') %}
 
-  <!-- Header - باکس جستجو (منتقل‌شده از اکسپلور) -->
-  <header data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-    <div class="w-full px-4 py-2.5 flex items-center gap-2">
-      {# جستجو و فیلتر شهر در همان داشبورد (نتیجه در همین صفحه) #}
-      {% set selected_city = request.args.get('city') or (profile.city if profile else '') %}
+  <!-- Header - باکس جستجو + فیلترهای سریع -->
+  <header data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full shadow-sm dark:shadow-black/20">
+    <div class="w-full px-3 sm:px-4 pt-2.5 pb-2 space-y-2 max-w-6xl mx-auto">
+      {# جستجو و فیلتر شهر #}
+      <div class="flex items-center gap-2">
       <form method="GET" action="{{ url_for('express_partner.dashboard') }}" class="flex-1 min-w-0" id="searchForm">
         <input type="hidden" name="city" id="cityInputHidden" value="{{ selected_city }}">
+        {% if ftag %}<input type="hidden" name="tag" value="{{ request.args.get('tag', '') }}">{% endif %}
+        {% if fcat %}<input type="hidden" name="cat" value="{{ fcat }}">{% endif %}
         <div class="relative w-full">
           <div class="flex items-center bg-white dark:bg-gray-800 rounded-full border border-gray-300 dark:border-gray-600 focus-within:border-gray-500 dark:focus-within:border-gray-400 transition-colors">
             <button type="submit"
@@ -55,7 +61,7 @@
               </div>
               {% endif %}
               {% if request.args.get('q') %}
-              <a href="{{ url_for('express_partner.dashboard', city=selected_city) }}"
+              <a href="{{ url_for('express_partner.dashboard', city=selected_city or none, tag=request.args.get('tag') or none, cat=request.args.get('cat') or none) }}"
                  class="flex-shrink-0 w-7 h-7 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                  aria-label="پاک کردن جستجو">
                 <i class="fa-solid fa-xmark text-xs"></i>
@@ -65,10 +71,118 @@
           </div>
         </div>
       </form>
+      </div>
+
+      {# ردیف چیپ‌ها — اسکرول افقی در موبایل #}
+      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1 snap-x snap-mandatory">
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none) }}"
+           class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors
+                  {% if not ftag and not fcat %}
+                  bg-emerald-800 text-white dark:bg-emerald-900 dark:text-emerald-50 ring-1 ring-emerald-700/60
+                  {% else %}
+                  border border-gray-300 bg-gray-50 text-gray-800 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 hover:border-emerald-500/50 dark:hover:border-emerald-600
+                  {% endif %}">
+          همه فیلترها
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='pool') }}"
+           class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
+                  {% if ftag == 'pool' %}
+                  border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
+                  {% else %}
+                  border-gray-300 bg-white text-gray-800 dark:border-gray-600 dark:bg-gray-800/40 dark:text-gray-100
+                  {% endif %}">
+          <i class="fas fa-person-swimming text-[13px] opacity-90"></i>
+          استخردار
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='forest') }}"
+           class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
+                  {% if ftag == 'forest' %}
+                  border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
+                  {% else %}
+                  border-gray-300 bg-white text-gray-800 dark:border-gray-600 dark:bg-gray-800/40 dark:text-gray-100
+                  {% endif %}">
+          <i class="fas fa-tree text-[13px] opacity-90"></i>
+          جنگلی
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='town') }}"
+           class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
+                  {% if ftag == 'town' %}
+                  border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
+                  {% else %}
+                  border-gray-300 bg-white text-gray-800 dark:border-gray-600 dark:bg-gray-800/40 dark:text-gray-100
+                  {% endif %}">
+          <i class="fas fa-city text-[13px] opacity-90"></i>
+          شهرکی
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='urgent') }}"
+           class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
+                  {% if ftag == 'urgent' %}
+                  border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
+                  {% else %}
+                  border-gray-300 bg-white text-gray-800 dark:border-gray-600 dark:bg-gray-800/40 dark:text-gray-100
+                  {% endif %}">
+          <i class="fas fa-location-dot text-[13px] opacity-90"></i>
+          فوری
+        </a>
+      </div>
+
+      {# دسته‌ها — کارت‌های کوچک #}
+      <div class="grid grid-cols-5 gap-1.5 sm:gap-2 pb-1">
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, cat='land_garden') }}"
+           class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
+                  {% if fcat == 'land_garden' %}
+                  border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
+                  {% else %}
+                  border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 hover:border-amber-400/40
+                  {% endif %}">
+          <i class="fas fa-map text-lg text-amber-500 dark:text-amber-400"></i>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">زمین و باغ</span>
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, cat='ویلا') }}"
+           class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
+                  {% if fcat == 'ویلا' %}
+                  border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
+                  {% else %}
+                  border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 hover:border-amber-400/40
+                  {% endif %}">
+          <i class="fas fa-house text-lg text-amber-500 dark:text-amber-400"></i>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">ویلا</span>
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='deed') }}"
+           class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
+                  {% if ftag == 'deed' %}
+                  border-emerald-500/70 bg-emerald-500/10 dark:bg-emerald-950/40
+                  {% else %}
+                  border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 hover:border-emerald-500/40
+                  {% endif %}">
+          <i class="fas fa-file-contract text-lg text-emerald-600 dark:text-emerald-400"></i>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سنددار</span>
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='invest') }}"
+           class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
+                  {% if ftag == 'invest' %}
+                  border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
+                  {% else %}
+                  border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 hover:border-amber-400/40
+                  {% endif %}">
+          <i class="fas fa-chart-line text-lg text-amber-500 dark:text-amber-400"></i>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سرمایه‌گذاری</span>
+        </a>
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='installment') }}"
+           class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
+                  {% if ftag == 'installment' %}
+                  border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
+                  {% else %}
+                  border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50 hover:border-amber-400/40
+                  {% endif %}">
+          <i class="fas fa-coins text-lg text-amber-500 dark:text-amber-400"></i>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">اقساطی</span>
+        </a>
+      </div>
     </div>
   </header>
 
-<div class="max-w-6xl mx-auto pt-14 px-3 sm:px-4 pb-16">
+<div class="max-w-6xl mx-auto pt-[13.75rem] sm:pt-[13.25rem] px-3 sm:px-4 pb-16">
 
   {% if is_approved %}
     <!-- کارت آموزش - فقط برای همکاران تأییدشده -->
@@ -112,7 +226,7 @@
     }
     @media (max-width:640px){
       #cardsTrack{
-        min-height:calc(100vh - 130px);
+        min-height:calc(100vh - 270px);
       }
     }
     .express-card{

@@ -773,6 +773,66 @@ def dashboard():
             ]).lower()
             return all(t in text for t in terms)
         display_lands = [l for l in display_lands if _matches(l)]
+
+    filter_tag = (request.args.get('tag') or '').strip().lower()
+    filter_cat = (request.args.get('cat') or '').strip()
+
+    def _land_text_blob(ln):
+        parts = [
+            str(ln.get('title') or ''),
+            str(ln.get('description') or ''),
+            str(ln.get('features') or ''),
+            str(ln.get('location') or ''),
+            str(ln.get('category') or ''),
+            str(ln.get('payment_method') or ''),
+        ]
+        return ' '.join(parts).lower()
+
+    if filter_cat == 'land_garden':
+        display_lands = [
+            ln for ln in display_lands
+            if str(ln.get('category') or '').strip() in ('زمین', 'باغ')
+        ]
+    elif filter_cat:
+        display_lands = [
+            ln for ln in display_lands
+            if str(ln.get('category') or '').strip() == filter_cat
+        ]
+
+    if filter_tag == 'pool':
+        display_lands = [ln for ln in display_lands if 'استخر' in _land_text_blob(ln)]
+    elif filter_tag == 'forest':
+        display_lands = [
+            ln for ln in display_lands
+            if any(k in _land_text_blob(ln) for k in ('جنگل', 'جنگلی', 'بوستان'))
+        ]
+    elif filter_tag == 'town':
+        display_lands = [
+            ln for ln in display_lands
+            if any(k in _land_text_blob(ln) for k in ('شهرک', 'شهرکی', 'مجتمع'))
+        ]
+    elif filter_tag == 'urgent':
+        display_lands = [
+            ln for ln in display_lands
+            if any(k in _land_text_blob(ln) for k in ('فوری', 'فرصت', 'فوریت'))
+        ]
+    elif filter_tag == 'deed':
+        display_lands = [
+            ln for ln in display_lands
+            if any(k in _land_text_blob(ln) for k in ('سند', 'سنددار', 'تک‌برگ', 'تک برگ'))
+        ]
+    elif filter_tag == 'invest':
+        display_lands = [
+            ln for ln in display_lands
+            if any(k in _land_text_blob(ln) for k in ('سرمایه', 'سرمایه‌گذاری', 'سودآور'))
+        ]
+    elif filter_tag == 'installment':
+        display_lands = [
+            ln for ln in display_lands
+            if str(ln.get('payment_method') or '').strip() == 'اقساطی'
+            or 'قسط' in _land_text_blob(ln)
+        ]
+
     display_lands = _sort_by_created_at_desc(display_lands)
 
     # برای همکاران تاییدشده: روی کارت‌هایی که به آن‌ها اختصاص داده شده پورسانت و لینک اشتراک تزریق کن
