@@ -251,11 +251,18 @@
       gap:0;
       padding-bottom:0.375rem;
     }
-    /* اسکرول صفحه از روی ناحیه کارت: ژست عمودی به document برسد؛ افقی در sm هنوز روی #cardsTrack با overflow-x-auto */
-    @media (max-width: 1023px) {
-      #dashboardMobileCardsRoot .express-card {
-        touch-action: manipulation;
-      }
+    /*
+      لمسی/قلم: ژست عمودی را مرورگر به اسکرول کل صفحه بدهد (نه قفل روی کارت).
+      گرید دسکتاپ + ترک موبایل؛ افقی روی #cardsTrack در sm همچنان با overflow-x-auto کار می‌کند.
+    */
+    #expressDashboardMain #cardsGrid .vinor-premium-card.express-card,
+    #dashboardMobileCardsRoot .vinor-premium-card.express-card {
+      touch-action: pan-x pan-y;
+    }
+    #dashboardMobileCardsRoot #cardsTrack {
+      touch-action: pan-x pan-y;
+      overscroll-behavior-y: auto;
+      overscroll-behavior-x: contain;
     }
   </style>
   <script>
