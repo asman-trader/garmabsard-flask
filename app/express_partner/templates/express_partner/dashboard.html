@@ -122,7 +122,10 @@
       height:100%;
     }
     .express-card:hover{
-      transform:translateY(-1px);
+      transform:translateY(-2px);
+    }
+    .vinor-premium-card .vinor-fav-icon.text-red-400{
+      font-weight:900;
     }
   </style>
   <script>
@@ -198,9 +201,9 @@
   {% if loading %}
     <div class="space-y-4">
       <div class="h-40 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {% for i in range(6) %}
-          <div class="h-56 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+          <div class="aspect-[3/4] min-h-[220px] rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
         {% endfor %}
       </div>
     </div>
@@ -298,120 +301,10 @@
           </div>
         </div>
       {% else %}
-        <div id="cardsGrid" class="grid grid-cols-2 xl:grid-cols-3 gap-4">
+        <div id="cardsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {% for land in assigned_lands %}
-          {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-          {% set _st = (land._assignment_status|default('active')) %}
-          <article class="group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
-                   data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
-            <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden" data-img-wrap>
-              <div class="card-img-loading absolute inset-0 z-10 flex items-center justify-center bg-black/10 dark:bg-black/30 transition-opacity">
-                <div class="w-8 h-8 rounded-full border-2 border-white/50 border-t-transparent animate-spin"></div>
-              </div>
-              {% set video = land.video %}
-              {% if video %}
-                {% if "://" in (video|string) %}
-                  {% set video_src = video %}
-                {% elif (video|string).startswith('/uploads/') %}
-                  {% set video_src = video %}
-                {% elif (video|string).startswith('uploads/') %}
-                  {% set video_src = '/uploads/' + (video|string)[8:] %}
-                {% elif not (video|string).startswith('/') %}
-                  {% set video_src = '/uploads/' + (video|string) %}
-                {% else %}
-                  {% set video_src = video %}
-                {% endif %}
-                <video class="w-full h-full object-cover" autoplay muted loop playsinline>
-                  <source src="{{ video_src }}" type="video/mp4">
-                  {% if img %}
-                    {% if "://" in (img|string) %}
-                      {% set img_src = img %}
-                    {% elif (img|string).startswith('/uploads/') %}
-                      {% set img_src = img %}
-                    {% elif (img|string).startswith('uploads/') %}
-                      {% set img_src = '/uploads/' + (img|string)[8:] %}
-                    {% elif not (img|string).startswith('/') %}
-                      {% set img_src = '/uploads/' + (img|string) %}
-                    {% else %}
-                      {% set img_src = img %}
-                    {% endif %}
-                    <img src="{{ img_src }}" alt="{{ land.title }}" class="w-full h-full object-cover">
-                  {% endif %}
-                </video>
-              {% elif img %}
-                {% if "://" in (img|string) %}
-                  {% set img_src = img %}
-                {% elif (img|string).startswith('/uploads/') %}
-                  {% set img_src = img %}
-                {% elif (img|string).startswith('uploads/') %}
-                  {% set img_src = '/uploads/' + (img|string)[8:] %}
-                {% elif not (img|string).startswith('/') %}
-                  {% set img_src = '/uploads/' + (img|string) %}
-                {% else %}
-                  {% set img_src = img %}
-                {% endif %}
-                <img src="{{ img_src }}" alt="{{ land.title }}" loading="lazy" class="w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
-              {% else %}
-                <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">
-                  <i class="fas fa-image text-3xl"></i>
-                </div>
-              {% endif %}
-              <div class="absolute top-2 left-2 flex flex-col gap-1">
-                {% if land._is_expired %}
-                  <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-red-600 text-white">
-                    <i class="fas fa-exclamation-circle text-[9px] ml-1"></i>
-                    منقضی شده
-                  </span>
-                {% endif %}
-                {% if _st == 'sold' %}
-                  <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-green-600 text-white">فروخته شد</span>
-                {% elif _st == 'in_transaction' %}
-                  <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-orange-500 text-white">در حال معامله</span>
-                {% elif _st == 'closed' %}
-                  <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-gray-700 text-white">بسته</span>
-                {% elif _st == 'pending' %}
-                  <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-yellow-500 text-white">در انتظار</span>
-                {% endif %}
-              </div>
-            </div>
-            <div class="p-3">
-              <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 leading-snug min-h-[2.5rem]">{{ land.title or '—' }}</h3>
-              <div class="mb-2">
-                <div class="text-lg font-bold text-gray-900 dark:text-white">{{ (land.price_total or 0)|toman }}</div>
-                {% if is_approved and land._commission_amount %}
-                <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                  پورسانت شما: {{ (land._commission_amount or 0)|toman }}
-                  {% if land._commission_pct %}
-                    <span class="text-gray-500 dark:text-gray-400">({{ land._commission_pct }}%)</span>
-                  {% endif %}
-                </div>
-                {% endif %}
-              </div>
-              <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
-                {% if land.size %}
-                  <span class="flex items-center gap-1"><i class="fas fa-ruler-combined text-[10px]"></i>{{ land.size }} متر</span>
-                {% endif %}
-                {% if land.location or land.city %}
-                  <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt text-[10px]"></i>{{ land.location or (land.city or '') }}</span>
-                {% endif %}
-                {% if land.category %}
-                  <span class="flex items-center gap-1"><i class="fas fa-tag text-[10px]"></i>{{ land.category }}</span>
-                {% endif %}
-              </div>
-              <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
-                {% if land.created_at %}
-                  <span class="text-[11px] text-gray-500 dark:text-gray-500"><span class="jalali-dt" data-dt="{{ land.created_at }}"></span></span>
-                {% else %}
-                  <span></span>
-                {% endif %}
-                <div class="inline-flex items-center gap-2">
-                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                    <i class="fas fa-check text-[9px]"></i> تایید شده
-                  </span>
-                </div>
-              </div>
-            </div>
-          </article>
+            {% set tour_land_card = false %}
+            {% include 'express_partner/partials/land_premium_card.html' %}
           {% endfor %}
         </div>
       {% endif %}
@@ -474,156 +367,12 @@
       <i class="fas fa-chevron-left"></i>
     </button>
 
-    <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-4 pb-4 sm:overflow-x-auto sm:snap-x sm:snap-mandatory no-scrollbar">
+    <div id="cardsTrack" class="px-3 flex flex-col sm:flex-row sm:flex-nowrap items-stretch gap-5 pb-4 sm:overflow-x-auto sm:snap-x sm:snap-mandatory no-scrollbar">
     {% for land in assigned_lands %}
-      <article {% if loop.first %}data-tour="land-card"{% endif %} class="snap-start shrink-0 w-full sm:w-[320px] group express-card relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md" data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}" role="link" tabindex="0">
-        {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-        {% set _st = (land._assignment_status|default('active')) %}
-        
-        <!-- Image/Video Section - دیوار استایل -->
-        <div class="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 overflow-hidden" data-img-wrap>
-          <div class="card-img-loading absolute inset-0 z-10 flex items-center justify-center bg-black/10 dark:bg-black/30 transition-opacity">
-            <div class="w-8 h-8 rounded-full border-2 border-white/50 border-t-transparent animate-spin"></div>
-          </div>
-          {% set video = land.video %}
-          {% if video %}
-            {% if "://" in (video|string) %}
-              {% set video_src = video %}
-            {% elif (video|string).startswith('/uploads/') %}
-              {% set video_src = video %}
-            {% elif (video|string).startswith('uploads/') %}
-              {% set video_src = '/uploads/' + (video|string)[8:] %}
-            {% elif not (video|string).startswith('/') %}
-              {% set video_src = '/uploads/' + (video|string) %}
-            {% else %}
-              {% set video_src = video %}
-            {% endif %}
-            <video class="w-full h-full object-cover" autoplay muted loop playsinline>
-              <source src="{{ video_src }}" type="video/mp4">
-              {% if img %}
-                {% if "://" in (img|string) %}
-                  {% set img_src = img %}
-                {% elif (img|string).startswith('/uploads/') %}
-                  {% set img_src = img %}
-                {% elif (img|string).startswith('uploads/') %}
-                  {% set img_src = '/uploads/' + (img|string)[8:] %}
-                {% elif not (img|string).startswith('/') %}
-                  {% set img_src = '/uploads/' + (img|string) %}
-                {% else %}
-                  {% set img_src = img %}
-                {% endif %}
-                <img src="{{ img_src }}" alt="{{ land.title }}" class="w-full h-full object-cover">
-              {% endif %}
-            </video>
-          {% elif img %}
-            {% if "://" in (img|string) %}
-              {% set img_src = img %}
-            {% elif (img|string).startswith('/uploads/') %}
-              {% set img_src = img %}
-            {% elif (img|string).startswith('uploads/') %}
-              {% set img_src = '/uploads/' + (img|string)[8:] %}
-            {% elif not (img|string).startswith('/') %}
-              {% set img_src = '/uploads/' + (img|string) %}
-            {% else %}
-              {% set img_src = img %}
-            {% endif %}
-            <img src="{{ img_src }}" alt="{{ land.title }}" loading="lazy" class="w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
-          {% else %}
-            <div class="w-full h-full grid place-items-center text-gray-300 dark:text-gray-600">
-              <i class="fas fa-image text-3xl"></i>
-            </div>
-          {% endif %}
-          
-          <!-- Status Badge - ساده و تمیز -->
-          <div class="absolute top-2 left-2 flex flex-col gap-1">
-            {% if land._is_expired %}
-              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-red-600 text-white">
-                <i class="fas fa-exclamation-circle text-[9px] ml-1"></i>
-                منقضی شده
-              </span>
-            {% endif %}
-            {% if _st == 'sold' %}
-              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-green-600 text-white">
-                فروخته شد
-              </span>
-            {% elif _st == 'in_transaction' %}
-              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-orange-500 text-white">
-                در حال معامله
-              </span>
-            {% elif _st == 'closed' %}
-              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-gray-700 text-white">
-                بسته
-              </span>
-            {% elif _st == 'pending' %}
-              <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-yellow-500 text-white">
-                در انتظار
-              </span>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Content Section - سبک دیوار -->
-        <div class="p-3">
-          <!-- Title -->
-          <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 leading-snug min-h-[2.5rem]">
-            {{ land.title or '—' }}
-          </h3>
-
-          <!-- Price - بزرگ و برجسته -->
-          <div class="mb-2">
-            <div class="text-lg font-bold text-gray-900 dark:text-white">
-              {{ (land.price_total or 0)|toman }}
-            </div>
-            {% if is_approved and land._commission_amount %}
-            <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-              پورسانت شما: {{ (land._commission_amount or 0)|toman }}
-              {% if land._commission_pct %}
-                <span class="text-gray-500 dark:text-gray-400">({{ land._commission_pct }}%)</span>
-              {% endif %}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Details - ساده و تمیز -->
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
-            {% if land.size %}
-              <span class="flex items-center gap-1">
-                <i class="fas fa-ruler-combined text-[10px]"></i>
-                {{ land.size }} متر
-              </span>
-            {% endif %}
-            {% if land.location or land.city %}
-              <span class="flex items-center gap-1">
-                <i class="fas fa-map-marker-alt text-[10px]"></i>
-                {{ land.location or (land.city or '') }}
-              </span>
-            {% endif %}
-            {% if land.category %}
-              <span class="flex items-center gap-1">
-                <i class="fas fa-tag text-[10px]"></i>
-                {{ land.category }}
-              </span>
-            {% endif %}
-          </div>
-
-          <!-- Footer - تاریخ و برچسب -->
-          <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
-            {% if land.created_at %}
-              <span class="text-[11px] text-gray-500 dark:text-gray-500">
-                <span class="jalali-dt" data-dt="{{ land.created_at }}"></span>
-              </span>
-            {% else %}
-              <span></span>
-            {% endif %}
-            <div class="inline-flex items-center gap-2">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                <i class="fas fa-check text-[9px]"></i>
-                تایید شده
-              </span>
-            </div>
-          </div>
-        </div>
-      </article>
+      <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
+        {% set tour_land_card = loop.first %}
+        {% include 'express_partner/partials/land_premium_card.html' %}
+      </div>
     {% endfor %}
     </div>
   </div>
@@ -651,9 +400,47 @@
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
+  // علاقه‌مندی‌ها (محلی)
+  function vinorReadFavs(){
+    try{
+      const a = JSON.parse(localStorage.getItem('vinor_dashboard_favs') || '[]');
+      return Array.isArray(a) ? a.map(String) : [];
+    }catch(_){ return []; }
+  }
+  function vinorWriteFavs(arr){
+    try{ localStorage.setItem('vinor_dashboard_favs', JSON.stringify(arr)); }catch(_){}
+  }
+  function vinorSyncFavButtons(scope){
+    const root = scope || document;
+    const favs = new Set(vinorReadFavs());
+    root.querySelectorAll('[data-fav-code]').forEach((btn) => {
+      const code = String(btn.getAttribute('data-fav-code') || '');
+      const icon = btn.querySelector('.vinor-fav-icon');
+      if (!icon) return;
+      const on = favs.has(code);
+      icon.classList.toggle('far', !on);
+      icon.classList.toggle('fas', on);
+      icon.classList.toggle('text-red-400', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest && ev.target.closest('[data-fav-code]');
+    if (!btn || !btn.closest('.vinor-premium-card')) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const code = String(btn.getAttribute('data-fav-code') || '');
+    let a = vinorReadFavs();
+    const i = a.indexOf(code);
+    if (i >= 0) a.splice(i, 1); else a.push(code);
+    vinorWriteFavs(a);
+    vinorSyncFavButtons();
+  }, true);
+
   // Make entire cards clickable with keyboard support
   document.querySelectorAll('.express-card[data-href]').forEach((card) => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('[data-fav-code]')) return;
       const href = card.getAttribute('data-href');
       if (href) window.location.assign(href);
     });
@@ -665,6 +452,7 @@
       }
     });
   });
+  vinorSyncFavButtons();
   
   // Image/video loading for cards (show loader only while loading)
   (function(){
@@ -946,7 +734,8 @@
       const newCard = card.cloneNode(true);
       card.parentNode.replaceChild(newCard, card);
       
-      newCard.addEventListener('click', () => {
+      newCard.addEventListener('click', (e) => {
+        if (e.target.closest && e.target.closest('[data-fav-code]')) return;
         const href = newCard.getAttribute('data-href');
         if (href) window.location.assign(href);
       });
@@ -978,6 +767,8 @@
         });
       }catch(_){ return ''; }
     }
+
+    vinorSyncFavButtons();
   }
   
   window.performRefresh = performRefresh;

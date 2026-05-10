@@ -1,0 +1,153 @@
+{# Premium listing card (dashboard). Expects: land, is_approved, tour_land_card (bool) #}
+{% set img = (land.images[0] if land.images and land.images[0] else None) %}
+{% set _st = (land._assignment_status|default('active')) %}
+{% set land_m = (land.villa_land_area or land.land_area or land.size or '') %}
+{% set built_m = (land.villa_built_area or land.built_area or '') %}
+{% set beds = (land.villa_bedrooms or land.rooms or '') %}
+{% set loc_line = ([land.city, land.location]|select|join('، ')) if (land.city or land.location) else '' %}
+
+<article {% if tour_land_card %}data-tour="land-card"{% endif %}
+         class="group express-card vinor-premium-card relative w-full rounded-2xl overflow-hidden border border-white/10 dark:border-white/10 shadow-lg hover:shadow-xl hover:border-white/20 transition-all duration-200 cursor-pointer bg-neutral-900"
+         data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}"
+         role="link"
+         tabindex="0">
+  <div class="relative aspect-[3/4] min-h-[260px] sm:min-h-[300px] bg-neutral-800" data-img-wrap>
+    <div class="card-img-loading absolute inset-0 z-20 flex items-center justify-center bg-black/30 transition-opacity">
+      <div class="w-8 h-8 rounded-full border-2 border-white/40 border-t-transparent animate-spin"></div>
+    </div>
+
+    {% set video = land.video %}
+    {% if video %}
+      {% if "://" in (video|string) %}
+        {% set video_src = video %}
+      {% elif (video|string).startswith('/uploads/') %}
+        {% set video_src = video %}
+      {% elif (video|string).startswith('uploads/') %}
+        {% set video_src = '/uploads/' + (video|string)[8:] %}
+      {% elif not (video|string).startswith('/') %}
+        {% set video_src = '/uploads/' + (video|string) %}
+      {% else %}
+        {% set video_src = video %}
+      {% endif %}
+      <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+        <source src="{{ video_src }}" type="video/mp4">
+        {% if img %}
+          {% if "://" in (img|string) %}
+            {% set img_src = img %}
+          {% elif (img|string).startswith('/uploads/') %}
+            {% set img_src = img %}
+          {% elif (img|string).startswith('uploads/') %}
+            {% set img_src = '/uploads/' + (img|string)[8:] %}
+          {% elif not (img|string).startswith('/') %}
+            {% set img_src = '/uploads/' + (img|string) %}
+          {% else %}
+            {% set img_src = img %}
+          {% endif %}
+          <img src="{{ img_src }}" alt="{{ land.title or '' }}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+        {% endif %}
+      </video>
+    {% elif img %}
+      {% if "://" in (img|string) %}
+        {% set img_src = img %}
+      {% elif (img|string).startswith('/uploads/') %}
+        {% set img_src = img %}
+      {% elif (img|string).startswith('uploads/') %}
+        {% set img_src = '/uploads/' + (img|string)[8:] %}
+      {% elif not (img|string).startswith('/') %}
+        {% set img_src = '/uploads/' + (img|string) %}
+      {% else %}
+        {% set img_src = img %}
+      {% endif %}
+      <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+    {% else %}
+      <div class="absolute inset-0 grid place-items-center text-neutral-500">
+        <i class="fas fa-image text-4xl opacity-60"></i>
+      </div>
+    {% endif %}
+
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10 pointer-events-none z-[1]"></div>
+
+    {# Top row: favorite + special offer #}
+    <div class="absolute top-3 z-10 flex w-full items-start justify-between px-3 pointer-events-none">
+      <button type="button"
+              data-fav-code="{{ land.code }}"
+              class="pointer-events-auto w-9 h-9 rounded-full border border-white/80 bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors"
+              aria-label="علاقه‌مندی">
+        <i class="far fa-heart text-sm vinor-fav-icon" aria-hidden="true"></i>
+      </button>
+      <span class="pointer-events-auto rounded-lg bg-[#d4b996] px-2.5 py-1 text-[11px] font-bold text-neutral-900 shadow-sm">
+        پیشنهاد ویژه
+      </span>
+    </div>
+
+    {# Assignment / expiry ribbons #}
+    <div class="absolute top-14 z-10 flex flex-col gap-1.5 ps-3 pointer-events-none">
+      {% if land._is_expired %}
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-red-600 text-white shadow">
+          <i class="fas fa-exclamation-circle text-[9px] ms-1"></i>
+          منقضی شده
+        </span>
+      {% endif %}
+      {% if _st == 'sold' %}
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-700 text-white shadow">فروخته شد</span>
+      {% elif _st == 'in_transaction' %}
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-orange-600 text-white shadow">در حال معامله</span>
+      {% elif _st == 'closed' %}
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-neutral-700 text-white shadow">بسته</span>
+      {% elif _st == 'pending' %}
+        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-amber-500 text-neutral-900 shadow">در انتظار</span>
+      {% endif %}
+    </div>
+
+    {# Title block — بالای نوار آمار #}
+    <div class="absolute bottom-[4.25rem] left-0 right-0 z-10 px-3 pb-2 pt-6 flex flex-col gap-2">
+      <div class="flex items-end justify-between gap-2">
+        <span class="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#34d399] bg-[#064e3b]/90 px-2.5 py-1 text-[10px] font-semibold text-[#6ee7b7] shadow-sm backdrop-blur-sm">
+          <i class="fas fa-circle-check text-[10px]"></i>
+          تایید کارشناسی
+        </span>
+        <div class="min-w-0 flex-1 text-end">
+          <h3 class="text-base sm:text-lg font-bold text-white leading-snug line-clamp-2 drop-shadow-md">
+            {{ land.title or '—' }}
+          </h3>
+          {% if loc_line %}
+          <p class="mt-1 flex items-center justify-end gap-1 text-xs text-white/85">
+            <span class="truncate">{{ loc_line }}</span>
+            <i class="fas fa-location-dot text-[11px] text-white/70 shrink-0"></i>
+          </p>
+          {% endif %}
+          {% if is_approved and land._commission_amount %}
+          <p class="mt-1 text-[11px] font-medium text-emerald-300">
+            پورسانت شما: {{ (land._commission_amount or 0)|toman }}
+            {% if land._commission_pct %}<span class="text-emerald-400/90">({{ land._commission_pct }}٪)</span>{% endif %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Bottom stats bar #}
+    <div class="absolute bottom-0 left-0 right-0 z-10 flex border-t border-white/10 bg-black/55 backdrop-blur-md text-white divide-x divide-white/15 rtl:divide-x-reverse">
+      <div class="flex-1 min-w-0 px-1 py-2.5 text-center">
+        <div class="text-[10px] text-white/55 leading-tight">متراژ زمین</div>
+        <div class="mt-0.5 text-[13px] font-semibold tabular-nums truncate">
+          {% if land_m %}{{ land_m }} متر{% else %}—{% endif %}
+        </div>
+      </div>
+      <div class="flex-1 min-w-0 px-1 py-2.5 text-center">
+        <div class="text-[10px] text-white/55 leading-tight">اتاق خواب</div>
+        <div class="mt-0.5 text-[13px] font-semibold tabular-nums">{{ beds if beds else '—' }}</div>
+      </div>
+      <div class="flex-1 min-w-0 px-1 py-2.5 text-center">
+        <div class="text-[10px] text-white/55 leading-tight">متراژ بنا</div>
+        <div class="mt-0.5 text-[13px] font-semibold tabular-nums truncate">
+          {% if built_m %}{{ built_m }} متر{% else %}—{% endif %}
+        </div>
+      </div>
+      <div class="flex-[1.15] min-w-0 px-1 py-2.5 text-center">
+        <div class="text-[10px] text-white/55 leading-tight">قیمت</div>
+        <div class="mt-0.5 text-[12px] sm:text-[13px] font-bold tabular-nums leading-tight">{{ (land.price_total or 0)|toman }}</div>
+      </div>
+    </div>
+  </div>
+</article>
