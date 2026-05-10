@@ -209,6 +209,13 @@
 <div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: {% if is_approved %}14.25rem{% else %}17.25rem{% endif %}">
 
   <style>
+    /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد */
+    @media (max-width: 1023px) {
+      #expressDashboardMain {
+        min-height: calc(100vh + 120px);
+        min-height: calc(100dvh + 120px);
+      }
+    }
     #cardsTrack{
       min-height:calc(100vh - 150px);
     }
