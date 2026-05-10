@@ -17,10 +17,11 @@
   {% set ftag = (request.args.get('tag', '') or '')|lower %}
   {% set fcat = request.args.get('cat', '') %}
 
-  <!-- Header — کشیدن محتوا به سمت بالا (رفتن به پایین لیست) فیلترها را جمع می‌کند -->
+  <!-- هدر: نوار جستجو جدا از نوار فیلترها؛ فیلتر با اسکرول به پایین صفحه جمع می‌شود -->
   <header id="expressDashboardHeader" data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full shadow-sm dark:shadow-black/20 transition-shadow duration-300">
     <div class="express-dash-header-inner w-full px-3 sm:px-4 pt-2.5 pb-2 flex flex-col gap-2 transition-[gap,padding-bottom] duration-300 ease-out max-w-6xl mx-auto">
-      {# جستجو و فیلتر شهر #}
+      {# فقط جستجو + شهر — همیشه ثابت می‌ماند #}
+      <div id="dashboardSearchStrip" class="dashboard-search-strip flex-shrink-0">
       <div class="flex items-center gap-2">
       <form method="GET" action="{{ url_for('express_partner.dashboard') }}" class="flex-1 min-w-0" id="searchForm">
         <input type="hidden" name="city" id="cityInputHidden" value="{{ selected_city }}">
@@ -72,9 +73,11 @@
         </div>
       </form>
       </div>
+      </div>
 
-      <div id="dashHeaderFoldable" class="express-dash-header-fold overflow-hidden transition-[max-height,opacity] duration-300 ease-out opacity-100">
-        <div class="space-y-2">
+      {# فیلترها و دسته‌ها — جدا از جستجو؛ با اسکرول مخفی می‌شوند #}
+      <div id="dashboardFiltersStrip" class="dashboard-filters-strip overflow-hidden transition-[max-height,opacity,margin] duration-300 ease-out opacity-100">
+        <div class="space-y-2 pt-0">
       {# بین جستجو و فیلترها: فقط دعوت همکاری برای کاربر غیرتأییدشده #}
       {% if not is_approved %}
         <a href="{{ url_for('express_partner.cooperation_terms') }}"
@@ -226,13 +229,16 @@
     .vinor-premium-card .vinor-fav-icon.text-red-400{
       font-weight:900;
     }
-    #dashHeaderFoldable{
+    #dashboardFiltersStrip{
       max-height:min(100vh,28rem);
     }
-    #expressDashboardHeader.dash-header--compact #dashHeaderFoldable{
+    #expressDashboardHeader.dash-header--compact #dashboardFiltersStrip{
       max-height:0 !important;
       opacity:0;
       pointer-events:none;
+      margin-top:0 !important;
+      padding-top:0 !important;
+      padding-bottom:0 !important;
     }
     #expressDashboardHeader.dash-header--compact .express-dash-header-inner{
       gap:0;
@@ -512,58 +518,82 @@
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
 
-  /* هدر: کشیدن لیست به بالا (= scrollY بیشتر) → فشرده؛ کشیدن به پایین (= برگشت به بالای صفحه) → باز؛ نزدیک ابتدا همیشه باز */
+  /* #dashboardFiltersStrip نسبت به #dashboardSearchStrip جداست؛ جمع‌شدن فقط با موقعیت اسکرول واقعی صفحه */
   (function () {
     const header = document.getElementById('expressDashboardHeader');
     const main = document.getElementById('expressDashboardMain');
-    const fold = document.getElementById('dashHeaderFoldable');
-    if (!header || !main || !fold) return;
+    const filtersStrip = document.getElementById('dashboardFiltersStrip');
+    if (!header || !main || !filtersStrip) return;
+
+    const COMPACT_MIN_Y = 24;
+    const EXPAND_MAX_Y = 8;
 
     function scrollTopNow() {
-      return (
-        window.scrollY ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop ||
-        0
-      );
+      if (typeof window.scrollY === 'number' && !Number.isNaN(window.scrollY)) return window.scrollY;
+      if (typeof window.pageYOffset === 'number' && !Number.isNaN(window.pageYOffset)) return window.pageYOffset;
+      const se = document.scrollingElement;
+      if (se && typeof se.scrollTop === 'number') return se.scrollTop;
+      return 0;
     }
 
-    let lastY = scrollTopNow();
+    let compact = false;
 
     function syncMainPadding() {
       const h = header.getBoundingClientRect().height;
-      main.style.paddingTop = Math.ceil(h + 6) + 'px';
+      main.style.paddingTop = `${Math.ceil(h + 6)}px`;
     }
 
-    function setCompact(on) {
-      header.classList.toggle('dash-header--compact', on);
+    function applyCompact(on) {
+      if (on === compact) return;
+      compact = on;
+      header.classList.toggle('dash-header--compact', compact);
       syncMainPadding();
     }
 
-    function onScroll() {
+    function updateFromScroll() {
       const y = scrollTopNow();
-      const dy = y - lastY;
-      lastY = y;
-
-      if (y < 12) {
-        setCompact(false);
-        return;
-      }
-      if (dy > 2) setCompact(true);
-      else if (dy < -2) setCompact(false);
+      if (y <= EXPAND_MAX_Y) applyCompact(false);
+      else if (y >= COMPACT_MIN_Y) applyCompact(true);
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', syncMainPadding, { passive: true });
+    function bindScrollTargets(fn) {
+      window.addEventListener('scroll', fn, { passive: true });
+      document.addEventListener('scroll', fn, { passive: true, capture: true });
+      const se = document.scrollingElement;
+      if (se) {
+        try {
+          se.addEventListener('scroll', fn, { passive: true });
+        } catch (_) {}
+      }
+      try {
+        if (window.visualViewport) window.visualViewport.addEventListener('scroll', fn, { passive: true });
+      } catch (_) {}
+    }
+
+    bindScrollTargets(updateFromScroll);
+    window.addEventListener('wheel', updateFromScroll, { passive: true });
+
+    let touchScrollQueued = false;
+    function queueScrollUpdate() {
+      if (touchScrollQueued) return;
+      touchScrollQueued = true;
+      requestAnimationFrame(() => {
+        touchScrollQueued = false;
+        updateFromScroll();
+      });
+    }
+    window.addEventListener('touchmove', queueScrollUpdate, { passive: true });
+    window.addEventListener('touchend', queueScrollUpdate, { passive: true });
 
     try {
       const ro = new ResizeObserver(syncMainPadding);
       ro.observe(header);
     } catch (_) {}
 
+    window.addEventListener('resize', syncMainPadding, { passive: true });
+
     syncMainPadding();
-    lastY = scrollTopNow();
+    updateFromScroll();
   })();
 
   // علاقه‌مندی‌ها (محلی)
