@@ -73,6 +73,37 @@
       </form>
       </div>
 
+      {# بین جستجو و فیلترها: آموزش (همکار تأییدشده) یا دعوت همکاری #}
+      {% if is_approved %}
+        <a href="{{ url_for('express_partner.training') }}"
+           data-tour="training-bar"
+           class="flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 px-3 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group shrink-0">
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-graduation-cap text-emerald-600 dark:text-emerald-400 text-sm"></i>
+            </div>
+            <p class="text-[11px] sm:text-xs font-medium text-gray-900 dark:text-white truncate leading-snug">
+              آموزش ۳ مرحله‌ای موفقیت در همکاری
+            </p>
+          </div>
+          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-[10px] flex-shrink-0 group-hover:translate-x-[-2px] transition-transform"></i>
+        </a>
+      {% else %}
+        <a href="{{ url_for('express_partner.cooperation_terms') }}"
+           class="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-l from-emerald-50/90 via-white to-white dark:from-emerald-950/35 dark:via-gray-900 dark:to-gray-900 py-2 px-3 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group shrink-0">
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-handshake text-sm"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-white truncate leading-snug">تو هم می‌تونی همکار ما باشی</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate leading-tight hidden sm:block">شرایط همکاری و مراحل شروع را ببین</p>
+            </div>
+          </div>
+          <i class="fas fa-chevron-left text-emerald-500 dark:text-emerald-400 text-[10px] flex-shrink-0 group-hover:translate-x-[-2px] transition-transform"></i>
+        </a>
+      {% endif %}
+
       {# ردیف چیپ‌ها — اسکرول افقی در موبایل #}
       <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1 snap-x snap-mandatory">
         <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none) }}"
@@ -182,43 +213,7 @@
     </div>
   </header>
 
-<div class="max-w-6xl mx-auto pt-[13.75rem] sm:pt-[13.25rem] px-3 sm:px-4 pb-16">
-
-  {% if is_approved %}
-    <!-- کارت آموزش - فقط برای همکاران تأییدشده -->
-    <a href="{{ url_for('express_partner.training') }}" 
-       data-tour="training-bar"
-       class="block mt-2 mb-3 -mx-3 sm:mx-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none sm:rounded-lg py-3 px-4 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 flex-1 min-w-0">
-          <div class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-graduation-cap text-emerald-600 dark:text-emerald-400 text-base"></i>
-          </div>
-          <p class="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
-            آموزش ۳ مرحله‌ای موفقیت در همکاری
-          </p>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-xs flex-shrink-0 group-hover:translate-x-[-2px] transition-transform"></i>
-      </div>
-    </a>
-  {% else %}
-    <!-- دعوت به همکاری برای کاربران عادی -->
-    <a href="{{ url_for('express_partner.cooperation_terms') }}"
-       class="block mt-2 mb-3 -mx-3 sm:mx-0 bg-gradient-to-l from-emerald-50 via-white to-white dark:from-emerald-950/30 dark:via-gray-900 dark:to-gray-900 border border-emerald-100 dark:border-emerald-900/50 rounded-none sm:rounded-lg py-3 px-4 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all duration-200 group">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 flex-1 min-w-0">
-          <div class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-handshake text-base"></i>
-          </div>
-          <div class="min-w-0">
-            <p class="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">تو هم می‌تونی همکار ما باشی</p>
-            <p class="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">شرایط همکاری و مراحل شروع را ببین</p>
-          </div>
-        </div>
-        <i class="fas fa-chevron-left text-emerald-500 dark:text-emerald-400 text-xs flex-shrink-0 group-hover:translate-x-[-2px] transition-transform"></i>
-      </div>
-    </a>
-  {% endif %}
+<div class="max-w-6xl mx-auto pt-[17.25rem] sm:pt-[16.75rem] px-3 sm:px-4 pb-16">
 
   <style>
     #cardsTrack{
@@ -226,7 +221,7 @@
     }
     @media (max-width:640px){
       #cardsTrack{
-        min-height:calc(100vh - 270px);
+        min-height:calc(100vh - 320px);
       }
     }
     .express-card{
