@@ -119,10 +119,13 @@
       }
     }
 
-    /* انیمیشن فقط روی #tg-page-shell تا نوار پایین fixed به viewport بچسبد (transform روی body آن را با محتوا جابه‌جا می‌کرد) */
+    /*
+      بدون transform پیش‌فرض روی شِل: فرزندان position:fixed (مثل هدر داشبورد) به viewport می‌چسبند و محتوا با اسکرول از «زیر» هدر رد می‌شود.
+      قرار دادن translateZ روی شِل، بلاک containing برای fixed می‌ساخت و هدر با کل صفحه بالا می‌رفت — کارت‌ها به لبهٔ هدر می‌خوردند و متوقف دیده می‌شدند.
+      نوار پایین جدا به body منتقل شده (hoistExpressPartnerShell). انیمیشن‌های tg-page-* خودشان transform را موقت اعمال می‌کنند.
+    */
     #tg-page-shell {
       min-height: 100%;
-      transform: translateZ(0);
     }
     html[class*="tg-page-leave-"] #tg-page-shell,
     html[class*="tg-page-enter-"] #tg-page-shell {
