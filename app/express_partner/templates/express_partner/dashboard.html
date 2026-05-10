@@ -17,7 +17,7 @@
   {% set ftag = (request.args.get('tag', '') or '')|lower %}
   {% set fcat = request.args.get('cat', '') %}
 
-  <!-- Header - باکس جستجو + فیلترهای سریع (فیلترها با اسکرول به پایین جمع می‌شوند) -->
+  <!-- Header - باکس جستجو + فیلترهای سریع (فیلترها با اسکرول به بالا جمع می‌شوند) -->
   <header id="expressDashboardHeader" data-tour="dashboard-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full shadow-sm dark:shadow-black/20 transition-shadow duration-300">
     <div class="express-dash-header-inner w-full px-3 sm:px-4 pt-2.5 pb-2 flex flex-col gap-2 transition-[gap,padding-bottom] duration-300 ease-out max-w-6xl mx-auto">
       {# جستجو و فیلتر شهر #}
@@ -512,7 +512,7 @@
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   });
 
-  /* هدر داشبورد: اسکرول به پایین ← فقط جستجو؛ اسکرول به بالا یا نزدیک ابتدای صفحه ← فیلترها باز */
+  /* هدر داشبورد: اسکرول به بالا ← فقط جستجو؛ اسکرول به پایین ← فیلترها باز؛ نزدیک ابتدای صفحه همیشه باز */
   (function () {
     const header = document.getElementById('expressDashboardHeader');
     const main = document.getElementById('expressDashboardMain');
@@ -542,8 +542,8 @@
         setCompact(false);
         return;
       }
-      if (dy > 4) setCompact(true);
-      else if (dy < -4) setCompact(false);
+      if (dy < -4) setCompact(true);
+      else if (dy > 4) setCompact(false);
     }
 
     function onScroll() {
@@ -560,7 +560,6 @@
       ro.observe(header);
     } catch (_) {}
 
-    if ((window.scrollY || 0) > 48) header.classList.add('dash-header--compact');
     syncMainPadding();
     lastY = window.scrollY || 0;
   })();
