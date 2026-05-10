@@ -497,7 +497,6 @@ class OnboardingTour {
     this.tooltip.style.cssText = `
       position: fixed;
       z-index: 9999;
-      pointer-events: auto;
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: ${isMobile ? '16px' : '12px'};
@@ -548,6 +547,14 @@ class OnboardingTour {
         }
         .onboarding-overlay {
           pointer-events: none !important;
+        }
+        .onboarding-tooltip,
+        .onboarding-tooltip * {
+          pointer-events: none !important;
+        }
+        .onboarding-tooltip button {
+          pointer-events: auto !important;
+          touch-action: manipulation;
         }
         /* استایل‌های موبایل */
         @media (max-width: 640px) {
