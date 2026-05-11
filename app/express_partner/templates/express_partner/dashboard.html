@@ -257,8 +257,8 @@
       background-color: #030712;
     }
     /*
-      موبایل عمودی: ~۱۹۰px از dvh کم می‌شود تا لبهٔ پایین ناحیهٔ اسکرول بالای کپسول تب ثابت (tg-tabbar) بماند؛
-      padding-bottom ترک هم فضای اسکرول انتهایی می‌دهد تا پایین آخرین کارت زیر منو نماند.
+      موبایل عمودی: ~۱۹۰px از dvh کم می‌شود تا لبهٔ پایین ناحیهٔ اسکرول بالای کپسول تب ثابت بماند؛
+      فاصلهٔ انتهایی داخل ترک با بلوک امتداد کارت (dashboard_cards_mobile) داده می‌شود تا با اسکرول به کارت آخر بچسبد.
     */
     @media (max-width: 639px) {
       /* یکدست با body تا اگر زیر ناحیهٔ اسکرول کارت فاصلهٔ زیرپیکسل ماند، نوار تیره دیده نشود */
@@ -270,9 +270,6 @@
       }
       #dashboardMobileCardsRoot {
         height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-      }
-      #dashboardMobileCardsRoot #cardsTrack {
-        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
       }
     }
     #dashboardMobileCardsRoot #cardsTrack {
