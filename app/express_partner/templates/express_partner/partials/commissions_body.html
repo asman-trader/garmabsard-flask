@@ -1,0 +1,46 @@
+{# بادی صفحهٔ پورسانت: main + محتوا؛ اسکرول سند + padding زیر هدر fixed اینجا تنظیم می‌شود #}
+<style>
+  /*
+    اسکرول پایدار مثل داشبورد (#expressDashboardMain):
+    main کمی از viewport بلندتر است تا در موبایل اسکرول عمومی سند قفل نشود.
+  */
+  @media (max-width: 1023px) {
+    #commissionsPageMain {
+      min-height: calc(100dvh + 48px);
+    }
+  }
+</style>
+
+<main id="commissionsPageMain"
+      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 transition-[padding-top] duration-300 ease-out max-lg:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-10"
+      style="padding-top: 5.75rem">
+
+{% if not is_approved %}
+  {% include 'express_partner/partials/commissions_guest.html' %}
+{% else %}
+  {% include 'express_partner/partials/commissions_pull_hint.html' %}
+  <div id="commissionsRefreshMount" class="space-y-4 w-full pb-4">
+    {% include 'express_partner/partials/commissions_refresh_inner.html' %}
+  </div>
+{% endif %}
+
+</main>
+
+<script>
+  /* هم‌تراز با expressDashboardMain: padding-top = ارتفاع هدر fixed + چند پیکسل — ResizeObserver روی هدر */
+  (function () {
+    var header = document.getElementById('commissionsPageHeader');
+    var main = document.getElementById('commissionsPageMain');
+    if (!header || !main) return;
+    function syncCommissionsMainPadding() {
+      var h = header.getBoundingClientRect().height;
+      main.style.paddingTop = Math.ceil(h + 6) + 'px';
+    }
+    try {
+      var ro = new ResizeObserver(syncCommissionsMainPadding);
+      ro.observe(header);
+    } catch (_) {}
+    window.addEventListener('resize', syncCommissionsMainPadding, { passive: true });
+    syncCommissionsMainPadding();
+  })();
+</script>
