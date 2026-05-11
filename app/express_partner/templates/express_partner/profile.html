@@ -1,265 +1,274 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}پروفایل{% endblock %}
+
+{% block head %}
+  <style>
+    .profile-hero-glow {
+      background: radial-gradient(ellipse 95% 70% at 50% 100%, rgba(34, 197, 94, 0.22), transparent 62%);
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
 
-  <!-- Header - سبک دیوار؛ روی دسکتاپ هم‌تراز با محتوا -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-      <a href="{{ url_for('express_partner.dashboard') }}" class="w-9 h-9 sm:w-10 sm:h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400 sm:text-lg"></i>
+  <header id="profileExpressHeader" class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
+    <div class="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
+      <a href="{{ url_for('express_partner.dashboard') }}"
+         class="relative z-10 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+         aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
       </a>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">پروفایل</h1>
+      <h1 class="pointer-events-none absolute inset-x-0 text-center text-sm font-bold text-white sm:text-base">پروفایل</h1>
       {% if me_phone %}
+      {% set profile_notifications_dark = true %}
       {% include 'express_partner/partials/notifications_button.html' %}
       {% else %}
-      <div class="w-9 sm:w-10"></div>
+      <div class="h-10 w-10" aria-hidden="true"></div>
       {% endif %}
     </div>
   </header>
 
-<div id="profilePage" class="max-w-6xl mx-auto pt-14 sm:pt-16 px-4 sm:px-6 lg:pb-16 max-lg:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]">
+  <div id="profilePage"
+       class="min-h-[100dvh] bg-[#050a0e] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-14 text-zinc-100 sm:pt-16 lg:pb-16">
 
-  {% if not me_phone %}
-  <!-- Guest View: Login CTA -->
-  <section class="mt-4 sm:mt-6 lg:max-w-xl lg:mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center">
-    <div class="flex flex-col items-center gap-3 sm:gap-4">
-      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 dark:bg-gray-800 grid place-items-center">
-        <i class="fas fa-user text-gray-500 dark:text-gray-400 text-xl sm:text-2xl"></i>
+    {% if not me_phone %}
+    <section class="mx-auto mt-6 max-w-md px-4 sm:px-6">
+      <div class="rounded-2xl border border-white/10 bg-[#12181f] p-8 text-center shadow-xl shadow-black/30">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/5">
+          <i class="fas fa-user text-2xl text-zinc-500" aria-hidden="true"></i>
+        </div>
+        <p class="text-base font-bold text-white">کاربر وارد نشده است</p>
+        <p class="mt-2 text-sm text-zinc-400">برای مشاهده و مدیریت پروفایل وارد شوید</p>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <a href="{{ url_for('express_partner.login', next=url_for('express_partner.profile')) }}"
+             class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-400">
+            <i class="fas fa-right-to-bracket text-xs" aria-hidden="true"></i>
+            ورود
+          </a>
+          <a href="{{ url_for('express_partner.apply_step1') }}"
+             class="inline-flex items-center gap-2 rounded-xl border border-white/15 px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:bg-white/5">
+            <i class="fas fa-user-plus text-xs" aria-hidden="true"></i>
+            درخواست همکاری
+          </a>
+        </div>
       </div>
-      <div>
-        <p class="text-sm sm:text-base font-bold text-gray-900 dark:text-white mb-1">کاربر وارد نشده است</p>
-        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">برای مشاهده و مدیریت پروفایل وارد شوید</p>
-      </div>
-      <div class="mt-2 flex items-center justify-center gap-2">
-        <a href="{{ url_for('express_partner.login', next=url_for('express_partner.profile')) }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-          <i class="fas fa-right-to-bracket text-xs"></i>
-          ورود
-        </a>
+    </section>
+    {% else %}
+
+    <div class="mx-auto max-w-6xl space-y-3 px-4 sm:space-y-4 sm:px-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
+      {# کارت هویت #}
+      <section data-tour="profile-section"
+               id="profileClickableCard"
+               class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#141c26] to-[#0d1218] p-5 shadow-xl shadow-black/40 lg:sticky lg:top-20 lg:max-w-none">
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 profile-hero-glow" aria-hidden="true"></div>
+        <div class="relative flex items-start gap-4">
+          <div class="relative shrink-0">
+            <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="pointer-events-auto">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input id="avatarInput" name="avatar" type="file" accept="image/*" class="hidden">
+              <button type="button" id="avatarTrigger"
+                      class="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/15 bg-[#0a1018] ring-2 ring-emerald-500/20 transition hover:ring-emerald-400/40 sm:h-[5rem] sm:w-[5rem]"
+                      title="تغییر عکس پروفایل">
+                {% if profile and profile.get('avatar') %}
+                <img src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
+                     alt="عکس پروفایل" class="h-full w-full object-cover" referrerpolicy="no-referrer">
+                {% else %}
+                <span class="text-lg font-bold text-zinc-400 sm:text-xl">{{ (me_name or (me_phone or '')[-4:])[:2] }}</span>
+                {% endif %}
+              </button>
+            </form>
+            {% if is_approved %}
+            <span class="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center border border-amber-400/70 bg-gradient-to-br from-amber-300 to-amber-600 text-[9px] font-black leading-none text-[#0a0a0c] shadow-md shadow-amber-900/50"
+                  style="clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"
+                  title="تأیید شده">V</span>
+            {% endif %}
+          </div>
+
+          <div class="min-w-0 flex-1 pt-0.5 text-right">
+            <div class="truncate text-lg font-bold text-white sm:text-xl">{{ me_name or 'همکار وینور' }}</div>
+            <div class="mt-1.5 text-sm tabular-nums text-zinc-400" dir="ltr">
+              {% if me_phone and me_phone|length >= 11 %}
+                {{ me_phone[0:4] }} {{ me_phone[4:7] }} {{ me_phone[7:11] }}
+              {% else %}
+                {{ me_phone }}
+              {% endif %}
+            </div>
+            <div class="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400/95">
+              {% if is_approved %}
+              <i class="fas fa-circle-check text-emerald-400" aria-hidden="true"></i>
+              <span>همکار تایید شده</span>
+              {% else %}
+              <span class="text-zinc-500">کاربر عادی</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="pointer-events-auto shrink-0 self-start">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" onclick="showLogoutConfirm('logoutProfileForm')"
+                    class="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/5 text-zinc-300 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
+                    aria-label="خروج">
+              <i class="fas fa-right-from-bracket text-sm" aria-hidden="true"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {# منو #}
+      <div class="space-y-3 sm:space-y-3.5 lg:mt-0">
+        {% if not is_approved %}
         <a href="{{ url_for('express_partner.apply_step1') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-          <i class="fas fa-user-plus text-xs"></i>
-          درخواست همکاری
+           data-tour="apply-link"
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-emerald-500/25 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-sky-500/25 bg-sky-500/15 text-sky-400">
+              <i class="fas fa-user-plus text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">درخواست همکاری</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">برای تبدیل به همکار اکسپرس درخواست دهید</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('express_partner.notes') }}"
+           data-tour="notes-link"
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-emerald-500/25 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
+              <i class="fas fa-sticky-note text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">یادداشت‌ها</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">یادداشت‌های شخصی</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </a>
+
+        <a href="{{ android_apk_url or '#' }}"
+           id="appUpdateCard"
+           data-tour="app-update-link"
+           aria-label="بروزرسانی اپلیکیشن اندروید"
+           {% if android_apk_url %}download rel="noopener"{% endif %}
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-amber-500/25 hover:bg-[#161e29] sm:p-5 {{ '' if android_apk_url else 'pointer-events-none opacity-70' }}">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-400">
+              <i class="fas fa-download text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">بروزرسانی اپلیکیشن</div>
+              <div id="appUpdateSubtitle" class="mt-0.5 text-xs text-zinc-500 sm:text-sm">
+                {% if android_apk_version and android_apk_url %}نسخهٔ جدید برای دانلود آماده است{% elif android_apk_version %}آخرین نسخه: {{ android_apk_version }}{% else %}نسخهٔ جدیدی موجود نیست{% endif %}
+              </div>
+              <div id="appUpdateMeta" class="mt-1.5 flex flex-wrap justify-end gap-1.5 text-[11px] text-zinc-500">
+                {% if android_apk_version %}
+                <span class="inline-flex items-center gap-1 rounded border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-amber-300/90">نسخه {{ android_apk_version }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </a>
+        <a href="{{ url_for('express_partner.top_sellers') }}"
+           data-tour="top-sellers-link"
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-amber-500/25 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/15 text-orange-400">
+              <i class="fas fa-trophy text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">فروشنده‌های برتر</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">رتبه‌بندی همکاران</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </a>
+
+        <a href="{{ url_for('express_partner.help') }}"
+           data-tour="help-link"
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-sky-500/25 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-sky-500/30 bg-sky-500/15 text-sky-400">
+              <i class="fas fa-question-circle text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">راهنما</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">راهنمای استفاده از پلتفرم</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </a>
+
+        <button type="button"
+                data-tour="restart-tour"
+                onclick="window.onboardingTour && window.onboardingTour.restartTour()"
+                class="profile-menu-card w-full rounded-2xl border border-white/10 bg-[#12181f] p-4 text-right transition hover:border-zinc-500/30 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-600/50 bg-zinc-800/80 text-zinc-400">
+              <i class="fas fa-graduation-cap text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">اجرای مجدد تور راهنما</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">مشاهدهٔ دوبارهٔ آموزش‌ها</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
+        </button>
+
+        <a id="profileSupportLink"
+           href="{{ url_for('express_partner.support') }}"
+           data-tour="support-link"
+           class="profile-menu-card block rounded-2xl border border-white/10 bg-[#12181f] p-4 transition hover:border-emerald-500/25 hover:bg-[#161e29] sm:p-5">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
+              <i class="fas fa-headset text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <div class="text-sm font-semibold text-white sm:text-base">تماس با پشتیبانی</div>
+              <div class="mt-0.5 text-xs text-zinc-500 sm:text-sm">راهنمایی و پشتیبانی</div>
+            </div>
+            <i class="fas fa-chevron-left shrink-0 text-sm text-zinc-600" aria-hidden="true"></i>
+          </div>
         </a>
       </div>
     </div>
-  </section>
-  {% else %}
-  <div class="mt-4 sm:mt-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
-  <!-- Profile Section - سبک دیوار -->
-  <section data-tour="profile-section" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 cursor-pointer lg:sticky lg:top-20" id="profileClickableCard">
-    <div class="flex items-center gap-3 sm:gap-4">
-      <form id="avatarForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="pointer-events-auto">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input id="avatarInput" name="avatar" type="file" accept="image/*" class="hidden" />
-        <button type="button" id="avatarTrigger"
-                class="w-14 h-14 sm:w-16 sm:h-16 lg:w-[4.5rem] lg:h-[4.5rem] rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600 transition shrink-0"
-                title="تغییر عکس پروفایل">
-          {% if profile and profile.get('avatar') %}
-            <img src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
-                 alt="عکس پروفایل"
-                 class="w-full h-full object-cover" referrerpolicy="no-referrer" />
-          {% else %}
-            <span class="text-gray-600 dark:text-gray-400 text-lg sm:text-xl font-semibold">
-              {{ (me_name or (me_phone or '')[-4:])[:2] }}
-            </span>
-          {% endif %}
-        </button>
-      </form>
-      <div class="flex-1 min-w-0">
-        <div class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-          {{ me_name or 'همکار وینور' }}
-        </div>
-        <div class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 tabular-nums">{{ me_phone }}</div>
-        <div class="mt-1 text-[11px] sm:text-xs text-gray-500 dark:text-gray-500">
-          {% if is_approved %}همکار تایید شده{% else %}کاربر عادی{% endif %}
-        </div>
-      </div>
-      <form id="logoutProfileForm" method="post" action="{{ url_for('express_partner.logout') }}" class="shrink-0 pointer-events-auto self-start">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="button"
-                onclick="showLogoutConfirm('logoutProfileForm')"
-                class="px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          خروج
-        </button>
-      </form>
-    </div>
-  </section>
-
-  <!-- Quick Links - سبک دیوار -->
-  <div class="mt-3 lg:mt-0 space-y-2 sm:space-y-3">
-    {% if not is_approved %}
-    <a href="{{ url_for('express_partner.apply_step1') }}" 
-       data-tour="apply-link"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-          <i class="fas fa-user-plus text-blue-600 dark:text-blue-300 sm:text-lg"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">درخواست همکاری</div>
-          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">برای تبدیل به همکار اکسپرس درخواست دهید</div>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0"></i>
-      </div>
-    </a>
     {% endif %}
-    <a href="{{ url_for('express_partner.notes') }}" 
-       data-tour="notes-link"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-          <i class="fas fa-sticky-note text-gray-600 dark:text-gray-400 sm:text-lg"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">یادداشت‌ها</div>
-          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">یادداشت‌های خصوصی</div>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0"></i>
-      </div>
-    </a>
 
-    <!-- بروزرسانی اپلیکیشن -->
-    <a href="{{ android_apk_url or '#' }}"
-       id="appUpdateCard"
-       data-tour="app-update-link"
-       aria-label="بروزرسانی اپلیکیشن اندروید"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors {{ '' if android_apk_version else 'opacity-80 pointer-events-none' }}"
-       {% if android_apk_url %} download {% endif %}>
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-          <i class="fas fa-download text-amber-600 dark:text-amber-400 sm:text-lg"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">بروزرسانی اپلیکیشن</div>
-          <div id="appUpdateSubtitle" class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-            {% if android_apk_version and android_apk_url %}نسخه جدید برای دانلود آماده است{% elif android_apk_version %}آخرین نسخه: {{ android_apk_version }}{% else %}نسخه جدید در حال حاضر موجود نیست{% endif %}
-          </div>
-          <div id="appUpdateMeta" class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
-            {% if android_apk_version %}<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">نسخه {{ android_apk_version }}</span>{% endif %}
-            {# تاریخ و اندازه حذف شد به درخواست کاربر #}
-          </div>
-        </div>
-        <button type="button"
-                id="appUpdateAction"
-                class="shrink-0 px-3 py-2 sm:px-4 sm:py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-semibold transition-colors {{ '' if android_apk_url else 'hidden' }}"
-                aria-label="دانلود آخرین نسخه"
-                title="دانلود آخرین نسخه"
-                onclick="if ('{{ android_apk_url }}') window.location.assign('{{ android_apk_url }}')">
-          دانلود
-        </button>
-      </div>
-    </a>
-
-    <!-- فروشنده‌های برتر -->
-    <a href="{{ url_for('express_partner.top_sellers') }}" 
-       data-tour="top-sellers-link"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-          <i class="fas fa-trophy text-amber-600 dark:text-amber-400 sm:text-lg"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">فروشنده‌های برتر</div>
-          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">رتبه‌بندی همکاران</div>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0"></i>
-      </div>
-    </a>
-
-    <!-- راهنما (+ اجرای مجدد تور در همان کارت) -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl overflow-hidden hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <a href="{{ url_for('express_partner.help') }}"
-         data-tour="help-link"
-         class="block p-4 sm:p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-        <div class="flex items-center gap-3 sm:gap-4">
-          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-            <i class="fas fa-question-circle text-blue-600 dark:text-blue-400 sm:text-lg"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">راهنما</div>
-            <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">راهنمای استفاده از پلتفرم</div>
-          </div>
-          <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0"></i>
-        </div>
-      </a>
-      <div class="border-t border-gray-200 dark:border-gray-700" aria-hidden="true"></div>
-      <button type="button"
-              data-tour="restart-tour"
-              onclick="window.onboardingTour.restartTour()"
-              class="w-full block p-4 sm:p-5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-right">
-        <div class="flex items-center gap-3 sm:gap-4">
-          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-            <i class="fas fa-graduation-cap text-gray-600 dark:text-gray-400 sm:text-lg"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">اجرای مجدد تور راهنما</div>
-            <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">مشاهده دوباره آموزش‌ها</div>
-          </div>
-          <i class="fas fa-redo text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0" aria-hidden="true"></i>
-        </div>
-      </button>
-    </div>
-
-    <!-- تماس با پشتیبانی -->
-    <a id="profileSupportLink"
-       href="{{ url_for('express_partner.support') }}" 
-       data-tour="support-link"
-       class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl p-4 sm:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-          <i class="fas fa-headset text-gray-600 dark:text-gray-400 sm:text-lg"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">تماس با پشتیبانی</div>
-          <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">راهنمایی و پشتیبانی</div>
-        </div>
-        <i class="fas fa-chevron-left text-gray-400 dark:text-gray-500 text-sm sm:text-base shrink-0"></i>
-      </div>
-    </a>
+    {% include 'express_partner/partials/partner_tab_footer.html' %}
   </div>
-  </div>
-  {% endif %}
 
-  {% include 'express_partner/partials/partner_tab_footer.html' %}
-
-</div>
-
-<!-- Logout Confirm Modal — data-tg-body-modal: منتقل به انتهای body توسط base تا بالای نوار پایین باشد -->
-<div id="logoutConfirmModal"
-     data-tg-body-modal
-     class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="logoutConfirmTitle">
-  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideLogoutConfirm()"></div>
-  <div class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-sm:pb-[env(safe-area-inset-bottom,0px)]">
-    <div class="p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:pb-5">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 grid place-items-center">
-          <i class="fas fa-sign-out-alt text-lg"></i>
+  <div id="logoutConfirmModal"
+       data-tg-body-modal
+       class="fixed inset-0 z-[100] hidden items-end justify-center sm:items-center"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="logoutConfirmTitle">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="hideLogoutConfirm()"></div>
+    <div class="relative mx-auto w-full max-sm:rounded-t-3xl sm:max-w-md sm:rounded-2xl border border-white/10 bg-[#12181f] shadow-2xl max-sm:pb-[env(safe-area-inset-bottom,0px)]">
+      <div class="p-5 sm:p-6">
+        <div class="flex items-center gap-3">
+          <div class="grid h-12 w-12 place-items-center rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-400">
+            <i class="fas fa-sign-out-alt text-lg" aria-hidden="true"></i>
+          </div>
+          <div>
+            <p id="logoutConfirmTitle" class="text-lg font-bold text-white">خروج از حساب</p>
+            <p class="mt-1 text-sm text-zinc-400">آیا از خروج اطمینان دارید؟</p>
+          </div>
         </div>
-        <div>
-          <p id="logoutConfirmTitle" class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">خروج از حساب</p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">آیا از خروج اطمینان دارید؟</p>
+        <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button type="button"
+                  class="w-full rounded-xl border border-white/15 py-3 font-semibold text-zinc-200 transition hover:bg-white/5"
+                  onclick="hideLogoutConfirm()">انصراف</button>
+          <button type="button"
+                  class="w-full rounded-xl bg-rose-600 py-3 font-semibold text-white transition hover:bg-rose-500"
+                  onclick="confirmLogout()">خروج</button>
         </div>
-      </div>
-
-      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button type="button"
-                class="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-                onclick="hideLogoutConfirm()">
-          انصراف
-        </button>
-        <button type="button"
-                class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition"
-                onclick="confirmLogout()">
-          خروج
-        </button>
       </div>
     </div>
   </div>
-</div>
 
 <script>
   (function() {
@@ -304,125 +313,73 @@
     };
   })();
 
-  // Avatar upload bindings
   (function() {
     const trigger = document.getElementById('avatarTrigger');
     const input = document.getElementById('avatarInput');
     const form = document.getElementById('avatarForm');
     if (!trigger || !input || !form) return;
-    trigger.addEventListener('click', function() {
-      input.click();
-    });
+    trigger.addEventListener('click', function() { input.click(); });
     input.addEventListener('change', function() {
       if (!input.files || input.files.length === 0) return;
       form.submit();
     });
   })();
 
-  // App update card: اگر سرور نسخه/لینک را داده، AJAX لازم نیست
   (function() {
     const card = document.getElementById('appUpdateCard');
     const sub = document.getElementById('appUpdateSubtitle');
     const meta = document.getElementById('appUpdateMeta');
-    const action = document.getElementById('appUpdateAction');
     if (!card || !sub) return;
     const serverV = "{{ android_apk_version or '' }}".trim();
     const serverU = "{{ android_apk_url or '' }}".trim();
-    if (serverV || serverU) {
-      return; // از داده‌های سرور استفاده می‌شود
-    }
+    if (serverV || serverU) return;
     function absUrl(path) {
       try {
         if (!path) return '';
         if (path.startsWith('http')) return path;
-        const u = new URL(window.location.href);
-        const base = u.origin;
-        return base + path;
-      } catch(_){ return path || ''; }
-    }
-    function humanSize(n) {
-      try {
-        const b = Number(n||0);
-        if (!isFinite(b) || b <= 0) return '';
-        const units = ['بایت','کیلوبایت','مگابایت','گیگابایت'];
-        let i = 0, val = b;
-        while (val >= 1024 && i < units.length-1) { val /= 1024; i++; }
-        return `${val.toFixed(val>=10?0:1)} ${units[i]}`;
-      } catch(_){ return ''; }
-    }
-    function faDate(iso) {
-      try {
-        if (!iso) return '';
-        const d = new Date(String(iso).replace(' ','T'));
-        if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('fa-IR', { year:'numeric', month:'2-digit', day:'2-digit' });
-      } catch(_){ return ''; }
+        return new URL(path, window.location.origin).toString();
+      } catch (_) { return path || ''; }
     }
     async function fetchVersionWithFallback() {
-      const headers = {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-        'X-Requested-With': 'XMLHttpRequest'
-      };
-      const urls = [
-        // ابتدا مسیر سازگار با SW اکسپرس
-        '/api/express/app-version',
-        (function(){ try { return new URL('/api/express/app-version', window.location.origin).toString(); } catch(_){ return '/api/express/app-version'; } })(),
-        // سپس مسیر عمومی
-        '/api/app/version',
-        (function(){ try { return new URL('/api/app/version', window.location.origin).toString(); } catch(_){ return '/api/app/version'; } })()
-      ];
-      for (const u of urls) {
+      const headers = { 'Accept': 'application/json', 'Cache-Control': 'no-cache', 'X-Requested-With': 'XMLHttpRequest' };
+      const urls = ['/api/express/app-version', '/api/app/version'];
+      for (var i = 0; i < urls.length; i++) {
         try {
-          const res = await fetch(u, { headers, credentials: 'same-origin', cache: 'no-store' });
+          var res = await fetch(urls[i], { headers: headers, credentials: 'same-origin', cache: 'no-store' });
           if (res && res.ok) return await res.json();
-        } catch(_) { /* try next */ }
+        } catch (_) {}
       }
       throw new Error('unavailable');
     }
     fetchVersionWithFallback()
-      .then(d => {
+      .then(function (d) {
         if (!d || d.success !== true) throw new Error();
-        const v = String(d.android_apk_version || '').trim();
-        const url = String(d.android_apk_url || '').trim();
-        const items = [];
-        if (v) items.push(`نسخه ${v}`); // فقط نسخه نمایش داده شود
-        if (items.length && meta) {
-          meta.innerHTML = items.map(t => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40">${t}</span>`).join(' ');
-        }
+        var v = String(d.android_apk_version || '').trim();
+        var url = String(d.android_apk_url || '').trim();
         if (v && url) {
-          sub.textContent = 'نسخه جدید برای دانلود آماده است';
-          const link = absUrl(url);
-          if (action) {
-            action.style.display = '';
-            action.onclick = function(e){ e.preventDefault(); window.location.assign(link); };
-          }
-          card.onclick = function(e){ e.preventDefault(); window.location.assign(link); };
+          sub.textContent = 'نسخهٔ جدید برای دانلود آماده است';
+          if (meta) meta.innerHTML = '<span class="inline-flex items-center gap-1 rounded border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-amber-300/90">نسخه ' + v + '</span>';
+          card.classList.remove('pointer-events-none', 'opacity-70');
+          card.href = absUrl(url);
+          if (card.hasAttribute('download')) { /* keep */ }
         } else if (v) {
-          sub.textContent = `آخرین نسخه: ${v}`;
-          if (action) action.style.display = 'none';
-          card.classList.add('opacity-80','pointer-events-none');
+          sub.textContent = 'آخرین نسخه: ' + v;
+          if (meta) meta.innerHTML = '<span class="inline-flex items-center gap-1 rounded border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-amber-300/90">نسخه ' + v + '</span>';
         } else {
-          sub.textContent = 'نسخه جدید در حال حاضر موجود نیست';
-          if (action) action.style.display = 'none';
-          card.classList.add('opacity-80','pointer-events-none');
+          sub.textContent = 'نسخهٔ جدیدی موجود نیست';
         }
       })
-      .catch(() => {
+      .catch(function () {
         sub.textContent = 'عدم دسترسی به اطلاعات بروزرسانی';
-        if (action) action.style.display = 'none';
-        card.classList.add('opacity-80','pointer-events-none');
       });
   })();
 
-  // Navigate to edit on card click (excluding avatar button and logout)
   (function() {
     const card = document.getElementById('profileClickableCard');
     const avatarBtn = document.getElementById('avatarTrigger');
     const logoutForm = document.getElementById('logoutProfileForm');
     if (!card) return;
     card.addEventListener('click', function(e) {
-      // جلوگیری از کلیک روی آواتار یا دکمه‌های داخل
       if (avatarBtn && avatarBtn.contains(e.target)) return;
       if (logoutForm && logoutForm.contains(e.target)) return;
       window.location.href = "{{ url_for('express_partner.profile_edit') }}";
@@ -431,6 +388,3 @@
 </script>
 
 {% endblock %}
-
-
-

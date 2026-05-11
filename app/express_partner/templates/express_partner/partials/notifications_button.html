@@ -1,11 +1,23 @@
-<div class="relative" x-data="vinorNotifyBadge()" data-tour="notifications-link">
+{% set _profile_dark_nav = profile_notifications_dark|default(false) %}
+<div class="relative z-10" x-data="vinorNotifyBadge()" data-tour="notifications-link">
   <a href="{{ url_for('express_partner.notifications') }}"
-     class="relative w-9 h-9 sm:w-10 sm:h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+     class="relative w-10 h-10 grid place-items-center rounded-full transition
+            {% if _profile_dark_nav %}
+              border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white
+            {% else %}
+              hover:bg-gray-100 dark:hover:bg-gray-700
+            {% endif %}"
      aria-label="اعلان‌ها">
-    <i class="fas fa-bell text-gray-700 dark:text-gray-300 sm:text-lg"></i>
+    <i class="fas fa-bell sm:text-lg {% if _profile_dark_nav %}text-zinc-200{% else %}text-gray-700 dark:text-gray-300{% endif %}"></i>
+    {% if _profile_dark_nav %}
+    <span x-show="unreadCount > 0"
+          class="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#0a1018]"
+          x-cloak></span>
+    {% else %}
     <span x-show="unreadCount > 0"
           x-text="badgeLabel()"
           class="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"></span>
+    {% endif %}
   </a>
 </div>
 
