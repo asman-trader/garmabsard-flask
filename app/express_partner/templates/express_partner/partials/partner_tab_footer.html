@@ -1,0 +1,18 @@
+{# فوتر تب‌های اصلی پرتال: یک نقطهٔ فراخوانی برای bottom_nav.
+   اگر صفحهٔ فراخوان bottom_nav_active را ست نکرده باشد، از request.endpoint حدس زده می‌شود.
+   برای حالت‌های خاص (ورود، آموزش، …) قبل از include همان متغیر را ست کنید. #}
+{% if bottom_nav_active is not defined %}
+  {% set ep = request.endpoint or '' %}
+  {% if ep in ('express_partner.dashboard', 'express_partner.dashboard_data') %}
+    {% set bottom_nav_active = 'dashboard' %}
+  {% elif ep in ('express_partner.commissions', 'express_partner.commissions_data') %}
+    {% set bottom_nav_active = 'commissions' %}
+  {% elif ep and ep.startswith('express_partner.routine') %}
+    {% set bottom_nav_active = 'routine' %}
+  {% elif ep and (ep.startswith('express_partner.profile') or ep in ('express_partner.notifications', 'express_partner.help', 'express_partner.top_sellers')) %}
+    {% set bottom_nav_active = 'profile' %}
+  {% else %}
+    {% set bottom_nav_active = '' %}
+  {% endif %}
+{% endif %}
+{% include 'express_partner/partials/bottom_nav.html' %}
