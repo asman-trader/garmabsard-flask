@@ -247,11 +247,21 @@
       - این روش با ویدیو و تصویر هم کاملاً سازگار است.
     */
     #dashboardMobileCardsRoot {
-      height: calc(100dvh - 160px);
-      height: calc(100dvh - 160px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+    }
+    /*
+      موبایل عمودی: ~۱۹۰px از dvh کم می‌شود تا لبهٔ پایین ناحیهٔ اسکرول بالای کپسول تب ثابت (tg-tabbar) بماند؛
+      padding-bottom ترک هم فضای اسکرول انتهایی می‌دهد تا پایین آخرین کارت زیر منو نماند.
+    */
+    @media (max-width: 639px) {
+      #dashboardMobileCardsRoot {
+        height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      }
+      #dashboardMobileCardsRoot #cardsTrack {
+        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+      }
     }
     #dashboardMobileCardsRoot #cardsTrack {
       overflow: visible;
