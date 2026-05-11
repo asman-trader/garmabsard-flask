@@ -1227,6 +1227,36 @@ def commissions_page():
     
     # فروش‌های تایید شده: تعداد پورسانت‌هایی که status='approved' یا 'paid' دارند
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+
+    def _norm_st(c):
+        try:
+            return (str(c.get('status') or 'pending')).strip()
+        except Exception:
+            return 'pending'
+
+    pending_count = sum(1 for c in my_comms if _norm_st(c) == 'pending')
+    approved_count = sum(1 for c in my_comms if _norm_st(c) == 'approved')
+    paid_count = sum(1 for c in my_comms if _norm_st(c) == 'paid')
+    approved_commission = sum(_i(c.get('commission_amount')) for c in my_comms if _norm_st(c) == 'approved')
+    # موجودی که همکار می‌تواند درخواست برداشت/واریز بزند: پورسانت‌های تأییدشده و هنوز پرداخت‌نشده
+    withdrawable_balance = approved_commission
+
+    try:
+        lands_all = load_ads_cached() or []
+        lo = {str(x.get('code')): x for x in lands_all if x.get('code') is not None}
+        for c in my_comms:
+            L = lo.get(str(c.get('land_code', '') or ''))
+            if L:
+                title = (str(L.get('title') or L.get('category') or 'ملک')).strip() or 'ملک'
+                city = (str(L.get('city') or '')).strip()
+                c['_txn_label'] = f'پورسانت فروش {title}' + (f' در {city}' if city else '')
+            else:
+                c['_txn_label'] = 'پورسانت فروش'
+    except Exception:
+        pass
+    for c in my_comms:
+        c.setdefault('_txn_label', 'پورسانت فروش')
+
     try:
         my_comms.sort(key=lambda x: x.get('created_at',''), reverse=True)
     except Exception:
@@ -1239,6 +1269,11 @@ def commissions_page():
         pending_commission=pending_commission,
         paid_commission=paid_commission,
         sold_count=sold_count,
+        pending_count=pending_count,
+        approved_count=approved_count,
+        paid_count=paid_count,
+        approved_commission=approved_commission,
+        withdrawable_balance=withdrawable_balance,
         hide_header=True,
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
