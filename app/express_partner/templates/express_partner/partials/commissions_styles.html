@@ -1,5 +1,13 @@
-{# پس‌زمینهٔ صفحهٔ پورسانت + شل پرتال رشد می‌کند تا دسکتاپ اسکرول سند سالم بماند #}
+{# پس‌زمینهٔ صفحهٔ پورسانت؛ html/body هم رنگ شِل تا نوار زیر فوتر (safe-area زیر کپسول تب) دیده نشود #}
 <style>
+  html:has(#commissionsPageHeader),
+  body:has(#commissionsPageHeader) {
+    background-color: #0b0e14;
+  }
+  /* نوار پایین خارج از شِل است؛ پس‌زمینهٔ همان ناحیهٔ padding زیر کپسول */
+  body:has(#commissionsPageHeader) #bottomNavMenu.tg-tabbar-shell {
+    background-color: #0b0e14;
+  }
   #tg-page-shell:has(#commissionsPageHeader) {
     background-color: #0b0e14;
     min-height: min-content;
