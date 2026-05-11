@@ -1,14 +1,31 @@
-{# بادی پورسانت: main + محتوا — اسکرول سند و padding زیر هدر مثل #expressDashboardMain در dashboard.html #}
+{# بادی پورسانت: روی موبایل اسکرول داخل #commissionsPageMain (مثل dashboardMobileCardsRoot) تا WebView قفل نکند #}
 <main id="commissionsPageMain"
-      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 text-slate-100 pb-16 transition-[padding-top] duration-300 ease-out max-lg:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]"
+      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 text-slate-100 pb-4 lg:pb-10 transition-[padding-top] duration-300 ease-out"
       style="padding-top: 5.75rem">
 
   <style>
-    /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد — همان dashboard.html */
+    /* موبایل/تبلت: اسکرول داخل main؛ --vn-comm-nav-h از ارتفاع واقعی #bottomNavMenu پر می‌شود. */
     @media (max-width: 1023px) {
+      /*
+        فقط نوار پایین از dvh کم می‌شود؛ padding-top هدر را داخل همین باکس جا می‌دهد (بدون کم کردن دوبارهٔ هدر از ارتفاع).
+      */
       #commissionsPageMain {
-        min-height: calc(100vh + 120px);
-        min-height: calc(100dvh + 120px);
+        box-sizing: border-box;
+        height: calc(100dvh - var(--vn-comm-nav-h, 5.75rem));
+        max-height: calc(100dvh - var(--vn-comm-nav-h, 5.75rem));
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
+      }
+    }
+    @media (min-width: 1024px) {
+      #commissionsPageMain {
+        overflow-x: hidden;
+        overflow-y: visible;
+        min-height: calc(100vh + 48px);
+        min-height: calc(100dvh + 48px);
       }
     }
   </style>
@@ -25,20 +42,45 @@
 </main>
 
 <script>
-  /* همان الگوی syncMainPadding در dashboard.html: ResizeObserver + resize + فراخوانی فوری */
   (function () {
     var header = document.getElementById('commissionsPageHeader');
     var main = document.getElementById('commissionsPageMain');
     if (!header || !main) return;
-    function syncCommissionsMainPadding() {
-      var h = header.getBoundingClientRect().height;
-      main.style.paddingTop = Math.ceil(h + 6) + 'px';
+
+    function syncCommissionsChrome() {
+      var hh = Math.ceil(header.getBoundingClientRect().height + 6);
+      main.style.paddingTop = hh + 'px';
+      var nav = document.getElementById('bottomNavMenu');
+      var nh = 0;
+      try {
+        if (nav) nh = Math.ceil(nav.getBoundingClientRect().height);
+      } catch (_) {}
+      if (!nh) nh = 92;
+      main.style.setProperty('--vn-comm-nav-h', nh + 'px');
     }
+
     try {
-      var ro = new ResizeObserver(syncCommissionsMainPadding);
+      var ro = new ResizeObserver(syncCommissionsChrome);
       ro.observe(header);
+      var nav0 = document.getElementById('bottomNavMenu');
+      if (nav0) ro.observe(nav0);
     } catch (_) {}
-    window.addEventListener('resize', syncCommissionsMainPadding, { passive: true });
-    syncCommissionsMainPadding();
+
+    window.addEventListener('resize', syncCommissionsChrome, { passive: true });
+    syncCommissionsChrome();
+
+    if (!document.getElementById('bottomNavMenu')) {
+      document.addEventListener('DOMContentLoaded', function vnCommNavRo() {
+        document.removeEventListener('DOMContentLoaded', vnCommNavRo);
+        syncCommissionsChrome();
+        try {
+          var nav = document.getElementById('bottomNavMenu');
+          if (nav) {
+            var ron = new ResizeObserver(syncCommissionsChrome);
+            ron.observe(nav);
+          }
+        } catch (_) {}
+      });
+    }
   })();
 </script>

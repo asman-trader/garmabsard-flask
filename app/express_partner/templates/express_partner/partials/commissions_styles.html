@@ -1,7 +1,11 @@
-{# پس‌زمینهٔ صفحهٔ پورسانت — شِل پرتال؛ بدون min-height/overflow اضافه (مثل داشبورد وینور) #}
+{# پس‌زمینهٔ صفحهٔ پورسانت + شل پرتال رشد می‌کند تا دسکتاپ اسکرول سند سالم بماند #}
 <style>
   #tg-page-shell:has(#commissionsPageHeader) {
     background-color: #0b0e14;
+    min-height: min-content;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
   .vn-gold-glow {
     box-shadow: 0 0 40px rgba(245, 158, 11, 0.14);
