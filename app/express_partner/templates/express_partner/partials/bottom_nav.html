@@ -1,41 +1,54 @@
-{# نوار پایین همکار — کپسول شناور؛ رنگ‌ها مثل هدر/کارت‌ها (gray + blue-600 مثل دکمه‌ها و آمار داشبورد) #}
+{# نوار پایین — کپسول شیشه‌ای شناور؛ شِل شفاف تا اسکرول از پشت/اطراف دیده شود #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 {% set bottom_nav_unread_url = url_for('express_partner.get_unread_count') %}
 <style>
-  /*
-    هماهنگ با صفحات پرتال: header bg-white/95 dark:bg-gray-900/95 ، border-gray-200 dark:border-gray-800 ،
-    حالت فعال و دکمه‌های اصلی: blue-600 / dark:text-blue-400
-  */
-  .tg-tabbar-shell {
+  #bottomNavMenu.tg-tabbar-shell {
     pointer-events: none;
-    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
-    padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+    background: transparent !important;
+    box-shadow: none !important;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    padding-top: 0.65rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   }
   .tg-tabbar-pill {
-    --vn-pill-bg: rgba(255, 255, 255, 0.95);
-    --vn-pill-bg-solid: #ffffff;
-    --vn-pill-border: rgb(229 231 235); /* gray-200 */
-    --vn-shadow: 0 10px 36px rgba(15, 23, 42, 0.07), 0 2px 8px rgba(15, 23, 42, 0.04);
+    --vn-pill-bg: rgba(255, 255, 255, 0.42);
+    --vn-pill-bg-solid: #f3f4f6;
+    --vn-pill-border: rgba(15, 23, 42, 0.1);
+    --vn-shadow:
+      0 10px 40px rgba(15, 23, 42, 0.12),
+      0 2px 12px rgba(15, 23, 42, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65);
     pointer-events: auto;
+    position: relative;
+    isolation: isolate;
+    transform: translateZ(0);
     background-color: var(--vn-pill-bg);
     border: 1px solid var(--vn-pill-border);
     border-radius: 9999px;
     box-shadow: var(--vn-shadow);
-    -webkit-backdrop-filter: saturate(160%) blur(18px);
-    backdrop-filter: saturate(160%) blur(18px);
+    -webkit-backdrop-filter: saturate(200%) blur(26px);
+    backdrop-filter: saturate(200%) blur(26px);
   }
   .dark .tg-tabbar-pill {
-    --vn-pill-bg: rgba(17, 24, 39, 0.95); /* gray-900 */
+    --vn-pill-bg: rgba(3, 7, 18, 0.42);
     --vn-pill-bg-solid: rgb(17 24 39);
-    --vn-pill-border: rgb(31 41 55); /* gray-800 مثل border-b هدر */
-    --vn-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    --vn-pill-border: rgba(255, 255, 255, 0.12);
+    --vn-shadow:
+      0 12px 44px rgba(0, 0, 0, 0.55),
+      0 4px 16px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .tg-tabbar-pill {
-      background-color: var(--vn-pill-bg-solid);
+      --vn-pill-bg: rgba(255, 255, 255, 0.92);
+      background-color: var(--vn-pill-bg);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
+    }
+    .dark .tg-tabbar-pill {
+      --vn-pill-bg: rgba(17, 24, 39, 0.94);
+      background-color: var(--vn-pill-bg);
     }
   }
   .tg-tab {
@@ -138,13 +151,13 @@
     font-weight: 700;
     line-height: 1.05rem;
     text-align: center;
-    box-shadow: 0 0 0 2px var(--vn-pill-bg, #ffffff);
+    box-shadow: 0 0 0 2px #ffffff;
     display: none;
     align-items: center;
     justify-content: center;
   }
   .dark .tg-tab-badge {
-    box-shadow: 0 0 0 2px var(--vn-pill-bg, #111827);
+    box-shadow: 0 0 0 2px rgb(17 24 39);
   }
   .tg-tab-badge.is-visible {
     display: inline-flex;
