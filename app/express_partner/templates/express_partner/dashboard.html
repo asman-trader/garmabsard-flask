@@ -250,12 +250,24 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      /* بدون پس‌زمینه، padding انتهایی ترک شفاف است و لبهٔ تیره/زیرپیکسل بین کارت و فوتر دیده می‌شود */
+      background-color: #f9fafb;
+    }
+    html.dark #dashboardMobileCardsRoot {
+      background-color: #030712;
     }
     /*
       موبایل عمودی: ~۱۹۰px از dvh کم می‌شود تا لبهٔ پایین ناحیهٔ اسکرول بالای کپسول تب ثابت (tg-tabbar) بماند؛
       padding-bottom ترک هم فضای اسکرول انتهایی می‌دهد تا پایین آخرین کارت زیر منو نماند.
     */
     @media (max-width: 639px) {
+      /* یکدست با body تا اگر زیر ناحیهٔ اسکرول کارت فاصلهٔ زیرپیکسل ماند، نوار تیره دیده نشود */
+      #expressDashboardMain {
+        background-color: #f9fafb;
+      }
+      html.dark #expressDashboardMain {
+        background-color: #030712;
+      }
       #dashboardMobileCardsRoot {
         height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       }
@@ -265,6 +277,10 @@
     }
     #dashboardMobileCardsRoot #cardsTrack {
       overflow: visible;
+      background-color: #f9fafb;
+    }
+    html.dark #dashboardMobileCardsRoot #cardsTrack {
+      background-color: #030712;
     }
     /* تبلت */
     @media (min-width: 640px) and (max-width: 1023px) {
