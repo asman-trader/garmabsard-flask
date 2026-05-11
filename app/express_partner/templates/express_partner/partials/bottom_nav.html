@@ -9,7 +9,11 @@
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    /* inset پایین فقط روی کپسول — شِل شفاف بودن باعث نوار مشکی زیر منو می‌شد */
+    padding-bottom: 0;
+  }
+  #bottomNavMenu .tg-tabbar-pill {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   }
   .tg-tabbar-pill {
     --vn-pill-bg: rgba(255, 255, 255, 0.42);
