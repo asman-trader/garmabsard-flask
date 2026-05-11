@@ -501,6 +501,11 @@ def create_app() -> Flask:
     # ---------- Gate ----------
     @app.before_request
     def landing_gate():
+        # مسیری که گیت‌وی اصلاً در آن دخالت نکند (پنل ادمین، خودش لایهٔ امنیتی جدا دارد)
+        if request.path.startswith("/admin"):
+            current_app.logger.debug("PASS (admin-scope): %s", request.path)
+            return
+
         safe_prefixes = ("/static", "/api", "/uploads")
         if request.path.startswith(safe_prefixes):
             current_app.logger.debug("PASS (prefix): %s", request.path)
@@ -519,8 +524,6 @@ def create_app() -> Flask:
             # Express Partner auth paths (public)
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
             "/express/partner/api/login-request", "/express/partner/api/verify",
-            # Admin auth: صفحه لاگین ادمین باید بدون پیش‌لاگین در دسترس باشد
-            "/admin/login",
             # Express listings (public)
             "/express",
             "/public",  # صفحه اکسپلور عمومی - بدون نیاز به ورود
