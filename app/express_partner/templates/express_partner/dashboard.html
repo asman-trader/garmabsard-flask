@@ -257,8 +257,9 @@
       background-color: #030712;
     }
     /*
-      موبایل عمودی: ~۱۹۰px از dvh کم می‌شود تا لبهٔ پایین ناحیهٔ اسکرول بالای کپسول تب ثابت بماند؛
-      فاصلهٔ انتهایی داخل ترک با بلوک امتداد کارت (dashboard_cards_mobile) داده می‌شود تا با اسکرول به کارت آخر بچسبد.
+      موبایل عمودی: ارتفاع ناحیهٔ اسکرول کارت‌ها با JS از فاصلهٔ واقعی تا نوار تب پر می‌شود
+      (با جمع‌شدن فیلترها هدر کوتاه‌تر می‌شود؛ ارتفاع ثابت 100dvh-190px باعث فاصلهٔ خالی مشکی زیر لیست می‌شد).
+      قبل از اجرای اسکریپت، تخمین قبلی به‌عنوان fallback می‌ماند.
     */
     @media (max-width: 639px) {
       /* یکدست با body تا اگر زیر ناحیهٔ اسکرول کارت فاصلهٔ زیرپیکسل ماند، نوار تیره دیده نشود */
@@ -270,6 +271,7 @@
       }
       #dashboardMobileCardsRoot {
         height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        min-height: 12rem;
       }
     }
     #dashboardMobileCardsRoot #cardsTrack {
@@ -543,9 +545,27 @@
 
     let compact = false;
 
+    function syncMobileCardsRootHeight() {
+      if (!mobileCardsRoot) return;
+      try {
+        if (!window.matchMedia('(max-width: 639px)').matches) {
+          mobileCardsRoot.style.height = '';
+          return;
+        }
+        const nav = document.getElementById('bottomNavMenu');
+        const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+        const rootTop = mobileCardsRoot.getBoundingClientRect().top;
+        let available = navTop - rootTop - 2;
+        if (!Number.isFinite(available)) return;
+        available = Math.max(160, Math.floor(available));
+        mobileCardsRoot.style.height = `${available}px`;
+      } catch (_) {}
+    }
+
     function syncMainPadding() {
       const h = header.getBoundingClientRect().height;
       main.style.paddingTop = `${Math.ceil(h + 6)}px`;
+      syncMobileCardsRootHeight();
     }
 
     function applyCompact(on) {
@@ -600,9 +620,16 @@
     try {
       const ro = new ResizeObserver(syncMainPadding);
       ro.observe(header);
+      const nav0 = document.getElementById('bottomNavMenu');
+      if (nav0) ro.observe(nav0);
     } catch (_) {}
 
     window.addEventListener('resize', syncMainPadding, { passive: true });
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncMainPadding, { passive: true });
+      }
+    } catch (_) {}
 
     syncMainPadding();
     updateFromScroll();

@@ -15,15 +15,10 @@
 
   <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory sm:overscroll-x-contain sm:[-webkit-overflow-scrolling:touch] no-scrollbar">
     {% for land in assigned_lands %}
-      <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]{% if loop.last %} max-sm:[&>article]:rounded-b-none{% endif %}">
+      <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
         {% set tour_land_card = loop.first %}
         {% include 'express_partner/partials/land_premium_card.html' %}
       </div>
     {% endfor %}
-    {# موبایل عمودی: امتداد آخرین کارت — فاصله تا تب داخل ترک و با اسکرول همراه کارت آخر (جایگزین padding-bottom ترک) #}
-    {% if assigned_lands|length %}
-    <div class="hidden max-sm:block w-full shrink-0 -mt-5 h-[calc(5.75rem+env(safe-area-inset-bottom,0px))] bg-neutral-900 rounded-b-2xl border border-t-0 border-white/10 pointer-events-none"
-         aria-hidden="true"></div>
-    {% endif %}
   </div>
 </div>
