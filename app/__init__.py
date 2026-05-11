@@ -512,13 +512,15 @@ def create_app() -> Flask:
             "/site.webmanifest", "/manifest.webmanifest", "/sw.js",
             "/git-webhook", "/git-webhook/",
             "/healthz", "/diag", "/connection",
-            # Public help pages (accessible without login)
+            # Public help pages (accessible بدون لاگین)
             "/help", "/راهنما",
             # Public landing pages
             "/partners",
             # Express Partner auth paths (public)
             "/express/partner/login", "/express/partner/verify", "/express/partner/otp/resend",
             "/express/partner/api/login-request", "/express/partner/api/verify",
+            # Admin auth: صفحه لاگین ادمین باید بدون پیش‌لاگین در دسترس باشد
+            "/admin/login",
             # Express listings (public)
             "/express",
             "/public",  # صفحه اکسپلور عمومی - بدون نیاز به ورود
