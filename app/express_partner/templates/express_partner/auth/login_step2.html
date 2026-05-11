@@ -1,248 +1,269 @@
 {% extends 'express_partner/base.html' %}
-{% block title %}تأیید کد | همکار اکسپرس{% endblock %}
+{% block title %}تأیید کد | وینور اکسپرس{% endblock %}
 {% block content %}
 
-  <!-- Header - سبک دیوار (تمام‌عرض) -->
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-    <div class="w-full px-4 h-14 flex items-center justify-between">
-      <a href="{{ url_for('express_partner.login') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="بازگشت">
-        <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
+<div class="min-h-[100dvh] bg-[#050810] text-zinc-100 flex flex-col pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]">
+  <header class="relative px-4 pt-6 pb-2">
+    <a href="{{ url_for('express_partner.login') }}" class="absolute right-4 top-6 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white transition-colors" aria-label="بازگشت به ورود">
+      <i class="fas fa-arrow-right text-sm" aria-hidden="true"></i>
+    </a>
+    <div class="flex flex-col items-center gap-6 pt-2">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5" aria-label="وینور">
+        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 text-[#0a0a0c] text-xl font-black shadow-lg shadow-amber-500/20">V</span>
+        <span class="text-xl font-extrabold tracking-wide text-amber-400">VINOR</span>
       </a>
-      <h1 class="text-sm font-bold text-gray-900 dark:text-white">تأیید کد</h1>
-      <div class="w-9"></div>
+      {% set login_step = 2 %}
+      {% include 'express_partner/partials/auth_login_progress.html' %}
     </div>
   </header>
 
-<div class="max-w-5xl mx-auto pt-0 px-4 pb-16">
-
-  <!-- Main Content - سبک دیوار -->
-  <div class="mt-8 max-w-md mx-auto">
-    
-    <!-- Verification Card - سبک دیوار -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
-      
-      <!-- Header -->
-      <div class="text-center space-y-2">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">تأیید کد پیامکی</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          کد ۵ رقمی ارسال‌شده به <span class="font-semibold text-gray-900 dark:text-white">{{ phone }}</span> را وارد کنید
-        </p>
-      </div>
-
-      <!-- Messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="space-y-2" role="status" aria-live="polite">
-            {% for category, msg in messages %}
-              <div class="text-sm rounded-lg px-3 py-2 flex items-start gap-2
-                          {% if category in ['success', 'ok'] %}
-                            bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200
-                          {% elif category in ['warning'] %}
-                            bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200
-                          {% elif category in ['info'] %}
-                            bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200
-                          {% else %}
-                            bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-200
-                          {% endif %}">
-                <i class="fas mt-0.5 flex-shrink-0 text-xs
-                          {% if category in ['success', 'ok'] %}fa-check-circle{% elif category in ['warning'] %}fa-exclamation-triangle{% elif category in ['info'] %}fa-info-circle{% else %}fa-times-circle{% endif %}"></i>
-                <span class="flex-1">{{ msg|safe }}</span>
-              </div>
-            {% endfor %}
+  <main class="flex-1 px-4 pt-4">
+    <div class="mx-auto w-full max-w-md">
+      <div class="rounded-2xl border border-white/10 bg-[#0c1018] p-6 sm:p-7 shadow-xl shadow-black/40">
+        <div class="mb-5 flex justify-center">
+          <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/10 text-emerald-400">
+            <i class="fas fa-mobile-screen-button text-2xl" aria-hidden="true"></i>
           </div>
-        {% endif %}
-      {% endwith %}
-
-      <!-- Form -->
-      <form id="otpForm" method="POST" action="{{ url_for('express_partner.verify') }}" class="space-y-6" novalidate>
-        <input type="hidden" name="phone" value="{{ phone }}">
-        {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
-        <input type="hidden" name="otp_code" id="otpHidden" />
-
-        <!-- OTP Input Boxes -->
-        <div class="flex items-center justify-center gap-2" dir="ltr" aria-label="ورود کد ۵ رقمی">
-          <input class="otp-box w-12 h-12 text-center text-lg font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" inputmode="numeric" maxlength="5" autocomplete="one-time-code" name="otp" autocapitalize="off" autocorrect="off" pattern="\d*" aria-label="رقم اول" />
-          <input class="otp-box w-12 h-12 text-center text-lg font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم دوم" />
-          <input class="otp-box w-12 h-12 text-center text-lg font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم سوم" />
-          <input class="otp-box w-12 h-12 text-center text-lg font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم چهارم" />
-          <input class="otp-box w-12 h-12 text-center text-lg font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" inputmode="numeric" maxlength="1" pattern="\d" aria-label="رقم پنجم" />
         </div>
 
-        <button 
-          type="submit" 
-          class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors">
-          ورود به پنل
-        </button>
-      </form>
+        <div class="text-center space-y-2 mb-5">
+          <h2 class="text-xl font-bold text-white">تأیید کد پیامکی</h2>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            کد ۵ رقمی ارسال‌شده به
+            <span class="font-semibold text-emerald-400 tabular-nums" dir="ltr">{{ phone }}</span>
+            را وارد کنید
+          </p>
+        </div>
 
-      <!-- Resend Section -->
-      <div class="pt-4 border-t border-gray-200 dark:border-gray-700 text-center space-y-2">
-        <p id="timer" class="text-xs text-gray-600 dark:text-gray-400">
-          ارسال مجدد کد تا <span id="countdown" class="font-semibold">60</span> ثانیه دیگر
-        </p>
-        <button 
-          type="button" 
-          id="resendBtn" 
-          disabled 
-          class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hover:underline disabled:text-gray-400 disabled:cursor-not-allowed disabled:no-underline transition-colors">
-          ارسال مجدد کد
-        </button>
+        <div class="mb-5 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-100">
+          <i class="fas fa-check-circle text-emerald-400 flex-shrink-0" aria-hidden="true"></i>
+          <span>کد تأیید ارسال شد</span>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="space-y-2 mb-5" role="status" aria-live="polite">
+              {% for category, msg in messages %}
+                <div class="text-sm rounded-xl px-3 py-2.5 flex items-start gap-2
+                            {% if category in ['success', 'ok'] %}
+                              bg-emerald-500/15 text-emerald-200 border border-emerald-500/25
+                            {% elif category in ['warning'] %}
+                              bg-amber-500/15 text-amber-200 border border-amber-500/25
+                            {% elif category in ['info'] %}
+                              bg-sky-500/15 text-sky-200 border border-sky-500/25
+                            {% else %}
+                              bg-rose-500/15 text-rose-200 border border-rose-500/25
+                            {% endif %}">
+                  <i class="fas mt-0.5 flex-shrink-0 text-xs
+                            {% if category in ['success', 'ok'] %}fa-check-circle{% elif category in ['warning'] %}fa-exclamation-triangle{% elif category in ['info'] %}fa-info-circle{% else %}fa-times-circle{% endif %}"></i>
+                  <span class="flex-1">{{ msg|safe }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form id="otpForm" method="POST" action="{{ url_for('express_partner.verify') }}" class="space-y-6" novalidate>
+          <input type="hidden" name="phone" value="{{ phone }}">
+          {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+          <input type="hidden" name="otp_code" id="otpHidden" value="" />
+
+          <div class="flex items-center justify-center gap-2 sm:gap-2.5" dir="ltr" aria-label="ورود کد ۵ رقمی">
+            {% for _ in range(5) %}
+            <input class="otp-box h-12 w-11 sm:h-14 sm:w-12 shrink-0 rounded-xl border-2 border-zinc-600 bg-[#070b12] text-center text-lg font-bold text-white tabular-nums shadow-inner focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-colors"
+                   inputmode="numeric" maxlength="1" autocomplete="one-time-code" autocapitalize="off" autocorrect="off" pattern="\d"
+                   aria-label="رقم {{ loop.index }}" />
+            {% endfor %}
+          </div>
+
+          <button type="submit"
+                  class="w-full rounded-xl bg-emerald-500 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-900/40 transition hover:bg-emerald-400 active:scale-[0.99]">
+            ورود به پنل
+          </button>
+        </form>
+
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-zinc-700/80"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-[#0c1018] px-3 text-xs text-zinc-500">یا</span>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-center">
+          <p id="timer" class="text-xs text-zinc-400">
+            <span id="timerLine">ارسال مجدد کد تا <span id="countdown" class="font-semibold text-zinc-200 tabular-nums">۶۰</span> ثانیه دیگر</span>
+          </p>
+          <button type="button" id="resendBtn" disabled
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-zinc-500 bg-zinc-900/80 py-3 text-sm font-semibold text-zinc-200 transition enabled:hover:border-zinc-400 enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-45 disabled:border-zinc-700">
+            <i class="fas fa-message" aria-hidden="true"></i>
+            ارسال مجدد کد
+          </button>
+        </div>
       </div>
 
+      <p class="mt-10 flex items-center justify-center gap-2 text-center text-xs text-zinc-500">
+        <i class="fas fa-lock text-[10px] text-emerald-600/80" aria-hidden="true"></i>
+        وینور اکسپرس — سریع و حرفه‌ای
+      </p>
     </div>
-
-    <!-- Footer Text -->
-    <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">وینور اکسپرس – سریع و حرفه‌ای</p>
-
-  </div>
-
+  </main>
 </div>
 
 {% set bottom_nav_active = '' %}
 {% include 'express_partner/partials/partner_tab_footer.html' %}
 
 <script>
+(function () {
   const boxes = Array.from(document.querySelectorAll('.otp-box'));
   const hidden = document.getElementById('otpHidden');
   const form = document.getElementById('otpForm');
-  const countdownEl = document.getElementById('countdown');
   const resendBtn = document.getElementById('resendBtn');
-  const timerEl = document.getElementById('timer');
-  const autoField = boxes[0];
-  try { autoField && autoField.focus(); } catch(_) {}
-
-  // Auto-fill from SMS (WebOTP API)
-  (async function(){
-    try{
-      if ('OTPCredential' in window && navigator.credentials) {
-        const ac = new AbortController(); 
-        setTimeout(()=>ac.abort(), 60000);
-        const cred = await navigator.credentials.get({ 
-          otp: { transport: ['sms'] }, 
-          signal: ac.signal 
-        });
-        if (cred && cred.code) {
-          const digits = String(cred.code).replace(/\D+/g,'').slice(0,5).split('');
-          digits.forEach((d, i) => { if (boxes[i]) boxes[i].value = d; });
-          hidden.value = digits.join(''); 
-          if (hidden.value.length === 5) form.requestSubmit();
-        }
-      }
-    } catch(_) {}
-  })();
-
-  function fillFromString(str){
-    const digits = String(str||'').replace(/\D+/g,'').slice(0,5).split('');
-    if (!digits.length) return; 
-    boxes.forEach(b => b.value = '');
-    digits.forEach((d,i)=>{ if (boxes[i]) boxes[i].value = d; });
-    hidden.value = digits.join(''); 
-    if (hidden.value.length === 5) form.requestSubmit();
+  const timerLine = document.getElementById('timerLine');
+  const faDigits = '۰۱۲۳۴۵۶۷۸۹';
+  function toFaNum(n) {
+    try {
+      return String(n).replace(/\d/g, function (d) { return faDigits[Number(d)]; });
+    } catch (_) {
+      return String(n);
+    }
   }
-
-  autoField && ['input','change'].forEach(ev => 
-    autoField.addEventListener(ev, ()=> fillFromString(autoField.value))
-  );
+  function cdEl() {
+    return document.getElementById('countdown');
+  }
+  if (cdEl()) cdEl().textContent = toFaNum(60);
 
   function syncHiddenAndMaybeSubmit() {
-    hidden.value = boxes.map(b => (b.value || '').replace(/\D/g,'')).join('').slice(0,5);
+    hidden.value = boxes.map(function (b) { return (b.value || '').replace(/\D/g, ''); }).join('').slice(0, 5);
     if (hidden.value.length === 5) form.requestSubmit();
   }
 
-  boxes.forEach((box, idx) => {
-    box.addEventListener('input', () => {
-      const raw = box.value || '';
-      const cleaned = raw.replace(/\D/g,'');
+  function fillFromString(str) {
+    var digits = String(str || '').replace(/\D+/g, '').slice(0, 5).split('');
+    if (!digits.length) return;
+    boxes.forEach(function (b) { b.value = ''; });
+    digits.forEach(function (d, i) {
+      if (boxes[i]) boxes[i].value = d;
+    });
+    syncHiddenAndMaybeSubmit();
+  }
+
+  boxes.forEach(function (box, idx) {
+    box.addEventListener('input', function () {
+      var raw = box.value || '';
+      var cleaned = raw.replace(/\D/g, '');
       if (cleaned.length <= 1) {
-        box.value = cleaned; 
+        box.value = cleaned;
         if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
       } else {
-        const digits = cleaned.slice(0, 5 - idx).split('');
-        digits.forEach((d, i) => { if (boxes[idx + i]) boxes[idx + i].value = d; });
-        const last = Math.min(idx + digits.length, boxes.length) - 1; 
+        var ds = cleaned.slice(0, 5 - idx).split('');
+        ds.forEach(function (d, i) {
+          if (boxes[idx + i]) boxes[idx + i].value = d;
+        });
+        var last = Math.min(idx + ds.length, boxes.length) - 1;
         if (last >= 0) boxes[last].focus();
       }
       syncHiddenAndMaybeSubmit();
     });
-
-    box.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' && !box.value && idx > 0) { 
-        e.preventDefault(); 
-        boxes[idx - 1].focus(); 
-        boxes[idx - 1].value = ''; 
-        syncHiddenAndMaybeSubmit(); 
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !box.value && idx > 0) {
+        e.preventDefault();
+        boxes[idx - 1].focus();
+        boxes[idx - 1].value = '';
+        syncHiddenAndMaybeSubmit();
       }
-      if (e.key === 'ArrowLeft' && idx > 0) { 
-        e.preventDefault(); 
-        boxes[idx - 1].focus(); 
+      if (e.key === 'ArrowLeft' && idx > 0) {
+        e.preventDefault();
+        boxes[idx - 1].focus();
       }
-      if (e.key === 'ArrowRight' && idx < boxes.length - 1) { 
-        e.preventDefault(); 
-        boxes[idx + 1].focus(); 
+      if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+        e.preventDefault();
+        boxes[idx + 1].focus();
       }
     });
-
-    box.addEventListener('paste', (e) => { 
-      e.preventDefault(); 
-      const val = (e.clipboardData || window.clipboardData).getData('text'); 
-      fillFromString(val); 
+    box.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var val = (e.clipboardData || window.clipboardData).getData('text');
+      fillFromString(val);
     });
   });
 
-  // Countdown timer
-  let counter = 60; 
-  const t = setInterval(() => { 
-    counter--; 
-    countdownEl.textContent = String(counter); 
-    if (counter <= 0) { 
-      clearInterval(t); 
-      timerEl.textContent = 'هنوز کد را دریافت نکردید؟'; 
-      resendBtn.disabled = false; 
-    } 
+  try {
+    boxes[0].focus();
+  } catch (_) {}
+
+  (async function () {
+    try {
+      if ('OTPCredential' in window && navigator.credentials) {
+        var ac = new AbortController();
+        setTimeout(function () { ac.abort(); }, 60000);
+        var cred = await navigator.credentials.get({
+          otp: { transport: ['sms'] },
+          signal: ac.signal
+        });
+        if (cred && cred.code) fillFromString(cred.code);
+      }
+    } catch (_) {}
+  })();
+
+  document.addEventListener('paste', function (e) {
+    try {
+      var val = (e.clipboardData || window.clipboardData).getData('text');
+      if (val && document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('otp-box')) {
+        fillFromString(val);
+      }
+    } catch (_) {}
+  });
+
+  var counter = 60;
+  var t = setInterval(function () {
+    counter--;
+    var el = cdEl();
+    if (el) el.textContent = toFaNum(counter);
+    if (counter <= 0) {
+      clearInterval(t);
+      if (timerLine) timerLine.textContent = 'هنوز کد را دریافت نکردید؟';
+      resendBtn.disabled = false;
+    }
   }, 1000);
 
-  // Global paste handler
-  document.addEventListener('paste', (e)=>{
-    try{ 
-      const val = (e.clipboardData || window.clipboardData).getData('text'); 
-      if (val) fillFromString(val); 
-    }catch(_){ } 
-  });
-
-  // Resend button handler
-  resendBtn.addEventListener('click', async () => {
+  resendBtn.addEventListener('click', async function () {
     if (resendBtn.disabled) return;
-    try{
-      resendBtn.disabled = true; 
-      timerEl.textContent = 'در حال ارسال مجدد...';
-      const resp = await fetch('{{ url_for("express_partner.otp_resend") }}', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        credentials: 'same-origin', 
-        body: JSON.stringify({ phone: '{{ phone }}' }) 
+    try {
+      resendBtn.disabled = true;
+      if (timerLine) timerLine.textContent = 'در حال ارسال مجدد…';
+      var resp = await fetch('{{ url_for("express_partner.otp_resend") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ phone: '{{ phone }}' })
       });
-      const data = await resp.json();
-      if (data && data.ok){
-        let c = 60; 
-        countdownEl.textContent = String(c); 
-        timerEl.textContent = 'ارسال مجدد کد تا ' + c + ' ثانیه دیگر'; 
-        const tt = setInterval(()=>{
-          c--; 
-          countdownEl.textContent = String(c); 
-          if (c<=0){
-            clearInterval(tt); 
-            timerEl.textContent='هنوز کد را دریافت نکردید؟'; 
-            resendBtn.disabled=false; 
-          } 
-        }, 1000); 
-      } else { 
-        timerEl.textContent = (data && data.error) ? data.error : 'خطا در ارسال مجدد'; 
-        setTimeout(()=>{ resendBtn.disabled = false; }, 2000); 
+      var data = await resp.json();
+      if (data && data.ok) {
+        var c = 60;
+        if (timerLine) {
+          timerLine.innerHTML = 'ارسال مجدد کد تا <span id="countdown" class="font-semibold text-zinc-200 tabular-nums">' + toFaNum(c) + '</span> ثانیه دیگر';
+        }
+        var tt = setInterval(function () {
+          c--;
+          var el = cdEl();
+          if (el) el.textContent = toFaNum(c);
+          if (c <= 0) {
+            clearInterval(tt);
+            if (timerLine) timerLine.textContent = 'هنوز کد را دریافت نکردید؟';
+            resendBtn.disabled = false;
+          }
+        }, 1000);
+      } else {
+        if (timerLine) timerLine.textContent = (data && data.error) ? data.error : 'خطا در ارسال مجدد';
+        setTimeout(function () { resendBtn.disabled = false; }, 2000);
       }
-    }catch(_){ 
-      timerEl.textContent = 'خطا در ارسال مجدد'; 
-      setTimeout(()=>{ resendBtn.disabled = false; }, 2000); 
+    } catch (_) {
+      if (timerLine) timerLine.textContent = 'خطا در ارسال مجدد';
+      setTimeout(function () { resendBtn.disabled = false; }, 2000);
     }
   });
+})();
 </script>
 {% endblock %}
