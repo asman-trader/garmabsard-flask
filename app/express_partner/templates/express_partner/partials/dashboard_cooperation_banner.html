@@ -1,6 +1,6 @@
-{# داشبورد — دعوت همکاری؛ زیر نوار جستجو و جدا از نوار فیلترها #}
+{# داشبورد — دعوت همکاری؛ زیر نوار ثابت جستجو + فیلترها (داخل #expressDashboardMain) #}
 {% if not is_approved %}
-  <div id="dashboardCooperationStrip" class="w-full flex-shrink-0" data-tour="dashboard-cooperation">
+  <div id="dashboardCooperationStrip" class="w-full mb-3" data-tour="dashboard-cooperation">
     <a href="{{ url_for('express_partner.cooperation_terms') }}"
        class="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-l from-emerald-50/90 via-white to-white dark:from-emerald-950/35 dark:via-gray-900 dark:to-gray-900 py-2 px-3 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all duration-200 group shrink-0">
       <div class="flex items-center gap-2 flex-1 min-w-0">

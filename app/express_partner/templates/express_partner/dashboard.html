@@ -75,9 +75,6 @@
       </div>
       </div>
 
-      {# دعوت همکاری — فایل مجزا؛ زیر نوار جستجو، بالای فیلترها #}
-      {% include 'express_partner/partials/dashboard_cooperation_banner.html' %}
-
       {# فیلترها و دسته‌ها — جدا از جستجو؛ با اسکرول مخفی می‌شوند #}
       <div id="dashboardFiltersStrip" class="dashboard-filters-strip overflow-hidden transition-[max-height,opacity,margin] duration-300 ease-out opacity-100">
         <div class="space-y-2 pt-0">
@@ -193,7 +190,7 @@
     </div>
   </header>
 
-<div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: {% if is_approved %}14.25rem{% else %}17.25rem{% endif %}">
+<div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: 14.25rem">
 
   <style>
     /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد */
@@ -317,6 +314,9 @@
   </script>
 
   {# Flash messages removed by request #}
+
+  {# دعوت همکاری — زیر هدر و فیلترهای ثابت؛ اول محتوای اسکرول‌شونده #}
+  {% include 'express_partner/partials/dashboard_cooperation_banner.html' %}
 
 {% if (not is_approved) and has_pending_app %}
     <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/50 p-4 rounded-xl mb-4">
