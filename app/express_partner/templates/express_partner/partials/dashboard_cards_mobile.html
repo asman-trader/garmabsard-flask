@@ -1,5 +1,11 @@
 {# داشبورد همکار - لیست کارت‌ها در موبایل (اسکرول افقی) #}
 <div id="dashboardMobileCardsRoot" class="mt-2 -mx-3 relative lg:hidden">
+  <div id="dashboardPullRefreshHint" class="pointer-events-none overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0" aria-live="polite" aria-atomic="true">
+    <div class="flex items-center justify-center gap-2 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+      <i class="fas fa-rotate text-[13px]"></i>
+      <span>رها کنید برای تازه‌سازی فایل‌ها</span>
+    </div>
+  </div>
   <button type="button" id="cardsPrev" class="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
     <i class="fas fa-chevron-right"></i>
   </button>
