@@ -1,9 +1,23 @@
-{# استایل صفحهٔ پورسانت — پس‌زمینهٔ شِل + افکت کارت‌ها + فاصلهٔ اسکرول بدنه (min-height روی main) #}
+{# استایل صفحهٔ پورسانت — پس‌زمینه + رفع قفل اسکرول بین هدر fixed و تب پایین #}
 <style>
+  /*
+    مشکل: #tg-page-shell در base با min-height: 100% گاهی زنجیرهٔ ارتفاع را با viewport قفل می‌کند و
+    اسکرول عمومی سند بین هدر و فوتر برقرار نمی‌شود. فقط وقتی صفحهٔ پورسانت است (#commissionsPageShell داخل شِل است) شِل را شل می‌کنیم.
+  */
+  #tg-page-shell:has(#commissionsPageShell) {
+    overflow-x: hidden;
+    overflow-y: visible;
+    min-height: auto;
+    height: auto;
+  }
+
   #commissionsPageShell {
     --vn-comm-bg: #0b0e14;
     background-color: var(--vn-comm-bg);
-    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: visible;
+    width: 100%;
+    min-height: 100%;
   }
   #commissionsPageShell .vn-gold-glow {
     box-shadow: 0 0 40px rgba(245, 158, 11, 0.14);

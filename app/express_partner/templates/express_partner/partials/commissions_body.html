@@ -1,12 +1,18 @@
-{# بادی صفحهٔ پورسانت: main + محتوا؛ اسکرول سند + padding زیر هدر fixed اینجا تنظیم می‌شود #}
+{# بادی صفحهٔ پورسانت: main + محتوا؛ اسکرول روی سند (مثل expressDashboardMain) + padding زیر هدر #}
 <style>
   /*
-    اسکرول پایدار مثل داشبورد (#expressDashboardMain):
-    main کمی از viewport بلندتر است تا در موبایل اسکرول عمومی سند قفل نشود.
+    اسکرول عمودی بین هدر fixed و تب پایین: main باید از viewport بلندتر باشد تا ریشهٔ سند اسکرول داشته باشد.
+    touch-action: pan-y — لم عمودی به سند برسد (WebKit).
   */
+  #commissionsPageMain {
+    touch-action: pan-y;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
   @media (max-width: 1023px) {
     #commissionsPageMain {
-      min-height: calc(100dvh + 48px);
+      min-height: calc(100svh + 72px);
+      min-height: calc(100dvh + 72px);
     }
   }
 </style>
@@ -27,7 +33,7 @@
 </main>
 
 <script>
-  /* هم‌تراز با expressDashboardMain: padding-top = ارتفاع هدر fixed + چند پیکسل — ResizeObserver روی هدر */
+  /* padding-top زیر هدر fixed + علامت‌گذاری #tg-page-shell برای CSS رفع قفل اسکرول (بعد از hoist در base) */
   (function () {
     var header = document.getElementById('commissionsPageHeader');
     var main = document.getElementById('commissionsPageMain');
@@ -41,6 +47,13 @@
       ro.observe(header);
     } catch (_) {}
     window.addEventListener('resize', syncCommissionsMainPadding, { passive: true });
-    syncCommissionsMainPadding();
+    function runSyncWhenShellReady() {
+      syncCommissionsMainPadding();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runSyncWhenShellReady);
+    } else {
+      runSyncWhenShellReady();
+    }
   })();
 </script>
