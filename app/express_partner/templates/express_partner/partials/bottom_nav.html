@@ -1,4 +1,4 @@
-{# نوار پایین — کپسول شیشه‌ای شناور؛ شِل شفاف تا اسکرول از پشت/اطراف دیده شود #}
+{# نوار پایین — کپسول شفاف (بدون مات/بلور)؛ شِل شفاف #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 {% set bottom_nav_unread_url = url_for('express_partner.get_unread_count') %}
 <style>
@@ -16,44 +16,43 @@
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   }
   .tg-tabbar-pill {
-    --vn-pill-bg: rgba(255, 255, 255, 0.42);
-    --vn-pill-bg-solid: #f3f4f6;
-    --vn-pill-border: rgba(15, 23, 42, 0.1);
-    --vn-shadow:
-      0 10px 40px rgba(15, 23, 42, 0.12),
-      0 2px 12px rgba(15, 23, 42, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.65);
     pointer-events: auto;
     position: relative;
     isolation: isolate;
     transform: translateZ(0);
-    background-color: var(--vn-pill-bg);
-    border: 1px solid var(--vn-pill-border);
+    background-color: transparent;
+    border: 1px solid transparent;
     border-radius: 9999px;
-    box-shadow: var(--vn-shadow);
-    -webkit-backdrop-filter: saturate(200%) blur(26px);
-    backdrop-filter: saturate(200%) blur(26px);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .dark .tg-tabbar-pill {
-    --vn-pill-bg: rgba(3, 7, 18, 0.42);
-    --vn-pill-bg-solid: rgb(17 24 39);
-    --vn-pill-border: rgba(255, 255, 255, 0.12);
-    --vn-shadow:
-      0 12px 44px rgba(0, 0, 0, 0.55),
-      0 4px 16px rgba(0, 0, 0, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border-color: transparent;
   }
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .tg-tabbar-pill {
-      --vn-pill-bg: rgba(255, 255, 255, 0.92);
-      background-color: var(--vn-pill-bg);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-    .dark .tg-tabbar-pill {
-      --vn-pill-bg: rgba(17, 24, 39, 0.94);
-      background-color: var(--vn-pill-bg);
-    }
+  /* خوانایی آیکن/برچسب وقتی محتوا از پشت دیده می‌شود */
+  .tg-tabbar-pill .tg-tab-icon {
+    filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.55));
+  }
+  .tg-tabbar-pill .tg-tab-label {
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+  }
+  .dark .tg-tabbar-pill .tg-tab-icon {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+  }
+  .dark .tg-tabbar-pill .tg-tab-label {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+  .tg-tab-active .tg-tab-icon,
+  .tg-tab-active .tg-tab-label {
+    filter: none;
+    text-shadow: none;
+  }
+  .dark .tg-tab-active .tg-tab-icon {
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.45));
+  }
+  .dark .tg-tab-active .tg-tab-label {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
   }
   .tg-tab {
     min-height: 48px;
@@ -79,12 +78,12 @@
     margin-right: auto;
   }
   .tg-tab-active .tg-tab-stack {
-    background-color: rgba(37, 99, 235, 0.09); /* blue-600 ملایم */
+    background-color: transparent;
     box-shadow: none;
   }
   .dark .tg-tab-active .tg-tab-stack {
-    background-color: rgba(59, 130, 246, 0.14);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    background-color: transparent;
+    box-shadow: none;
   }
   .tg-tab-icon-wrap {
     position: relative;
