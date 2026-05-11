@@ -1,25 +1,17 @@
-{# بادی صفحهٔ پورسانت: main + محتوا؛ اسکرول روی سند (مثل expressDashboardMain) + padding زیر هدر #}
-<style>
-  /*
-    اسکرول عمودی بین هدر fixed و تب پایین: main باید از viewport بلندتر باشد تا ریشهٔ سند اسکرول داشته باشد.
-    touch-action: pan-y — لم عمودی به سند برسد (WebKit).
-  */
-  #commissionsPageMain {
-    touch-action: pan-y;
-    overflow-x: hidden;
-    overflow-y: visible;
-  }
-  @media (max-width: 1023px) {
-    #commissionsPageMain {
-      min-height: calc(100svh + 72px);
-      min-height: calc(100dvh + 72px);
-    }
-  }
-</style>
-
+{# بادی پورسانت: main + محتوا — اسکرول سند و padding زیر هدر مثل #expressDashboardMain در dashboard.html #}
 <main id="commissionsPageMain"
-      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 transition-[padding-top] duration-300 ease-out max-lg:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-10"
+      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 text-slate-100 pb-16 transition-[padding-top] duration-300 ease-out max-lg:pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]"
       style="padding-top: 5.75rem">
+
+  <style>
+    /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد — همان dashboard.html */
+    @media (max-width: 1023px) {
+      #commissionsPageMain {
+        min-height: calc(100vh + 120px);
+        min-height: calc(100dvh + 120px);
+      }
+    }
+  </style>
 
 {% if not is_approved %}
   {% include 'express_partner/partials/commissions_guest.html' %}
@@ -33,7 +25,7 @@
 </main>
 
 <script>
-  /* padding-top زیر هدر fixed + علامت‌گذاری #tg-page-shell برای CSS رفع قفل اسکرول (بعد از hoist در base) */
+  /* همان الگوی syncMainPadding در dashboard.html: ResizeObserver + resize + فراخوانی فوری */
   (function () {
     var header = document.getElementById('commissionsPageHeader');
     var main = document.getElementById('commissionsPageMain');
@@ -47,13 +39,6 @@
       ro.observe(header);
     } catch (_) {}
     window.addEventListener('resize', syncCommissionsMainPadding, { passive: true });
-    function runSyncWhenShellReady() {
-      syncCommissionsMainPadding();
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runSyncWhenShellReady);
-    } else {
-      runSyncWhenShellReady();
-    }
+    syncCommissionsMainPadding();
   })();
 </script>

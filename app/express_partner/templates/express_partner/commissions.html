@@ -2,13 +2,11 @@
 {% block title %}پورسانت‌های من | همکار اکسپرس{% endblock %}
 {% block content %}
 
+{# همان الگوی داشبورد: هدر fixed + main مستقیم در شِل پرتال (بدون wrapper اضافه) + نوار پایین #}
 {% include 'express_partner/partials/commissions_styles.html' %}
-
-<div id="commissionsPageShell" class="text-slate-100">
-  {% include 'express_partner/partials/commissions_header.html' %}
-  {% include 'express_partner/partials/commissions_body.html' %}
-  {% include 'express_partner/partials/commissions_footer.html' %}
-</div>
+{% include 'express_partner/partials/commissions_header.html' %}
+{% include 'express_partner/partials/commissions_body.html' %}
+{% include 'express_partner/partials/commissions_footer.html' %}
 
 {% if is_approved %}
   {% include 'express_partner/partials/commissions_scripts.html' %}
