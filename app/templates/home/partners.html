@@ -1,154 +1,149 @@
 {% extends 'base.html' %}
 
-{% block title %}همکاری با وینور اکسپرس | VINOR EXPRESS{% endblock %}
+{% block title %}وینور | مسیر هوشمند معاملات ملک{% endblock %}
 
 {% block head %}
-  <meta name="description" content="همکاری با وینور اکسپرس در زمینه ملک - فرصت همکاری برای مشاوران املاک" />
-  <meta name="theme-color" content="#2563EB">
+  <meta name="description" content="وینور — خرید، فروش و سرمایه‌گذاری املاک با اپ اندروید؛ تجربه‌ای سریع، امن و فارسی." />
+  <meta name="theme-color" content="#050508">
   <link rel="canonical" href="{{ request.url_root.rstrip('/') }}">
 
-  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="همکاری با وینور اکسپرس | VINOR EXPRESS">
-  <meta property="og:description" content="همکاری با وینور اکسپرس در زمینه ملک - فرصت همکاری برای مشاوران املاک">
+  <meta property="og:title" content="وینور | مسیر هوشمند معاملات ملک">
+  <meta property="og:description" content="دانلود اپ وینور؛ جستجو، آگهی‌های تأییدشده و همراهی کارشناسان.">
   <meta property="og:url" content="{{ request.url }}">
 
+  <script>
+    try {
+      document.documentElement.classList.add('dark');
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', '#050508');
+    } catch (_) {}
+  </script>
+
   <style>
-    .focusable:focus{outline:2px solid #2563EB;outline-offset:2px}
-    /* Hide slide-out menu and its toggles on landing */
-    #menuToggle, #menuBackdrop, #menuOverlay, #sideMenu { display: none !important; }
+    .focusable:focus {
+      outline: 2px solid #34d399;
+      outline-offset: 2px;
+    }
+    #menuToggle, #menuBackdrop, #menuOverlay, #sideMenu {
+      display: none !important;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .landing-nav-link {
+      position: relative;
+    }
+    .landing-nav-link--active {
+      color: #fff !important;
+    }
+    .landing-nav-link--active::after {
+      content: '';
+      position: absolute;
+      bottom: 0.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1.5rem;
+      height: 2px;
+      border-radius: 9999px;
+      background: #34d399;
+    }
   </style>
 {% endblock %}
 
 {% block content %}
-  {# هدر برند (فایل مجزا) #}
-  {% include 'partials/landing_header.html' %}
+  <div class="-mx-4 -my-6 bg-[#050508] text-zinc-100 min-h-[calc(100dvh-4rem)] sm:min-h-[calc(100dvh-3rem)] flex flex-col">
+    {% include 'partials/landing_header.html' %}
 
-  {# کانتینر اصلی محتوا #}
-  <div class="max-w-6xl mx-auto px-4 py-8 sm:py-12 space-y-6 sm:space-y-8">
-    {# هیرو + CTA + کارت‌های متریک (فایل مجزا) #}
-    {% include 'partials/landing_hero.html' %}
-
-    {# سه کارت بنفیت (فایل مجزا) #}
-    {% include 'partials/landing_benefits.html' %}
-
-    {# خط مراحل همکاری (فایل مجزا) #}
-    {% include 'partials/landing_path.html' %}
-
-    {# بخش نصب PWA موبایل (فایل مجزا) #}
-    {% include 'partials/landing_pwa.html' %}
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 lg:py-16 flex-1 flex flex-col gap-14 sm:gap-16 lg:gap-20">
+      {% include 'partials/landing_hero.html' %}
+      {% include 'partials/landing_benefits.html' %}
+      {% include 'partials/landing_showcase.html' %}
+      {% include 'partials/landing_bottom_cta.html' %}
+      {% include 'partials/landing_pwa.html' %}
+    </div>
   </div>
-
-  {# Spacer removed: no bottom nav on landing #}
 {% endblock %}
 
 {% block footer %}{% endblock %}
 
 {% block scripts %}
   <script>
-    // --- Dark Mode ---
-    const root = document.documentElement;
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') root.classList.remove('dark');
-    document.getElementById('darkToggle')?.addEventListener('click', () => {
-      root.classList.toggle('dark');
-      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-      const icon = document.querySelector('#darkToggle i');
-      if (icon) {
-        icon.className = root.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-      }
-    });
+    try {
+      localStorage.setItem('vinor_show_sidebar', '0');
+    } catch (_) {}
 
-    // دکمهٔ منو را مخفی می‌کنیم؛ قطع کردن touch روی window با stopImmediatePropagation
-    // کل زنجیرهٔ رویداد تا document/کارت‌ها را می‌بُرد و اسکرول لمسی از روی کارت‌ها از کار می‌افتد.
-    try { localStorage.setItem('vinor_show_sidebar','0'); } catch(_){}
-    // Update icon on load
-    if (savedTheme === 'light') {
-      const icon = document.querySelector('#darkToggle i');
-      if (icon) icon.className = 'fa-solid fa-sun';
-    }
-
-    // --- Express Partner PWA Install Hooks ---
     let expressPartnerDeferredPrompt;
 
-    // Detect mobile platform
     function detectMobilePlatform() {
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        return 'ios';
-      }
-      if (/android/i.test(userAgent)) {
-        return 'android';
-      }
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return 'ios';
+      if (/android/i.test(userAgent)) return 'android';
       return 'other';
     }
 
-    // Show mobile install instructions
     function showMobileInstallInstructions() {
       const platform = detectMobilePlatform();
       const instructionsDiv = document.getElementById('mobileInstallInstructions');
       const iosInstructions = document.getElementById('iosInstructions');
       const androidInstructions = document.getElementById('androidInstructions');
-      
       if (instructionsDiv) {
         instructionsDiv.classList.remove('hidden');
-        if (platform === 'ios' && iosInstructions) {
-          iosInstructions.classList.remove('hidden');
-        } else if (platform === 'android' && androidInstructions) {
-          androidInstructions.classList.remove('hidden');
-        }
+        if (platform === 'ios' && iosInstructions) iosInstructions.classList.remove('hidden');
+        else if (platform === 'android' && androidInstructions) androidInstructions.classList.remove('hidden');
       }
     }
 
-    // Handle PWA install prompt for Express Partner
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener('beforeinstallprompt', function (e) {
       const url = new URL(window.location.href);
       if (['/', '/partners'].includes(url.pathname) || url.pathname.startsWith('/express/partner/')) {
         e.preventDefault();
         expressPartnerDeferredPrompt = e;
-
-        // Show install buttons when PWA is available
-        const installBtnContainer = document.getElementById('expressPartnerInstallLanding');
-        const installHeroContainer = document.getElementById('expressPartnerInstallHero');
-        if (installBtnContainer) {
-          installBtnContainer.classList.remove('hidden');
-        }
-        if (installHeroContainer) {
-          installHeroContainer.classList.remove('hidden');
-        }
+        document.getElementById('expressPartnerInstallLanding')?.classList.remove('hidden');
+        document.getElementById('expressPartnerInstallHero')?.classList.remove('hidden');
       }
     });
 
-    // Show mobile install instructions on mobile devices if PWA install is not available
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const platform = detectMobilePlatform();
       const installHeroContainer = document.getElementById('expressPartnerInstallHero');
-      
-      // If on mobile and no install prompt available, show instructions after a delay
       if ((platform === 'ios' || platform === 'android') && !expressPartnerDeferredPrompt) {
-        setTimeout(() => {
+        setTimeout(function () {
           if (installHeroContainer && installHeroContainer.classList.contains('hidden')) {
-            // Show install card with mobile instructions
             installHeroContainer.classList.remove('hidden');
             showMobileInstallInstructions();
-            // Hide the install button and show instructions directly
             const installBtn = document.getElementById('expressPartnerInstallHeroBtn');
-            if (installBtn) {
-              installBtn.style.display = 'none';
-            }
+            if (installBtn) installBtn.style.display = 'none';
           }
         }, 1000);
       }
+
+      const links = document.querySelectorAll('.landing-nav-link');
+      const sections = ['hero', 'features', 'why', 'about', 'contact'].map(function (id) {
+        return document.getElementById(id);
+      });
+      function setActive() {
+        var pad = 130;
+        var idx = 0;
+        for (var i = 0; i < sections.length; i++) {
+          var el = sections[i];
+          if (!el) continue;
+          try {
+            if (el.getBoundingClientRect().top <= pad) idx = i;
+          } catch (_) {}
+        }
+        links.forEach(function (a, j) {
+          a.classList.toggle('landing-nav-link--active', j === idx);
+        });
+      }
+      window.addEventListener('scroll', setActive, { passive: true });
+      setActive();
     });
 
-    // Handle successful installation
-    window.addEventListener('appinstalled', (evt) => {
-      console.log('Express Partner PWA was installed successfully');
+    window.addEventListener('appinstalled', function () {
       expressPartnerDeferredPrompt = null;
-
-      // Update install buttons after successful install
-      const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
-      const installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
+      var installBtn = document.getElementById('expressPartnerInstallLandingBtn');
+      var installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
       if (installBtn) {
         installBtn.innerHTML = '<i class="fa-solid fa-check text-sm"></i> <span>نصب شد</span>';
         installBtn.disabled = true;
@@ -161,55 +156,34 @@
       }
     });
 
-    // PWA Install Button Handler
     function handleInstall() {
       if (expressPartnerDeferredPrompt) {
         expressPartnerDeferredPrompt.prompt();
-        expressPartnerDeferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted Express Partner PWA install');
-          } else {
-            console.log('User dismissed Express Partner PWA install');
-          }
-          expressPartnerDeferredPrompt = null;
-        }).catch((error) => {
-          console.error('Error during Express Partner PWA install:', error);
-        });
+        expressPartnerDeferredPrompt.userChoice
+          .then(function (choiceResult) {
+            expressPartnerDeferredPrompt = null;
+          })
+          .catch(function () {
+            expressPartnerDeferredPrompt = null;
+          });
       } else {
-        // Fallback: show mobile instructions for mobile devices
-        const platform = detectMobilePlatform();
-        if (platform === 'ios' || platform === 'android') {
-          showMobileInstallInstructions();
-        } else {
-          // Show generic hint for desktop
-          const heroHint = document.getElementById('expressPartnerInstallHint');
-          if (heroHint) {
-            heroHint.classList.remove('hidden');
-          }
-        }
+        var platform = detectMobilePlatform();
+        if (platform === 'ios' || platform === 'android') showMobileInstallInstructions();
+        else document.getElementById('expressPartnerInstallHint')?.classList.remove('hidden');
       }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const installBtn = document.getElementById('expressPartnerInstallLandingBtn');
-      const installHeroBtn = document.getElementById('expressPartnerInstallHeroBtn');
-      const installHint = document.getElementById('expressPartnerInstallHint');
-      
-      if (installBtn) {
-        installBtn.addEventListener('click', async function(e) {
-          e.preventDefault();
-          handleInstall();
-          if (installHint) installHint.classList.remove('hidden');
-        });
-      }
-      
-      if (installHeroBtn) {
-        installHeroBtn.addEventListener('click', async function(e) {
-          e.preventDefault();
-          handleInstall();
-          if (installHint) installHint.classList.remove('hidden');
-        });
-      }
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('expressPartnerInstallLandingBtn')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        handleInstall();
+        document.getElementById('expressPartnerInstallHint')?.classList.remove('hidden');
+      });
+      document.getElementById('expressPartnerInstallHeroBtn')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        handleInstall();
+        document.getElementById('expressPartnerInstallHint')?.classList.remove('hidden');
+      });
     });
   </script>
 {% endblock %}

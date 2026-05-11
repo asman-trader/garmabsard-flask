@@ -1,0 +1,37 @@
+{# CTA پایین صفحه #}
+<section id="download" class="scroll-mt-24 pt-14 sm:pt-20 pb-4 sm:pb-8">
+  <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-transparent px-6 py-12 sm:px-10 sm:py-14 text-center">
+    <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white">همین حالا وینور را دانلود کنید</h2>
+    <p class="mt-3 text-sm sm:text-base text-zinc-400">به جمع هزاران کاربر هوشمند بپیوندید</p>
+    <div class="mt-8 flex justify-center">
+      {% if android_apk_url %}
+      <a href="{{ android_apk_url }}" download rel="noopener"
+         class="inline-flex items-center justify-center gap-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 text-base font-bold shadow-xl shadow-emerald-900/35 transition-colors w-full max-w-md sm:w-auto">
+        <i class="fa-brands fa-android text-3xl" aria-hidden="true"></i>
+        دانلود اپلیکیشن اندروید
+      </a>
+      {% else %}
+      <span class="inline-flex items-center justify-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-amber-200 px-8 py-4 text-sm font-semibold w-full max-w-md">
+        لینک دانلود اندروید به‌زودی از طریق پشتیبانی اعلام می‌شود.
+      </span>
+      {% endif %}
+    </div>
+    <p class="mt-6 text-xs sm:text-sm text-zinc-500">
+      کاملاً رایگان <span class="mx-2 text-zinc-600" aria-hidden="true">|</span> نصب سریع و آسان
+    </p>
+  </div>
+</section>
+
+<section id="about" class="scroll-mt-20 pt-8 border-t border-white/5">
+  <p class="text-center text-sm text-zinc-500 max-w-2xl mx-auto leading-relaxed">
+    <span class="text-zinc-400 font-medium text-white">وینور</span>
+    پلتفرمی برای کشف و مدیریت معاملات املاک است؛ تیم محصول به‌صورت مداوم تجربه کاربری و امنیت را بهبود می‌دهد.
+  </p>
+</section>
+
+<section id="contact" class="scroll-mt-20 py-10 sm:py-12">
+  <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-zinc-400">
+    <span class="text-zinc-500">تماس با ما:</span>
+    <a href="https://vinor.ir" class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors" rel="noopener">vinor.ir</a>
+  </div>
+</section>

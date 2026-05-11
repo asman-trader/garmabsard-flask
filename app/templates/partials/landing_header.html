@@ -1,8 +1,37 @@
-{# لندینگ - هدر مینیمال برند (فقط لوگو/نام) — بیرون از کانتینر اصلی تا sticky درست کار کند #}
-<header class="sticky top-0 left-0 right-0 z-50 border-b border-gray-200/80 dark:border-gray-800/80 bg-white/85 dark:bg-gray-950/85 backdrop-blur">
-  <div class="max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-center sm:justify-start">
-    <a href="{{ url_for('main.index') }}" class="text-base sm:text-lg font-extrabold tracking-tight text-gray-900 dark:text-white" aria-label="وینور">
-      VINOR EXPRESS
+{# لندینگ اپ وینور — هدر sticky، RTL #}
+<header class="sticky top-0 z-50 border-b border-white/10 bg-[#050508]/90 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-[4.25rem] flex items-center justify-between gap-3">
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 shrink-0 group" aria-label="وینور">
+      <span class="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 text-[#0a0a0c] font-black text-lg sm:text-xl shadow-lg shadow-amber-500/20 group-hover:shadow-amber-400/30 transition-shadow">
+        V
+      </span>
+      <span class="text-lg sm:text-xl font-extrabold tracking-tight text-white">VINOR</span>
     </a>
+
+    <nav class="hidden lg:flex items-center justify-center gap-1 xl:gap-2 flex-1 min-w-0" aria-label="ناوبری اصلی">
+      <a href="#hero" class="landing-nav-link landing-nav-link--active px-3 py-2 text-sm font-medium text-zinc-200 hover:text-white rounded-lg transition-colors">خانه</a>
+      <a href="#features" class="landing-nav-link px-3 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg transition-colors">ویژگی‌ها</a>
+      <a href="#why" class="landing-nav-link px-3 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg transition-colors">چرا وینور؟</a>
+      <a href="#about" class="landing-nav-link px-3 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg transition-colors">درباره ما</a>
+      <a href="#contact" class="landing-nav-link px-3 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg transition-colors">تماس با ما</a>
+    </nav>
+
+    <div class="flex items-center gap-2 shrink-0">
+      {% if android_apk_url %}
+      <a href="{{ android_apk_url }}" download rel="noopener"
+         class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500/80 px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+        <i class="fa-brands fa-android text-base sm:text-lg" aria-hidden="true"></i>
+        <span class="hidden sm:inline">دانلود اپلیکیشن</span>
+        <span class="sm:hidden">دانلود</span>
+      </a>
+      {% else %}
+      <a href="#download"
+         class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500/80 px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+        <i class="fa-solid fa-download text-sm" aria-hidden="true"></i>
+        <span class="hidden sm:inline">دانلود اپلیکیشن</span>
+        <span class="sm:hidden">دانلود</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
 </header>
