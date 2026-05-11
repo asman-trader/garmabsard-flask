@@ -1,0 +1,65 @@
+{# لندینگ - بخش اصلی (هیرو + CTAها + کارت‌های متریک) #}
+<section class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 sm:p-10">
+  <div class="flex flex-col gap-8">
+    <div>
+      <p class="inline-flex items-center gap-2 text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full px-3 py-1">
+        <i class="fa-solid fa-bolt"></i>
+        همکاری سریع و حرفه ای در املاک
+      </p>
+      <h1 class="mt-4 text-2xl sm:text-4xl font-extrabold leading-tight text-gray-900 dark:text-white">
+        لندینگ مینیمال برای مشاوران
+        <span class="text-blue-700 dark:text-blue-300">وینور اکسپرس</span>
+      </h1>
+      <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+        فایل های تایید شده را سریع ببینید، همکاری را شفاف پیگیری کنید و با تجربه ای ساده و حرفه ای، بازده روزانه تیم فروش را بالا ببرید.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <a href="{{ url_for('express_partner.login') }}"
+           class="focusable inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <i class="fa-solid fa-user text-xs"></i>
+          ورود همکار
+        </a>
+        <a href="{{ url_for('express_partner.apply') }}"
+           class="focusable inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+          درخواست همکاری
+        </a>
+        {% if android_apk_url %}
+        <a href="{{ android_apk_url }}" download rel="noopener"
+           class="focusable inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">
+          <i class="fa-solid fa-download text-xs"></i>
+          دانلود اندروید ({{ android_apk_version or '—' }})
+        </a>
+        {% endif %}
+        <div id="expressPartnerInstallLanding" class="hidden">
+          <button id="expressPartnerInstallLandingBtn"
+                  type="button"
+                  class="focusable inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+            <i class="fa-solid fa-mobile-screen-button text-xs"></i>
+            نصب PWA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {# ۴ کارت متریک کیفیت/فرآیند/تجربه/پلتفرم #}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-800/70">
+        <div class="text-xs text-gray-500 dark:text-gray-400">کیفیت فایل</div>
+        <div class="mt-1 text-lg font-bold text-gray-900 dark:text-white">تایید اولیه</div>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-800/70">
+        <div class="text-xs text-gray-500 dark:text-gray-400">فرآیند همکاری</div>
+        <div class="mt-1 text-lg font-bold text-gray-900 dark:text-white">کاملا شفاف</div>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-800/70">
+        <div class="text-xs text-gray-500 dark:text-gray-400">تجربه کاربری</div>
+        <div class="mt-1 text-lg font-bold text-gray-900 dark:text-white">سریع و سبک</div>
+      </div>
+      <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-800/70">
+        <div class="text-xs text-gray-500 dark:text-gray-400">پلتفرم</div>
+        <div class="mt-1 text-lg font-bold text-gray-900 dark:text-white">وب + اپ</div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -11,7 +11,7 @@
          data-href="{{ land._detail_url or url_for('express_partner.land_detail', code=land.code) }}"
          role="link"
          tabindex="0">
-  <div class="relative aspect-[3/4] min-h-[260px] sm:min-h-[300px] bg-neutral-800 pointer-events-none" data-img-wrap>
+  <div class="relative aspect-[3/4] min-h-[260px] sm:min-h-[300px] bg-neutral-800" data-img-wrap>
     <div class="card-img-loading pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30 transition-opacity">
       <div class="w-8 h-8 rounded-full border-2 border-white/40 border-t-transparent animate-spin"></div>
     </div>
@@ -29,7 +29,7 @@
       {% else %}
         {% set video_src = video %}
       {% endif %}
-      <video class="pointer-events-none absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+      <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
         <source src="{{ video_src }}" type="video/mp4">
         {% if img %}
           {% if "://" in (img|string) %}
@@ -43,7 +43,7 @@
           {% else %}
             {% set img_src = img %}
           {% endif %}
-          <img src="{{ img_src }}" alt="{{ land.title or '' }}" class="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+          <img src="{{ img_src }}" alt="{{ land.title or '' }}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
         {% endif %}
       </video>
     {% elif img %}
@@ -58,14 +58,14 @@
       {% else %}
         {% set img_src = img %}
       {% endif %}
-      <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" class="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+      <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
     {% else %}
-      <div class="pointer-events-none absolute inset-0 grid place-items-center text-neutral-500">
+      <div class="absolute inset-0 grid place-items-center text-neutral-500">
         <i class="fas fa-image text-4xl opacity-60"></i>
       </div>
     {% endif %}
 
-    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10 pointer-events-none z-[1]"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10 z-[1]"></div>
 
     {# Top row: favorite + special offer #}
     <div class="absolute top-3 z-10 flex w-full items-start justify-between px-3 pointer-events-none">
