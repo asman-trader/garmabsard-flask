@@ -1,4 +1,4 @@
-{# نوار پایین — کپسول شفاف (بدون مات/بلور)؛ شِل شفاف #}
+{# نوار پایین — کپسول شیشه‌ای شناور (blur + نیمه‌شفاف) در همهٔ صفحات پرتال؛ شِل شفاف #}
 {% set bottom_nav_active = bottom_nav_active|default('') %}
 {% set bottom_nav_unread_url = url_for('express_partner.get_unread_count') %}
 <style>
@@ -9,7 +9,6 @@
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    /* inset پایین فقط روی کپسول — شِل شفاف بودن باعث نوار مشکی زیر منو می‌شد */
     padding-bottom: 0;
   }
   #bottomNavMenu .tg-tabbar-pill {
@@ -20,39 +19,31 @@
     position: relative;
     isolation: isolate;
     transform: translateZ(0);
-    background-color: transparent;
-    border: 1px solid transparent;
     border-radius: 9999px;
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.38);
+    box-shadow:
+      0 10px 36px rgba(15, 23, 42, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
   }
   .dark .tg-tabbar-pill {
-    border-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(24, 24, 28, 0.48);
+    box-shadow:
+      0 14px 44px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
-  /* خوانایی آیکن/برچسب وقتی محتوا از پشت دیده می‌شود */
-  .tg-tabbar-pill .tg-tab-icon {
-    filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.55));
-  }
-  .tg-tabbar-pill .tg-tab-label {
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-  }
-  .dark .tg-tabbar-pill .tg-tab-icon {
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
-  }
-  .dark .tg-tabbar-pill .tg-tab-label {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  }
-  .tg-tab-active .tg-tab-icon,
-  .tg-tab-active .tg-tab-label {
-    filter: none;
-    text-shadow: none;
-  }
-  .dark .tg-tab-active .tg-tab-icon {
-    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.45));
-  }
-  .dark .tg-tab-active .tg-tab-label {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .tg-tabbar-pill {
+      background-color: rgba(243, 244, 246, 0.95);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .dark .tg-tabbar-pill {
+      background-color: rgba(30, 30, 34, 0.94);
+    }
   }
   .tg-tab {
     min-height: 48px;
@@ -78,12 +69,12 @@
     margin-right: auto;
   }
   .tg-tab-active .tg-tab-stack {
-    background-color: transparent;
+    background-color: rgba(37, 99, 235, 0.14);
     box-shadow: none;
   }
   .dark .tg-tab-active .tg-tab-stack {
-    background-color: transparent;
-    box-shadow: none;
+    background-color: rgba(59, 130, 246, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .tg-tab-icon-wrap {
     position: relative;
@@ -121,10 +112,10 @@
     color: #4b5563;
   }
   .dark .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-icon {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.82);
   }
   .dark .tg-tab:not(.tg-tab-active):not(.tg-tab-disabled) .tg-tab-label {
-    color: #d1d5db;
+    color: rgba(255, 255, 255, 0.86);
   }
   .tg-tab-disabled .tg-tab-stack {
     opacity: 0.45;
