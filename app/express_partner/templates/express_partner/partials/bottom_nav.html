@@ -4,15 +4,44 @@
 <style>
   #bottomNavMenu.tg-tabbar-shell {
     pointer-events: none;
-    background: transparent !important;
     box-shadow: none !important;
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    padding-bottom: 0;
+    /* ناحیهٔ home indicator: قبلاً شفاف بود و پس‌زمینهٔ تیرهٔ body نوار مشکی زیر منو می‌ساخت */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* پر کردن فقط نوار پایین (لبهٔ ایمن) با همان شیشهٔ منو — بدون مسدود کردن لمس روی کپسول */
+  #bottomNavMenu.tg-tabbar-shell::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    z-index: 0;
+    pointer-events: none;
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+    background-color: rgba(255, 255, 255, 0.38);
+  }
+  html.dark #bottomNavMenu.tg-tabbar-shell::after {
+    background-color: rgba(24, 24, 28, 0.48);
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    #bottomNavMenu.tg-tabbar-shell::after {
+      background-color: rgba(243, 244, 246, 0.95);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    html.dark #bottomNavMenu.tg-tabbar-shell::after {
+      background-color: rgba(30, 30, 34, 0.94);
+    }
   }
   #bottomNavMenu .tg-tabbar-pill {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    position: relative;
+    z-index: 1;
+    padding-bottom: 0.5rem;
   }
   .tg-tabbar-pill {
     pointer-events: auto;
@@ -158,7 +187,7 @@
   }
 </style>
 <nav id="bottomNavMenu" data-tour="bottom-nav" class="tg-tabbar-shell fixed inset-x-0 bottom-0 z-[60]" role="navigation" aria-label="منوی اصلی">
-  <div class="tg-tabbar-pill mx-auto w-full max-w-md px-1 py-1">
+  <div class="tg-tabbar-pill mx-auto w-full max-w-full px-3 py-1">
     <div id="bottomNavItems" class="grid grid-cols-4 gap-0 min-h-[52px] w-full items-center">
       {% set nav_items = [
         {'key': 'dashboard', 'endpoint': 'express_partner.dashboard', 'icon': 'fa-home', 'label': 'وینور'},

@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{% block title %}وینور اکسپرس | پنل همکاران{% endblock %}</title>
 
   {# --- Favicon & PWA (Separate from main VINOR) --- #}
@@ -126,6 +126,20 @@
     */
     #tg-page-shell {
       min-height: 100%;
+      min-height: 100dvh;
+    }
+    /* یکدست با پس‌زمینهٔ پرتال تا زیر منوی شیشه‌ای نوار مشکی WebView/لبهٔ ایمن دیده نشود */
+    html {
+      min-height: 100%;
+      min-height: 100dvh;
+      background-color: #f9fafb;
+    }
+    html.dark {
+      background-color: #030712;
+    }
+    body {
+      min-height: 100%;
+      min-height: 100dvh;
     }
     html[class*="tg-page-leave-"] #tg-page-shell,
     html[class*="tg-page-enter-"] #tg-page-shell {

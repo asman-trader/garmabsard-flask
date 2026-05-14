@@ -552,7 +552,7 @@
         const nav = document.getElementById('bottomNavMenu');
         const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
         const rootTop = mobileCardsRoot.getBoundingClientRect().top;
-        let available = navTop - rootTop - 2;
+        let available = navTop - rootTop;
         if (!Number.isFinite(available)) return;
         available = Math.max(160, Math.floor(available));
         mobileCardsRoot.style.height = `${available}px`;
