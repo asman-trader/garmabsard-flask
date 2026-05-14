@@ -19,6 +19,12 @@
     </nav>
 
     <div class="flex items-center gap-2 shrink-0">
+      <a href="{{ url_for('express_partner.login', next=url_for('express_partner.dashboard')) }}"
+         class="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.06] px-2.5 py-2 sm:px-3.5 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 hover:border-white/30 transition-colors">
+        <i class="fa-solid fa-right-to-bracket text-xs sm:text-sm opacity-90" aria-hidden="true"></i>
+        <span class="hidden sm:inline">ورود / ثبت‌نام</span>
+        <span class="sm:hidden">ورود</span>
+      </a>
       {% if android_apk_url %}
       <a href="{{ android_apk_url }}" download rel="noopener"
          class="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500/80 px-3 py-2 sm:px-4 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-emerald-500/10 transition-colors">
