@@ -552,7 +552,10 @@
 
     let compact = false;
 
-    function syncMobileCardsRootHeight() {
+    let mobileCardsHeightRaf = 0;
+    const HEIGHT_SLACK_PX = 3;
+
+    function syncMobileCardsRootHeightNow() {
       if (!mobileCardsRoot) return;
       try {
         if (!window.matchMedia('(max-width: 639px)').matches) {
@@ -564,16 +567,24 @@
         const rootTop = mobileCardsRoot.getBoundingClientRect().top;
         let available = navTop - rootTop;
         if (!Number.isFinite(available)) return;
-        /* ceil تا شکاف زیرپیکسلی/گردکردن زیر کارت و فوتر باقی نماند */
-        available = Math.max(160, Math.ceil(available));
+        /* ceil + slack: نوار متناوب زیرپیکسلی / نوار آدرس دینامیک موبایل */
+        available = Math.max(160, Math.ceil(available) + HEIGHT_SLACK_PX);
         mobileCardsRoot.style.height = `${available}px`;
       } catch (_) {}
+    }
+
+    function scheduleSyncMobileCardsRootHeight() {
+      if (mobileCardsHeightRaf) return;
+      mobileCardsHeightRaf = requestAnimationFrame(function () {
+        mobileCardsHeightRaf = 0;
+        syncMobileCardsRootHeightNow();
+      });
     }
 
     function syncMainPadding() {
       const h = header.getBoundingClientRect().height;
       main.style.paddingTop = `${Math.ceil(h + 6)}px`;
-      syncMobileCardsRootHeight();
+      scheduleSyncMobileCardsRootHeight();
     }
 
     function applyCompact(on) {
@@ -587,6 +598,8 @@
       const y = scrollTopNow();
       if (y <= EXPAND_MAX_Y) applyCompact(false);
       else if (y >= COMPACT_MIN_Y) applyCompact(true);
+      /* حتی در بُرد مُرده بین ۸ و ۲۴px، visualViewport / نوار ابزار عوض می‌شود */
+      scheduleSyncMobileCardsRootHeight();
     }
 
     function bindScrollTargets(fn) {
@@ -626,7 +639,18 @@
     }
 
     try {
-      const ro = new ResizeObserver(syncMainPadding);
+      const ro = new ResizeObserver(function (entries) {
+        try {
+          for (let i = 0; i < entries.length; i++) {
+            if (entries[i].target === header) {
+              const h = header.getBoundingClientRect().height;
+              main.style.paddingTop = `${Math.ceil(h + 6)}px`;
+              break;
+            }
+          }
+        } catch (_) {}
+        scheduleSyncMobileCardsRootHeight();
+      });
       ro.observe(header);
       const nav0 = document.getElementById('bottomNavMenu');
       if (nav0) ro.observe(nav0);
@@ -635,7 +659,7 @@
     /* هر تغییر اندازهٔ main (مثلاً padding-top پس از compact هدر) → دوباره ارتفاع کارت‌ها تا لبهٔ فوتر */
     try {
       const rom = new ResizeObserver(function () {
-        syncMobileCardsRootHeight();
+        scheduleSyncMobileCardsRootHeight();
       });
       rom.observe(main);
     } catch (_) {}
@@ -643,7 +667,8 @@
     window.addEventListener('resize', syncMainPadding, { passive: true });
     try {
       if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', syncMainPadding, { passive: true });
+        /* فقط ارتفاع کارت‌ها: syncMainPadding روی resize نوار آدرس باعث نوسان می‌شد */
+        window.visualViewport.addEventListener('resize', scheduleSyncMobileCardsRootHeight, { passive: true });
       }
     } catch (_) {}
 
