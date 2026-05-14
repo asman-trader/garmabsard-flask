@@ -545,7 +545,7 @@
     let compact = false;
 
     let mobileCardsHeightRaf = 0;
-    const HEIGHT_SLACK_PX = 6;
+    const HEIGHT_SLACK_PX = 10;
 
     function updateCompactFromScroll() {
       const y = scrollTopNow();
@@ -696,6 +696,18 @@
       if (window.visualViewport) {
         /* فقط ارتفاع کارت‌ها: syncMainPadding روی resize نوار آدرس باعث نوسان می‌شد */
         window.visualViewport.addEventListener('resize', scheduleSyncMobileCardsRootHeight, { passive: true });
+        var vvDashT = 0;
+        window.visualViewport.addEventListener(
+          'scroll',
+          function () {
+            window.clearTimeout(vvDashT);
+            vvDashT = window.setTimeout(function () {
+              vvDashT = 0;
+              scheduleSyncMobileCardsRootHeight();
+            }, 100);
+          },
+          { passive: true }
+        );
       }
     } catch (_) {}
 
