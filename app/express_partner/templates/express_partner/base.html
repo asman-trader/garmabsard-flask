@@ -164,24 +164,6 @@
     html.dark body {
       background-color: #030712 !important;
     }
-    /*
-      نوار اطمینان زیر viewport: اگر لایهٔ منو از لبهٔ واقعی کوتاه‌تر ماند، همان رنگ پرتال دیده شود (نه مشکی سیستم).
-      z-index:0 و منو z-[60] است؛ محتوای معمولی داخل شِل بدون z-index بالاتر از این لایه نیست.
-    */
-    body::after {
-      content: '';
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: calc(env(safe-area-inset-bottom, 0px) + max(40px, 5vmin));
-      z-index: 0;
-      pointer-events: none;
-      background-color: #f9fafb;
-    }
-    html.dark body::after {
-      background-color: #030712;
-    }
     html[class*="tg-page-leave-"] #tg-page-shell,
     html[class*="tg-page-enter-"] #tg-page-shell {
       backface-visibility: hidden;
