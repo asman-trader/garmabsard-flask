@@ -190,7 +190,7 @@
     </div>
   </header>
 
-<div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: 14.25rem">
+<div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: 14.25rem">
 
   <style>
     /*
@@ -268,7 +268,7 @@
     }
     /*
       موبایل عمودی: ارتفاع ناحیهٔ اسکرول کارت‌ها با JS از فاصلهٔ واقعی تا نوار تب پر می‌شود
-      (با جمع‌شدن فیلترها هدر کوتاه‌تر می‌شود؛ ارتفاع ثابت 100dvh-190px باعث فاصلهٔ خالی مشکی زیر لیست می‌شد).
+      (با جمع‌شدن فیلترها هدر کوتاه‌تر می‌شود؛ ارتفاع ثابت 100dvh-202px باعث فاصلهٔ خالی مشکی زیر لیست می‌شد).
       قبل از اجرای اسکریپت، تخمین قبلی به‌عنوان fallback می‌ماند.
     */
     @media (max-width: 639px) {
@@ -280,7 +280,7 @@
         background-color: #030712;
       }
       #dashboardMobileCardsRoot {
-        height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        height: calc(100dvh - 202px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         min-height: 12rem;
       }
     }
