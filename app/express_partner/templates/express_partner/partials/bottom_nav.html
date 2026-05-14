@@ -23,10 +23,11 @@
     pointer-events: none;
     -webkit-backdrop-filter: saturate(180%) blur(22px);
     backdrop-filter: saturate(180%) blur(22px);
-    background-color: rgba(255, 255, 255, 0.38);
+    background-color: rgba(255, 255, 255, 0.14);
   }
+  /* تیره: لایهٔ رنگی کم‌تر تا blur پشتِ کارت‌ها دیده شود (پیش‌فرض قبلی ماتِ کامل می‌نمود) */
   html.dark #bottomNavMenu.tg-tabbar-shell::after {
-    background-color: rgba(24, 24, 28, 0.48);
+    background-color: rgba(3, 7, 18, 0.18);
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     #bottomNavMenu.tg-tabbar-shell::after {
@@ -46,11 +47,10 @@
   .tg-tabbar-pill {
     pointer-events: auto;
     position: relative;
-    isolation: isolate;
-    transform: translateZ(0);
+    /* isolation + translateZ روی موبایل/WebView گاهی لایهٔ compositor جدا می‌سازد و backdrop-filter را مات یا خالی نشان می‌دهد */
     border-radius: 9999px;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    background-color: rgba(255, 255, 255, 0.38);
+    background-color: rgba(255, 255, 255, 0.22);
     box-shadow:
       0 10px 36px rgba(15, 23, 42, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.55);
@@ -58,8 +58,8 @@
     backdrop-filter: saturate(180%) blur(22px);
   }
   .dark .tg-tabbar-pill {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(24, 24, 28, 0.48);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: rgba(3, 7, 18, 0.28);
     box-shadow:
       0 14px 44px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.07);

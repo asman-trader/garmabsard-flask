@@ -13,7 +13,8 @@
     <i class="fas fa-chevron-left"></i>
   </button>
 
-  <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory sm:overscroll-x-contain sm:[-webkit-overflow-scrolling:touch] no-scrollbar">
+  {# موبایل عمودی: padding پایین زیاد تا با اسکرول، تصویر کارت‌ها زیر منوی شیشه‌ای برود و backdrop-filter محتوا داشته باشد #}
+  <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-32 sm:pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory sm:overscroll-x-contain sm:[-webkit-overflow-scrolling:touch] no-scrollbar">
     {% for land in assigned_lands %}
       <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
         {% set tour_land_card = loop.first %}
