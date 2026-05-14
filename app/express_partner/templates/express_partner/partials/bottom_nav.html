@@ -9,37 +9,34 @@
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
     /*
-      همهٔ عرض‌ها: safe-area + حداقل فیزیکی برای WebView/دسکتاپ کوچک تا زیر کپسول شکاف مشکی دیده نشود.
-      max(20px,3vmin) روی lg هم می‌ماند (قبلاً فقط env بود و گاهی ۱px زیر منو می‌ماند).
+      safe-area + حاشیهٔ فیزیکی؛ مقدار بزرگ‌تر برای WebView تا شکاف زیر کپسول دیده نشود.
+      لایهٔ ::after زیر کپسول: بدون backdrop-filter (همان ناحیه گاهی پشت خالی مشکی می‌شد) — رنگ تخت = پس‌زمینهٔ پرتال.
     */
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + max(20px, 3vmin));
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + max(32px, 6vmin));
   }
-  /* پر کردن فقط نوار پایین (لبهٔ ایمن) با همان شیشهٔ منو — بدون مسدود کردن لمس روی کپسول */
+  /* پر کردن نوار پایین: رنگ تخت مثل html/body تا نوار مشکیِ compositor دیده نشود؛ شیشه فقط روی .tg-tabbar-pill */
   #bottomNavMenu.tg-tabbar-shell::after {
     content: '';
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    height: calc(env(safe-area-inset-bottom, 0px) + max(20px, 3vmin));
+    height: calc(env(safe-area-inset-bottom, 0px) + max(32px, 6vmin));
     z-index: 0;
     pointer-events: none;
-    -webkit-backdrop-filter: saturate(180%) blur(22px);
-    backdrop-filter: saturate(180%) blur(22px);
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: #f9fafb;
   }
-  /* تیره: لایهٔ رنگی کم‌تر تا blur پشتِ کارت‌ها دیده شود (پیش‌فرض قبلی ماتِ کامل می‌نمود) */
   html.dark #bottomNavMenu.tg-tabbar-shell::after {
-    background-color: rgba(3, 7, 18, 0.18);
+    background-color: #030712;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     #bottomNavMenu.tg-tabbar-shell::after {
-      background-color: rgba(243, 244, 246, 0.95);
+      background-color: #f9fafb;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
     html.dark #bottomNavMenu.tg-tabbar-shell::after {
-      background-color: rgba(30, 30, 34, 0.94);
+      background-color: #030712;
     }
   }
   #bottomNavMenu .tg-tabbar-pill {

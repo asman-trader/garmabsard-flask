@@ -203,17 +203,15 @@
         transition-property: none !important;
       }
     }
-    /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد */
+    /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد + پس‌زمینه یکدست */
     @media (max-width: 1023px) {
       #expressDashboardMain {
         min-height: calc(100vh + 120px);
         min-height: calc(100dvh + 120px);
+        background-color: #f9fafb;
       }
-    }
-    /* موبایل ستونی: بدون min-height روی ترک؛ قبلاً در چیدمان ستونی اسکرول صفحه را در برخی مرورگرها مسدود می‌کرد */
-    @media (min-width: 640px) and (max-width: 1023px) {
-      #dashboardMobileCardsRoot #cardsTrack {
-        min-height: calc(100vh - 150px);
+      html.dark #expressDashboardMain {
+        background-color: #030712;
       }
     }
     .express-card{
@@ -273,13 +271,6 @@
       قبل از اجرای اسکریپت، تخمین قبلی به‌عنوان fallback می‌ماند.
     */
     @media (max-width: 639px) {
-      /* یکدست با body تا اگر زیر ناحیهٔ اسکرول کارت فاصلهٔ زیرپیکسل ماند، نوار تیره دیده نشود */
-      #expressDashboardMain {
-        background-color: #f9fafb;
-      }
-      html.dark #expressDashboardMain {
-        background-color: #030712;
-      }
       #dashboardMobileCardsRoot {
         height: calc(100dvh - 212px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         min-height: 12rem;
@@ -292,10 +283,10 @@
     html.dark #dashboardMobileCardsRoot #cardsTrack {
       background-color: #030712;
     }
-    /* تبلت */
+    /* تبلت (عرض مثل ۷۲۶px): ارتفاع با JS از navTop-rootTop؛ height ثابت 100dvh-120px با هدر جمع‌شده کارت را زیر نوار تیره می‌برد */
     @media (min-width: 640px) and (max-width: 1023px) {
       #dashboardMobileCardsRoot {
-        height: calc(100dvh - 120px);
+        min-height: 12rem;
         overflow-x: auto;
         overflow-y: hidden;
         touch-action: pan-x;
@@ -565,7 +556,17 @@
     function syncMobileCardsRootHeightNow() {
       if (!mobileCardsRoot) return;
       try {
-        if (!window.matchMedia('(max-width: 639px)').matches) {
+        if (!window.matchMedia('(max-width: 1023px)').matches) {
+          mobileCardsRoot.style.height = '';
+          return;
+        }
+        let cs;
+        try {
+          cs = window.getComputedStyle(mobileCardsRoot);
+        } catch (_) {
+          return;
+        }
+        if (cs.display === 'none' || cs.visibility === 'hidden') {
           mobileCardsRoot.style.height = '';
           return;
         }
