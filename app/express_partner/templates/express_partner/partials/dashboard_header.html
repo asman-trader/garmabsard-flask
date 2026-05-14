@@ -29,22 +29,16 @@
                      class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 py-2.5 pl-2 min-w-0">
               <div class="flex items-center gap-1 pl-1">
                 {% if cities %}
-                <div class="relative" id="cityFilterRoot">
+                <div class="relative shrink-0" id="cityFilterRoot">
                   <button type="button"
                           id="cityFilterToggle"
-                          class="h-8 pr-3 pl-2 rounded-full bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 inline-flex items-center gap-1.5"
-                          aria-haspopup="listbox"
+                          class="h-8 max-w-[9.5rem] shrink-0 truncate pr-3 pl-2 rounded-full bg-gray-100 dark:bg-gray-700 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 inline-flex items-center gap-1.5"
+                          aria-haspopup="dialog"
+                          aria-controls="dashCityPickerPanel"
                           aria-expanded="false">
-                    <span id="cityFilterLabel">{{ selected_city or 'همه شهرها' }}</span>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-500 dark:text-gray-400"></i>
+                    <span id="cityFilterLabel" class="truncate">{{ selected_city or 'همه شهرها' }}</span>
+                    <i class="fa-solid fa-chevron-down shrink-0 text-[10px] text-gray-500 dark:text-gray-400"></i>
                   </button>
-                  <div id="cityFilterMenu"
-                       class="hidden absolute left-0 top-10 z-20 min-w-36 max-h-60 overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-1">
-                    <button type="button" data-city="" class="city-option w-full text-right px-2.5 py-1.5 rounded-lg text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">همه شهرها</button>
-                    {% for c in cities %}
-                    <button type="button" data-city="{{ c }}" class="city-option w-full text-right px-2.5 py-1.5 rounded-lg text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{{ c }}</button>
-                    {% endfor %}
-                  </div>
                 </div>
                 {% endif %}
                 {% if request.args.get('q') %}
@@ -177,3 +171,7 @@
     </div>
   </div>
 </header>
+
+{% if cities %}
+{% include 'express_partner/partials/dashboard_city_sheet.html' %}
+{% endif %}
