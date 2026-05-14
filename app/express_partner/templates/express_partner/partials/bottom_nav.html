@@ -222,9 +222,10 @@
 <script>
 (function() {
   var gapRaf = 0;
+  var seamLastFillPx = 0;
   /**
-   * پر کردن شکاف مشکی گاه‌به‌گاه زیر #bottomNavMenu (موبایل / WebView / نوار آدرس).
-   * مقدار --vn-footer-gap-fill روی خود nav ست می‌شود و در padding-bottom و ::after مصرف می‌گردد.
+   * پر کردن شکاف مشکی زیر #bottomNavMenu (موبایل / WebView).
+   * آستانهٔ هیسترزیس + بدون visualViewport.scroll (باعث چشمک زدن می‌شد).
    */
   window.vinorSyncFooterNavBottomSeam = function () {
     var nav = document.getElementById('bottomNavMenu');
@@ -240,9 +241,11 @@
         }
         var r = nav.getBoundingClientRect();
         var gap = layoutBottom - r.bottom;
-        if (gap > 0.25 && gap < 96) {
-          nav.style.setProperty('--vn-footer-gap-fill', Math.ceil(gap) + 'px');
-        } else {
+        if (gap > 2 && gap < 96) {
+          seamLastFillPx = Math.min(48, Math.max(seamLastFillPx, Math.ceil(gap)));
+          nav.style.setProperty('--vn-footer-gap-fill', seamLastFillPx + 'px');
+        } else if (gap <= 1) {
+          seamLastFillPx = 0;
           nav.style.removeProperty('--vn-footer-gap-fill');
         }
       } catch (_) {}
@@ -250,14 +253,13 @@
   };
 
   window.addEventListener('resize', function () {
+    seamLastFillPx = 0;
     if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
   }, { passive: true });
   try {
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', function () {
-        if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
-      }, { passive: true });
-      window.visualViewport.addEventListener('scroll', function () {
+        seamLastFillPx = 0;
         if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
       }, { passive: true });
     }
