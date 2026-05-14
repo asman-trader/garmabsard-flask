@@ -2,15 +2,15 @@
 {% block title %}روتین روزانه | ثبت پیشرفت{% endblock %}
 {% block content %}
 
-  <!-- Header — هم‌تراز با پروفایل / دسکتاپ -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+  <!-- Header — هم‌راستا با پروفایل -->
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md w-full">
+    <div class="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
       <a href="{{ url_for('express_partner.dashboard') }}"
-         class="relative z-10 grid h-10 w-10 place-items-center rounded-full border border-gray-300 bg-gray-100/90 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
+         class="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
          aria-label="بازگشت">
         <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
       </a>
-      <h1 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">روتین و آمار فعالیت</h1>
+      <h1 class="pointer-events-none absolute inset-x-0 text-center text-sm font-bold text-white sm:text-base">روتین و آمار فعالیت</h1>
       <div class="h-10 w-10 shrink-0" aria-hidden="true"></div>
     </div>
   </header>
