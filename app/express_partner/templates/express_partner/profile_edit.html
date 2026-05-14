@@ -3,7 +3,7 @@
 
 {% block head %}
 <style>
-  html.vinor-express-delete-modal-open #bottomNavMenu {
+  html.vinor-express-overlay-modal-open #bottomNavMenu {
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
@@ -129,20 +129,16 @@
             </div>
 
             <div>
-              <label for="profileCity" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+              <span class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
                 <span>شهر فعالیت</span>
                 <i class="fas fa-location-dot text-zinc-500" aria-hidden="true"></i>
-              </label>
-              <div class="relative">
-                <select id="profileCity" name="city"
-                        class="w-full appearance-none rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-10 pr-3 text-sm text-white outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base">
-                  <option value="">انتخاب شهر</option>
-                  {% for c in (cities or []) %}
-                  <option value="{{ c }}" {% if me_city == c %}selected{% endif %}>{{ c }}</option>
-                  {% endfor %}
-                </select>
-                <i class="fas fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500" aria-hidden="true"></i>
-              </div>
+              </span>
+              <input type="hidden" name="city" id="profileCityValue" value="{{ me_city }}">
+              <button type="button" id="cityPickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="cityPickerPanel"
+                      class="flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-3 text-right text-sm text-white outline-none transition hover:border-white/15 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base">
+                <span id="cityPickerTriggerText" class="min-w-0 flex-1 truncate {% if not me_city %}text-zinc-500{% endif %}">{{ me_city or 'انتخاب شهر' }}</span>
+                <i class="fas fa-chevron-down pointer-events-none shrink-0 text-xs text-zinc-500" aria-hidden="true"></i>
+              </button>
             </div>
 
             <div>
@@ -197,6 +193,63 @@
 
     </div>
   </main>
+
+  <script type="application/json" id="cityPickerCitiesJson">{{ cities|tojson }}</script>
+
+  <div id="cityPickerModal" class="fixed inset-0 z-[85] hidden overflow-y-auto" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-[1px]" data-city-modal-backdrop></div>
+    <div class="relative flex min-h-full flex-col justify-end pointer-events-none sm:justify-center sm:p-4">
+      <div id="cityPickerPanel" role="dialog" aria-modal="true" aria-labelledby="cityPickerTitle"
+           class="pointer-events-auto mx-auto flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl border border-white/10 bg-[#1a222c] shadow-2xl sm:max-h-[88dvh] sm:rounded-2xl">
+        <div class="flex shrink-0 justify-center pt-2 pb-1" aria-hidden="true">
+          <span class="h-1 w-10 rounded-full bg-white/20"></span>
+        </div>
+        <div class="relative flex shrink-0 items-center justify-center border-b border-white/10 px-4 py-3">
+          <button type="button" id="cityPickerClose" class="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                  aria-label="بستن">
+            <i class="fas fa-times text-lg" aria-hidden="true"></i>
+          </button>
+          <h2 id="cityPickerTitle" class="text-base font-bold text-white">انتخاب شهر</h2>
+        </div>
+
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3">
+          <div class="relative mb-3 shrink-0">
+            <i class="fas fa-magnifying-glass pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500" aria-hidden="true"></i>
+            <input type="search" id="cityPickerSearch" autocomplete="off"
+                   class="w-full rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-10 text-sm text-white placeholder-zinc-500 outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/25"
+                   placeholder="جستجو در شهرها" dir="rtl">
+          </div>
+
+          <button type="button" id="cityPickerGeoQuick"
+                  class="mb-4 flex w-full shrink-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0f1419] px-3 py-3 text-right transition hover:border-emerald-500/30 hover:bg-[#121820]">
+            <span class="flex min-w-0 flex-1 items-center justify-end gap-2">
+              <span class="min-w-0 text-right">
+                <span class="block text-xs font-medium text-emerald-400">موقعیت فعلی</span>
+                <span id="cityPickerCurrentLabel" class="block truncate text-sm font-semibold text-white">—</span>
+              </span>
+              <i class="fas fa-location-dot shrink-0 text-lg text-emerald-500" aria-hidden="true"></i>
+            </span>
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-400" aria-hidden="true">
+              <i class="fas fa-crosshairs"></i>
+            </span>
+          </button>
+
+          <p class="mb-2 shrink-0 text-right text-xs text-zinc-500">پیشنهادهای نزدیک</p>
+          <div id="cityPickerChips" class="mb-4 flex max-w-full shrink-0 flex-wrap justify-end gap-2"></div>
+
+          <p class="mb-2 shrink-0 text-right text-xs text-zinc-500">همه شهرها</p>
+          <div id="cityPickerList" class="min-h-[40dvh] flex-1 overflow-y-auto overscroll-contain border-t border-white/10 -mx-4 px-4 pb-2 sm:min-h-0"></div>
+        </div>
+
+        <div class="shrink-0 border-t border-white/10 bg-[#1a222c] p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+          <button type="button" id="cityPickerApply"
+                  class="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-500 active:scale-[0.99]">
+            انتخاب شهر
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   {# فرم واقعی حذف؛ دکمهٔ تأیید داخل مودال با form="" به این فرم وصل است #}
   <form id="profileDeleteForm" method="post" action="{{ url_for('express_partner.profile_delete_account') }}" class="hidden" aria-hidden="true">
@@ -269,6 +322,24 @@
 
 {% block scripts %}
 <script>
+(function (g) {
+  var depth = 0;
+  function sync() {
+    var root = document.documentElement;
+    if (depth > 0) {
+      root.classList.add('vinor-express-overlay-modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      root.classList.remove('vinor-express-overlay-modal-open');
+      document.body.style.overflow = '';
+    }
+  }
+  g.vinorExpressModalOverlay = {
+    open: function () { depth++; sync(); },
+    close: function () { depth = Math.max(0, depth - 1); sync(); }
+  };
+})(window);
+
 (function() {
   var trigger = document.getElementById('avatarEditTrigger');
   var inputCamera = document.getElementById('avatarInputCamera');
@@ -382,6 +453,199 @@
 })();
 
 (function() {
+  var overlay = window.vinorExpressModalOverlay;
+  var jsonEl = document.getElementById('cityPickerCitiesJson');
+  var allCities = [];
+  try {
+    allCities = jsonEl ? JSON.parse(jsonEl.textContent || '[]') : [];
+  } catch (e1) { allCities = []; }
+  if (!Array.isArray(allCities)) allCities = [];
+  allCities = allCities.filter(function (c) { return c && String(c).trim(); }).map(function (c) { return String(c).trim(); });
+
+  var modal = document.getElementById('cityPickerModal');
+  var trigger = document.getElementById('cityPickerTrigger');
+  var hidden = document.getElementById('profileCityValue');
+  var triggerText = document.getElementById('cityPickerTriggerText');
+  var closeBtn = document.getElementById('cityPickerClose');
+  var backdrop = modal && modal.querySelector('[data-city-modal-backdrop]');
+  var search = document.getElementById('cityPickerSearch');
+  var chipsEl = document.getElementById('cityPickerChips');
+  var listEl = document.getElementById('cityPickerList');
+  var currentLabel = document.getElementById('cityPickerCurrentLabel');
+  var geoQuick = document.getElementById('cityPickerGeoQuick');
+  var applyBtn = document.getElementById('cityPickerApply');
+  if (!modal || !trigger || !hidden || !overlay) return;
+
+  var MAJOR = ['تهران', 'کرج', 'اصفهان', 'مشهد', 'شیراز'];
+  var pending = '';
+
+  function firstMajorInList() {
+    for (var i = 0; i < MAJOR.length; i++) {
+      if (allCities.indexOf(MAJOR[i]) >= 0) return MAJOR[i];
+    }
+    return allCities[0] || '';
+  }
+
+  function suggestChips() {
+    var out = [];
+    MAJOR.forEach(function (name) {
+      if (allCities.indexOf(name) >= 0 && out.length < 4 && out.indexOf(name) < 0) out.push(name);
+    });
+    return out;
+  }
+
+  function syncCurrentLabel() {
+    var t = (pending || '').trim();
+    if (currentLabel) currentLabel.textContent = t || '—';
+  }
+
+  function renderChips() {
+    if (!chipsEl) return;
+    while (chipsEl.firstChild) chipsEl.removeChild(chipsEl.firstChild);
+    var chips = suggestChips();
+    if (!chips.length) {
+      var sp = document.createElement('span');
+      sp.className = 'text-xs text-zinc-500';
+      sp.textContent = 'شهری برای پیشنهاد نیست';
+      chipsEl.appendChild(sp);
+      return;
+    }
+    chips.forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-city-chip', c);
+      b.className = 'shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-emerald-500/50 hover:bg-emerald-500/10';
+      if (c === pending) {
+        b.classList.add('border-emerald-500', 'bg-emerald-500/15', 'text-emerald-300');
+      }
+      b.textContent = c;
+      chipsEl.appendChild(b);
+    });
+  }
+
+  function renderList() {
+    if (!listEl) return;
+    while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    var q = ((search && search.value) || '').trim();
+    var filtered = allCities.filter(function (c) {
+      return !q || c.indexOf(q) >= 0;
+    });
+    if (!filtered.length) {
+      var empty = document.createElement('p');
+      empty.className = 'py-8 text-center text-sm text-zinc-500';
+      empty.textContent = allCities.length ? 'شهری یافت نشد.' : 'لیست شهرها خالی است.';
+      listEl.appendChild(empty);
+      return;
+    }
+    filtered.forEach(function (c) {
+      var row = document.createElement('button');
+      row.type = 'button';
+      row.setAttribute('data-city-row', c);
+      row.className = 'flex w-full items-center gap-2 border-b border-white/5 py-3.5 text-right transition last:border-b-0 hover:bg-white/[0.04]';
+
+      var mark = document.createElement('span');
+      mark.className = 'grid h-6 w-6 shrink-0 place-items-center';
+      if (c === pending) {
+        var ok = document.createElement('i');
+        ok.className = 'fas fa-check text-emerald-500';
+        ok.setAttribute('aria-hidden', 'true');
+        mark.appendChild(ok);
+      }
+
+      var name = document.createElement('span');
+      name.className = 'min-w-0 flex-1 truncate text-sm font-medium ' + (c === pending ? 'text-emerald-400' : 'text-white');
+      name.textContent = c;
+
+      var chev = document.createElement('span');
+      chev.className = 'shrink-0 text-zinc-600';
+      var ic = document.createElement('i');
+      ic.className = 'fas fa-chevron-left text-xs';
+      ic.setAttribute('aria-hidden', 'true');
+      chev.appendChild(ic);
+
+      row.appendChild(mark);
+      row.appendChild(name);
+      row.appendChild(chev);
+      listEl.appendChild(row);
+    });
+  }
+
+  function refresh() {
+    syncCurrentLabel();
+    renderChips();
+    renderList();
+  }
+
+  function openCityPicker() {
+    pending = (hidden.value || '').trim();
+    if (search) search.value = '';
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+    overlay.open();
+    refresh();
+  }
+
+  function closeCityPicker() {
+    pending = (hidden.value || '').trim();
+    if (search) search.value = '';
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+    overlay.close();
+    refresh();
+  }
+
+  function applyCityPicker() {
+    var v = (pending || '').trim();
+    if (v && allCities.indexOf(v) < 0) return;
+    hidden.value = v;
+    if (triggerText) {
+      triggerText.textContent = v || 'انتخاب شهر';
+      triggerText.classList.toggle('text-zinc-500', !v);
+    }
+    if (search) search.value = '';
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+    overlay.close();
+  }
+
+  function setPending(c) {
+    var x = (c || '').trim();
+    if (x && allCities.indexOf(x) < 0) return;
+    pending = x;
+    refresh();
+  }
+
+  trigger.addEventListener('click', openCityPicker);
+  if (closeBtn) closeBtn.addEventListener('click', closeCityPicker);
+  if (backdrop) backdrop.addEventListener('click', closeCityPicker);
+  if (applyBtn) applyBtn.addEventListener('click', applyCityPicker);
+  if (search) search.addEventListener('input', function () { renderList(); });
+
+  if (chipsEl) chipsEl.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest && e.target.closest('[data-city-chip]');
+    if (!t) return;
+    setPending(t.getAttribute('data-city-chip') || '');
+  });
+
+  if (listEl) listEl.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest && e.target.closest('[data-city-row]');
+    if (!t) return;
+    setPending(t.getAttribute('data-city-row') || '');
+  });
+
+  if (geoQuick) geoQuick.addEventListener('click', function () {
+    var pick = firstMajorInList();
+    if (pick) setPending(pick);
+  });
+
+  window.__vinorCloseCityPicker = closeCityPicker;
+})();
+
+(function() {
+  var overlay = window.vinorExpressModalOverlay;
   var modal = document.getElementById('deleteAccountModal');
   var openBtn = document.getElementById('deleteAccountOpen');
   var closeBtn = document.getElementById('deleteAccountModalClose');
@@ -389,7 +653,7 @@
   var backdrop = modal && modal.querySelector('[data-delete-modal-backdrop]');
   var chk = document.getElementById('deleteAccountConfirmCheck');
   var submitBtn = document.getElementById('deleteAccountConfirmSubmit');
-  if (!modal || !openBtn) return;
+  if (!modal || !openBtn || !overlay) return;
 
   function syncSubmit() {
     if (submitBtn) submitBtn.disabled = !chk || !chk.checked;
@@ -398,8 +662,7 @@
   function openModal() {
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
-    document.documentElement.classList.add('vinor-express-delete-modal-open');
-    document.body.style.overflow = 'hidden';
+    overlay.open();
     if (chk) chk.checked = false;
     syncSubmit();
   }
@@ -407,8 +670,7 @@
   function closeModal() {
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
-    document.documentElement.classList.remove('vinor-express-delete-modal-open');
-    document.body.style.overflow = '';
+    overlay.close();
     if (chk) chk.checked = false;
     syncSubmit();
   }
@@ -418,11 +680,22 @@
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
   if (backdrop) backdrop.addEventListener('click', closeModal);
   if (chk) chk.addEventListener('change', syncSubmit);
+})();
 
+(function() {
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
-    if (modal.classList.contains('hidden')) return;
-    closeModal();
+    var cityM = document.getElementById('cityPickerModal');
+    if (cityM && !cityM.classList.contains('hidden')) {
+      if (window.__vinorCloseCityPicker) window.__vinorCloseCityPicker();
+      e.preventDefault();
+      return;
+    }
+    var delM = document.getElementById('deleteAccountModal');
+    if (delM && !delM.classList.contains('hidden')) {
+      var cancelBtn = document.getElementById('deleteAccountModalCancel');
+      if (cancelBtn) cancelBtn.click();
+    }
   });
 })();
 </script>

@@ -2312,6 +2312,8 @@ def profile_data():
 def profile_edit_page():
     """
     ویرایش مشخصات همکار: نام، شهر، بیو، تلفن ثابت، ایمیل، تاریخ تولد؛ موبایل فقط نمایش.
+    هر همکار با شمارهٔ session (user_phone) در لیست express_partners شناسایی می‌شود؛
+    تمام فیلدها فقط روی همان دیکشنری پروفایل همان شماره ذخیره می‌شوند (مجزا از بقیهٔ کاربران).
     """
     me_phone = (session.get('user_phone') or '').strip()
     partners = load_express_partners() or []
@@ -2319,6 +2321,13 @@ def profile_edit_page():
     if not profile:
         profile = {"phone": me_phone}
         partners.append(profile)
+
+    try:
+        cities_allowed = load_active_cities() or []
+    except Exception:
+        cities_allowed = []
+    if not isinstance(cities_allowed, list):
+        cities_allowed = []
 
     if request.method == 'POST':
         name = (request.form.get('name') or '').strip()[:60]
@@ -2341,7 +2350,12 @@ def profile_edit_page():
         else:
             profile.pop('name', None)
         if city:
-            profile['city'] = city
+            if cities_allowed and city not in cities_allowed:
+                city = ''
+            if city:
+                profile['city'] = city
+            else:
+                profile.pop('city', None)
         else:
             profile.pop('city', None)
         if bio:
@@ -2384,10 +2398,7 @@ def profile_edit_page():
                 birth_year_custom = yi < 1320 or yi > 1393
             except ValueError:
                 birth_year_custom = True
-    try:
-        cities = load_active_cities() or []
-    except Exception:
-        cities = []
+    cities = cities_allowed
     return render_template('express_partner/profile_edit.html',
                            me_phone=me_phone,
                            me_name=me_name,
@@ -2455,12 +2466,23 @@ def api_profile_update():
     if not profile:
         profile = {"phone": me_phone}
         partners.append(profile)
+    try:
+        cities_allowed = load_active_cities() or []
+    except Exception:
+        cities_allowed = []
+    if not isinstance(cities_allowed, list):
+        cities_allowed = []
     if name:
         profile['name'] = name
     else:
         profile.pop('name', None)
     if city:
-        profile['city'] = city
+        if cities_allowed and city not in cities_allowed:
+            city = ''
+        if city:
+            profile['city'] = city
+        else:
+            profile.pop('city', None)
     else:
         profile.pop('city', None)
     if bio:
