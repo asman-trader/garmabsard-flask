@@ -1,6 +1,16 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}ویرایش پروفایل{% endblock %}
 
+{% block head %}
+<style>
+  html.vinor-express-delete-modal-open #bottomNavMenu {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
   <header id="profileEditHeader" class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
@@ -388,6 +398,7 @@
   function openModal() {
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
+    document.documentElement.classList.add('vinor-express-delete-modal-open');
     document.body.style.overflow = 'hidden';
     if (chk) chk.checked = false;
     syncSubmit();
@@ -396,6 +407,7 @@
   function closeModal() {
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
+    document.documentElement.classList.remove('vinor-express-delete-modal-open');
     document.body.style.overflow = '';
     if (chk) chk.checked = false;
     syncSubmit();
