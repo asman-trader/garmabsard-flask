@@ -1,17 +1,17 @@
 {# هدر fixed: pointer-events-none روی شِل تا لم اسکرول از نوار زیرنویس به main زیر هدر برسد؛ ردیف دکمه‌ها pointer-events-auto #}
 <header id="commissionsPageHeader" data-tour="commissions-header" class="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/5 bg-[#0b0e14]/95 backdrop-blur-md shadow-sm dark:shadow-black/20 pointer-events-none">
   <div class="max-w-lg lg:max-w-4xl mx-auto px-4 h-[3.25rem] flex items-center justify-between gap-2 relative pointer-events-auto">
-    <div class="shrink-0 z-10" dir="ltr">
-      {% include 'express_partner/partials/notifications_button.html' %}
-    </div>
-    <div class="absolute inset-x-16 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center pointer-events-none">
-      <h1 class="text-[15px] font-bold text-white leading-tight pointer-events-auto">پورسانت‌های من</h1>
-    </div>
     <a href="{{ url_for('express_partner.dashboard') }}"
        class="shrink-0 z-10 w-10 h-10 rounded-full grid place-items-center border border-amber-400/45 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition"
        aria-label="بازگشت">
       <i class="fas fa-arrow-right text-sm"></i>
     </a>
+    <div class="absolute inset-x-16 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center pointer-events-none">
+      <h1 class="text-[15px] font-bold text-white leading-tight pointer-events-auto">پورسانت‌های من</h1>
+    </div>
+    <div class="shrink-0 z-10" dir="ltr">
+      {% include 'express_partner/partials/notifications_button.html' %}
+    </div>
   </div>
   <div class="max-w-lg lg:max-w-4xl mx-auto px-4 pb-2.5 pointer-events-none">
     <p class="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1.5 leading-relaxed">
