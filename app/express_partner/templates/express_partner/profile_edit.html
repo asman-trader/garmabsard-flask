@@ -8,6 +8,16 @@
     opacity: 0 !important;
     pointer-events: none !important;
   }
+  #cityPickerSearch {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  #cityPickerSearch::-webkit-search-decoration,
+  #cityPickerSearch::-webkit-search-cancel-button,
+  #cityPickerSearch::-webkit-search-results-button,
+  #cityPickerSearch::-webkit-search-results-decoration {
+    display: none;
+  }
 </style>
 {% endblock %}
 
@@ -214,9 +224,9 @@
 
         <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3">
           <div class="relative mb-3 shrink-0">
-            <i class="fas fa-magnifying-glass pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500" aria-hidden="true"></i>
-            <input type="search" id="cityPickerSearch" autocomplete="off"
-                   class="w-full rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-10 text-sm text-white placeholder-zinc-500 outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/25"
+            <i class="fas fa-magnifying-glass pointer-events-none absolute right-3 top-1/2 z-[1] -translate-y-1/2 text-sm text-zinc-500" aria-hidden="true"></i>
+            <input type="text" id="cityPickerSearch" inputmode="search" enterkeyhint="search" autocomplete="off" role="searchbox" aria-label="جستجو در شهرها"
+                   class="w-full rounded-xl border border-white/10 bg-[#0f1419] py-3 pl-3 pr-11 text-right text-sm text-white outline-none transition placeholder:text-zinc-500 placeholder:text-right focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/25"
                    placeholder="جستجو در شهرها" dir="rtl">
           </div>
 
@@ -523,13 +533,17 @@
     });
   }
 
+  function filteredCities(query) {
+    var q = (query || '').trim();
+    return allCities.filter(function (c) {
+      return !q || c.indexOf(q) >= 0;
+    });
+  }
+
   function renderList() {
     if (!listEl) return;
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
-    var q = ((search && search.value) || '').trim();
-    var filtered = allCities.filter(function (c) {
-      return !q || c.indexOf(q) >= 0;
-    });
+    var filtered = filteredCities((search && search.value) || '');
     if (!filtered.length) {
       var empty = document.createElement('p');
       empty.className = 'py-8 text-center text-sm text-zinc-500';
@@ -623,6 +637,20 @@
   if (backdrop) backdrop.addEventListener('click', closeCityPicker);
   if (applyBtn) applyBtn.addEventListener('click', applyCityPicker);
   if (search) search.addEventListener('input', function () { renderList(); });
+  if (search) search.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var q = (search.value || '').trim();
+    var list = filteredCities(q);
+    if (list.length === 1) {
+      setPending(list[0]);
+      e.preventDefault();
+      return;
+    }
+    if (q && allCities.indexOf(q) >= 0) {
+      setPending(q);
+      e.preventDefault();
+    }
+  });
 
   if (chipsEl) chipsEl.addEventListener('click', function (e) {
     var t = e.target && e.target.closest && e.target.closest('[data-city-chip]');
