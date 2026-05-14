@@ -24,6 +24,13 @@ from ..utils.storage import (
     load_settings,
     load_express_partner_views, save_express_partner_views,
     load_partner_routines, load_partner_routines_cached, save_partner_routines,
+    load_partner_bank_accounts, save_partner_bank_accounts,
+)
+from .partner_bank_accounts import (
+    validate_new_account,
+    public_account_dict,
+    accounts_for_phone,
+    catalog_public,
 )
 from ..services.notifications import get_user_notifications, unread_count, mark_read, mark_all_read
 from ..services.sms import send_sms_direct
@@ -1347,6 +1354,123 @@ def commissions_data():
         'withdrawable_balance': withdrawable_balance,
         'items': items,
     })
+
+
+def _sort_bank_accounts_by_created(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    from ..utils.dates import parse_datetime_safe
+    try:
+        return sorted(rows, key=lambda x: parse_datetime_safe(x.get('created_at', '1970-01-01')), reverse=True)
+    except Exception:
+        return list(rows)
+
+
+def _rebalance_partner_bank_defaults(all_rows: List[Dict[str, Any]], phone: str) -> None:
+    from ..utils.dates import parse_datetime_safe
+    ph = (phone or "").strip()
+    mine = [r for r in all_rows if isinstance(r, dict) and str(r.get('phone') or '').strip() == ph]
+    if not mine:
+        return
+    defs = [r for r in mine if r.get('is_default')]
+    if len(defs) == 0:
+        oldest_first = sorted(
+            mine,
+            key=lambda x: parse_datetime_safe(x.get('created_at', '9999-12-31')),
+        )
+        pick = oldest_first[0].get('id')
+        for r in mine:
+            r['is_default'] = (r.get('id') == pick)
+    elif len(defs) > 1:
+        oldest_first = sorted(
+            defs,
+            key=lambda x: parse_datetime_safe(x.get('created_at', '9999-12-31')),
+        )
+        pick = oldest_first[0].get('id')
+        for r in mine:
+            r['is_default'] = (r.get('id') == pick)
+
+
+@express_partner_bp.get('/bank-accounts/data', endpoint='bank_accounts_data')
+@require_partner_access(json_response=True)
+def bank_accounts_data():
+    """فهرست حساب‌های ذخیره‌شدهٔ همکار + کاتالوگ بانک برای فرم."""
+    me_phone = (session.get("user_phone") or "").strip()
+    all_rows = load_partner_bank_accounts() or []
+    if not isinstance(all_rows, list):
+        all_rows = []
+    mine = [r for r in all_rows if isinstance(r, dict) and str(r.get('phone') or '').strip() == me_phone]
+    mine = _sort_bank_accounts_by_created(mine)
+    return jsonify({
+        'success': True,
+        'accounts': [public_account_dict(r) for r in mine],
+        'banks': catalog_public(),
+    })
+
+
+@express_partner_bp.post('/bank-accounts/add', endpoint='bank_accounts_add')
+@require_partner_access(json_response=True)
+def bank_accounts_add():
+    """افزودن حساب؛ شمارهٔ کامل کارت ذخیره نمی‌شود (فقط ۴ رقم اول و ۴ رقم آخر + چک Luhn)."""
+    me_phone = (session.get("user_phone") or "").strip()
+    data = request.get_json(silent=True) or {}
+    bank_key = (data.get('bank_key') or '').strip().lower()
+    pan = (data.get('pan') or data.get('card_number') or '').strip()
+    holder = (data.get('holder_name') or data.get('holder') or '').strip()
+    sheba_raw = (data.get('sheba') or '').strip()
+
+    rec, err = validate_new_account(bank_key, pan, holder, sheba_raw)
+    if err or not rec:
+        return jsonify({'success': False, 'error': err or 'invalid'}), 400
+
+    all_rows = load_partner_bank_accounts() or []
+    if not isinstance(all_rows, list):
+        all_rows = []
+    mine = accounts_for_phone(all_rows, me_phone)
+    rec['phone'] = me_phone
+    rec['created_at'] = datetime.utcnow().isoformat() + 'Z'
+    rec['is_default'] = len(mine) == 0
+    all_rows.append(rec)
+    _rebalance_partner_bank_defaults(all_rows, me_phone)
+    try:
+        save_partner_bank_accounts(all_rows)
+    except Exception:
+        current_app.logger.exception('save_partner_bank_accounts failed')
+        return jsonify({'success': False, 'error': 'save_failed'}), 500
+    return jsonify({'success': True, 'account': public_account_dict(rec)})
+
+
+@express_partner_bp.post('/bank-accounts/default', endpoint='bank_accounts_set_default')
+@require_partner_access(json_response=True)
+def bank_accounts_set_default():
+    """تنظیم/لغو حساب پیش‌فرض برای برداشت."""
+    me_phone = (session.get("user_phone") or "").strip()
+    data = request.get_json(silent=True) or {}
+    acc_id = (data.get('id') or '').strip()
+    want = bool(data.get('is_default'))
+    if not acc_id:
+        return jsonify({'success': False, 'error': 'missing_id'}), 400
+
+    all_rows = load_partner_bank_accounts() or []
+    if not isinstance(all_rows, list):
+        all_rows = []
+    mine_ids = {str(r.get('id') or '') for r in accounts_for_phone(all_rows, me_phone)}
+    if acc_id not in mine_ids:
+        return jsonify({'success': False, 'error': 'not_found'}), 404
+
+    for r in all_rows:
+        if not isinstance(r, dict) or str(r.get('phone') or '').strip() != me_phone:
+            continue
+        if want:
+            r['is_default'] = (str(r.get('id') or '') == acc_id)
+        else:
+            if str(r.get('id') or '') == acc_id:
+                r['is_default'] = False
+    _rebalance_partner_bank_defaults(all_rows, me_phone)
+    try:
+        save_partner_bank_accounts(all_rows)
+    except Exception:
+        current_app.logger.exception('save_partner_bank_accounts default failed')
+        return jsonify({'success': False, 'error': 'save_failed'}), 500
+    return jsonify({'success': True})
 
 
 @express_partner_bp.post('/notes/add')

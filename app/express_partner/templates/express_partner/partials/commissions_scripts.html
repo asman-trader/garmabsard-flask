@@ -137,12 +137,16 @@
 
 <script>
   (function () {
+    var API = '/express/partner/bank-accounts';
     var modal = document.getElementById('vnWithdrawModal');
     if (!modal) return;
 
     var bankModal = document.getElementById('vnBankPickerModal');
+    var bankAddModal = document.getElementById('vnBankAddModal');
     var bankSummaryEl = document.getElementById('vnWithdrawBankSummary');
     var bankConfirm = document.getElementById('vnBankPickerConfirmBtn');
+    var bankListEl = document.getElementById('vnBankAccountList');
+    var bankListLoading = document.getElementById('vnBankListLoading');
 
     var balanceEl = document.getElementById('vnWithdrawModalBalance');
     var input = document.getElementById('vnWithdrawAmountInput');
@@ -152,6 +156,32 @@
 
     var maxWithdraw = 0;
     var selectedBankSummary = '';
+    var bankCatalogCache = null;
+    var lastAddedAccountId = null;
+    var lastAddedWasDefault = false;
+
+    var elBank = document.getElementById('vnBankAddBank');
+    var elPan = document.getElementById('vnBankAddPan');
+    var elSheba = document.getElementById('vnBankAddSheba');
+    var elHolder = document.getElementById('vnBankAddHolder');
+    var elFormErr = document.getElementById('vnBankAddFormError');
+    var elCfErr = document.getElementById('vnBankAddConfirmError');
+    var elCfBank = document.getElementById('vnBankAddCfBank');
+    var elCfPan = document.getElementById('vnBankAddCfPan');
+    var elCfShebaRow = document.getElementById('vnBankAddCfShebaRow');
+    var elCfSheba = document.getElementById('vnBankAddCfSheba');
+    var elCfHolder = document.getElementById('vnBankAddCfHolder');
+    var elViewForm = document.getElementById('vnBankAddViewForm');
+    var elViewConfirm = document.getElementById('vnBankAddViewConfirm');
+    var elViewSuccess = document.getElementById('vnBankAddViewSuccess');
+    var elFooterForm = document.getElementById('vnBankAddFooterForm');
+    var elFooterConfirm = document.getElementById('vnBankAddFooterConfirm');
+    var elFooterSuccess = document.getElementById('vnBankAddFooterSuccess');
+    var elSuccessCard = document.getElementById('vnBankAddSuccessCard');
+    var elDefaultToggle = document.getElementById('vnBankAddDefaultToggle');
+    var btnContinue = document.getElementById('vnBankAddBtnContinue');
+    var btnSubmit = document.getElementById('vnBankAddBtnSubmit');
+    var btnFinish = document.getElementById('vnBankAddBtnFinish');
 
     function toFaDigits(s) {
       var p = '۰۱۲۳۴۵۶۷۸۹';
@@ -199,11 +229,20 @@
       }
     }
 
+    function escAttr(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
     function bankPickerOpen() {
       return bankModal && bankModal.classList.contains('vn-bank-picker-modal--open');
     }
 
+    function bankAddOpen() {
+      return bankAddModal && bankAddModal.classList.contains('vn-bank-add-modal--open');
+    }
+
     function closeBankPicker() {
+      forceCloseBankAdd();
       if (!bankModal) return;
       bankModal.classList.remove('vn-bank-picker-modal--open');
       window.setTimeout(function () {
@@ -213,20 +252,36 @@
     }
 
     function forceCloseBankPicker() {
+      forceCloseBankAdd();
       if (!bankModal) return;
       bankModal.classList.remove('vn-bank-picker-modal--open');
       bankModal.classList.add('hidden');
       bankModal.setAttribute('aria-hidden', 'true');
     }
 
+    function closeBankAdd() {
+      if (!bankAddModal) return;
+      bankAddModal.classList.remove('vn-bank-add-modal--open');
+      window.setTimeout(function () {
+        bankAddModal.classList.add('hidden');
+      }, 280);
+      bankAddModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function forceCloseBankAdd() {
+      if (!bankAddModal) return;
+      bankAddModal.classList.remove('vn-bank-add-modal--open');
+      bankAddModal.classList.add('hidden');
+      bankAddModal.setAttribute('aria-hidden', 'true');
+    }
+
     function openBankPicker() {
       if (!bankModal) return;
       bankModal.classList.remove('hidden');
       bankModal.setAttribute('aria-hidden', 'false');
-      try {
-        void bankModal.offsetWidth;
-      } catch (_) {}
+      try { void bankModal.offsetWidth; } catch (_) {}
       bankModal.classList.add('vn-bank-picker-modal--open');
+      fetchBankPickerData();
     }
 
     function markBankSelected(row) {
@@ -244,8 +299,173 @@
     function pickDefaultBankRow() {
       if (!bankModal) return null;
       var list = bankModal.querySelectorAll('.vn-bank-account');
-      var def = bankModal.querySelector('.vn-bank-account[data-bank-default="1"]');
+      var def = bankModal.querySelector('.vn-bank-account[data-default-account="1"]');
       return def || (list.length ? list[0] : null);
+    }
+
+    function renderBankRows(accounts) {
+      if (!bankListEl) return;
+      if (!accounts || !accounts.length) {
+        bankListEl.innerHTML = '<p class="text-center text-xs text-slate-500 py-6 leading-relaxed px-2">هنوز حساب بانکی ثبت نکرده‌اید.<br/>با «افزودن حساب جدید» یک کارت اضافه کنید.</p>';
+        if (bankConfirm) {
+          bankConfirm.disabled = true;
+          bankConfirm.classList.add('opacity-40', 'cursor-not-allowed');
+        }
+        return;
+      }
+      if (bankConfirm) {
+        bankConfirm.disabled = false;
+        bankConfirm.classList.remove('opacity-40', 'cursor-not-allowed');
+      }
+      var html = accounts.map(function (a) {
+        var defBadge = a.is_default
+          ? '<div class="flex justify-start mt-2"><span class="rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 border border-emerald-500/30">پیش‌فرض</span></div>'
+          : '';
+        return (
+          '<button type="button" class="vn-bank-account w-full rounded-2xl border border-white/10 bg-[#252836] p-3 text-start hover:border-white/18 transition" dir="rtl" ' +
+          'data-bank-summary="' + escAttr(a.summary || '') + '" data-default-account="' + (a.is_default ? '1' : '0') + '">' +
+          '<div class="flex items-start justify-between gap-2">' +
+          '<div class="flex items-center gap-2 min-w-0">' +
+          '<span class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-extrabold leading-none" style="background:' + escAttr(a.color || '#455a64') + '">' + escAttr(a.abbr || '') + '</span>' +
+          '<span class="text-sm font-bold text-white truncate">' + escAttr(a.bank_name || '') + '</span></div>' +
+          '<span class="shrink-0 text-slate-400 text-base leading-none pt-0.5 opacity-80" aria-hidden="true"><i class="fas fa-ellipsis-v"></i></span></div>' +
+          '<p dir="ltr" class="text-[13px] font-medium text-slate-200 tracking-wide text-end w-full mt-2 tabular-nums">' + escAttr(a.masked_pan || '') + '</p>' +
+          '<p class="text-[10px] text-slate-500 truncate mt-1 text-start">' + escAttr(a.holder_name || '') + '</p>' +
+          defBadge + '</button>'
+        );
+      }).join('');
+      bankListEl.innerHTML = html;
+      bankListEl.querySelectorAll('.vn-bank-account').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          e.preventDefault();
+          markBankSelected(row);
+        });
+      });
+      var row0 = pickDefaultBankRow();
+      markBankSelected(row0);
+    }
+
+    function fetchBankPickerData() {
+      if (bankListLoading) bankListLoading.classList.remove('hidden');
+      fetch(API + '/data', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (bankListLoading) bankListLoading.classList.add('hidden');
+          if (!d || !d.success) {
+            if (bankListEl) bankListEl.innerHTML = '<p class="text-center text-xs text-red-400 py-4">خطا در بارگذاری حساب‌ها</p>';
+            return;
+          }
+          bankCatalogCache = d.banks || [];
+          renderBankRows(d.accounts || []);
+        })
+        .catch(function () {
+          if (bankListLoading) bankListLoading.classList.add('hidden');
+          if (bankListEl) bankListEl.innerHTML = '<p class="text-center text-xs text-red-400 py-4">خطا در ارتباط با سرور</p>';
+        });
+    }
+
+    function fillBankSelect() {
+      if (!elBank) return;
+      var banks = bankCatalogCache || [];
+      var cur = elBank.value;
+      elBank.innerHTML = '<option value="">انتخاب بانک</option>';
+      banks.forEach(function (b) {
+        var o = document.createElement('option');
+        o.value = b.key;
+        o.textContent = b.name;
+        elBank.appendChild(o);
+      });
+      if (cur) elBank.value = cur;
+    }
+
+    function resetAddWizard() {
+      lastAddedAccountId = null;
+      lastAddedWasDefault = false;
+      if (elFormErr) { elFormErr.classList.add('hidden'); elFormErr.textContent = ''; }
+      if (elCfErr) { elCfErr.classList.add('hidden'); elCfErr.textContent = ''; }
+      if (elPan) elPan.value = '';
+      if (elSheba) elSheba.value = '';
+      if (elHolder) elHolder.value = '';
+      if (elBank) elBank.value = '';
+      if (elViewForm) elViewForm.classList.remove('hidden');
+      if (elViewConfirm) elViewConfirm.classList.add('hidden');
+      if (elViewSuccess) elViewSuccess.classList.add('hidden');
+      if (elFooterForm) elFooterForm.classList.remove('hidden');
+      if (elFooterConfirm) elFooterConfirm.classList.add('hidden');
+      if (elFooterSuccess) elFooterSuccess.classList.add('hidden');
+      setAddStepper(1);
+    }
+
+    function setAddStepper(activeStep) {
+      if (!bankAddModal) return;
+      var labels = ['اطلاعات کارت', 'تأیید اطلاعات', 'اتمام'];
+      var nums = ['۱', '۲', '۳'];
+      bankAddModal.querySelectorAll('.vn-add-step').forEach(function (w) {
+        var k = parseInt(w.getAttribute('data-step'), 10);
+        var circle = w.querySelector('.vn-add-step-circle');
+        var label = w.querySelector('.vn-add-step-label');
+        if (!circle || !label) return;
+        var done = k < activeStep;
+        var cur = k === activeStep;
+        if (activeStep === 3) {
+          done = k < 3;
+          cur = k === 3;
+        }
+        w.classList.toggle('opacity-40', activeStep < 3 && !done && !cur);
+        w.classList.toggle('opacity-100', done || cur || activeStep === 3);
+        circle.className = 'vn-add-step-circle w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ';
+        label.className = 'vn-add-step-label text-[9px] leading-tight px-0.5 ';
+        if (activeStep === 3) {
+          circle.className += 'border-emerald-500 bg-emerald-500 text-slate-900';
+          circle.innerHTML = '<i class="fas fa-check text-[11px]"></i>';
+          label.className += 'text-emerald-400 font-semibold';
+          label.textContent = labels[k - 1];
+          return;
+        }
+        if (done) {
+          circle.className += 'border-emerald-500 bg-emerald-500 text-slate-900';
+          circle.innerHTML = '<i class="fas fa-check text-[11px]"></i>';
+          label.className += 'text-emerald-500/90 font-semibold';
+        } else if (cur) {
+          circle.className += 'border-emerald-500 bg-emerald-500 text-slate-900';
+          circle.textContent = nums[k - 1];
+          label.className += 'text-emerald-400 font-semibold';
+        } else {
+          circle.className += 'border-slate-600 bg-slate-800 text-slate-400';
+          circle.textContent = nums[k - 1];
+          label.className += 'text-slate-500 font-medium';
+        }
+        label.textContent = labels[k - 1];
+      });
+    }
+
+    function showAddView(which) {
+      if (elViewForm) elViewForm.classList.toggle('hidden', which !== 'form');
+      if (elViewConfirm) elViewConfirm.classList.toggle('hidden', which !== 'confirm');
+      if (elViewSuccess) elViewSuccess.classList.toggle('hidden', which !== 'success');
+      if (elFooterForm) elFooterForm.classList.toggle('hidden', which !== 'form');
+      if (elFooterConfirm) elFooterConfirm.classList.toggle('hidden', which !== 'confirm');
+      if (elFooterSuccess) elFooterSuccess.classList.toggle('hidden', which !== 'success');
+    }
+
+    function openBankAdd() {
+      if (!bankAddModal) return;
+      if (!bankCatalogCache) {
+        fetch(API + '/data', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.success) bankCatalogCache = d.banks || [];
+            fillBankSelect();
+          })
+          .catch(function () { fillBankSelect(); });
+      } else {
+        fillBankSelect();
+      }
+      resetAddWizard();
+      bankAddModal.classList.remove('hidden');
+      bankAddModal.setAttribute('aria-hidden', 'false');
+      try { void bankAddModal.offsetWidth; } catch (_) {}
+      bankAddModal.classList.add('vn-bank-add-modal--open');
     }
 
     function openModal(fromBtn) {
@@ -256,9 +476,7 @@
       syncSubmitHref();
       modal.classList.remove('hidden');
       modal.setAttribute('aria-hidden', 'false');
-      try {
-        void modal.offsetWidth;
-      } catch (_) {}
+      try { void modal.offsetWidth; } catch (_) {}
       modal.classList.add('vn-withdraw-modal--open');
       try {
         document.documentElement.style.overflow = 'hidden';
@@ -270,6 +488,7 @@
     }
 
     function closeModal() {
+      forceCloseBankAdd();
       forceCloseBankPicker();
       modal.classList.remove('vn-withdraw-modal--open');
       window.setTimeout(function () {
@@ -292,9 +511,17 @@
       }
       if (t.closest('[data-open-bank-picker]')) {
         e.preventDefault();
-        var row0 = pickDefaultBankRow();
-        markBankSelected(row0);
         openBankPicker();
+        return;
+      }
+      if (t.closest('[data-open-bank-add]')) {
+        e.preventDefault();
+        openBankAdd();
+        return;
+      }
+      if (t.closest('[data-close-bank-add]')) {
+        e.preventDefault();
+        closeBankAdd();
         return;
       }
       if (t.closest('[data-close-bank-picker]')) {
@@ -310,6 +537,11 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
+      if (bankAddOpen()) {
+        e.preventDefault();
+        closeBankAdd();
+        return;
+      }
       if (bankPickerOpen()) {
         e.preventDefault();
         closeBankPicker();
@@ -320,18 +552,10 @@
       }
     });
 
-    if (bankModal) {
-      bankModal.querySelectorAll('.vn-bank-account').forEach(function (row) {
-        row.addEventListener('click', function (e) {
-          e.preventDefault();
-          markBankSelected(row);
-        });
-      });
-    }
-
     if (bankConfirm) {
       bankConfirm.addEventListener('click', function (e) {
         e.preventDefault();
+        if (bankConfirm.disabled) return;
         var row = bankModal && bankModal.querySelector('.vn-bank-account--selected');
         var sum = row && row.getAttribute('data-bank-summary');
         if (sum && bankSummaryEl) {
@@ -340,6 +564,114 @@
         }
         syncSubmitHref();
         closeBankPicker();
+      });
+    }
+
+    if (elPan) {
+      elPan.addEventListener('input', function () {
+        var d = elPan.value.replace(/[^\d]/g, '').slice(0, 16);
+        elPan.value = d;
+      });
+    }
+
+    if (btnContinue) {
+      btnContinue.addEventListener('click', function () {
+        if (elFormErr) { elFormErr.classList.add('hidden'); elFormErr.textContent = ''; }
+        var bk = elBank && elBank.value;
+        var pan = (elPan && elPan.value) ? elPan.value.replace(/[^\d]/g, '') : '';
+        var holder = (elHolder && elHolder.value) ? elHolder.value.trim() : '';
+        if (!bk) {
+          if (elFormErr) { elFormErr.textContent = 'بانک را انتخاب کنید.'; elFormErr.classList.remove('hidden'); }
+          return;
+        }
+        if (pan.length !== 16) {
+          if (elFormErr) { elFormErr.textContent = 'شماره کارت باید ۱۶ رقم باشد.'; elFormErr.classList.remove('hidden'); }
+          return;
+        }
+        if (holder.length < 2) {
+          if (elFormErr) { elFormErr.textContent = 'نام صاحب حساب را وارد کنید.'; elFormErr.classList.remove('hidden'); }
+          return;
+        }
+        var bname = elBank.options[elBank.selectedIndex] ? elBank.options[elBank.selectedIndex].text : '';
+        if (elCfBank) elCfBank.textContent = bname;
+        if (elCfPan) elCfPan.textContent = pan.slice(0, 4) + ' **** **** ' + pan.slice(-4);
+        var sh = (elSheba && elSheba.value) ? elSheba.value.trim() : '';
+        if (sh && elCfShebaRow && elCfSheba) {
+          elCfSheba.textContent = sh;
+          elCfShebaRow.classList.remove('hidden');
+        } else if (elCfShebaRow) {
+          elCfShebaRow.classList.add('hidden');
+        }
+        if (elCfHolder) elCfHolder.textContent = holder;
+        showAddView('confirm');
+        setAddStepper(2);
+      });
+    }
+
+    if (btnSubmit) {
+      btnSubmit.addEventListener('click', function () {
+        if (elCfErr) { elCfErr.classList.add('hidden'); elCfErr.textContent = ''; }
+        var bk = elBank && elBank.value;
+        var pan = (elPan && elPan.value) ? elPan.value.replace(/[^\d]/g, '') : '';
+        var holder = (elHolder && elHolder.value) ? elHolder.value.trim() : '';
+        var sheba = (elSheba && elSheba.value) ? elSheba.value.trim() : '';
+        fetch(API + '/add', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ bank_key: bk, pan: pan, holder_name: holder, sheba: sheba })
+        })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (x) {
+            if (!x.ok || !x.j.success) {
+              var msg = (x.j && x.j.error) ? x.j.error : 'خطا';
+              if (elCfErr) { elCfErr.textContent = msg === 'invalid_pan' ? 'شماره کارت نامعتبر است.' : (msg === 'invalid_bank' ? 'بانک نامعتبر است.' : (msg === 'invalid_holder' ? 'نام صاحب حساب نامعتبر است.' : (msg === 'invalid_sheba' ? 'شماره شبا نامعتبر است.' : 'ثبت انجام نشد.'))); elCfErr.classList.remove('hidden'); }
+              return;
+            }
+            var acc = x.j.account || {};
+            lastAddedAccountId = acc.id || '';
+            lastAddedWasDefault = !!acc.is_default;
+            if (elSuccessCard) {
+              var badge = acc.is_default ? '<div class="flex justify-start mt-2"><span class="rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 border border-emerald-500/30">پیش‌فرض</span></div>' : '';
+              elSuccessCard.innerHTML =
+                '<div class="rounded-2xl border border-white/10 bg-[#252836] p-3" dir="rtl">' +
+                '<div class="flex items-start justify-between gap-2">' +
+                '<div class="flex items-center gap-2 min-w-0">' +
+                '<span class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-extrabold" style="background:' + escAttr(acc.color || '#455a64') + '">' + escAttr(acc.abbr || '') + '</span>' +
+                '<span class="text-sm font-bold text-white truncate">' + escAttr(acc.bank_name || '') + '</span></div>' +
+                '<span class="text-slate-400"><i class="fas fa-ellipsis-v"></i></span></div>' +
+                '<p dir="ltr" class="text-[13px] font-medium text-slate-200 text-end mt-2 tabular-nums">' + escAttr(acc.masked_pan || '') + '</p>' +
+                '<p class="text-[10px] text-slate-500 mt-1 text-start">' + escAttr(acc.holder_name || '') + '</p>' + badge + '</div>';
+            }
+            if (elDefaultToggle) elDefaultToggle.checked = !!acc.is_default;
+            showAddView('success');
+            setAddStepper(3);
+          })
+          .catch(function () {
+            if (elCfErr) { elCfErr.textContent = 'خطا در ارتباط با سرور.'; elCfErr.classList.remove('hidden'); }
+          });
+      });
+    }
+
+    if (btnFinish) {
+      btnFinish.addEventListener('click', function () {
+        var id = lastAddedAccountId;
+        var want = elDefaultToggle ? !!elDefaultToggle.checked : true;
+        if (!id) {
+          closeBankAdd();
+          if (bankPickerOpen()) fetchBankPickerData();
+          return;
+        }
+        fetch(API + '/default', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ id: id, is_default: want })
+        })
+          .finally(function () {
+            closeBankAdd();
+            if (bankPickerOpen()) fetchBankPickerData();
+          });
       });
     }
 
