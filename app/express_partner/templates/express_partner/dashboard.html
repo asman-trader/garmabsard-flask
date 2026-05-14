@@ -193,6 +193,16 @@
 <div id="expressDashboardMain" class="max-w-6xl mx-auto px-3 sm:px-4 pb-16 transition-[padding-top] duration-300 ease-out" style="padding-top: 14.25rem">
 
   <style>
+    /*
+      موبایل عمودی: انیمیشن padding-top روی main با جمع‌شدن هدر باعث می‌شد
+      getBoundingClientRect قبل از پایان transition خوانده شود و ارتفاع #dashboardMobileCardsRoot
+      کمتر از فاصلهٔ واقعی تا فوتر شود → نوار مشکی زیر کارت‌ها و خراب شدن شفافیت منوی پایین.
+    */
+    @media (max-width: 639px) {
+      #expressDashboardMain {
+        transition-property: none !important;
+      }
+    }
     /* موبایل/تبلت: کمی بلندتر از viewport تا اسکرول عمودی همیشه ممکن باشد */
     @media (max-width: 1023px) {
       #expressDashboardMain {
@@ -554,7 +564,8 @@
         const rootTop = mobileCardsRoot.getBoundingClientRect().top;
         let available = navTop - rootTop;
         if (!Number.isFinite(available)) return;
-        available = Math.max(160, Math.floor(available));
+        /* ceil تا شکاف زیرپیکسلی/گردکردن زیر کارت و فوتر باقی نماند */
+        available = Math.max(160, Math.ceil(available));
         mobileCardsRoot.style.height = `${available}px`;
       } catch (_) {}
     }
@@ -619,6 +630,14 @@
       ro.observe(header);
       const nav0 = document.getElementById('bottomNavMenu');
       if (nav0) ro.observe(nav0);
+    } catch (_) {}
+
+    /* هر تغییر اندازهٔ main (مثلاً padding-top پس از compact هدر) → دوباره ارتفاع کارت‌ها تا لبهٔ فوتر */
+    try {
+      const rom = new ResizeObserver(function () {
+        syncMobileCardsRootHeight();
+      });
+      rom.observe(main);
     } catch (_) {}
 
     window.addEventListener('resize', syncMainPadding, { passive: true });
