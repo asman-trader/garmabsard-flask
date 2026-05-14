@@ -13,11 +13,13 @@
         <p class="text-xs font-medium text-slate-400">موجودی قابل برداشت</p>
         <p class="mt-1 text-2xl font-extrabold text-amber-300 tabular-nums tracking-tight">{{ (withdrawable_balance or 0)|toman }}</p>
       </div>
-      <a href="{{ url_for('express_partner.support') }}"
-         class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-400 text-slate-900 text-sm font-bold py-3 shadow-lg shadow-amber-900/25 hover:from-amber-400 hover:to-amber-300 transition">
+      <button type="button"
+              data-open-withdraw-modal
+              data-withdrawable-int="{{ (withdrawable_balance or 0)|int }}"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-400 text-slate-900 text-sm font-bold py-3 shadow-lg shadow-amber-900/25 hover:from-amber-400 hover:to-amber-300 transition">
         <i class="fas fa-wallet text-sm"></i>
         درخواست برداشت
-      </a>
+      </button>
       <div class="grid grid-cols-4 gap-1 pt-1 border-t border-white/10">
         <div class="flex flex-col items-center gap-1 py-1 text-center">
           <i class="fas fa-eye text-[11px] text-amber-400/90"></i>

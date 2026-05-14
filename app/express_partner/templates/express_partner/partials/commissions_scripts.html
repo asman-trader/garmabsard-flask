@@ -134,3 +134,138 @@
     }, { passive: true });
   })();
 </script>
+
+<script>
+  (function () {
+    var modal = document.getElementById('vnWithdrawModal');
+    if (!modal) return;
+
+    var balanceEl = document.getElementById('vnWithdrawModalBalance');
+    var input = document.getElementById('vnWithdrawAmountInput');
+    var fillAll = document.getElementById('vnWithdrawFillAllBtn');
+    var submit = document.getElementById('vnWithdrawSubmitBtn');
+    var supportUrl = (modal.getAttribute('data-support-url') || '').trim();
+
+    var maxWithdraw = 0;
+
+    function toFaDigits(s) {
+      var p = '۰۱۲۳۴۵۶۷۸۹';
+      return String(s || '').replace(/[0-9]/g, function (d) { return p[parseInt(d, 10)]; });
+    }
+
+    function formatToman(n) {
+      var v = Math.max(0, parseInt(String(n || '0'), 10) || 0);
+      if (v === 0) return '۰ تومان';
+      var raw = String(v);
+      var rev = raw.split('').reverse().join('');
+      var parts = [];
+      for (var i = 0; i < rev.length; i += 3) {
+        parts.push(rev.slice(i, i + 3));
+      }
+      var joined = parts.join('،').split('').reverse().join('');
+      return toFaDigits(joined) + ' تومان';
+    }
+
+    function parseInputDigits() {
+      var t = (input && input.value) ? input.value.replace(/[^\d]/g, '') : '';
+      return parseInt(t || '0', 10) || 0;
+    }
+
+    function setInputFromInt(n) {
+      if (!input) return;
+      var v = Math.max(0, Math.min(maxWithdraw, parseInt(String(n || '0'), 10) || 0));
+      input.value = v > 0 ? String(v) : '';
+    }
+
+    function syncSubmitHref() {
+      if (!submit || !supportUrl) return;
+      var amt = parseInputDigits();
+      try {
+        var u = new URL(supportUrl, window.location.origin);
+        if (amt > 0) u.searchParams.set('withdraw_amount', String(amt));
+        submit.setAttribute('href', u.pathname + u.search + u.hash);
+      } catch (_) {
+        submit.setAttribute('href', supportUrl + (supportUrl.indexOf('?') >= 0 ? '&' : '?') + 'withdraw_amount=' + encodeURIComponent(String(amt)));
+      }
+    }
+
+    function openModal(fromBtn) {
+      var raw = fromBtn && fromBtn.getAttribute('data-withdrawable-int');
+      maxWithdraw = Math.max(0, parseInt(String(raw || '0'), 10) || 0);
+      if (balanceEl) balanceEl.textContent = formatToman(maxWithdraw);
+      setInputFromInt(0);
+      syncSubmitHref();
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+      try {
+        void modal.offsetWidth;
+      } catch (_) {}
+      modal.classList.add('vn-withdraw-modal--open');
+      try {
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+      } catch (_) {}
+      requestAnimationFrame(function () {
+        try { if (input) input.focus(); } catch (_) {}
+      });
+    }
+
+    function closeModal() {
+      modal.classList.remove('vn-withdraw-modal--open');
+      window.setTimeout(function () {
+        modal.classList.add('hidden');
+      }, 280);
+      modal.setAttribute('aria-hidden', 'true');
+      try {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      } catch (_) {}
+    }
+
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      if (t.closest('[data-open-withdraw-modal]')) {
+        e.preventDefault();
+        openModal(t.closest('[data-open-withdraw-modal]'));
+        return;
+      }
+      if (t.closest('[data-close-withdraw-modal]')) {
+        e.preventDefault();
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.classList.contains('vn-withdraw-modal--open')) {
+        closeModal();
+      }
+    });
+
+    if (fillAll) {
+      fillAll.addEventListener('click', function () {
+        setInputFromInt(maxWithdraw);
+        syncSubmitHref();
+      });
+    }
+
+    modal.querySelectorAll('.vn-withdraw-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var add = parseInt(chip.getAttribute('data-chip') || '0', 10) || 0;
+        var cur = parseInputDigits();
+        setInputFromInt(cur + add);
+        syncSubmitHref();
+      });
+    });
+
+    if (input) {
+      input.addEventListener('input', function () {
+        var digits = (input.value || '').replace(/[^\d]/g, '');
+        var v = parseInt(digits || '0', 10) || 0;
+        if (maxWithdraw > 0 && v > maxWithdraw) v = maxWithdraw;
+        input.value = v > 0 ? String(v) : '';
+        syncSubmitHref();
+      });
+    }
+  })();
+</script>

@@ -1306,6 +1306,15 @@ def commissions_data():
     pending_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
     paid_commission = sum(_i(c.get('commission_amount')) for c in my_comms if (c.get('status') or '').strip() == 'paid')
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
+
+    def _norm_st(c):
+        try:
+            return (str(c.get('status') or 'pending')).strip()
+        except Exception:
+            return 'pending'
+
+    approved_commission = sum(_i(c.get('commission_amount')) for c in my_comms if _norm_st(c) == 'approved')
+    withdrawable_balance = approved_commission
     try:
         my_comms = sorted(my_comms, key=lambda x: x.get('created_at', ''), reverse=True)
     except Exception:
@@ -1327,6 +1336,7 @@ def commissions_data():
         'pending_commission': pending_commission,
         'paid_commission': paid_commission,
         'sold_count': sold_count,
+        'withdrawable_balance': withdrawable_balance,
         'items': items,
     })
 
