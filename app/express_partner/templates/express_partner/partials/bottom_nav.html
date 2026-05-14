@@ -8,8 +8,8 @@
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    /* موبایل: چند پیکسل اضافهٔ ثابت زیر safe-area تا شکاف/WebView پر شود؛ بدون JS (جلوگیری از چشمک) */
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    /* موبایل: لایهٔ زیر منو (WebView / نوار ژست) — مقدار بزرگ‌تر از ۱۲px برای داشبورد با visualViewport */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
   }
   @media (min-width: 1024px) {
     #bottomNavMenu.tg-tabbar-shell {
@@ -23,7 +23,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    height: calc(env(safe-area-inset-bottom, 0px) + 22px);
     z-index: 0;
     pointer-events: none;
     -webkit-backdrop-filter: saturate(180%) blur(22px);

@@ -268,7 +268,7 @@
     }
     /*
       موبایل عمودی: ارتفاع ناحیهٔ اسکرول کارت‌ها با JS از فاصلهٔ واقعی تا نوار تب پر می‌شود
-      (با جمع‌شدن فیلترها هدر کوتاه‌تر می‌شود؛ ارتفاع ثابت 100dvh-202px باعث فاصلهٔ خالی مشکی زیر لیست می‌شد).
+      (با جمع‌شدن فیلترها هدر کوتاه‌تر می‌شود؛ ارتفاع ثابت 100dvh-212px باعث فاصلهٔ خالی مشکی زیر لیست می‌شد).
       قبل از اجرای اسکریپت، تخمین قبلی به‌عنوان fallback می‌ماند.
     */
     @media (max-width: 639px) {
@@ -280,7 +280,7 @@
         background-color: #030712;
       }
       #dashboardMobileCardsRoot {
-        height: calc(100dvh - 202px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        height: calc(100dvh - 212px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         min-height: 12rem;
       }
     }
@@ -555,6 +555,12 @@
     let mobileCardsHeightRaf = 0;
     const HEIGHT_SLACK_PX = 6;
 
+    function updateCompactFromScroll() {
+      const y = scrollTopNow();
+      if (y <= EXPAND_MAX_Y) applyCompact(false);
+      else if (y >= COMPACT_MIN_Y) applyCompact(true);
+    }
+
     function syncMobileCardsRootHeightNow() {
       if (!mobileCardsRoot) return;
       try {
@@ -597,10 +603,7 @@
     }
 
     function updateFromScroll() {
-      const y = scrollTopNow();
-      if (y <= EXPAND_MAX_Y) applyCompact(false);
-      else if (y >= COMPACT_MIN_Y) applyCompact(true);
-      /* حتی در بُرد مُرده بین ۸ و ۲۴px، visualViewport / نوار ابزار عوض می‌شود */
+      updateCompactFromScroll();
       scheduleSyncMobileCardsRootHeight();
     }
 
@@ -613,15 +616,19 @@
           se.addEventListener('scroll', fn, { passive: true });
         } catch (_) {}
       }
-      try {
-        if (window.visualViewport) window.visualViewport.addEventListener('scroll', fn, { passive: true });
-      } catch (_) {}
       if (mobileCardsRoot) {
         mobileCardsRoot.addEventListener('scroll', fn, { passive: true });
       }
     }
 
     bindScrollTargets(updateFromScroll);
+    try {
+      if (window.visualViewport) {
+        /* فقط جمع‌شدن هدر: همگام ارتفاع کارت روی visualViewport.scroll با نوار آدرس/ژست باعث نوسان و نوار تیره زیر منو می‌شد */
+        window.visualViewport.addEventListener('scroll', updateCompactFromScroll, { passive: true });
+      }
+    } catch (_) {}
+
     window.addEventListener('wheel', updateFromScroll, { passive: true });
 
     let touchScrollQueued = false;
