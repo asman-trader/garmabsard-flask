@@ -8,13 +8,11 @@
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    /* موبایل: لایهٔ زیر منو (WebView / نوار ژست) — مقدار بزرگ‌تر از ۱۲px برای داشبورد با visualViewport */
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
-  }
-  @media (min-width: 1024px) {
-    #bottomNavMenu.tg-tabbar-shell {
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
+    /*
+      همهٔ عرض‌ها: safe-area + حداقل فیزیکی برای WebView/دسکتاپ کوچک تا زیر کپسول شکاف مشکی دیده نشود.
+      max(20px,3vmin) روی lg هم می‌ماند (قبلاً فقط env بود و گاهی ۱px زیر منو می‌ماند).
+    */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + max(20px, 3vmin));
   }
   /* پر کردن فقط نوار پایین (لبهٔ ایمن) با همان شیشهٔ منو — بدون مسدود کردن لمس روی کپسول */
   #bottomNavMenu.tg-tabbar-shell::after {
@@ -23,17 +21,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: calc(env(safe-area-inset-bottom, 0px) + 22px);
+    height: calc(env(safe-area-inset-bottom, 0px) + max(20px, 3vmin));
     z-index: 0;
     pointer-events: none;
     -webkit-backdrop-filter: saturate(180%) blur(22px);
     backdrop-filter: saturate(180%) blur(22px);
     background-color: rgba(255, 255, 255, 0.14);
-  }
-  @media (min-width: 1024px) {
-    #bottomNavMenu.tg-tabbar-shell::after {
-      height: env(safe-area-inset-bottom, 0px);
-    }
   }
   /* تیره: لایهٔ رنگی کم‌تر تا blur پشتِ کارت‌ها دیده شود (پیش‌فرض قبلی ماتِ کامل می‌نمود) */
   html.dark #bottomNavMenu.tg-tabbar-shell::after {
