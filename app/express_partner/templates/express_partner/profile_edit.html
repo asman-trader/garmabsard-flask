@@ -1,308 +1,311 @@
 {% extends 'express_partner/base.html' %}
 {% block title %}ویرایش پروفایل{% endblock %}
+
 {% block content %}
 
-<header class="fixed top-0 inset-x-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-    <a href="{{ url_for('express_partner.profile') }}" class="w-10 h-10 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition" aria-label="بازگشت">
-      <i class="fas fa-arrow-right text-gray-600 dark:text-gray-400"></i>
-    </a>
-    <div class="text-center min-w-0 px-2">
-      <h1 class="text-sm sm:text-base font-extrabold text-gray-900 dark:text-white truncate">ویرایش پروفایل</h1>
-      <p class="hidden sm:block text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">اطلاعات معرفی شما در وینور</p>
+  <header id="profileEditHeader" class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
+    <div class="relative mx-auto flex h-14 max-w-lg items-center justify-between px-4 sm:h-16 lg:max-w-2xl">
+      <a href="{{ url_for('express_partner.profile') }}"
+         class="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+         aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
+      </a>
+      <h1 class="pointer-events-none absolute inset-x-0 text-center text-sm font-bold text-white sm:text-base">ویرایش پروفایل</h1>
+      <button type="submit" form="profileEditForm"
+              class="relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-500 sm:gap-2 sm:px-4 sm:text-sm">
+        <i class="fas fa-check text-[11px] sm:text-xs" aria-hidden="true"></i>
+        <span>ذخیره</span>
+      </button>
     </div>
-    <button type="submit" form="profileEditForm" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition">
-      <i class="fas fa-check text-xs"></i>
-      ذخیره
-    </button>
-  </div>
-</header>
+  </header>
 
-<style>
-  @media (max-width: 1023px) {
-    #profileEditPage {
-      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px)) !important;
-    }
-  }
-</style>
+  <main id="profileEditPage" class="min-h-[100dvh] bg-[#050a0e] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-14 text-zinc-100 sm:pt-16">
+    <div class="mx-auto max-w-lg px-4 pb-6 lg:max-w-2xl">
 
-<main id="profileEditPage" class="max-w-5xl mx-auto pt-16 sm:pt-20 px-3 sm:px-6 pb-36 lg:pb-10">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="mb-3 space-y-2">
-    {% for category, message in messages %}
-      <div class="text-xs rounded-xl px-3 py-2
-                  {% if category == 'success' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800
-                  {% elif category == 'error' or category == 'danger' %}bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800
-                  {% else %}bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700{% endif %}">
-        {{ message }}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="mb-4 space-y-2">
+        {% for category, message in messages %}
+        <div class="rounded-xl border px-3 py-2.5 text-xs leading-relaxed
+                    {% if category == 'success' %}border-emerald-500/40 bg-emerald-500/10 text-emerald-200
+                    {% elif category == 'error' or category == 'danger' %}border-rose-500/40 bg-rose-500/10 text-rose-200
+                    {% else %}border-white/10 bg-white/5 text-zinc-300{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endwith %}
+      {% endif %}
+      {% endwith %}
 
-  <div class="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
-    <aside class="lg:col-span-4 lg:sticky lg:top-20 space-y-3">
-      <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm">
+      {# آواتار — آپلود جدا؛ ضربه روی تصویر = انتخاب فایل #}
+      <form id="avatarEditForm" method="post" action="{{ url_for('express_partner.profile_avatar_upload') }}" enctype="multipart/form-data" class="mb-5">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ url_for('express_partner.profile_edit') }}">
-        <input id="avatarInputCamera" name="avatar" type="file" accept="image/*" capture="environment" class="hidden" />
-        <input id="avatarInputLibrary" name="avatar" type="file" accept="image/*" class="hidden" />
+        <input id="avatarInputCamera" name="avatar" type="file" accept="image/*" capture="environment" class="hidden">
+        <input id="avatarInputLibrary" name="avatar" type="file" accept="image/*" class="hidden">
 
-        <div class="flex flex-col items-center text-center">
+        <div class="flex flex-col items-center">
           <button type="button" id="avatarEditTrigger"
-                  class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden flex items-center justify-center ring-1 ring-inset ring-gray-200 dark:ring-gray-700 shadow-sm active:scale-95 transition"
+                  class="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border-2 border-white/10 bg-[#0a1018] shadow-lg ring-1 ring-white/5 transition active:scale-[0.98] sm:h-32 sm:w-32"
                   title="تغییر عکس پروفایل">
             {% if profile and profile.get('avatar') %}
-              <img id="avatarPreviewImg" src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
-                   alt="عکس پروفایل"
-                   class="w-full h-full object-cover" referrerpolicy="no-referrer" />
+            <img id="avatarPreviewImg" src="/uploads/{{ profile.get('avatar') }}?v={{ profile.get('avatar_updated_at', 0) }}"
+                 alt="" class="h-full w-full object-cover" referrerpolicy="no-referrer">
             {% else %}
-              <span id="avatarPreviewFallback" class="text-gray-600 dark:text-gray-400 text-3xl font-black">
-                {{ (me_name or (me_phone or '')[-4:])[:2] }}
-              </span>
+            <span id="avatarPreviewFallback" class="flex h-full w-full items-center justify-center text-2xl font-black text-zinc-500 sm:text-3xl">
+              {{ (me_name or (me_phone or '')[-4:])[:2] }}
+            </span>
             {% endif %}
-            <span class="absolute bottom-2 left-2 w-9 h-9 rounded-2xl bg-emerald-600 text-white grid place-items-center shadow-lg">
+            <span class="absolute bottom-1 left-1 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md sm:bottom-1.5 sm:left-1.5" aria-hidden="true">
               <i class="fas fa-camera text-sm"></i>
             </span>
-            <div id="avatarUploading" class="hidden absolute inset-0 bg-black/45 flex items-center justify-center">
-              <div class="w-8 h-8 rounded-full border-2 border-white/50 border-t-white animate-spin"></div>
-            </div>
+            <span id="avatarUploading" class="absolute inset-0 hidden items-center justify-center bg-black/50">
+              <span class="h-8 w-8 rounded-full border-2 border-white/40 border-t-white animate-spin"></span>
+            </span>
           </button>
-
-          <h2 class="mt-4 text-base font-extrabold text-gray-900 dark:text-white">{{ me_name or 'پروفایل شما' }}</h2>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 tabular-nums">{{ me_phone }}</p>
-
-          <div class="mt-4 grid grid-cols-2 gap-2 w-full">
-            <button type="button" id="openLibraryBtn" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-              <i class="fas fa-image"></i>
-              گالری
-            </button>
-            <button type="button" id="openCameraBtn" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-bold hover:opacity-90 transition">
-              <i class="fas fa-camera"></i>
-              دوربین
-            </button>
-          </div>
-
-          <p class="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-            عکس واضح و مربعی انتخاب کنید. تصویر قبل از آپلود تا حد امکان فشرده می‌شود.
+          <p class="mt-3 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
+            برای تغییر عکس پروفایل، روی تصویر ضربه بزنید
           </p>
         </div>
       </form>
 
-      <section class="rounded-2xl border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/20 p-4">
-        <div class="flex gap-3">
-          <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white grid place-items-center shrink-0">
-            <i class="fas fa-shield-heart text-sm"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">نکته نمایش</h3>
-            <p class="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-300">
-              نام، شهر و درباره من برای کامل‌تر شدن کارت معرفی و ارتباط بهتر با کاربران استفاده می‌شود.
-            </p>
-          </div>
-        </div>
-      </section>
-    </aside>
-
-    <section class="lg:col-span-8 mt-3 lg:mt-0">
-      <form id="profileEditForm" method="post" action="{{ url_for('express_partner.profile_edit') }}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <form id="profileEditForm" method="post" action="{{ url_for('express_partner.profile_edit') }}" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800">
-          <h2 class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white">اطلاعات اصلی</h2>
-          <p class="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">این اطلاعات را دقیق و کوتاه وارد کنید.</p>
-        </div>
+        <section class="rounded-2xl border border-white/10 bg-[#12181f] p-4 shadow-xl shadow-black/20 sm:p-5">
+          <div class="space-y-5">
 
-        <div class="p-4 sm:p-5 space-y-5">
-          <div>
-            <label for="profileName" class="flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
-              <span>نام و نام خانوادگی</span>
-              <span class="text-[11px] font-normal text-gray-400">حداکثر ۶۰ کاراکتر</span>
-            </label>
-            <div class="mt-2 relative">
-              <i class="fas fa-user absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-              <input id="profileName" type="text" name="name" value="{{ me_name }}"
-                     class="w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 text-sm sm:text-base pr-10 pl-3 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-800"
-                     placeholder="مثال: علی رضایی" maxlength="60" autocomplete="name" />
+            <div>
+              <label for="profileName" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>نام و نام خانوادگی</span>
+                <i class="fas fa-user text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <div class="relative">
+                <input id="profileName" type="text" name="name" value="{{ me_name }}" maxlength="60" autocomplete="name"
+                       class="w-full rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-3 text-sm text-white placeholder-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base"
+                       placeholder="نام و نام خانوادگی">
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label for="profileCity" class="block text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">شهر فعالیت</label>
-            <div class="mt-2 relative">
-              <i class="fas fa-location-dot absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-              <select id="profileCity" name="city"
-                      class="w-full appearance-none rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 text-sm sm:text-base pr-10 pl-9 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-800">
-                <option value="">انتخاب شهر</option>
-                {% for c in (cities or []) %}
+            <div>
+              <label class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>شماره موبایل</span>
+                <i class="fas fa-mobile-screen text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <input type="text" readonly tabindex="-1" dir="ltr"
+                     class="w-full cursor-not-allowed rounded-xl border border-white/5 bg-[#0d1218] py-3 pl-3 pr-3 text-sm tabular-nums text-zinc-400 sm:text-base"
+                     value="{{ me_phone }}">
+              <p class="mt-1.5 text-[11px] text-zinc-500">شماره موبایل قابل تغییر نیست.</p>
+            </div>
+
+            <div>
+              <label for="profileLandline" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>شماره تلفن ثابت <span class="font-normal text-zinc-500">(اختیاری)</span></span>
+                <i class="fas fa-phone text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <input id="profileLandline" type="tel" name="landline" value="{{ me_landline }}" maxlength="20" dir="ltr" inputmode="tel"
+                     class="w-full rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-3 text-sm text-white placeholder-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base"
+                     placeholder="مثال: 02112345678">
+            </div>
+
+            <div>
+              <label for="profileEmail" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>ایمیل <span class="font-normal text-zinc-500">(اختیاری)</span></span>
+                <i class="fas fa-envelope text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <input id="profileEmail" type="email" name="email" value="{{ me_email }}" maxlength="120" dir="ltr" autocomplete="email"
+                     class="w-full rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-3 pr-3 text-sm text-white placeholder-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base"
+                     placeholder="example@email.com">
+            </div>
+
+            <div>
+              <label for="profileCity" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>شهر فعالیت</span>
+                <i class="fas fa-location-dot text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <div class="relative">
+                <select id="profileCity" name="city"
+                        class="w-full appearance-none rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-10 pr-3 text-sm text-white outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base">
+                  <option value="">انتخاب شهر</option>
+                  {% for c in (cities or []) %}
                   <option value="{{ c }}" {% if me_city == c %}selected{% endif %}>{{ c }}</option>
-                {% endfor %}
-              </select>
-              <i class="fas fa-chevron-down absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                  {% endfor %}
+                </select>
+                <i class="fas fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500" aria-hidden="true"></i>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label for="bioInput" class="flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
-              <span>درباره من</span>
-              <span id="bioCounter" class="text-[11px] font-normal text-gray-400 tabular-nums">0/200</span>
-            </label>
-            <textarea name="bio" id="bioInput" rows="5" maxlength="200"
-                      class="mt-2 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100 text-sm sm:text-base px-3 sm:px-4 py-3 min-h-[9rem] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-gray-800 resize-none"
-                      placeholder="مثلاً: فعال در حوزه فایل‌های ملکی و پیگیری بازدید مشتریان...">{{ me_bio }}</textarea>
-            <p class="mt-2 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-              یک معرفی کوتاه، شفاف و حرفه‌ای اعتماد کاربران را بیشتر می‌کند.
-            </p>
-          </div>
-        </div>
+            <div>
+              <label for="profileBirth" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+                <span>تاریخ تولد <span class="font-normal text-zinc-500">(اختیاری)</span></span>
+                <i class="fas fa-calendar-days text-zinc-500" aria-hidden="true"></i>
+              </label>
+              <div class="relative">
+                <select id="profileBirth" name="birth_date"
+                        class="w-full appearance-none rounded-xl border border-white/10 bg-[#0a1018] py-3 pl-10 pr-3 text-sm text-white outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base">
+                  <option value="">انتخاب کنید</option>
+                  {% if birth_year_custom and me_birth_year %}
+                  <option value="{{ me_birth_year }}" selected>{{ me_birth_year }}</option>
+                  {% endif %}
+                  {% for y in range(1393, 1319, -1) %}
+                  <option value="{{ y }}" {% if me_birth_year == (y|string) %}selected{% endif %}>{{ y }}</option>
+                  {% endfor %}
+                </select>
+                <i class="fas fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500" aria-hidden="true"></i>
+              </div>
+            </div>
 
-        <div class="p-4 sm:p-5 bg-gray-50 dark:bg-gray-900/70 border-t border-gray-100 dark:border-gray-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a href="{{ url_for('express_partner.profile') }}"
-             class="w-full py-3 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm font-bold hover:bg-white dark:hover:bg-gray-800 transition text-center">
-            انصراف
-          </a>
-          <button type="submit"
-                  class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition shadow-sm shadow-emerald-900/10">
-            ذخیره تغییرات
-          </button>
-        </div>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-white/10 bg-[#12181f] p-4 shadow-xl shadow-black/20 sm:p-5">
+          <label for="bioInput" class="mb-2 flex items-center justify-end gap-2 text-xs font-semibold text-zinc-300 sm:text-sm">
+            <span>درباره من <span class="font-normal text-zinc-500">(اختیاری)</span></span>
+            <i class="fas fa-pen text-zinc-500" aria-hidden="true"></i>
+          </label>
+          <div class="relative">
+            <textarea id="bioInput" name="bio" rows="5" maxlength="200" data-bio-counter
+                      class="w-full resize-none rounded-xl border border-white/10 bg-[#0a1018] px-3 pb-7 pt-3 text-sm text-white placeholder-zinc-600 outline-none transition focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 sm:text-base"
+                      placeholder="درباره خودتان بنویسید...">{{ me_bio }}</textarea>
+            <span id="bioCounter" class="pointer-events-none absolute bottom-2 left-3 text-[11px] tabular-nums text-zinc-500">0/200</span>
+          </div>
+        </section>
       </form>
-    </section>
-  </div>
 
-</main>
+      <section class="mt-4 rounded-2xl border border-rose-500/35 bg-rose-950/20 p-4 sm:p-5">
+        <form method="post" action="{{ url_for('express_partner.profile_delete_account') }}" id="profileDeleteForm"
+              onsubmit="return confirm('حساب کاربری شما حذف شود؟ این کار قابل بازگشت نیست.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="flex w-full items-center justify-end gap-3 text-right transition hover:opacity-90">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-bold text-rose-400">حذف حساب کاربری</div>
+              <p class="mt-1 text-[11px] leading-relaxed text-rose-200/70">با حذف حساب، اطلاعات شما به صورت دائمی حذف می‌شود.</p>
+            </div>
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-rose-500/40 bg-rose-500/15 text-rose-400" aria-hidden="true">
+              <i class="fas fa-trash-alt"></i>
+            </span>
+          </button>
+        </form>
+      </section>
 
+    </div>
+  </main>
+
+  {% include 'express_partner/partials/partner_tab_footer.html' %}
 {% endblock %}
 
 {% block scripts %}
 <script>
-  (function() {
-    const trigger = document.getElementById('avatarEditTrigger');
-    const openCameraBtn = document.getElementById('openCameraBtn');
-    const openLibraryBtn = document.getElementById('openLibraryBtn');
-    const inputCamera = document.getElementById('avatarInputCamera');
-    const inputLibrary = document.getElementById('avatarInputLibrary');
-    const form = document.getElementById('avatarEditForm');
-    const uploading = document.getElementById('avatarUploading');
-    const previewImg = document.getElementById('avatarPreviewImg');
-    const previewFallback = document.getElementById('avatarPreviewFallback');
-    const csrfInput = form?.querySelector('input[name="csrf_token"]');
-    const nextInput = form?.querySelector('input[name="next"]');
+(function() {
+  var trigger = document.getElementById('avatarEditTrigger');
+  var inputCamera = document.getElementById('avatarInputCamera');
+  var inputLibrary = document.getElementById('avatarInputLibrary');
+  var form = document.getElementById('avatarEditForm');
+  var uploading = document.getElementById('avatarUploading');
+  var previewImg = document.getElementById('avatarPreviewImg');
+  var previewFallback = document.getElementById('avatarPreviewFallback');
+  var csrfInput = form && form.querySelector('input[name="csrf_token"]');
+  var nextInput = form && form.querySelector('input[name="next"]');
 
-    function openCamera() { inputCamera?.click(); }
-    function openLibrary() { inputLibrary?.click(); }
-    if (trigger) trigger.addEventListener('click', openLibrary);
-    if (openCameraBtn) openCameraBtn.addEventListener('click', openCamera);
-    if (openLibraryBtn) openLibraryBtn.addEventListener('click', openLibrary);
+  function openLibrary() { if (inputLibrary) inputLibrary.click(); }
+  if (trigger) trigger.addEventListener('click', openLibrary);
 
-    function showUploading(isOn) {
-      if (!uploading) return;
-      if (isOn) uploading.classList.remove('hidden');
-      else uploading.classList.add('hidden');
-    }
+  function showUploading(on) {
+    if (!uploading) return;
+    uploading.classList.toggle('hidden', !on);
+    uploading.classList.toggle('flex', on);
+  }
 
-    function previewFile(file) {
-      try {
-        const url = URL.createObjectURL(file);
-        if (previewImg) {
-          previewImg.src = url;
-          previewImg.classList.add('object-cover');
-        }
-        if (previewFallback) previewFallback.style.display = 'none';
-      } catch(_) {}
-    }
-
-    async function compressImage(file, maxSide = 1200, quality = 0.82) {
-      return new Promise((resolve) => {
-        try {
-          const img = new Image();
-          img.onload = function() {
-            let w = img.naturalWidth, h = img.naturalHeight;
-            if (!w || !h) return resolve(file);
-            const scale = Math.min(1, maxSide / Math.max(w, h));
-            const cw = Math.round(w * scale);
-            const ch = Math.round(h * scale);
-            const canvas = document.createElement('canvas');
-            canvas.width = cw;
-            canvas.height = ch;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, cw, ch);
-            canvas.toBlob((blob) => {
-              if (blob && blob.size > 0) {
-                const out = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-                resolve(out);
-              } else {
-                resolve(file);
-              }
-            }, 'image/jpeg', quality);
-          };
-          img.onerror = function() { resolve(file); };
-          const fr = new FileReader();
-          fr.onload = function(e) { img.src = e.target.result; };
-          fr.onerror = function() { resolve(file); };
-          fr.readAsDataURL(file);
-        } catch(_) {
-          resolve(file);
-        }
-      });
-    }
-
-    async function uploadFile(file) {
-      if (!form) return;
-      showUploading(true);
-      previewFile(file);
-      try {
-        const compressed = await compressImage(file);
-        const fd = new FormData();
-        fd.append('avatar', compressed);
-        if (csrfInput) fd.append('csrf_token', csrfInput.value || '');
-        if (nextInput) fd.append('next', nextInput.value || '');
-        const res = await fetch(form.action, { method: 'POST', body: fd, credentials: 'same-origin' });
-        if (res.ok) {
-          window.location.replace(nextInput?.value || window.location.href);
-        } else {
-          form.submit();
-        }
-      } catch(_) {
-        form.submit();
-      } finally {
-        showUploading(false);
+  function previewFile(file) {
+    try {
+      var url = URL.createObjectURL(file);
+      if (previewImg) {
+        previewImg.src = url;
+        previewImg.classList.add('object-cover');
       }
-    }
+      if (previewFallback) previewFallback.style.display = 'none';
+    } catch (_) {}
+  }
 
-    function handleFileInput(e) {
-      const files = e.target?.files;
-      if (!files || !files[0]) return;
-      const file = files[0];
-      uploadFile(file);
-    }
-    if (inputCamera) inputCamera.addEventListener('change', handleFileInput);
-    if (inputLibrary) inputLibrary.addEventListener('change', handleFileInput);
-  })();
+  function compressImage(file, maxSide, quality) {
+    maxSide = maxSide || 1200;
+    quality = typeof quality === 'number' ? quality : 0.82;
+    return new Promise(function (resolve) {
+      try {
+        var img = new Image();
+        img.onload = function () {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (!w || !h) return resolve(file);
+          var scale = Math.min(1, maxSide / Math.max(w, h));
+          var cw = Math.round(w * scale);
+          var ch = Math.round(h * scale);
+          var canvas = document.createElement('canvas');
+          canvas.width = cw;
+          canvas.height = ch;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, cw, ch);
+          canvas.toBlob(function (blob) {
+            if (blob && blob.size > 0) {
+              resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }));
+            } else resolve(file);
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = function () { resolve(file); };
+        var fr = new FileReader();
+        fr.onload = function (e) { img.src = e.target.result; };
+        fr.onerror = function () { resolve(file); };
+        fr.readAsDataURL(file);
+      } catch (_) {
+        resolve(file);
+      }
+    });
+  }
 
-  // Bio live counter (Divar style minimal helper)
-  (function() {
-    const input = document.getElementById('bioInput');
-    const counter = document.getElementById('bioCounter');
-    if (!input || !counter) return;
-    function update() {
-      const len = (input.value || '').length;
-      counter.textContent = len + '/200';
-      // رنگ هشدار نزدیک سقف
-      if (len > 180) {
-        counter.classList.remove('text-gray-400');
-        counter.classList.add('text-rose-500');
+  function uploadFile(file) {
+    if (!form) return;
+    showUploading(true);
+    previewFile(file);
+    compressImage(file).then(function (compressed) {
+      var fd = new FormData();
+      fd.append('avatar', compressed);
+      if (csrfInput) fd.append('csrf_token', csrfInput.value || '');
+      if (nextInput) fd.append('next', nextInput.value || '');
+      return fetch(form.action, { method: 'POST', body: fd, credentials: 'same-origin' });
+    }).then(function (res) {
+      if (res && res.ok) {
+        window.location.replace((nextInput && nextInput.value) || window.location.href);
       } else {
-        counter.classList.add('text-gray-400');
-        counter.classList.remove('text-rose-500');
+        form.submit();
       }
-    }
-    input.addEventListener('input', update);
-    update();
-  })();
+    }).catch(function () {
+      form.submit();
+    }).finally(function () {
+      showUploading(false);
+    });
+  }
+
+  function onFile(e) {
+    var files = e.target && e.target.files;
+    if (!files || !files[0]) return;
+    uploadFile(files[0]);
+    e.target.value = '';
+  }
+  if (inputCamera) inputCamera.addEventListener('change', onFile);
+  if (inputLibrary) inputLibrary.addEventListener('change', onFile);
+})();
+
+(function() {
+  var input = document.getElementById('bioInput');
+  var counter = document.getElementById('bioCounter');
+  if (!input || !counter) return;
+  function update() {
+    var len = (input.value || '').length;
+    counter.textContent = len + '/200';
+    counter.classList.toggle('text-rose-400', len > 180);
+    counter.classList.toggle('text-zinc-500', len <= 180);
+  }
+  input.addEventListener('input', update);
+  update();
+})();
 </script>
 {% endblock %}
-
-

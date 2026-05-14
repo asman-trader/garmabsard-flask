@@ -2311,7 +2311,7 @@ def profile_data():
 @require_partner_access(allow_pending=True)
 def profile_edit_page():
     """
-    ویرایش مشخصات کاربر (نام، شهر، توضیحات کوتاه)
+    ویرایش مشخصات همکار: نام، شهر، بیو، تلفن ثابت، ایمیل، تاریخ تولد؛ موبایل فقط نمایش.
     """
     me_phone = (session.get('user_phone') or '').strip()
     partners = load_express_partners() or []
@@ -2324,6 +2324,18 @@ def profile_edit_page():
         name = (request.form.get('name') or '').strip()[:60]
         city = (request.form.get('city') or '').strip()[:60]
         bio = (request.form.get('bio') or '').strip()[:200]
+        landline = (request.form.get('landline') or '').strip()[:20]
+        email = (request.form.get('email') or '').strip()[:120]
+        birth_date = (request.form.get('birth_date') or '').strip()[:32]
+        prev_birth = (profile.get('birth_date') or '').strip()
+        if birth_date and prev_birth and '/' in prev_birth:
+            parts = [p.strip() for p in prev_birth.split('/') if p.strip()]
+            head = parts[0] if parts else ''
+            if head and birth_date.isdigit() and len(birth_date) <= 4:
+                if birth_date == head:
+                    birth_date = prev_birth
+                elif len(parts) >= 2:
+                    birth_date = birth_date + '/' + '/'.join(parts[1:])
         if name:
             profile['name'] = name
         else:
@@ -2336,6 +2348,18 @@ def profile_edit_page():
             profile['bio'] = bio
         else:
             profile.pop('bio', None)
+        if landline:
+            profile['landline'] = landline
+        else:
+            profile.pop('landline', None)
+        if email:
+            profile['email'] = email
+        else:
+            profile.pop('email', None)
+        if birth_date:
+            profile['birth_date'] = birth_date
+        else:
+            profile.pop('birth_date', None)
         try:
             save_express_partners(partners)
             flash('مشخصات با موفقیت به‌روزرسانی شد.', 'success')
@@ -2347,6 +2371,19 @@ def profile_edit_page():
     me_name = (profile.get('name') or '').strip()
     me_city = (profile.get('city') or '').strip()
     me_bio = (profile.get('bio') or '').strip()
+    me_landline = (profile.get('landline') or '').strip()
+    me_email = (profile.get('email') or '').strip()
+    me_birth_date = (profile.get('birth_date') or '').strip()
+    me_birth_year = ''
+    birth_year_custom = False
+    if me_birth_date:
+        me_birth_year = me_birth_date.split('/', 1)[0].strip() if '/' in me_birth_date else me_birth_date
+        if me_birth_year:
+            try:
+                yi = int(me_birth_year)
+                birth_year_custom = yi < 1320 or yi > 1393
+            except ValueError:
+                birth_year_custom = True
     try:
         cities = load_active_cities() or []
     except Exception:
@@ -2356,6 +2393,11 @@ def profile_edit_page():
                            me_name=me_name,
                            me_city=me_city,
                            me_bio=me_bio,
+                           me_landline=me_landline,
+                           me_email=me_email,
+                           me_birth_date=me_birth_date,
+                           me_birth_year=me_birth_year,
+                           birth_year_custom=birth_year_custom,
                            profile=profile,
                            cities=cities)
 
@@ -2372,6 +2414,9 @@ def profile_edit_data():
     me_name = (profile.get('name') or '').strip()
     me_city = (profile.get('city') or '').strip()
     me_bio = (profile.get('bio') or '').strip()
+    me_landline = (profile.get('landline') or '').strip()
+    me_email = (profile.get('email') or '').strip()
+    me_birth_date = (profile.get('birth_date') or '').strip()
     avatar = (profile.get('avatar') or '').strip()
     avatar_url = (f"/uploads/{avatar}" if avatar else None)
     try:
@@ -2380,9 +2425,13 @@ def profile_edit_data():
         cities = []
     return jsonify({
         'success': True,
+        'me_phone': me_phone,
         'me_name': me_name,
         'me_city': me_city,
         'me_bio': me_bio,
+        'me_landline': me_landline,
+        'me_email': me_email,
+        'me_birth_date': me_birth_date,
         'avatar_url': avatar_url,
         'cities': cities if isinstance(cities, list) else [],
     })
@@ -2398,6 +2447,9 @@ def api_profile_update():
     name = (data.get('name') or '').strip()
     city = (data.get('city') or '').strip()
     bio = (data.get('bio') or '').strip()
+    landline = (data.get('landline') or '').strip()[:20]
+    email = (data.get('email') or '').strip()[:120]
+    birth_date = (data.get('birth_date') or '').strip()[:32]
     partners = load_express_partners() or []
     profile = next((p for p in partners if str(p.get('phone') or '').strip() == me_phone), None)
     if not profile:
@@ -2415,12 +2467,47 @@ def api_profile_update():
         profile['bio'] = bio[:200]
     else:
         profile.pop('bio', None)
+    if landline:
+        profile['landline'] = landline
+    else:
+        profile.pop('landline', None)
+    if email:
+        profile['email'] = email
+    else:
+        profile.pop('email', None)
+    if birth_date:
+        profile['birth_date'] = birth_date
+    else:
+        profile.pop('birth_date', None)
     try:
         save_express_partners(partners)
         return jsonify({'success': True})
     except Exception:
         current_app.logger.error("Failed to save partner profile edits", exc_info=True)
         return jsonify({'success': False, 'error': 'save_failed'}), 500
+
+
+@express_partner_bp.post('/profile/delete-account', endpoint='profile_delete_account')
+@require_partner_access(allow_pending=True)
+def profile_delete_account():
+    """حذف رکورد همکار از لیست و خروج از سشن (غیرقابل بازگشت از این مسیر)."""
+    me_phone = (session.get('user_phone') or '').strip()
+    if not me_phone:
+        return redirect(url_for('express_partner.login'))
+    partners = load_express_partners() or []
+    new_partners = [p for p in partners if str(p.get('phone') or '').strip() != me_phone]
+    try:
+        save_express_partners(new_partners)
+    except Exception:
+        current_app.logger.error('Failed to save partners after account delete', exc_info=True)
+        flash('حذف حساب انجام نشد. دوباره تلاش کنید.', 'error')
+        return redirect(url_for('express_partner.profile_edit'))
+    _clear_express_partner_auth_session()
+    flash('حساب کاربری شما حذف شد.', 'info')
+    r = redirect(url_for('express_partner.login'))
+    r.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+    r.headers['Pragma'] = 'no-cache'
+    return r
 
 
 @express_partner_bp.post('/profile/avatar')
