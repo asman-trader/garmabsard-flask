@@ -140,6 +140,10 @@
     var modal = document.getElementById('vnWithdrawModal');
     if (!modal) return;
 
+    var bankModal = document.getElementById('vnBankPickerModal');
+    var bankSummaryEl = document.getElementById('vnWithdrawBankSummary');
+    var bankConfirm = document.getElementById('vnBankPickerConfirmBtn');
+
     var balanceEl = document.getElementById('vnWithdrawModalBalance');
     var input = document.getElementById('vnWithdrawAmountInput');
     var fillAll = document.getElementById('vnWithdrawFillAllBtn');
@@ -147,6 +151,7 @@
     var supportUrl = (modal.getAttribute('data-support-url') || '').trim();
 
     var maxWithdraw = 0;
+    var selectedBankSummary = '';
 
     function toFaDigits(s) {
       var p = '۰۱۲۳۴۵۶۷۸۹';
@@ -183,10 +188,64 @@
       try {
         var u = new URL(supportUrl, window.location.origin);
         if (amt > 0) u.searchParams.set('withdraw_amount', String(amt));
+        if (selectedBankSummary) u.searchParams.set('bank_account', selectedBankSummary);
         submit.setAttribute('href', u.pathname + u.search + u.hash);
       } catch (_) {
-        submit.setAttribute('href', supportUrl + (supportUrl.indexOf('?') >= 0 ? '&' : '?') + 'withdraw_amount=' + encodeURIComponent(String(amt)));
+        var q = [];
+        if (amt > 0) q.push('withdraw_amount=' + encodeURIComponent(String(amt)));
+        if (selectedBankSummary) q.push('bank_account=' + encodeURIComponent(selectedBankSummary));
+        var joiner = supportUrl.indexOf('?') >= 0 ? '&' : '?';
+        submit.setAttribute('href', supportUrl + (q.length ? joiner + q.join('&') : ''));
       }
+    }
+
+    function bankPickerOpen() {
+      return bankModal && bankModal.classList.contains('vn-bank-picker-modal--open');
+    }
+
+    function closeBankPicker() {
+      if (!bankModal) return;
+      bankModal.classList.remove('vn-bank-picker-modal--open');
+      window.setTimeout(function () {
+        bankModal.classList.add('hidden');
+      }, 280);
+      bankModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function forceCloseBankPicker() {
+      if (!bankModal) return;
+      bankModal.classList.remove('vn-bank-picker-modal--open');
+      bankModal.classList.add('hidden');
+      bankModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openBankPicker() {
+      if (!bankModal) return;
+      bankModal.classList.remove('hidden');
+      bankModal.setAttribute('aria-hidden', 'false');
+      try {
+        void bankModal.offsetWidth;
+      } catch (_) {}
+      bankModal.classList.add('vn-bank-picker-modal--open');
+    }
+
+    function markBankSelected(row) {
+      if (!bankModal) return;
+      bankModal.querySelectorAll('.vn-bank-account').forEach(function (el) {
+        el.classList.remove('vn-bank-account--selected', 'ring-2', 'ring-emerald-500/35', 'border-emerald-500/40');
+        el.classList.add('border-white/10');
+      });
+      if (row) {
+        row.classList.add('vn-bank-account--selected', 'ring-2', 'ring-emerald-500/35', 'border-emerald-500/40');
+        row.classList.remove('border-white/10');
+      }
+    }
+
+    function pickDefaultBankRow() {
+      if (!bankModal) return null;
+      var list = bankModal.querySelectorAll('.vn-bank-account');
+      var def = bankModal.querySelector('.vn-bank-account[data-bank-default="1"]');
+      return def || (list.length ? list[0] : null);
     }
 
     function openModal(fromBtn) {
@@ -211,6 +270,7 @@
     }
 
     function closeModal() {
+      forceCloseBankPicker();
       modal.classList.remove('vn-withdraw-modal--open');
       window.setTimeout(function () {
         modal.classList.add('hidden');
@@ -230,6 +290,18 @@
         openModal(t.closest('[data-open-withdraw-modal]'));
         return;
       }
+      if (t.closest('[data-open-bank-picker]')) {
+        e.preventDefault();
+        var row0 = pickDefaultBankRow();
+        markBankSelected(row0);
+        openBankPicker();
+        return;
+      }
+      if (t.closest('[data-close-bank-picker]')) {
+        e.preventDefault();
+        closeBankPicker();
+        return;
+      }
       if (t.closest('[data-close-withdraw-modal]')) {
         e.preventDefault();
         closeModal();
@@ -237,10 +309,39 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && modal.classList.contains('vn-withdraw-modal--open')) {
+      if (e.key !== 'Escape') return;
+      if (bankPickerOpen()) {
+        e.preventDefault();
+        closeBankPicker();
+        return;
+      }
+      if (modal.classList.contains('vn-withdraw-modal--open')) {
         closeModal();
       }
     });
+
+    if (bankModal) {
+      bankModal.querySelectorAll('.vn-bank-account').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          e.preventDefault();
+          markBankSelected(row);
+        });
+      });
+    }
+
+    if (bankConfirm) {
+      bankConfirm.addEventListener('click', function (e) {
+        e.preventDefault();
+        var row = bankModal && bankModal.querySelector('.vn-bank-account--selected');
+        var sum = row && row.getAttribute('data-bank-summary');
+        if (sum && bankSummaryEl) {
+          selectedBankSummary = sum;
+          bankSummaryEl.textContent = sum;
+        }
+        syncSubmitHref();
+        closeBankPicker();
+      });
+    }
 
     if (fillAll) {
       fillAll.addEventListener('click', function () {

@@ -1,0 +1,122 @@
+{# مودال انتخاب حساب بانکی — روی مودال برداشت (z بالاتر) #}
+<div id="vnBankPickerModal"
+     class="vn-bank-picker-modal fixed inset-0 z-[210] hidden flex flex-col justify-end"
+     role="dialog"
+     aria-modal="true"
+     aria-hidden="true"
+     aria-labelledby="vnBankPickerTitle"
+     data-support-url="{{ url_for('express_partner.support') }}">
+  <div class="vn-bank-picker-backdrop absolute inset-0 bg-black/55 opacity-0 transition-opacity duration-200"
+       data-close-bank-picker
+       aria-hidden="true"></div>
+  <div class="vn-bank-picker-sheet relative w-full max-w-lg mx-auto rounded-t-3xl bg-[#1C1F2A] border-t border-white/10 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] max-h-[min(92vh,780px)] flex flex-col translate-y-full transition-transform duration-300 ease-out">
+    <div class="shrink-0 pt-2 pb-1 flex justify-center">
+      <span class="block w-10 h-1 rounded-full bg-white/20" aria-hidden="true"></span>
+    </div>
+    <div class="shrink-0 px-4 pb-3 flex flex-col items-center relative min-h-[3.25rem]">
+      <button type="button"
+              class="absolute top-1/2 -translate-y-1/2 left-3 w-9 h-9 rounded-full border border-white/10 text-slate-300 hover:bg-white/5 flex items-center justify-center transition"
+              data-close-bank-picker
+              aria-label="بستن">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+      <h2 id="vnBankPickerTitle" class="text-[15px] font-bold text-white pt-0.5">انتخاب حساب بانکی</h2>
+      <p class="text-[11px] text-slate-400 text-center mt-1 px-6 leading-relaxed">حساب بانکی خود را برای دریافت وجه انتخاب کنید.</p>
+    </div>
+
+    <div class="px-4 pb-4 overflow-y-auto flex-1 min-h-0 space-y-4">
+      <a href="{{ url_for('express_partner.support') }}?topic=add_bank_card"
+         class="flex items-center gap-3 rounded-2xl border-2 border-dashed border-white/15 bg-[#12141D]/50 px-3 py-3 hover:border-emerald-500/35 hover:bg-[#12141D] transition text-start">
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-white">افزودن حساب جدید</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">کارت جدید ثبت کنید</div>
+        </div>
+        <span class="shrink-0 w-11 h-11 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30">
+          <i class="fas fa-plus text-lg"></i>
+        </span>
+      </a>
+
+      <div>
+        <p class="text-xs font-medium text-slate-500 mb-2 text-start">حساب‌های من</p>
+        <div class="space-y-2.5" id="vnBankAccountList">
+          {# نمونهٔ UI — بعداً می‌توان از API جایگزین کرد #}
+          <button type="button"
+                  class="vn-bank-account w-full rounded-2xl border border-white/10 bg-[#252836] p-3 text-start hover:border-white/18 transition vn-bank-account--selected ring-2 ring-emerald-500/35 border-emerald-500/40"
+                  dir="rtl"
+                  data-bank-summary="بانک ملت · ۶۱۰۴ **** **** ۱۲۳۴"
+                  data-bank-default="1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="shrink-0 w-9 h-9 rounded-lg bg-[#c62828] flex items-center justify-center text-white text-[10px] font-extrabold leading-none">ملت</span>
+                <span class="text-sm font-bold text-white truncate">بانک ملت</span>
+              </div>
+              <span class="shrink-0 text-slate-400 text-base leading-none pt-0.5 opacity-80" aria-hidden="true"><i class="fas fa-ellipsis-v"></i></span>
+            </div>
+            <p dir="ltr" class="text-[13px] font-medium text-slate-200 tracking-wide text-end w-full mt-2 tabular-nums">6104 **** **** 1234</p>
+            <p class="text-[10px] text-slate-500 truncate mt-1 text-start">{{ partner_name or 'صاحب حساب' }}</p>
+            <div class="flex justify-start mt-2">
+              <span class="rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 border border-emerald-500/30">پیش‌فرض</span>
+            </div>
+          </button>
+
+          <button type="button"
+                  class="vn-bank-account w-full rounded-2xl border border-white/10 bg-[#252836] p-3 text-start hover:border-white/18 transition"
+                  dir="rtl"
+                  data-bank-summary="بانک ملی ایران · ۶۰۳۷ **** **** ۵۶۷۸">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="shrink-0 w-9 h-9 rounded-lg bg-[#1565c0] flex items-center justify-center text-white text-[10px] font-extrabold leading-none">ملی</span>
+                <span class="text-sm font-bold text-white truncate">بانک ملی ایران</span>
+              </div>
+              <span class="shrink-0 text-slate-400 text-base leading-none pt-0.5 opacity-80" aria-hidden="true"><i class="fas fa-ellipsis-v"></i></span>
+            </div>
+            <p dir="ltr" class="text-[13px] font-medium text-slate-200 tracking-wide text-end w-full mt-2 tabular-nums">6037 **** **** 5678</p>
+            <p class="text-[10px] text-slate-500 truncate mt-1 text-start">{{ partner_name or 'صاحب حساب' }}</p>
+          </button>
+
+          <button type="button"
+                  class="vn-bank-account w-full rounded-2xl border border-white/10 bg-[#252836] p-3 text-start hover:border-white/18 transition"
+                  dir="rtl"
+                  data-bank-summary="بانک پارسیان · ۶۲۲۱ **** **** ۹۰۱۲">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="shrink-0 w-9 h-9 rounded-lg bg-[#6a1b9a] flex items-center justify-center text-white text-[10px] font-extrabold leading-none">پارس</span>
+                <span class="text-sm font-bold text-white truncate">بانک پارسیان</span>
+              </div>
+              <span class="shrink-0 text-slate-400 text-base leading-none pt-0.5 opacity-80" aria-hidden="true"><i class="fas fa-ellipsis-v"></i></span>
+            </div>
+            <p dir="ltr" class="text-[13px] font-medium text-slate-200 tracking-wide text-end w-full mt-2 tabular-nums">6221 **** **** 9012</p>
+            <p class="text-[10px] text-slate-500 truncate mt-1 text-start">{{ partner_name or 'صاحب حساب' }}</p>
+          </button>
+        </div>
+      </div>
+
+      <div class="rounded-xl bg-[#1a2744] border border-blue-500/25 px-3 py-2.5 flex items-start gap-2.5" dir="rtl">
+        <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xs mt-0.5">
+          <i class="fas fa-info"></i>
+        </span>
+        <p class="text-[11px] leading-relaxed text-slate-300 text-start flex-1">وجه برداشت‌شده فقط به حساب بانکی به نام خودتان واریز می‌شود.</p>
+      </div>
+    </div>
+
+    <div class="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 border-t border-white/5 bg-[#1C1F2A]">
+      <button type="button"
+              id="vnBankPickerConfirmBtn"
+              class="w-full rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-sm font-bold py-3.5 shadow-lg shadow-amber-900/20 transition">
+        تأیید و ادامه
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #vnBankPickerModal.vn-bank-picker-modal--open {
+    display: flex !important;
+  }
+  #vnBankPickerModal.vn-bank-picker-modal--open .vn-bank-picker-backdrop {
+    opacity: 1;
+  }
+  #vnBankPickerModal.vn-bank-picker-modal--open .vn-bank-picker-sheet {
+    transform: translateY(0);
+  }
+</style>

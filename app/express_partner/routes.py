@@ -1262,6 +1262,13 @@ def commissions_page():
     except Exception:
         pass
 
+    partner_name = ""
+    try:
+        if profile and isinstance(profile, dict):
+            partner_name = (str(profile.get("name") or "")).strip()
+    except Exception:
+        partner_name = ""
+
     resp = make_response(render_template(
         "express_partner/commissions.html",
         items=my_comms,
@@ -1274,6 +1281,7 @@ def commissions_page():
         paid_count=paid_count,
         approved_commission=approved_commission,
         withdrawable_balance=withdrawable_balance,
+        partner_name=partner_name,
         hide_header=True,
         SHOW_SUBMIT_BUTTON=False,
         brand="وینور",
