@@ -260,6 +260,7 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      overflow-anchor: none;
       /* بدون پس‌زمینه، padding انتهایی ترک شفاف است و لبهٔ تیره/زیرپیکسل بین کارت و فوتر دیده می‌شود */
       background-color: #f9fafb;
     }
@@ -579,10 +580,10 @@
         const rootTop = mobileCardsRoot.getBoundingClientRect().top;
         let available = navTop - rootTop;
         if (!Number.isFinite(available)) return;
-        /* ceil + slack؛ فقط اگر اختلاف ≥۲px باشد تا اسکرول باعث لرزش ۱px و چشمک زیر فوتر نشود */
+        /* ceil + slack؛ آستانهٔ بزرگ‌تر تا حین اسکرول داخلی کارت‌ها لرزش ۱–۳px و چشمک زیر فوتر نباشد */
         available = Math.max(160, Math.ceil(available) + HEIGHT_SLACK_PX);
         const prev = parseFloat(String(mobileCardsRoot.style.height || '').replace('px', ''), 10);
-        if (Number.isFinite(prev) && Math.abs(prev - available) < 2) return;
+        if (Number.isFinite(prev) && Math.abs(prev - available) < 8) return;
         mobileCardsRoot.style.height = `${available}px`;
       } catch (_) {}
     }
@@ -622,12 +623,24 @@
           se.addEventListener('scroll', fn, { passive: true });
         } catch (_) {}
       }
-      if (mobileCardsRoot) {
-        mobileCardsRoot.addEventListener('scroll', fn, { passive: true });
-      }
     }
 
     bindScrollTargets(updateFromScroll);
+    if (mobileCardsRoot) {
+      var cardsScrollEndTimer = 0;
+      mobileCardsRoot.addEventListener(
+        'scroll',
+        function () {
+          updateCompactFromScroll();
+          window.clearTimeout(cardsScrollEndTimer);
+          cardsScrollEndTimer = window.setTimeout(function () {
+            cardsScrollEndTimer = 0;
+            scheduleSyncMobileCardsRootHeight();
+          }, 160);
+        },
+        { passive: true }
+      );
+    }
     try {
       if (window.visualViewport) {
         /* فقط جمع‌شدن هدر: همگام ارتفاع کارت روی visualViewport.scroll با نوار آدرس/ژست باعث نوسان و نوار تیره زیر منو می‌شد */
@@ -643,7 +656,7 @@
       touchScrollQueued = true;
       requestAnimationFrame(() => {
         touchScrollQueued = false;
-        updateFromScroll();
+        updateCompactFromScroll();
       });
     }
     window.addEventListener('touchmove', queueScrollUpdate, { passive: true });
@@ -667,8 +680,6 @@
         scheduleSyncMobileCardsRootHeight();
       });
       ro.observe(header);
-      const nav0 = document.getElementById('bottomNavMenu');
-      if (nav0) ro.observe(nav0);
     } catch (_) {}
 
     /* هر تغییر اندازهٔ main (مثلاً padding-top پس از compact هدر) → دوباره ارتفاع کارت‌ها تا لبهٔ فوتر */
