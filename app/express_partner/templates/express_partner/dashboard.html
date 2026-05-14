@@ -570,6 +570,9 @@
         /* ceil + slack: نوار متناوب زیرپیکسلی / نوار آدرس دینامیک موبایل */
         available = Math.max(160, Math.ceil(available) + HEIGHT_SLACK_PX);
         mobileCardsRoot.style.height = `${available}px`;
+        try {
+          if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+        } catch (_) {}
       } catch (_) {}
     }
 

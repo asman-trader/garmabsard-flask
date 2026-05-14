@@ -8,8 +8,8 @@
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    /* ناحیهٔ home indicator: قبلاً شفاف بود و پس‌زمینهٔ تیرهٔ body نوار مشکی زیر منو می‌ساخت */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* ناحیهٔ home indicator + پر کردن شکاف زیر منو (موبایل: innerHeight vs لبهٔ واقعی) */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--vn-footer-gap-fill, 0px));
   }
   /* پر کردن فقط نوار پایین (لبهٔ ایمن) با همان شیشهٔ منو — بدون مسدود کردن لمس روی کپسول */
   #bottomNavMenu.tg-tabbar-shell::after {
@@ -18,7 +18,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: env(safe-area-inset-bottom, 0px);
+    height: calc(env(safe-area-inset-bottom, 0px) + var(--vn-footer-gap-fill, 0px));
     z-index: 0;
     pointer-events: none;
     -webkit-backdrop-filter: saturate(180%) blur(22px);
@@ -221,6 +221,48 @@
 
 <script>
 (function() {
+  var gapRaf = 0;
+  /**
+   * پر کردن شکاف مشکی گاه‌به‌گاه زیر #bottomNavMenu (موبایل / WebView / نوار آدرس).
+   * مقدار --vn-footer-gap-fill روی خود nav ست می‌شود و در padding-bottom و ::after مصرف می‌گردد.
+   */
+  window.vinorSyncFooterNavBottomSeam = function () {
+    var nav = document.getElementById('bottomNavMenu');
+    if (!nav) return;
+    if (gapRaf) return;
+    gapRaf = requestAnimationFrame(function () {
+      gapRaf = 0;
+      try {
+        var layoutBottom = window.innerHeight;
+        if (window.visualViewport) {
+          var vv = window.visualViewport;
+          layoutBottom = Math.max(layoutBottom, vv.offsetTop + vv.height);
+        }
+        var r = nav.getBoundingClientRect();
+        var gap = layoutBottom - r.bottom;
+        if (gap > 0.25 && gap < 96) {
+          nav.style.setProperty('--vn-footer-gap-fill', Math.ceil(gap) + 'px');
+        } else {
+          nav.style.removeProperty('--vn-footer-gap-fill');
+        }
+      } catch (_) {}
+    });
+  };
+
+  window.addEventListener('resize', function () {
+    if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+  }, { passive: true });
+  try {
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function () {
+        if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+      }, { passive: true });
+      window.visualViewport.addEventListener('scroll', function () {
+        if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+      }, { passive: true });
+    }
+  } catch (_) {}
+
   const activeKey = '{{ bottom_nav_active }}';
   const unreadUrl = '{{ bottom_nav_unread_url }}';
   const navContainer = document.getElementById('bottomNavItems');
@@ -247,11 +289,14 @@
       el.textContent = '';
       el.classList.remove('is-visible');
       el.setAttribute('aria-hidden', 'true');
-      return;
+    } else {
+      el.textContent = formatBadgeCount(n);
+      el.classList.add('is-visible');
+      el.setAttribute('aria-hidden', 'false');
     }
-    el.textContent = formatBadgeCount(n);
-    el.classList.add('is-visible');
-    el.setAttribute('aria-hidden', 'false');
+    try {
+      if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+    } catch (_) {}
   }
 
   async function refreshUnreadBadge() {
@@ -352,16 +397,27 @@
       navContainer.appendChild(link);
     });
     refreshUnreadBadge();
+    try {
+      setTimeout(function () {
+        if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+      }, 0);
+    } catch (_) {}
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       loadMenuFromAPI();
       refreshUnreadBadge();
+      setTimeout(function () {
+        if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+      }, 0);
     });
   } else {
     loadMenuFromAPI();
     refreshUnreadBadge();
+    setTimeout(function () {
+      if (typeof window.vinorSyncFooterNavBottomSeam === 'function') window.vinorSyncFooterNavBottomSeam();
+    }, 0);
   }
 
   window.addEventListener('storage', (e) => {
