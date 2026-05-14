@@ -569,7 +569,13 @@
           return;
         }
         const nav = document.getElementById('bottomNavMenu');
-        const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+        let navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+        try {
+          if (window.visualViewport) {
+            const lb = window.visualViewport.offsetTop + window.visualViewport.height;
+            navTop = Math.min(navTop, lb);
+          }
+        } catch (_) {}
         const rootTop = mobileCardsRoot.getBoundingClientRect().top;
         let available = navTop - rootTop;
         if (!Number.isFinite(available)) return;

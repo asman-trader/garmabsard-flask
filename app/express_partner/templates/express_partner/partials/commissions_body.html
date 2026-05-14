@@ -1,18 +1,14 @@
 {# بادی پورسانت: روی موبایل اسکرول داخل #commissionsPageMain (مثل dashboardMobileCardsRoot) تا WebView قفل نکند #}
 <main id="commissionsPageMain"
-      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 text-slate-100 bg-[#0b0e14] lg:pb-16 transition-[padding-top] duration-300 ease-out"
+      class="max-w-lg lg:max-w-4xl mx-auto w-full px-4 text-slate-100 bg-[#030712] lg:pb-16 transition-[padding-top] duration-300 ease-out"
       style="padding-top: 5.75rem">
 
   <style>
-    /* موبایل/تبلت: اسکرول داخل main؛ --vn-comm-nav-h از ارتفاع واقعی #bottomNavMenu پر می‌شود. */
+    /* موبایل/تبلت: اسکرول داخل main؛ ارتفاع با JS از فاصلهٔ واقعی تا لبهٔ بالای #bottomNavMenu (نه 100dvh) تا با WebView/نوار آدرس نوار تیره زیر منو ایجاد نشود. */
     @media (max-width: 1023px) {
-      /*
-        فقط نوار پایین از dvh کم می‌شود؛ padding-top هدر را داخل همین باکس جا می‌دهد (بدون کم کردن دوبارهٔ هدر از ارتفاع).
-      */
       #commissionsPageMain {
         box-sizing: border-box;
-        height: calc(100dvh - var(--vn-comm-nav-h, 5.75rem));
-        max-height: calc(100dvh - var(--vn-comm-nav-h, 5.75rem));
+        min-height: 12rem;
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -54,12 +50,30 @@
       var hh = Math.ceil(header.getBoundingClientRect().height + 6);
       main.style.paddingTop = hh + 'px';
       var nav = document.getElementById('bottomNavMenu');
-      var nh = 0;
+      var nh = 92;
       try {
         if (nav) nh = Math.ceil(nav.getBoundingClientRect().height);
       } catch (_) {}
-      if (!nh) nh = 92;
       main.style.setProperty('--vn-comm-nav-h', nh + 'px');
+      try {
+        if (window.matchMedia('(max-width: 1023px)').matches && nav) {
+          var mainTop = main.getBoundingClientRect().top;
+          var navTop = nav.getBoundingClientRect().top;
+          if (window.visualViewport) {
+            var lb = window.visualViewport.offsetTop + window.visualViewport.height;
+            navTop = Math.min(navTop, lb);
+          }
+          var h = Math.max(200, Math.ceil(navTop - mainTop));
+          main.style.height = h + 'px';
+          main.style.maxHeight = h + 'px';
+        } else if (window.matchMedia('(min-width: 1024px)').matches) {
+          main.style.height = '';
+          main.style.maxHeight = '';
+        }
+      } catch (_) {
+        main.style.height = '';
+        main.style.maxHeight = '';
+      }
     }
 
     try {
@@ -70,6 +84,11 @@
     } catch (_) {}
 
     window.addEventListener('resize', syncCommissionsChrome, { passive: true });
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncCommissionsChrome, { passive: true });
+      }
+    } catch (_) {}
     syncCommissionsChrome();
 
     if (!document.getElementById('bottomNavMenu')) {
