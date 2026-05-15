@@ -173,5 +173,7 @@
 </header>
 
 {% if cities %}
-{% include 'express_partner/partials/dashboard_city_sheet.html' %}
+{% with cp='dashCityPicker', selected=selected_city, allow_all=true, apply_submit=true, form_id='searchForm', hidden_id='cityInputHidden', label_id='cityFilterLabel', trigger_id='cityFilterToggle' %}
+{% include 'express_partner/partials/city_picker_sheet.html' %}
+{% endwith %}
 {% endif %}

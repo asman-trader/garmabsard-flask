@@ -55,6 +55,21 @@ def _express_partners_cached() -> List[Dict[str, Any]]:
     return lst
 
 
+def _active_cities_cached() -> List[str]:
+    """لیست شهرهای فعال — یک‌بار در هر درخواست."""
+    cached = getattr(g, '_active_cities_cached', None)
+    if cached is not None:
+        return cached
+    try:
+        cities = load_active_cities() or []
+    except Exception:
+        cities = []
+    if not isinstance(cities, list):
+        cities = []
+    g._active_cities_cached = cities
+    return cities
+
+
 def _express_settings_cached() -> Dict[str, Any]:
     """در هر درخواست یک‌بار تنظیمات (برای پروفایل و غیره)."""
     if getattr(g, '_express_settings_loaded', False):
@@ -903,10 +918,7 @@ def dashboard():
     # URL ویدئو آموزش - می‌تواند از تنظیمات یا متغیر محیطی گرفته شود
     training_video_url = os.environ.get("TRAINING_VIDEO_URL", "")  # مثال: "https://www.youtube.com/watch?v=VIDEO_ID"
     # شهرهای فعال برای فیلتر جستجو (قابل مدیریت در پنل ادمین)
-    try:
-        cities = load_active_cities() or []
-    except Exception:
-        cities = []
+    cities = _active_cities_cached()
     # سئو: عنوان و توضیح برای موتورهای جستجو (صفحه فایل‌ها برای همه در دسترس است)
     count = len(assigned_lands)
     seo_title = "فایل‌های اکسپرس وینور | خرید و فروش ملک و زمین"
@@ -2322,12 +2334,7 @@ def profile_edit_page():
         profile = {"phone": me_phone}
         partners.append(profile)
 
-    try:
-        cities_allowed = load_active_cities() or []
-    except Exception:
-        cities_allowed = []
-    if not isinstance(cities_allowed, list):
-        cities_allowed = []
+    cities_allowed = _active_cities_cached()
 
     if request.method == 'POST':
         name = (request.form.get('name') or '').strip()[:60]
@@ -2430,10 +2437,7 @@ def profile_edit_data():
     me_birth_date = (profile.get('birth_date') or '').strip()
     avatar = (profile.get('avatar') or '').strip()
     avatar_url = (f"/uploads/{avatar}" if avatar else None)
-    try:
-        cities = load_active_cities() or []
-    except Exception:
-        cities = []
+    cities = _active_cities_cached()
     return jsonify({
         'success': True,
         'me_phone': me_phone,
@@ -2466,12 +2470,7 @@ def api_profile_update():
     if not profile:
         profile = {"phone": me_phone}
         partners.append(profile)
-    try:
-        cities_allowed = load_active_cities() or []
-    except Exception:
-        cities_allowed = []
-    if not isinstance(cities_allowed, list):
-        cities_allowed = []
+    cities_allowed = _active_cities_cached()
     if name:
         profile['name'] = name
     else:

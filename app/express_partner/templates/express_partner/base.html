@@ -211,6 +211,15 @@
       html[class*="tg-page-leave-"] #tg-page-shell,
       html[class*="tg-page-enter-"] #tg-page-shell { animation: none !important; opacity: 1 !important; transform: none !important; }
     }
+    html.vinor-express-overlay-modal-open #bottomNavMenu {
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    [id$="Search"] {
+      -webkit-appearance: none;
+      appearance: none;
+    }
     {% block styles %}{% endblock %}
   </style>
 
@@ -1172,6 +1181,27 @@
     })();
   </script>
 
+  <script>
+    (function (g) {
+      if (g.vinorExpressModalOverlay) return;
+      var depth = 0;
+      g.vinorExpressModalOverlay = {
+        open: function () {
+          depth++;
+          document.documentElement.classList.add('vinor-express-overlay-modal-open');
+          document.body.style.overflow = 'hidden';
+        },
+        close: function () {
+          depth = Math.max(0, depth - 1);
+          if (!depth) {
+            document.documentElement.classList.remove('vinor-express-overlay-modal-open');
+            document.body.style.overflow = '';
+          }
+        }
+      };
+    })(window);
+  </script>
+  <script src="{{ 'express-partner/city-picker.js'|static_version }}" defer></script>
   {% block scripts %}{% endblock %}
   
   <!-- Onboarding Tour System -->

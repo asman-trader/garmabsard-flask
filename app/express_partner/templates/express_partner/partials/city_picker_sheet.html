@@ -1,0 +1,112 @@
+{# شیت انتخاب شهر — لیست از سرور؛ JS فقط فیلتر/انتخاب (city-picker.js)
+   cp: پیشوند id مثل dashCityPicker یا cityPicker
+   cities: لیست شهرها
+   selected: مقدار فعلی
+   allow_all: نمایش «همه شهرها»
+   apply_submit: با تأیید فرم submit شود
+   form_id, hidden_id, trigger_id, label_id, trigger_text_id (اختیاری)
+#}
+{% set cp = cp|default('dashCityPicker') %}
+{% set selected = selected|default('') %}
+{% set allow_all = allow_all|default(false) %}
+{% set apply_submit = apply_submit|default(false) %}
+{% set empty_label = empty_label|default('انتخاب شهر') %}
+{% set major_cities = ['تهران', 'کرج', 'اصفهان', 'مشهد', 'شیراز'] %}
+
+<div id="{{ cp }}Modal"
+     class="fixed inset-0 z-[85] hidden overflow-y-auto"
+     data-tg-body-modal
+     data-city-picker-root
+     data-cp-prefix="{{ cp }}"
+     data-allow-all="{{ '1' if allow_all else '0' }}"
+     data-apply-submit="{{ '1' if apply_submit else '0' }}"
+     data-form-id="{{ form_id|default('') }}"
+     data-hidden-id="{{ hidden_id|default('') }}"
+     data-label-id="{{ label_id|default('') }}"
+     data-trigger-id="{{ trigger_id|default('') }}"
+     data-trigger-text-id="{{ trigger_text_id|default('') }}"
+     data-empty-label="{{ empty_label }}"
+     aria-hidden="true">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-[1px]" data-city-modal-backdrop></div>
+  <div class="relative flex min-h-full flex-col justify-end pointer-events-none sm:justify-center sm:p-4">
+    <div id="{{ cp }}Panel" role="dialog" aria-modal="true" aria-labelledby="{{ cp }}Title"
+         class="pointer-events-auto mx-auto flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-3xl border border-white/10 bg-[#1a222c] shadow-2xl sm:max-h-[88dvh] sm:rounded-2xl">
+      <div class="flex shrink-0 justify-center pt-2 pb-1" aria-hidden="true">
+        <span class="h-1 w-10 rounded-full bg-white/20"></span>
+      </div>
+      <div class="relative flex shrink-0 items-center justify-center border-b border-white/10 px-4 py-3">
+        <button type="button" id="{{ cp }}Close" class="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                aria-label="بستن">
+          <i class="fas fa-times text-lg" aria-hidden="true"></i>
+        </button>
+        <h2 id="{{ cp }}Title" class="text-base font-bold text-white">انتخاب شهر</h2>
+      </div>
+
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3">
+        <div class="relative mb-3 shrink-0">
+          <i class="fas fa-magnifying-glass pointer-events-none absolute right-3 top-1/2 z-[1] -translate-y-1/2 text-sm text-zinc-500" aria-hidden="true"></i>
+          <input type="text" id="{{ cp }}Search" inputmode="search" enterkeyhint="search" autocomplete="off" role="searchbox" aria-label="جستجو در شهرها"
+                 class="w-full rounded-xl border border-white/10 bg-[#0f1419] py-3 pl-3 pr-11 text-right text-sm text-white outline-none transition placeholder:text-zinc-500 placeholder:text-right focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/25"
+                 placeholder="جستجو در شهرها" dir="rtl">
+        </div>
+
+        <button type="button" id="{{ cp }}GeoQuick"
+                class="mb-4 flex w-full shrink-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0f1419] px-3 py-3 text-right transition hover:border-emerald-500/30 hover:bg-[#121820]">
+          <span class="flex min-w-0 flex-1 items-center justify-end gap-2">
+            <span class="min-w-0 text-right">
+              <span class="block text-xs font-medium text-emerald-400">موقعیت فعلی</span>
+              <span id="{{ cp }}CurrentLabel" class="block truncate text-sm font-semibold text-white">{{ selected or ('همه شهرها' if allow_all else '—') }}</span>
+            </span>
+            <i class="fas fa-location-dot shrink-0 text-lg text-emerald-500" aria-hidden="true"></i>
+          </span>
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-400" aria-hidden="true">
+            <i class="fas fa-crosshairs"></i>
+          </span>
+        </button>
+
+        <p class="mb-2 shrink-0 text-right text-xs text-zinc-500">پیشنهادهای نزدیک</p>
+        <div id="{{ cp }}Chips" class="mb-4 flex max-w-full shrink-0 flex-wrap justify-end gap-2">
+          {% set ns = namespace(shown=0) %}
+          {% for name in major_cities %}
+            {% if name in cities and ns.shown < 4 %}
+              {% set ns.shown = ns.shown + 1 %}
+              <button type="button" data-city-chip="{{ name }}"
+                      class="shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-emerald-500/50 hover:bg-emerald-500/10{% if selected == name %} border-emerald-500 bg-emerald-500/15 text-emerald-300{% endif %}">{{ name }}</button>
+            {% endif %}
+          {% endfor %}
+          {% if ns.shown == 0 %}
+            <span class="text-xs text-zinc-500">شهری برای پیشنهاد نیست</span>
+          {% endif %}
+        </div>
+
+        <p class="mb-2 shrink-0 text-right text-xs text-zinc-500">همه شهرها</p>
+        <div id="{{ cp }}List" class="min-h-[40dvh] flex-1 overflow-y-auto overscroll-contain border-t border-white/10 -mx-4 px-4 pb-2 sm:min-h-0">
+          {% if allow_all %}
+          <button type="button" data-city-row=""
+                  class="city-picker-row flex w-full items-center gap-2 border-b border-white/5 py-3.5 text-right transition hover:bg-white/[0.04]{% if selected == '' %} is-selected{% endif %}">
+            <span class="city-picker-mark grid h-6 w-6 shrink-0 place-items-center">{% if selected == '' %}<i class="fas fa-check text-emerald-500" aria-hidden="true"></i>{% endif %}</span>
+            <span class="city-picker-name min-w-0 flex-1 truncate text-sm font-medium {% if selected == '' %}text-emerald-400{% else %}text-white{% endif %}">همه شهرها</span>
+            <span class="city-picker-chev shrink-0 text-zinc-600"><i class="fas fa-chevron-left text-xs" aria-hidden="true"></i></span>
+          </button>
+          {% endif %}
+          {% for c in (cities or []) %}
+          <button type="button" data-city-row="{{ c }}"
+                  class="city-picker-row flex w-full items-center gap-2 border-b border-white/5 py-3.5 text-right transition last:border-b-0 hover:bg-white/[0.04]{% if selected == c %} is-selected{% endif %}">
+            <span class="city-picker-mark grid h-6 w-6 shrink-0 place-items-center">{% if selected == c %}<i class="fas fa-check text-emerald-500" aria-hidden="true"></i>{% endif %}</span>
+            <span class="city-picker-name min-w-0 flex-1 truncate text-sm font-medium {% if selected == c %}text-emerald-400{% else %}text-white{% endif %}">{{ c }}</span>
+            <span class="city-picker-chev shrink-0 text-zinc-600"><i class="fas fa-chevron-left text-xs" aria-hidden="true"></i></span>
+          </button>
+          {% endfor %}
+        </div>
+        <p id="{{ cp }}Empty" class="hidden py-8 text-center text-sm text-zinc-500">شهری یافت نشد.</p>
+      </div>
+
+      <div class="shrink-0 border-t border-white/10 bg-[#1a222c] p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+        <button type="button" id="{{ cp }}Apply"
+                class="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-500 active:scale-[0.99]">
+          انتخاب شهر
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
