@@ -450,6 +450,39 @@
         return await res.json();
       }
 
+      const PUSH_SYNC_KEY = 'vinor_express_push_synced_at';
+      const PUSH_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+      function shouldSyncPushToServer() {
+        try {
+          const t = parseInt(localStorage.getItem(PUSH_SYNC_KEY) || '0', 10);
+          return !t || (Date.now() - t > PUSH_SYNC_INTERVAL_MS);
+        } catch (_) {
+          return true;
+        }
+      }
+
+      function markPushSyncedToServer() {
+        try { localStorage.setItem(PUSH_SYNC_KEY, String(Date.now())); } catch (_) {}
+      }
+
+      async function syncPushSubscriptionToServer(subObj) {
+        if (!shouldSyncPushToServer()) return false;
+        try {
+          const res = await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(subObj)
+          });
+          if (res && res.ok) {
+            markPushSyncedToServer();
+            return true;
+          }
+        } catch (_) {}
+        return false;
+      }
+
       // ===== فعال‌سازی خودکار اعلان‌ها در پس‌زمینه =====
       async function autoEnableNotificationsInBackground() {
         try {
@@ -496,14 +529,7 @@
             const existing = await reg.pushManager.getSubscription().catch(() => null);
             if (existing) {
               try {
-                const subObj = existing.toJSON();
-                const res = await fetch('/api/push/subscribe', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'same-origin',
-                  body: JSON.stringify(subObj)
-                }).catch(() => null);
-                if (res && res.ok) {
+                if (await syncPushSubscriptionToServer(existing.toJSON())) {
                   try { localStorage.setItem(NOTIFICATION_AUTO_ENABLED_FLAG, '1'); } catch(_) {}
                 }
               } catch(_) {}
@@ -538,36 +564,6 @@
         setTimeout(autoEnableNotificationsInBackground, 2000);
       }
 
-      // تلاش خودکار برای ثبت پوش اگر قبلاً اجازه داده شده
-      document.addEventListener('DOMContentLoaded', async () => {
-        try {
-          if (!('serviceWorker' in navigator)) return;
-          const perm = (Notification && Notification.permission) || 'default';
-          if (perm === 'granted' && VAPID_PUBLIC_KEY) {
-            const reg = await navigator.serviceWorker.getRegistration('{{ url_for("express_partner.service_worker") }}');
-            if (reg) {
-              const existing = await reg.pushManager.getSubscription();
-              if (!existing) {
-                try { 
-                  const sub = await subscribePush(); 
-                  await saveSubscription(sub); 
-                } catch(_){}
-              } else {
-                // اگر subscription موجود است، آن را در سرور ثبت کن
-                try {
-                  const subObj = existing.toJSON();
-                  await fetch('/api/push/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(subObj)
-                  });
-                } catch(_){}
-              }
-            }
-          }
-        } catch(_){}
-      });
     })();
   </script>
 
@@ -815,7 +811,6 @@
             this.sync(VinorNotifyCenter.getState());
             this._onUpdate = (evt) => this.sync(evt.detail);
             window.addEventListener('vinor:notifications:update', this._onUpdate);
-            VinorNotifyCenter.fetchList(true);
           },
           destroy() {
             if (this._onUpdate) {
@@ -924,23 +919,16 @@
               }
             }
             
-            // همیشه fetch کن تا داده‌های جدید را بگیر
-            // حتی اگر initial data وجود دارد، برای اطمینان از به‌روز بودن داده‌ها fetch کن
-            // اما با تاخیر کوتاه تا component به درستی initialize شود
-            setTimeout(() => {
-              if (typeof VinorNotifyCenter !== 'undefined') {
-                // اگر initial data وجود دارد، loading را false نگه دار اما fetch کن
-                if (this.items.length > 0) {
-                  this.loading = false;
-                }
-                console.debug('Calling VinorNotifyCenter.fetchList(true)');
-                VinorNotifyCenter.fetchList(true);
+            if (typeof VinorNotifyCenter !== 'undefined') {
+              const st = VinorNotifyCenter.getState();
+              if (st && Array.isArray(st.notifications) && st.notifications.length) {
+                this.sync(st);
               } else {
-                // اگر VinorNotifyCenter در دسترس نیست، مستقیماً fetch کن
-                console.debug('VinorNotifyCenter not available, calling fetchDirectly()');
-                this.fetchDirectly();
+                VinorNotifyCenter.fetchList(true);
               }
-            }, 100);
+            } else {
+              this.fetchDirectly();
+            }
           },
           async fetchDirectly() {
             try {

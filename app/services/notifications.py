@@ -129,6 +129,86 @@ def _load_all() -> Dict[str, List[Dict[str, Any]]]:
     return {}
 
 
+def _notifications_invalidate_cache() -> None:
+    try:
+        from flask import g
+        for key in ('_notifications_data_cached', '_notifications_user_items'):
+            if hasattr(g, key):
+                delattr(g, key)
+    except Exception:
+        pass
+
+
+def _load_all_cached() -> Dict[str, List[Dict[str, Any]]]:
+    try:
+        from flask import g
+        cached = getattr(g, '_notifications_data_cached', None)
+        if cached is not None:
+            return cached
+    except Exception:
+        pass
+    data = _load_all()
+    try:
+        from flask import g
+        g._notifications_data_cached = data
+    except Exception:
+        pass
+    return data
+
+
+def _resolve_user_items(user_id: str) -> List[Dict[str, Any]]:
+    """لیست اعلان‌های یک کاربر — یک‌بار در هر درخواست HTTP."""
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return []
+    try:
+        from flask import g
+        by_user = getattr(g, '_notifications_user_items', None)
+        if by_user is None:
+            by_user = {}
+            g._notifications_user_items = by_user
+        if normalized_user_id in by_user:
+            return by_user[normalized_user_id]
+    except Exception:
+        by_user = None
+
+    data = _load_all_cached()
+    items = data.get(normalized_user_id, [])
+    if not isinstance(items, list):
+        items = []
+
+    if not items:
+        found_items_list: List[Dict[str, Any]] = []
+        keys_to_remove = []
+        for key in data.keys():
+            normalized_key = _normalize_user_id(key)
+            if normalized_key == normalized_user_id:
+                found_items = data.get(key, [])
+                if found_items and isinstance(found_items, list):
+                    found_items_list.extend(found_items)
+                    if key != normalized_user_id:
+                        keys_to_remove.append(key)
+        if found_items_list:
+            seen_ids = set()
+            unique_items = []
+            for item in found_items_list:
+                item_id = item.get('id')
+                if item_id and item_id not in seen_ids:
+                    seen_ids.add(item_id)
+                    unique_items.append(item)
+            unique_items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
+            items = unique_items
+            if items:
+                data[normalized_user_id] = items
+                for old_key in keys_to_remove:
+                    data.pop(old_key, None)
+                _save_all(data)
+
+    if by_user is not None:
+        by_user[normalized_user_id] = items
+    return items
+
+
 def _save_all(data: Dict[str, List[Dict[str, Any]]]) -> bool:
     """ذخیره همه اعلان‌ها در فایل"""
     file_path = _get_notifications_file_path()
@@ -152,12 +232,8 @@ def _save_all(data: Dict[str, List[Dict[str, Any]]]) -> bool:
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(normalized_data, f, ensure_ascii=False, indent=2)
-        
-        try:
-            current_app.logger.info(f"Notifications saved successfully. Total users: {len(normalized_data)}")
-        except Exception:
-            pass
-        
+
+        _notifications_invalidate_cache()
         return True
     except Exception as e:
         try:
@@ -229,102 +305,20 @@ def add_notification(user_id: str, title: str, body: str, ntype: str = "info",
 
 
 def get_user_notifications(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """
-    دریافت اعلان‌های یک کاربر
-    """
+    """دریافت اعلان‌های یک کاربر (جدیدترین اول)."""
     if not user_id:
         return []
-    
-    # Normalize کردن user_id
-    normalized_user_id = _normalize_user_id(user_id)
-    if not normalized_user_id:
-        try:
-            current_app.logger.warning(f"Invalid user_id after normalization: {user_id}")
-        except Exception:
-            pass
-        return []
-    
-    # بارگذاری داده‌ها
-    data = _load_all()
-    
-    # Logging برای debug
-    try:
-        current_app.logger.info(
-            f"get_user_notifications: user_id={user_id} -> normalized={normalized_user_id}"
-        )
-        current_app.logger.info(f"Available keys in storage: {list(data.keys())}")
-    except Exception:
-        pass
-    
-    # دریافت اعلان‌های کاربر - اول با کلید normalize شده
-    items = data.get(normalized_user_id, [])
-    if not isinstance(items, list):
-        items = []
-    
-    # اگر اعلانی پیدا نشد، بررسی همه کلیدها برای تطابق احتمالی و merge
-    if not items:
-        try:
-            current_app.logger.info(f"No direct match for '{normalized_user_id}', searching variants...")
-        except Exception:
-            pass
-        
-        # بررسی همه کلیدها - normalize کردن هر کلید و مقایسه
-        found_items_list = []
-        keys_to_remove = []
-        for key in data.keys():
-            normalized_key = _normalize_user_id(key)
-            if normalized_key == normalized_user_id:
-                found_items = data.get(key, [])
-                if found_items and isinstance(found_items, list):
-                    found_items_list.extend(found_items)
-                    # علامت‌گذاری کلید قدیمی برای حذف
-                    if key != normalized_user_id:
-                        keys_to_remove.append(key)
-        
-        if found_items_list:
-            # حذف تکراری‌ها بر اساس id
-            seen_ids = set()
-            unique_items = []
-            for item in found_items_list:
-                item_id = item.get('id')
-                if item_id and item_id not in seen_ids:
-                    seen_ids.add(item_id)
-                    unique_items.append(item)
-            
-            # sort بر اساس created_at (جدیدترین اول)
-            unique_items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
-            items = unique_items
-            
-            # ذخیره با کلید normalize شده و حذف کلیدهای قدیمی
-            if items:
-                data[normalized_user_id] = items
-                for old_key in keys_to_remove:
-                    data.pop(old_key, None)
-                _save_all(data)
-                try:
-                    current_app.logger.info(f"Merged {len(items)} notifications from {len(keys_to_remove)} variant keys into '{normalized_user_id}'")
-                except Exception:
-                    pass
-    
-    # Logging
-    try:
-        current_app.logger.info(
-            f"Returning {len(items)} notifications for user_id={normalized_user_id}"
-        )
-    except Exception:
-        pass
-    
-    # محدود کردن تعداد و sort بر اساس created_at (جدیدترین اول)
-    # اطمینان از اینکه items به ترتیب زمانی صحیح هستند
+    items = list(_resolve_user_items(user_id))
     items.sort(key=lambda x: x.get('created_at', 0), reverse=True)
     limit = max(1, int(limit or 50))
     return items[:limit]
 
 
 def unread_count(user_id: str) -> int:
-    """شمارش اعلان‌های خوانده نشده"""
-    notifications = get_user_notifications(user_id, limit=9999)
-    return sum(1 for n in notifications if not n.get("is_read", False))
+    """شمارش اعلان‌های خوانده‌نشده — بدون بارگذاری مجدد فایل در همان درخواست."""
+    if not user_id:
+        return 0
+    return sum(1 for n in _resolve_user_items(user_id) if not n.get("is_read", False))
 
 
 def mark_read(user_id: str, notif_id: str) -> bool:

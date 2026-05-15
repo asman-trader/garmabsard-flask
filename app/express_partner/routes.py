@@ -2837,51 +2837,17 @@ def notifications_page():
 @require_partner_access(json_response=True, allow_pending=True)
 def get_notifications():
     """Get user notifications"""
-    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id, _load_all
-    
+    from app.services.notifications import get_user_notifications, unread_count, _normalize_user_id
+
     me_phone_raw = (session.get("user_phone") or "").strip()
-    # استفاده از همان تابع normalize که در notifications.py استفاده می‌شود
     me_phone = _normalize_user_id(me_phone_raw) if me_phone_raw else ""
-    
-    # Debug logging
-    try:
-        from flask import current_app
-        current_app.logger.info(f"API: Getting notifications for phone: {me_phone_raw} -> normalized: {me_phone}")
-        
-        # بررسی همه کلیدهای موجود
-        all_data = _load_all()
-        all_keys = list(all_data.keys())
-        current_app.logger.info(f"API: All notification keys in storage: {all_keys}")
-        
-        # بررسی اینکه آیا کلید دقیق وجود دارد
-        if me_phone in all_data:
-            current_app.logger.info(f"API: Key '{me_phone}' found in storage with {len(all_data[me_phone])} items")
-        else:
-            current_app.logger.warning(f"API: Key '{me_phone}' NOT found in storage!")
-            # بررسی تطابق احتمالی
-            for key in all_keys:
-                if _normalize_user_id(key) == me_phone:
-                    current_app.logger.info(f"API: Found matching key '{key}' that normalizes to '{me_phone}'")
-    except Exception as e:
-        current_app.logger.error(f"API: Debug error: {e}")
-    
     notifications = get_user_notifications(me_phone, limit=50)
-    
-    try:
-        from flask import current_app
-        current_app.logger.info(f"API: Returning {len(notifications)} notifications for {me_phone}")
-    except Exception:
-        pass
-    
+    unread = unread_count(me_phone)
+
     return jsonify({
         "success": True,
         "notifications": notifications,
-        "unread_count": unread_count(me_phone),
-        "debug": {
-            "phone_raw": me_phone_raw,
-            "phone_normalized": me_phone,
-            "notifications_count": len(notifications)
-        }
+        "unread_count": unread,
     })
 
 

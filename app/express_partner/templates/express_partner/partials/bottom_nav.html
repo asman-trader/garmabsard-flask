@@ -254,7 +254,17 @@
     }
   }
 
+  function notifyCenterEnabled() {
+    try {
+      var cfg = window.VINOR_NOTIFY_CFG;
+      return cfg && (cfg.enabled === true || cfg.enabled === 'true');
+    } catch (_) {
+      return false;
+    }
+  }
+
   async function refreshUnreadBadge() {
+    if (notifyCenterEnabled()) return;
     try {
       const res = await fetch(unreadUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
       if (!res.ok) return;
@@ -275,29 +285,51 @@
     return base + (isActive ? 'tg-tab-active ' : '') + (isDisabled ? 'tg-tab-disabled' : '');
   }
 
+  const MENU_CACHE_KEY = 'vinor_express_bottom_nav_menu_v1';
+  const MENU_CACHE_MAX_AGE_MS = 10 * 60 * 1000;
+
+  function readMenuCache() {
+    try {
+      const raw = sessionStorage.getItem(MENU_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.menu) || !parsed.ts) return null;
+      if (Date.now() - parsed.ts > MENU_CACHE_MAX_AGE_MS) return null;
+      return parsed.menu;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeMenuCache(menu) {
+    try {
+      sessionStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ menu: menu, ts: Date.now() }));
+    } catch (_) {}
+  }
+
   async function loadMenuFromAPI() {
+    const cachedMenu = readMenuCache();
+    if (cachedMenu) renderMenu(cachedMenu);
+
     try {
       const response = await fetch('/api/menu', {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
+        headers: { 'Accept': 'application/json' },
         credentials: 'same-origin'
       });
 
       if (!response.ok) {
-        console.warn('Failed to load menu from API, using default menu');
+        if (!cachedMenu) console.warn('Failed to load menu from API');
         return;
       }
 
       const data = await response.json();
       if (data.success && data.menu && Array.isArray(data.menu)) {
+        writeMenuCache(data.menu);
         renderMenu(data.menu);
-        refreshUnreadBadge();
       }
     } catch (error) {
-      console.warn('Error loading menu from API:', error);
+      if (!cachedMenu) console.warn('Error loading menu from API:', error);
     }
   }
 
@@ -351,17 +383,16 @@
       link.appendChild(stack);
       navContainer.appendChild(link);
     });
-    refreshUnreadBadge();
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       loadMenuFromAPI();
-      refreshUnreadBadge();
+      if (!notifyCenterEnabled()) refreshUnreadBadge();
     });
   } else {
     loadMenuFromAPI();
-    refreshUnreadBadge();
+    if (!notifyCenterEnabled()) refreshUnreadBadge();
   }
 
   window.addEventListener('storage', (e) => {
