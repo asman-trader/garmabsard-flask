@@ -4,7 +4,7 @@
   این Service Worker کاملاً مجزا از PWA اصلی وینور است
 */
 
-const VERSION = 'v1.0.6-post-redirect-manual';
+const VERSION = 'v1.0.7-tab-static-cache';
 const PRECACHE = `express-partner-precache-${VERSION}`;
 const RUNTIME = `express-partner-runtime-${VERSION}`;
 const API_CACHE = `express-partner-api-${VERSION}`;
@@ -52,7 +52,14 @@ const LOCAL_ASSETS = [
   '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
   '/static/vendor/fontawesome/webfonts/fa-regular-400.woff2',
   '/static/vendor/fontawesome/webfonts/fa-brands-400.woff2',
-  '/static/fonts/vazirmatn.css'
+  '/static/fonts/vazirmatn.css',
+  '/static/fonts/vazirmatn-regular.woff2',
+  '/static/fonts/vazirmatn-medium.woff2',
+  '/static/fonts/vazirmatn-bold.woff2',
+  '/static/vendor/tailwind/tailwindcdn-3.4.17.js',
+  '/static/vendor/alpine/alpine-3.14.1.min.js',
+  '/static/js/onboarding.js',
+  '/static/express-partner/city-picker.js'
 ];
 
 // نصب Service Worker

@@ -801,6 +801,7 @@
   
   // Image/video loading for cards (show loader only while loading)
   (function(){
+    initLazyCardVideos(document);
     document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
       const img = wrap.querySelector('[data-card-img]');
       const vid = wrap.querySelector('video');
@@ -823,7 +824,7 @@
           img.addEventListener('error', hideLoader, { once:true });
         }
       }
-      if (vid){
+      if (vid && !(vid.hasAttribute('data-vinor-lazy-video') && vid.dataset.vinorLazyLoaded !== '1')) {
         const ready = () => showMedia(vid);
         if (vid.readyState >= 2) ready();
         else {
@@ -1052,8 +1053,54 @@
     root.addEventListener('touchcancel', resetGesture, { passive: true });
   })();
   
+  function initLazyCardVideos(root) {
+    const scope = root || document;
+    const videos = scope.querySelectorAll('video[data-vinor-lazy-video]');
+    if (!videos.length) return;
+
+    function loadLazyCardVideo(vid) {
+      if (vid.dataset.vinorLazyLoaded === '1') return;
+      const wrap = vid.closest('[data-img-wrap]');
+      const loader = wrap && wrap.querySelector('.card-img-loading');
+      function hideLoader() {
+        if (loader) {
+          loader.classList.add('opacity-0', 'pointer-events-none');
+          setTimeout(function () { loader.remove(); }, 250);
+        }
+      }
+      function showMedia() {
+        vid.classList.remove('opacity-0');
+        hideLoader();
+      }
+      vid.addEventListener('loadeddata', showMedia, { once: true });
+      vid.addEventListener('error', hideLoader, { once: true });
+      const source = vid.querySelector('source[data-src]');
+      if (source && source.dataset.src) {
+        source.src = source.dataset.src;
+        vid.load();
+        vid.play().catch(function () {});
+      }
+      vid.dataset.vinorLazyLoaded = '1';
+    }
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          loadLazyCardVideo(entry.target);
+          io.unobserve(entry.target);
+        });
+      }, { rootMargin: '100px 0px' });
+      videos.forEach(function (v) { io.observe(v); });
+    } else {
+      videos.forEach(loadLazyCardVideo);
+    }
+  }
+
   // تابع برای re-initialize کردن کارت‌ها بعد از refresh
   function reinitializeCards() {
+    initLazyCardVideos(document);
+
     // 1. Image/video loading logic
     document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
       const img = wrap.querySelector('[data-card-img]');
@@ -1079,7 +1126,7 @@
           img.addEventListener('error', hideLoader, { once:true });
         }
       }
-      if (vid){
+      if (vid && !(vid.hasAttribute('data-vinor-lazy-video') && vid.dataset.vinorLazyLoaded !== '1')) {
         const ready = () => showMedia(vid);
         if (vid.readyState >= 2) ready();
         else {

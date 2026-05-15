@@ -223,6 +223,7 @@
 (function() {
   const activeKey = '{{ bottom_nav_active }}';
   const unreadUrl = '{{ bottom_nav_unread_url }}';
+  const userLoggedIn = {{ 'true' if session.get('user_phone') else 'false' }};
   const navContainer = document.getElementById('bottomNavItems');
   if (!navContainer) return;
 
@@ -264,7 +265,7 @@
   }
 
   async function refreshUnreadBadge() {
-    if (notifyCenterEnabled()) return;
+    if (!userLoggedIn || notifyCenterEnabled()) return;
     try {
       const res = await fetch(unreadUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
       if (!res.ok) return;
@@ -309,7 +310,10 @@
 
   async function loadMenuFromAPI() {
     const cachedMenu = readMenuCache();
-    if (cachedMenu) renderMenu(cachedMenu);
+    if (cachedMenu) {
+      renderMenu(cachedMenu);
+      return;
+    }
 
     try {
       const response = await fetch('/api/menu', {

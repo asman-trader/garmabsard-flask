@@ -229,7 +229,12 @@
 
   {% include 'express_partner/partials/app_skeleton_shell.html' %}
 
-  {% block content %}{% endblock %}
+  <div id="vinor-express-page-swap">
+    {% block content %}{% endblock %}
+  </div>
+  <div id="vinor-express-page-scripts" hidden aria-hidden="true">
+    {% block scripts %}{% endblock %}
+  </div>
 
   <script>
     (function hoistExpressPartnerShell() {
@@ -284,18 +289,7 @@
                 return navigator.serviceWorker.controller;
               })());
               
-              // Warmup Express Partner routes
-              const urls = [
-                '/express/partner/login',
-                '/express/partner/dashboard',
-                '/express/partner/profile',
-                '/express/partner/commissions',
-                '/express/partner/notes',
-                '/express/partner/apply',
-                '/static/express-partner/skeleton-shell.html'
-              ];
-              
-              if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls });
+              if (sw) sw.postMessage({ type: 'VINOR_WARMUP', urls: ['/static/express-partner/skeleton-shell.html'] });
             } catch {} 
           })
           .catch(()=>{});
@@ -635,6 +629,63 @@
       let bootstrapped = false;
       const knownNotificationIds = new Set();
       let notificationSoundBaselineReady = false;
+      const NOTIFY_CACHE_KEY = 'vinor_express_notifications_v1';
+      const NOTIFY_CACHE_MAX_AGE_MS = 90 * 1000;
+
+      function readNotifyCache() {
+        try {
+          const raw = sessionStorage.getItem(NOTIFY_CACHE_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.notifications) || !parsed.ts) return null;
+          if (Date.now() - parsed.ts > NOTIFY_CACHE_MAX_AGE_MS) return null;
+          return parsed;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function writeNotifyCache(notifications, unread) {
+        try {
+          sessionStorage.setItem(NOTIFY_CACHE_KEY, JSON.stringify({
+            notifications: notifications,
+            unread: unread,
+            ts: Date.now()
+          }));
+        } catch (_) {}
+      }
+
+      function isNotifyCacheStale() {
+        try {
+          const raw = sessionStorage.getItem(NOTIFY_CACHE_KEY);
+          if (!raw) return true;
+          const parsed = JSON.parse(raw);
+          return !parsed || !parsed.ts || (Date.now() - parsed.ts > NOTIFY_CACHE_MAX_AGE_MS);
+        } catch (_) {
+          return true;
+        }
+      }
+
+      function applyNotifyPayload(incoming, unread) {
+        const list = Array.isArray(incoming) ? incoming : [];
+        maybePlaySoundForNewNotifications(list);
+        state.notifications = list;
+        state.unread = Number(unread || 0);
+        writeNotifyCache(list, state.unread);
+        bootstrapped = true;
+        dispatch('vinor:notifications:update', cloneState());
+        return list;
+      }
+
+      function hydrateFromNotifyCache() {
+        const cached = readNotifyCache();
+        if (!cached) return false;
+        state.notifications = cached.notifications.map(function (n) { return Object.assign({}, n); });
+        state.unread = Number(cached.unread || 0);
+        bootstrapped = true;
+        dispatch('vinor:notifications:update', cloneState());
+        return true;
+      }
 
       function maybePlaySoundForNewNotifications(incomingList) {
         const list = Array.isArray(incomingList) ? incomingList : [];
@@ -682,6 +733,12 @@
           }
           return [];
         }
+        if (!force) {
+          const cached = readNotifyCache();
+          if (cached) {
+            return applyNotifyPayload(cached.notifications, cached.unread);
+          }
+        }
         if (state.loading && !force) {
           return state.notifications;
         }
@@ -696,12 +753,7 @@
           const data = await res.json();
           if (!data.success) return [];
           const incoming = Array.isArray(data.notifications) ? data.notifications : [];
-          maybePlaySoundForNewNotifications(incoming);
-          state.notifications = incoming;
-          state.unread = Number(data.unread_count || 0);
-          dispatch('vinor:notifications:update', cloneState());
-          bootstrapped = true;
-          return state.notifications;
+          return applyNotifyPayload(incoming, data.unread_count || 0);
         } catch (err) {
           console.warn('Vinor notifications fetch failed', err);
           return [];
@@ -741,8 +793,8 @@
             state.notifications = state.notifications.map(n => ({ ...n, is_read: true }));
             state.unread = Number(data.unread_count || 0);
             state.loading = false;
+            writeNotifyCache(state.notifications, state.unread);
             dispatch('vinor:notifications:update', cloneState());
-            // بعد از mark all، لیست را refresh کن
             fetchNotifications(true);
           } else {
             console.warn('Vinor notifications markAll failed:', data);
@@ -770,6 +822,7 @@
             state.notifications = state.notifications.map(n => n.id === id ? { ...n, is_read: true } : n);
             state.unread = Number(data.unread_count !== undefined ? data.unread_count : Math.max(0, state.unread - 1));
             state.loading = false;
+            writeNotifyCache(state.notifications, state.unread);
             dispatch('vinor:notifications:update', cloneState());
           } else {
             console.warn('Vinor notifications markRead failed:', data);
@@ -791,13 +844,16 @@
       });
 
       if (enabled) {
+        hydrateFromNotifyCache();
+        fetchNotifications(!readNotifyCache());
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
+          if (document.visibilityState === 'visible' && isNotifyCacheStale()) {
             fetchNotifications(true);
           }
         });
-        window.addEventListener('focus', () => fetchNotifications(true), { passive: true });
-        fetchNotifications(true);
+        window.addEventListener('focus', () => {
+          if (isNotifyCacheStale()) fetchNotifications(true);
+        }, { passive: true });
         startPolling();
       } else {
         dispatch('vinor:notifications:update', cloneState());
@@ -1034,6 +1090,145 @@
     (function () {
       var STORAGE_KEY = 'vinor_express_tab_nav_dir';
       var PREFIX = '/express/partner/';
+      var SOFT_TAB_PATHS = {
+        '/express/partner/dashboard': 'dashboard',
+        '/express/partner/commissions': 'commissions',
+        '/express/partner/routine': 'routine',
+        '/express/partner/profile': 'profile'
+      };
+
+      function normPath(pathname) {
+        var p = (pathname || '').replace(/\/+$/, '') || '/';
+        return p;
+      }
+
+      function softTabKeyForUrl(url) {
+        try {
+          return SOFT_TAB_PATHS[normPath(new URL(url, window.location.origin).pathname)] || '';
+        } catch (_) {
+          return '';
+        }
+      }
+
+      function runScriptsIn(container) {
+        if (!container) return;
+        container.querySelectorAll('script').forEach(function (oldScript) {
+          var s = document.createElement('script');
+          Array.prototype.forEach.call(oldScript.attributes, function (attr) {
+            s.setAttribute(attr.name, attr.value);
+          });
+          s.textContent = oldScript.textContent;
+          oldScript.parentNode.replaceChild(s, oldScript);
+        });
+      }
+
+      function setBottomNavActive(navKey) {
+        var nav = document.getElementById('bottomNavMenu');
+        if (!nav || !navKey) return;
+        nav.querySelectorAll('#bottomNavItems > a[data-nav-key]').forEach(function (link) {
+          var on = link.getAttribute('data-nav-key') === navKey;
+          link.classList.toggle('tg-tab-active', on);
+          link.setAttribute('aria-current', on ? 'page' : 'false');
+        });
+      }
+
+      function afterPageSwap(navKey) {
+        setBottomNavActive(navKey);
+        try {
+          if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            var root = document.getElementById('vinor-express-page-swap');
+            if (root) window.Alpine.initTree(root);
+          }
+        } catch (_) {}
+        try {
+          if (typeof window.reinitializeCards === 'function') window.reinitializeCards();
+        } catch (_) {}
+        try {
+          window.dispatchEvent(new CustomEvent('vinor:express-page-swap', { detail: { navKey: navKey } }));
+        } catch (_) {}
+        try {
+          document.dispatchEvent(new CustomEvent('vinor:city-picker-reinit'));
+        } catch (_) {}
+      }
+
+      function playEnterAnimation(dir) {
+        if (!dir || prefersReducedMotion()) return;
+        var shell = document.getElementById('tg-page-shell');
+        if (!shell) return;
+        var rtl = document.documentElement.getAttribute('dir') === 'rtl';
+        var enter = rtl
+          ? (dir > 0 ? 'tg-page-enter-rtl-forward' : 'tg-page-enter-rtl-back')
+          : (dir > 0 ? 'tg-page-enter-ltr-forward' : 'tg-page-enter-ltr-back');
+        document.documentElement.classList.add(enter);
+        var finished = false;
+        function done() {
+          if (finished) return;
+          finished = true;
+          stripNavClasses(document.documentElement);
+        }
+        function onEnterEnd(ev) {
+          if (ev.target !== shell) return;
+          if (!/^tgEnter/i.test(firstAnimName(ev))) return;
+          shell.removeEventListener('animationend', onEnterEnd);
+          done();
+        }
+        shell.addEventListener('animationend', onEnterEnd);
+        setTimeout(function () {
+          shell.removeEventListener('animationend', onEnterEnd);
+          done();
+        }, 220);
+      }
+
+      function softNavigate(href, dir, opts) {
+        opts = opts || {};
+        var navKey = softTabKeyForUrl(href);
+        var swapEl = document.getElementById('vinor-express-page-swap');
+        var scriptsEl = document.getElementById('vinor-express-page-scripts');
+        if (!navKey || !swapEl) {
+          window.location.href = href;
+          return Promise.resolve(false);
+        }
+        return fetch(href, {
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'text/html',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('nav');
+            return res.text();
+          })
+          .then(function (html) {
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var newSwap = doc.getElementById('vinor-express-page-swap');
+            var newScripts = doc.getElementById('vinor-express-page-scripts');
+            if (!newSwap) throw new Error('swap');
+            swapEl.innerHTML = newSwap.innerHTML;
+            if (scriptsEl && newScripts) {
+              scriptsEl.innerHTML = newScripts.innerHTML;
+              runScriptsIn(scriptsEl);
+            }
+            runScriptsIn(swapEl);
+            if (doc.title) document.title = doc.title;
+            if (!opts.fromPopstate) {
+              history.pushState({ vinorSoftTab: navKey }, '', href);
+            }
+            afterPageSwap(navKey);
+            playEnterAnimation(dir);
+            return true;
+          })
+          .catch(function () {
+            window.location.href = href;
+            return false;
+          });
+      }
+
+      window.addEventListener('popstate', function () {
+        var key = softTabKeyForUrl(window.location.href);
+        if (!key) return;
+        softNavigate(window.location.href, 0, { fromPopstate: true });
+      });
 
       function stripNavClasses(el) {
         if (!el || !el.classList) return;
@@ -1150,6 +1345,10 @@
             if (navigated) return;
             navigated = true;
             document.documentElement.classList.remove('tg-nav-transitioning');
+            if (softTabKeyForUrl(href)) {
+              softNavigate(href, dir);
+              return;
+            }
             window.location.href = href;
           }
           function onLeave(ev) {
@@ -1190,8 +1389,7 @@
     })(window);
   </script>
   <script src="{{ 'express-partner/city-picker.js'|static_version }}" defer></script>
-  {% block scripts %}{% endblock %}
-  
+
   <!-- Onboarding Tour System -->
   <script src="{{ 'js/onboarding.js'|static_version }}"></script>
   

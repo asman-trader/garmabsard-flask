@@ -258,7 +258,8 @@
   function boot() {
     document.querySelectorAll('[data-city-picker-root]').forEach(function (modal) {
       var trigger = document.getElementById(modal.getAttribute('data-trigger-id') || '');
-      if (!trigger) return;
+      if (!trigger || trigger.getAttribute('data-cp-bound') === '1') return;
+      trigger.setAttribute('data-cp-bound', '1');
       trigger.addEventListener('click', function () {
         initPicker(modal);
         if (modal._cpOpen) modal._cpOpen();
@@ -271,6 +272,9 @@
   } else {
     boot();
   }
+
+  document.addEventListener('vinor:express-page-swap', boot);
+  document.addEventListener('vinor:city-picker-reinit', boot);
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
