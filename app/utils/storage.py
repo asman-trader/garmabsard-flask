@@ -284,8 +284,32 @@ def save_partner_files_meta(items, app=None): return _save(ensure_file('EXPRESS_
 # Express Assignments & Commissions
 def load_express_assignments(app=None):    return _load(ensure_file('EXPRESS_ASSIGNMENTS_FILE','express_assignments.json',[],app))
 def save_express_assignments(items, app=None): return _save(ensure_file('EXPRESS_ASSIGNMENTS_FILE','express_assignments.json',[],app), items)
+_COMMISSIONS_CACHE = {"path": None, "mtime": None, "size": None, "data": None}
+
 def load_express_commissions(app=None):    return _load(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app))
-def save_express_commissions(items, app=None): return _save(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app), items)
+
+def load_express_commissions_cached(app=None):
+    """پورسانت‌ها با کش mtime — برای ناوبری سریع‌تر بین تب‌ها."""
+    app = _resolve_app(app)
+    path = ensure_file('EXPRESS_COMMISSIONS_FILE', 'express_commissions.json', [], app)
+    try:
+        st = os.stat(path)
+        mtime = st.st_mtime_ns if hasattr(st, 'st_mtime_ns') else int(st.st_mtime * 1e9)
+        size = st.st_size
+    except Exception:
+        mtime = None
+        size = None
+    c = _COMMISSIONS_CACHE
+    if c["path"] == path and c["mtime"] == mtime and c["size"] == size and c["data"] is not None:
+        return c["data"]
+    data = _load(path)
+    _COMMISSIONS_CACHE.update({"path": path, "mtime": mtime, "size": size, "data": data})
+    return data
+
+def save_express_commissions(items, app=None):
+    data = _save(ensure_file('EXPRESS_COMMISSIONS_FILE','express_commissions.json',[],app), items)
+    _COMMISSIONS_CACHE.update({"path": None, "mtime": None, "size": None, "data": None})
+    return data
 
 # کارت‌های بانکی همکار اکسپرس (فقط متادیتا؛ شمارهٔ کامل ذخیره نمی‌شود)
 def load_partner_bank_accounts(app=None):

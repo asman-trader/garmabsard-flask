@@ -17,7 +17,7 @@ from ..utils.storage import (
     load_express_partners, save_express_partners, load_partner_notes, save_partner_notes,
     load_partner_sales, save_partner_sales,
     load_partner_files_meta, save_partner_files_meta,
-    load_express_assignments, save_express_assignments, load_express_commissions, save_express_commissions,
+    load_express_assignments, save_express_assignments, load_express_commissions, load_express_commissions_cached, save_express_commissions,
     load_express_reposts, save_express_reposts,
     load_ads_cached, load_active_cities, load_express_lands_cached,
     load_sms_history, save_sms_history,
@@ -55,6 +55,104 @@ def _express_partners_cached() -> List[Dict[str, Any]]:
     return lst
 
 
+def _partner_profile_for_phone(phone: str) -> Dict[str, Any] | None:
+    """پروفایل یک همکار از لیست کش‌شدهٔ درخواست (بدون خواندن مجدد فایل)."""
+    phone = (phone or '').strip()
+    if not phone:
+        return None
+    by_phone = getattr(g, '_express_partner_by_phone', None)
+    if by_phone is None:
+        partners = _express_partners_cached()
+        by_phone = {
+            str(p.get('phone') or '').strip(): p
+            for p in partners
+            if isinstance(p, dict) and str(p.get('phone') or '').strip()
+        }
+        g._express_partner_by_phone = by_phone
+    return by_phone.get(phone)
+
+
+def _ensure_session_partner_on_g() -> None:
+    """یک‌بار در هر درخواست: پروفایل همکار جاری روی g."""
+    if getattr(g, '_express_partner_ctx_ready', False):
+        return
+    g._express_partner_ctx_ready = True
+    me_phone = (session.get('user_phone') or '').strip()
+    if not me_phone:
+        g.express_partner_profile = None
+        return
+    g.express_partner_profile = _partner_profile_for_phone(me_phone)
+
+
+def _express_commissions_cached() -> List[Dict[str, Any]]:
+    if getattr(g, '_express_commissions_cached', None) is not None:
+        return g._express_commissions_cached
+    try:
+        lst = load_express_commissions_cached() or []
+    except Exception:
+        lst = []
+    if not isinstance(lst, list):
+        lst = []
+    g._express_commissions_cached = lst
+    return lst
+
+
+def _commissions_for_phone(phone: str) -> List[Dict[str, Any]]:
+    phone = (phone or '').strip()
+    if not phone:
+        return []
+    cache_key = '_express_my_comms_' + phone
+    cached = getattr(g, cache_key, None)
+    if cached is not None:
+        return cached
+    mine = [c for c in _express_commissions_cached() if str(c.get('partner_phone') or '').strip() == phone]
+    setattr(g, cache_key, mine)
+    return mine
+
+
+def _attach_commission_txn_labels(my_comms: List[Dict[str, Any]]) -> None:
+    codes = {str(c.get('land_code') or '').strip() for c in my_comms if c.get('land_code')}
+    lo: Dict[str, Dict[str, Any]] = {}
+    if codes:
+        try:
+            lands = load_express_lands_cached() or []
+            lo = {
+                str(x.get('code')): x
+                for x in lands
+                if str(x.get('code') or '') in codes
+            }
+        except Exception:
+            lo = {}
+    for c in my_comms:
+        L = lo.get(str(c.get('land_code', '') or ''))
+        if L:
+            title = (str(L.get('title') or L.get('category') or 'ملک')).strip() or 'ملک'
+            city = (str(L.get('city') or '')).strip()
+            c['_txn_label'] = f'پورسانت فروش {title}' + (f' در {city}' if city else '')
+        else:
+            c.setdefault('_txn_label', 'پورسانت فروش')
+
+
+def _invalidate_partner_session_cache() -> None:
+    """پس از تغییر پروفایل: کش درخواست و پرچم نقش در سشن."""
+    for key in (
+        '_express_partners_list_cached',
+        '_express_partner_by_phone',
+        '_express_partner_ctx_ready',
+        'express_partner_profile',
+        '_express_commissions_cached',
+    ):
+        if hasattr(g, key):
+            try:
+                delattr(g, key)
+            except Exception:
+                pass
+    try:
+        session.pop('VINOR_IS_EXPRESS_PARTNER', None)
+    except Exception:
+        pass
+
+
 def _active_cities_cached() -> List[str]:
     """لیست شهرهای فعال — یک‌بار در هر درخواست."""
     cached = getattr(g, '_active_cities_cached', None)
@@ -84,31 +182,7 @@ def _express_settings_cached() -> Dict[str, Any]:
 
 
 def _append_partner_tab_prefetch(resp):
-    """برای همکار واردشده: پیشنهاد prefetch به مرورگر برای سایر تب‌های اصلی."""
-    try:
-        if not (session.get('user_phone') or '').strip():
-            return resp
-        here = (request.path or '').rstrip('/') or '/'
-        if not here.startswith('/express/partner'):
-            return resp
-        peers = (
-            '/express/partner/dashboard',
-            '/express/partner/commissions',
-            '/express/partner/routine',
-            '/express/partner/profile',
-        )
-        links = [
-            f'<{p}>; rel=prefetch; as=document'
-            for p in peers
-            if p.rstrip('/') != here
-        ]
-        if not links:
-            return resp
-        chunk = ', '.join(links)
-        prev = resp.headers.get('Link')
-        resp.headers['Link'] = f'{prev}, {chunk}' if prev else chunk
-    except Exception:
-        pass
+    """غیرفعال: prefetch سه صفحهٔ HTML همزمان ناوبری را کند می‌کرد."""
     return resp
 
 
@@ -250,8 +324,8 @@ def require_partner_access(json_response: bool = False, allow_pending: bool = Fa
                 return redirect(url_for("express_partner.login", next=nxt))
 
             me_phone = (session.get("user_phone") or "").strip()
-            partners = _express_partners_cached()
-            profile = next((p for p in partners if str(p.get("phone") or "").strip() == me_phone), None)
+            _ensure_session_partner_on_g()
+            profile = getattr(g, 'express_partner_profile', None)
 
             approved = _is_partner_approved(profile)
             if not approved:
@@ -293,55 +367,56 @@ def _express_partner_no_store_html(resp):
 # به‌روزرسانی خودکار timestamp همکاران آنلاین در تمام route‌های express_partner
 @express_partner_bp.before_request
 def track_online_partner():
-    """به‌روزرسانی timestamp آخرین فعالیت همکار در تمام route‌های express_partner"""
-    if session.get("user_phone"):
-        session.permanent = True
-        try:
-            phone = (session.get("user_phone") or "").strip()
-            if phone:
-                # دریافت نام همکار از profile
-                try:
-                    partners = _express_partners_cached()
-                    profile = next((p for p in partners if str(p.get("phone") or "").strip() == phone), None)
-                    name = profile.get('name') if profile else None
-                except Exception:
-                    name = None
-                
-                # به‌روزرسانی در admin routes (lazy import برای جلوگیری از circular import)
-                try:
-                    # استفاده از lazy import
-                    import admin.routes as admin_routes_module
-                    if hasattr(admin_routes_module, '_update_online_partner'):
-                        ip = request.remote_addr or 'نامشخص'
-                        admin_routes_module._update_online_partner(phone, name, ip)
-                except Exception:
-                    pass  # در صورت خطا در به‌روزرسانی آنلاین، ادامه بده
+    """فعالیت آنلاین سبک — بدون نوشتن فایل روتین روی هر درخواست."""
+    if not session.get("user_phone"):
+        return
+    session.permanent = True
+    try:
+        phone = (session.get("user_phone") or "").strip()
+        if not phone:
+            return
+        _ensure_session_partner_on_g()
+        profile = getattr(g, 'express_partner_profile', None)
+        name = (profile.get('name') or '').strip() if profile else None
 
-                # ثبت خودکار روتین امروز (در صورت آنلاین شدن) - یک‌بار در روز
-                try:
-                    today = datetime.now().strftime('%Y-%m-%d')
-                    last_mark = session.get('routine_marked_date')
-                    if last_mark == today:
-                        raise Exception("already_marked_today")
+        now_ts = time.time()
+        last_ping = session.get('_express_online_ping_ts') or 0
+        if now_ts - float(last_ping) >= 120:
+            session['_express_online_ping_ts'] = now_ts
+            try:
+                import admin.routes as admin_routes_module
+                if hasattr(admin_routes_module, '_update_online_partner'):
+                    ip = request.remote_addr or 'نامشخص'
+                    admin_routes_module._update_online_partner(phone, name, ip)
+            except Exception:
+                pass
 
-                    records = load_partner_routines()
+        ep = request.endpoint or ''
+        if ep.startswith('express_partner.routine'):
+            try:
+                today = datetime.now().strftime('%Y-%m-%d')
+                if session.get('routine_marked_date') != today:
+                    records = load_partner_routines_cached() or []
                     rec = next((r for r in records if str(r.get('phone')) == phone), None)
+                    changed = False
                     if not rec:
                         rec = {"phone": phone, "days": [], "steps": {}, "updated_at": None}
                         records.append(rec)
+                        changed = True
                     rec.setdefault('days', [])
                     rec.setdefault('steps', {})
                     if today not in rec['days']:
                         rec['days'].append(today)
                         rec['days'] = sorted(set(rec['days']))
-                    rec['steps'].setdefault(today, 0)
-                    rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
-                    save_partner_routines(records)
+                        changed = True
+                    if changed:
+                        rec['updated_at'] = datetime.utcnow().isoformat() + "Z"
+                        save_partner_routines(records)
                     session['routine_marked_date'] = today
-                except Exception:
-                    pass  # اگر ثبت روتین خطا داد، سکوت کن
-        except Exception:
-            pass  # در صورت خطا، ادامه بده
+            except Exception:
+                pass
+    except Exception:
+        pass
 
 @express_partner_bp.app_context_processor
 def inject_role_flags():
@@ -349,16 +424,14 @@ def inject_role_flags():
         me = str(session.get("user_phone") or "").strip()
     except Exception:
         me = ""
-    try:
-        partners = _express_partners_cached()
-        is_express_partner = any(
-            isinstance(p, dict)
-            and str(p.get("phone") or "").strip() == me
-            and (str(p.get("status") or "").lower() == "approved" or p.get("status") is True)
-            for p in partners
-        )
-    except Exception:
-        is_express_partner = False
+    is_express_partner = False
+    if me:
+        if 'VINOR_IS_EXPRESS_PARTNER' in session:
+            is_express_partner = bool(session.get('VINOR_IS_EXPRESS_PARTNER'))
+        else:
+            _ensure_session_partner_on_g()
+            is_express_partner = _is_partner_approved(getattr(g, 'express_partner_profile', None))
+            session['VINOR_IS_EXPRESS_PARTNER'] = is_express_partner
     
     # دریافت VAPID_PUBLIC_KEY از config
     try:
@@ -901,11 +974,7 @@ def dashboard():
             item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         assigned_lands.append(item)
 
-    try:
-        comms = load_express_commissions() or []
-        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
-    except Exception:
-        my_comms = []
+    my_comms = _commissions_for_phone(me_phone)
     # کل درآمد: فقط پورسانت‌های تایید شده و پرداخت شده (نه pending و rejected)
     total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     
@@ -1120,11 +1189,7 @@ def dashboard_data():
         assigned_lands.append(item)
 
     assigned_lands = _sort_by_created_at_desc(assigned_lands)
-    try:
-        comms = load_express_commissions() or []
-        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
-    except Exception:
-        my_comms = []
+    my_comms = _commissions_for_phone(me_phone)
     total_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
     pending_commission = sum(int(c.get('commission_amount') or 0) for c in my_comms if (c.get('status') or 'pending').strip() == 'pending')
     sold_count = sum(1 for c in my_comms if (c.get('status') or '').strip() in ('approved', 'paid'))
@@ -1223,11 +1288,7 @@ def commissions_page():
     me_phone = (session.get("user_phone") or "").strip()
     profile = getattr(g, 'express_partner_profile', None)
     is_approved = _is_partner_approved(profile)
-    try:
-        comms = load_express_commissions() or []
-        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
-    except Exception:
-        my_comms = []
+    my_comms = _commissions_for_phone(me_phone)
 
     def _i(v):
         try:
@@ -1260,21 +1321,7 @@ def commissions_page():
     # موجودی که همکار می‌تواند درخواست برداشت/واریز بزند: پورسانت‌های تأییدشده و هنوز پرداخت‌نشده
     withdrawable_balance = approved_commission
 
-    try:
-        lands_all = load_ads_cached() or []
-        lo = {str(x.get('code')): x for x in lands_all if x.get('code') is not None}
-        for c in my_comms:
-            L = lo.get(str(c.get('land_code', '') or ''))
-            if L:
-                title = (str(L.get('title') or L.get('category') or 'ملک')).strip() or 'ملک'
-                city = (str(L.get('city') or '')).strip()
-                c['_txn_label'] = f'پورسانت فروش {title}' + (f' در {city}' if city else '')
-            else:
-                c['_txn_label'] = 'پورسانت فروش'
-    except Exception:
-        pass
-    for c in my_comms:
-        c.setdefault('_txn_label', 'پورسانت فروش')
+    _attach_commission_txn_labels(my_comms)
 
     try:
         my_comms.sort(key=lambda x: x.get('created_at',''), reverse=True)
@@ -1317,11 +1364,7 @@ def commissions_page():
 def commissions_data():
     """API JSON برای اپ اندروید: خلاصه و لیست پورسانت‌های همکار جاری."""
     me_phone = (session.get("user_phone") or "").strip()
-    try:
-        comms = load_express_commissions() or []
-        my_comms = [c for c in comms if str(c.get('partner_phone')) == me_phone]
-    except Exception:
-        my_comms = []
+    my_comms = _commissions_for_phone(me_phone)
 
     def _i(v):
         try:
@@ -1723,6 +1766,7 @@ def verify():
         session['user_id'] = phone
         session['user_phone'] = phone
         session.permanent = True
+        _invalidate_partner_session_cache()
         # ensure user exists
         try:
             from ..utils.storage import load_users, save_users
@@ -1733,18 +1777,9 @@ def verify():
                 save_users(users)
         except Exception:
             pass
+        prof = _partner_profile_for_phone(phone)
+        session['VINOR_IS_EXPRESS_PARTNER'] = _is_partner_approved(prof)
         flash('ورود شما با موفقیت انجام شد.', 'success')
-        # اگر همکار تاییدشده نیست → به پروفایل عمومی هدایت شود تا بتواند درخواست همکاری ثبت کند
-        try:
-            partners = load_express_partners() or []
-        except Exception:
-            partners = []
-        prof = next((p for p in partners if str(p.get('phone') or '').strip() == phone), None)
-        is_approved = False
-        try:
-            is_approved = (str((prof or {}).get('status') or '').lower() == 'approved') or ((prof or {}).get('status') is True)
-        except Exception:
-            is_approved = False
         nxt = session.pop('next', None)
         if nxt:
             return redirect(nxt)
@@ -2208,6 +2243,7 @@ def api_verify():
     session['user_id'] = phone
     session['user_phone'] = phone
     session.permanent = True
+    _invalidate_partner_session_cache()
     try:
         from ..utils.storage import load_users, save_users
         users = load_users()
@@ -2216,6 +2252,8 @@ def api_verify():
             save_users(users)
     except Exception:
         pass
+    prof = _partner_profile_for_phone(phone)
+    session['VINOR_IS_EXPRESS_PARTNER'] = _is_partner_approved(prof)
     return jsonify({'success': True, 'message': 'ورود با موفقیت انجام شد.'})
 
 
@@ -2383,6 +2421,7 @@ def profile_edit_page():
             profile.pop('birth_date', None)
         try:
             save_express_partners(partners)
+            _invalidate_partner_session_cache()
             flash('مشخصات با موفقیت به‌روزرسانی شد.', 'success')
         except Exception:
             current_app.logger.error("Failed to save partner profile edits", exc_info=True)
@@ -2502,6 +2541,7 @@ def api_profile_update():
         profile.pop('birth_date', None)
     try:
         save_express_partners(partners)
+        _invalidate_partner_session_cache()
         return jsonify({'success': True})
     except Exception:
         current_app.logger.error("Failed to save partner profile edits", exc_info=True)

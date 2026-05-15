@@ -370,36 +370,5 @@
     }
   });
 
-  (function prefetchPartnerPeerRoutes() {
-    var paths = [
-      '/express/partner/dashboard',
-      '/express/partner/commissions',
-      '/express/partner/routine',
-      '/express/partner/profile'
-    ];
-    function norm(p) {
-      return (p || '').replace(/\/+$/, '') || '/';
-    }
-    function run() {
-      try {
-        var here = norm(window.location.pathname);
-        paths.forEach(function (p) {
-          if (norm(p) === here) return;
-          var sel = 'link[rel="prefetch"][href="' + p + '"]';
-          if (document.head.querySelector(sel)) return;
-          var link = document.createElement('link');
-          link.rel = 'prefetch';
-          link.href = p;
-          link.as = 'document';
-          document.head.appendChild(link);
-        });
-      } catch (_) {}
-    }
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(run, { timeout: 2800 });
-    } else {
-      setTimeout(run, 900);
-    }
-  })();
 })();
 </script>

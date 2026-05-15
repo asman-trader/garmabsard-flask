@@ -196,14 +196,14 @@
       from { opacity: 0.93; transform: translate3d(-13px, 0, 0); }
       to { opacity: 1; transform: translate3d(0, 0, 0); }
     }
-    html.tg-page-leave-rtl-forward #tg-page-shell { animation: tgLeaveRtlFwd 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
-    html.tg-page-enter-rtl-forward #tg-page-shell { animation: tgEnterRtlFwd 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    html.tg-page-leave-rtl-back #tg-page-shell { animation: tgLeaveRtlBack 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
-    html.tg-page-enter-rtl-back #tg-page-shell { animation: tgEnterRtlBack 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    html.tg-page-leave-ltr-forward #tg-page-shell { animation: tgLeaveLtrFwd 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
-    html.tg-page-enter-ltr-forward #tg-page-shell { animation: tgEnterLtrFwd 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    html.tg-page-leave-ltr-back #tg-page-shell { animation: tgLeaveLtrBack 0.22s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
-    html.tg-page-enter-ltr-back #tg-page-shell { animation: tgEnterLtrBack 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-rtl-forward #tg-page-shell { animation: tgLeaveRtlFwd 0.12s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-rtl-forward #tg-page-shell { animation: tgEnterRtlFwd 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-rtl-back #tg-page-shell { animation: tgLeaveRtlBack 0.12s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-rtl-back #tg-page-shell { animation: tgEnterRtlBack 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-ltr-forward #tg-page-shell { animation: tgLeaveLtrFwd 0.12s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-ltr-forward #tg-page-shell { animation: tgEnterLtrFwd 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    html.tg-page-leave-ltr-back #tg-page-shell { animation: tgLeaveLtrBack 0.12s cubic-bezier(0.45, 0, 0.55, 1) forwards; }
+    html.tg-page-enter-ltr-back #tg-page-shell { animation: tgEnterLtrBack 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     html.tg-nav-transitioning #bottomNavMenu {
       pointer-events: none;
     }
@@ -1108,7 +1108,7 @@
           setTimeout(function () {
             shell.removeEventListener('animationend', onEnterEnd);
             done();
-          }, 500);
+          }, 220);
         } catch (_) {}
       });
 
@@ -1174,7 +1174,7 @@
           setTimeout(function () {
             shell.removeEventListener('animationend', onLeave);
             go();
-          }, 360);
+          }, 160);
         },
         true
       );
