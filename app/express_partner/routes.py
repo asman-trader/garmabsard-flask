@@ -764,6 +764,16 @@ def apply_cancel():
     return redirect(url_for('express_partner.apply_step1'))
 
 
+def _dashboard_selected_city():
+    """
+    شهر فیلتر داشبورد.
+    پیش‌فرض: همه شهرها (بدون فیلتر). اگر city در URL باشد همان شهر فیلتر می‌شود.
+    """
+    if 'city' in request.args:
+        return (request.args.get('city') or '').strip()
+    return ''
+
+
 @express_partner_bp.route('/dashboard', methods=['GET'], endpoint='dashboard')
 @require_partner_access(allow_pending=True, allow_guest=True)
 def dashboard():
@@ -772,9 +782,9 @@ def dashboard():
 
     # فیلتر جستجو و شهر برای نمایش نتایج در همان داشبورد
     search_query = (request.args.get('q', '') or '').strip().lower()
-    selected_city = (request.args.get('city', '') or '').strip()
-    if not selected_city and profile:
-        selected_city = str(profile.get('city') or '').strip()
+    selected_city = _dashboard_selected_city()
+    # برای لینک‌ها: حالت «همه شهرها» باید city= خالی در URL بماند، نه حذف پارامتر
+    city_url = selected_city if ('city' in request.args or selected_city) else None
 
     apps = load_express_partner_apps() or []
     my_apps = [a for a in apps if str(a.get("phone")) == me_phone]
@@ -1002,6 +1012,8 @@ def dashboard():
     resp = make_response(render_template(
         "express_partner/dashboard.html",
         profile=profile,
+        selected_city=selected_city,
+        city_url=city_url,
         is_approved=is_approved,
         has_pending_app=has_pending_app,
         my_apps=my_apps,

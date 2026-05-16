@@ -1,5 +1,10 @@
 {# داشبورد همکار - هدر ثابت (جستجو + فیلترها + دسته‌ها) #}
-{% set selected_city = request.args.get('city') or (profile.city if profile else '') %}
+{% if selected_city is not defined %}
+  {% set selected_city = request.args.get('city') if 'city' in request.args else '' %}
+{% endif %}
+{% if city_url is not defined %}
+  {% set city_url = selected_city if ('city' in request.args or selected_city) else none %}
+{% endif %}
 {% set fq = request.args.get('q', '') %}
 {% set ftag = (request.args.get('tag', '') or '')|lower %}
 {% set fcat = request.args.get('cat', '') %}
@@ -42,7 +47,7 @@
                 </div>
                 {% endif %}
                 {% if request.args.get('q') %}
-                <a href="{{ url_for('express_partner.dashboard', city=selected_city or none, tag=request.args.get('tag') or none, cat=request.args.get('cat') or none) }}"
+                <a href="{{ url_for('express_partner.dashboard', city=city_url, tag=request.args.get('tag') or none, cat=request.args.get('cat') or none) }}"
                    class="flex-shrink-0 w-7 h-7 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                    aria-label="پاک کردن جستجو">
                   <i class="fa-solid fa-xmark text-xs"></i>
@@ -63,7 +68,7 @@
 
         {# ردیف چیپ‌ها — اسکرول افقی در موبایل #}
         <div data-tour="dashboard-filters" class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1 snap-x snap-mandatory">
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none) }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url) }}"
              class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors
                     {% if not ftag and not fcat %}
                     bg-emerald-800 text-white dark:bg-emerald-900 dark:text-emerald-50 ring-1 ring-emerald-700/60
@@ -72,7 +77,7 @@
                     {% endif %}">
             همه فیلترها
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='pool') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='pool') }}"
              class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                     {% if ftag == 'pool' %}
                     border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -82,7 +87,7 @@
             <i class="fas fa-person-swimming text-[13px] opacity-90"></i>
             استخردار
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='forest') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='forest') }}"
              class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                     {% if ftag == 'forest' %}
                     border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -92,7 +97,7 @@
             <i class="fas fa-tree text-[13px] opacity-90"></i>
             جنگلی
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='town') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='town') }}"
              class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                     {% if ftag == 'town' %}
                     border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -102,7 +107,7 @@
             <i class="fas fa-city text-[13px] opacity-90"></i>
             شهرکی
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='urgent') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='urgent') }}"
              class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                     {% if ftag == 'urgent' %}
                     border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -116,7 +121,7 @@
 
         {# دسته‌ها — کارت‌های کوچک #}
         <div class="grid grid-cols-5 gap-1.5 sm:gap-2 pb-1">
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, cat='land_garden') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, cat='land_garden') }}"
              class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                     {% if fcat == 'land_garden' %}
                     border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -126,7 +131,7 @@
             <i class="fas fa-map text-lg text-amber-500 dark:text-amber-400"></i>
             <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">زمین و باغ</span>
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, cat='ویلا') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, cat='ویلا') }}"
              class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                     {% if fcat == 'ویلا' %}
                     border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -136,7 +141,7 @@
             <i class="fas fa-house text-lg text-amber-500 dark:text-amber-400"></i>
             <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">ویلا</span>
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='deed') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='deed') }}"
              class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                     {% if ftag == 'deed' %}
                     border-emerald-500/70 bg-emerald-500/10 dark:bg-emerald-950/40
@@ -146,7 +151,7 @@
             <i class="fas fa-file-contract text-lg text-emerald-600 dark:text-emerald-400"></i>
             <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سنددار</span>
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='invest') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='invest') }}"
              class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                     {% if ftag == 'invest' %}
                     border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -156,7 +161,7 @@
             <i class="fas fa-chart-line text-lg text-amber-500 dark:text-amber-400"></i>
             <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سرمایه‌گذاری</span>
           </a>
-          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=selected_city or none, tag='installment') }}"
+          <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='installment') }}"
              class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                     {% if ftag == 'installment' %}
                     border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
