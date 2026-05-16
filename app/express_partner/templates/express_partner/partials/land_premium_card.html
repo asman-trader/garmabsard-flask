@@ -1,6 +1,7 @@
 {# Premium listing card (dashboard). Expects: land, is_approved, tour_land_card (bool) #}
 {% set img = (land.images[0] if land.images and land.images[0] else None) %}
-{% set _st = (land._assignment_status|default('active')) %}
+{% set _st = (land._assignment_status|default('active')|string)|lower|trim %}
+{% set _in_tx = land._in_transaction or (_st == 'in_transaction') %}
 {% set land_m = (land.villa_land_area or land.land_area or land.size or '') %}
 {% set built_m = (land.villa_built_area or land.built_area or '') %}
 {% set beds = (land.villa_bedrooms or land.rooms or '') %}
@@ -75,9 +76,19 @@
               aria-label="علاقه‌مندی">
         <i class="far fa-heart text-sm vinor-fav-icon" aria-hidden="true"></i>
       </button>
+      {% if _in_tx %}
+      <span class="pointer-events-auto rounded-lg bg-orange-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+        در حال معامله
+      </span>
+      {% elif _st == 'sold' %}
+      <span class="pointer-events-auto rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+        فروخته شد
+      </span>
+      {% else %}
       <span class="pointer-events-auto rounded-lg bg-[#d4b996] px-2.5 py-1 text-[11px] font-bold text-neutral-900 shadow-sm">
         پیشنهاد ویژه
       </span>
+      {% endif %}
     </div>
 
     {# Assignment / expiry ribbons #}
@@ -88,11 +99,7 @@
           منقضی شده
         </span>
       {% endif %}
-      {% if _st == 'sold' %}
-        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-700 text-white shadow">فروخته شد</span>
-      {% elif _st == 'in_transaction' %}
-        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-orange-600 text-white shadow">در حال معامله</span>
-      {% elif _st == 'closed' %}
+      {% if _st == 'closed' %}
         <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-neutral-700 text-white shadow">بسته</span>
       {% elif _st == 'pending' %}
         <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-amber-500 text-neutral-900 shadow">در انتظار</span>

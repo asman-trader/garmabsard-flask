@@ -311,6 +311,12 @@ def save_express_commissions(items, app=None):
     _COMMISSIONS_CACHE.update({"path": None, "mtime": None, "size": None, "data": None})
     return data
 
+def load_express_referrals(app=None):
+    return _load(ensure_file('EXPRESS_REFERRALS_FILE', 'express_referrals.json', [], app))
+
+def save_express_referrals(items, app=None):
+    return _save(ensure_file('EXPRESS_REFERRALS_FILE', 'express_referrals.json', [], app), items)
+
 # کارت‌های بانکی همکار اکسپرس (فقط متادیتا؛ شمارهٔ کامل ذخیره نمی‌شود)
 def load_partner_bank_accounts(app=None):
     return _load(ensure_file('EXPRESS_PARTNER_BANK_ACCOUNTS_FILE', 'express_partner_bank_accounts.json', [], app))

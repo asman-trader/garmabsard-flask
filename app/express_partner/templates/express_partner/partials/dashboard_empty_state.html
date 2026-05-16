@@ -1,0 +1,50 @@
+{# پیام خالی داشبورد — فیلتر فعال یا فهرست خالی #}
+{% set has_filters = fq or ftag or fcat or selected_city %}
+<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
+  <div class="flex flex-col items-center gap-3">
+    <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+      <i class="fas fa-inbox text-2xl text-gray-400 dark:text-gray-500" aria-hidden="true"></i>
+    </div>
+    <div>
+      {% if has_filters %}
+      <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">فایلی با این فیلترها پیدا نشد</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">فیلترها را تغییر دهید یا جستجو را پاک کنید.</p>
+      <a href="{{ url_for('express_partner.dashboard', city=city_url) }}"
+         class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+        <i class="fas fa-filter-circle-xmark text-xs" aria-hidden="true"></i>
+        پاک کردن فیلترها
+      </a>
+      {% else %}
+      <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">در حال حاضر آگهی‌ای در فهرست نیست</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">به‌زودی فایل‌های جدید در اینجا نمایش داده می‌شوند.</p>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {% if not profile %}
+        <a href="{{ url_for('express_partner.login', next=url_for('express_partner.dashboard')) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
+          <i class="fas fa-right-to-bracket text-xs" aria-hidden="true"></i>
+          ورود
+        </a>
+        <a href="{{ url_for('express_partner.apply') }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <i class="fas fa-user-plus text-xs" aria-hidden="true"></i>
+          درخواست همکاری
+        </a>
+        {% elif not is_approved %}
+          {% if has_pending_app %}
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200 text-xs border border-amber-100 dark:border-amber-800/40">
+            <i class="fas fa-clock text-[11px]" aria-hidden="true"></i>
+            درخواست شما در حال بررسی است
+          </span>
+          {% else %}
+          <a href="{{ url_for('express_partner.apply') }}"
+             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
+            <i class="fas fa-user-plus text-xs" aria-hidden="true"></i>
+            درخواست همکاری
+          </a>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

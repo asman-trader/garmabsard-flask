@@ -3291,52 +3291,52 @@ def express_commission_approve(cid: int):
             continue
     if changed and commission_record:
         save_express_commissions(items)
-        
-        # تغییر وضعیت فایل به "فروخته شده" در انتساب‌ها
-        try:
-            land_code = str(commission_record.get('land_code', ''))
-            if land_code:
-                assignments = load_express_assignments() or []
-                for a in assignments:
-                    if str(a.get('land_code')) == land_code:
-                        a['status'] = 'sold'
-                        a['sold_at'] = iso_z(utcnow())
-                        a.pop('transaction_holder', None)
-                        a.pop('transaction_started_at', None)
-                save_express_assignments(assignments)
-        except Exception as e:
-            current_app.logger.error(f"Error updating assignment status to sold: {e}")
-        
+        is_referral = str(commission_record.get('commission_type') or '').strip() == 'referral'
+
+        # تغییر وضعیت فایل به "فروخته شده" در انتساب‌ها (فقط پورسانت فروش ملک)
+        if not is_referral:
+            try:
+                land_code = str(commission_record.get('land_code', ''))
+                if land_code and land_code != 'referral':
+                    assignments = load_express_assignments() or []
+                    for a in assignments:
+                        if str(a.get('land_code')) == land_code:
+                            a['status'] = 'sold'
+                            a['sold_at'] = iso_z(utcnow())
+                            a.pop('transaction_holder', None)
+                            a.pop('transaction_started_at', None)
+                    save_express_assignments(assignments)
+            except Exception as e:
+                current_app.logger.error(f"Error updating assignment status to sold: {e}")
+
         # به‌روزرسانی آمار همکار
         try:
             partner_phone = str(commission_record.get('partner_phone', '')).strip()
             commission_amount = int(commission_record.get('commission_amount') or 0)
             sale_amount = int(commission_record.get('sale_amount') or 0)
-            
+
             if partner_phone:
                 partners = load_express_partners() or []
                 for p in partners:
                     if str(p.get('phone')) == partner_phone:
-                        # افزودن به کل درآمد
                         current_income = int(p.get('total_income', 0) or 0)
                         p['total_income'] = current_income + commission_amount
-                        
-                        # افزودن به تعداد فروش‌های تایید شده
-                        current_sales = int(p.get('approved_sales_count', 0) or 0)
-                        p['approved_sales_count'] = current_sales + 1
-                        
-                        # افزودن به کل فروش‌های تایید شده
-                        current_total_sales = int(p.get('total_approved_sales', 0) or 0)
-                        p['total_approved_sales'] = current_total_sales + sale_amount
-                        
+                        if not is_referral:
+                            current_sales = int(p.get('approved_sales_count', 0) or 0)
+                            p['approved_sales_count'] = current_sales + 1
+                            current_total_sales = int(p.get('total_approved_sales', 0) or 0)
+                            p['total_approved_sales'] = current_total_sales + sale_amount
                         p['last_updated'] = iso_z(utcnow())
                         break
-                
+
                 save_express_partners(partners)
         except Exception as e:
             current_app.logger.error(f"Error updating partner stats: {e}")
-        
-        flash('پورسانت تایید شد، فایل به فروخته شده تغییر کرد و آمار همکار به‌روز شد.', 'success')
+
+        if is_referral:
+            flash('پورسانت دعوت همکار تایید شد و آمار همکار به‌روز شد.', 'success')
+        else:
+            flash('پورسانت تایید شد، فایل به فروخته شده تغییر کرد و آمار همکار به‌روز شد.', 'success')
     elif not changed:
         flash('پورسانت قبلاً تایید شده است.', 'warning')
     return redirect(url_for('admin.express_commissions'))
@@ -3631,6 +3631,12 @@ def express_partner_application_approve(aid: int):
     target['approved_at'] = iso_z(utcnow())
     save_express_partners(partners)
 
+    try:
+        from app.express_partner.referrals import grant_referral_commission_for_application
+        grant_referral_commission_for_application(target)
+    except Exception as ref_err:
+        current_app.logger.error('Referral commission on application approve: %s', ref_err, exc_info=True)
+
     # بعد از تایید، خود درخواست از لیست درخواست‌ها حذف شود
     try:
         apps = [a for a in apps if int(a.get('id', 0) or 0) != int(aid)]
@@ -3756,6 +3762,12 @@ def express_partner_application_reject(aid: int):
     # وضعیت رد شده را فقط برای ثبت زمان در آبجکت نگه می‌داریم
     target['status'] = 'rejected'
     target['rejected_at'] = iso_z(utcnow())
+
+    try:
+        from app.express_partner.referrals import mark_referral_rejected_for_application
+        mark_referral_rejected_for_application(target)
+    except Exception as ref_err:
+        current_app.logger.error('Referral reject on application: %s', ref_err, exc_info=True)
 
     # بعد از رد شدن، درخواست از لیست درخواست‌ها حذف شود
     try:

@@ -83,7 +83,7 @@
                   {% endif %}">
           همه فیلترها
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='pool') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='pool', cat=fcat or none) }}"
            class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                   {% if ftag == 'pool' %}
                   border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -93,7 +93,7 @@
           <i class="fas fa-person-swimming text-[13px] opacity-90"></i>
           استخردار
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='forest') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='forest', cat=fcat or none) }}"
            class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                   {% if ftag == 'forest' %}
                   border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -103,7 +103,7 @@
           <i class="fas fa-tree text-[13px] opacity-90"></i>
           جنگلی
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='town') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='town', cat=fcat or none) }}"
            class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                   {% if ftag == 'town' %}
                   border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -113,7 +113,7 @@
           <i class="fas fa-city text-[13px] opacity-90"></i>
           شهرکی
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='urgent') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='urgent', cat=fcat or none) }}"
            class="snap-start shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border transition-colors
                   {% if ftag == 'urgent' %}
                   border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500
@@ -127,7 +127,7 @@
 
       {# دسته‌ها — کارت‌های کوچک #}
       <div class="grid grid-cols-5 gap-1.5 sm:gap-2 pb-1">
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, cat='land_garden') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag=request.args.get('tag') or none, cat='land_garden') }}"
            class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                   {% if fcat == 'land_garden' %}
                   border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -137,7 +137,7 @@
           <i class="fas fa-map text-lg text-amber-500 dark:text-amber-400"></i>
           <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">زمین و باغ</span>
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, cat='ویلا') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag=request.args.get('tag') or none, cat='ویلا') }}"
            class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                   {% if fcat == 'ویلا' %}
                   border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -147,7 +147,7 @@
           <i class="fas fa-house text-lg text-amber-500 dark:text-amber-400"></i>
           <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">ویلا</span>
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='deed') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='deed', cat=fcat or none) }}"
            class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                   {% if ftag == 'deed' %}
                   border-emerald-500/70 bg-emerald-500/10 dark:bg-emerald-950/40
@@ -157,7 +157,7 @@
           <i class="fas fa-file-contract text-lg text-emerald-600 dark:text-emerald-400"></i>
           <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سنددار</span>
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='invest') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='invest', cat=fcat or none) }}"
            class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                   {% if ftag == 'invest' %}
                   border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -167,7 +167,7 @@
           <i class="fas fa-chart-line text-lg text-amber-500 dark:text-amber-400"></i>
           <span class="text-[10px] sm:text-[11px] font-semibold text-gray-900 dark:text-white leading-tight">سرمایه‌گذاری</span>
         </a>
-        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='installment') }}"
+        <a href="{{ url_for('express_partner.dashboard', q=fq or none, city=city_url, tag='installment', cat=fcat or none) }}"
            class="flex flex-col items-center justify-center gap-1 rounded-xl border py-2 px-1 text-center transition-colors min-h-[4.5rem]
                   {% if ftag == 'installment' %}
                   border-amber-400/70 bg-amber-500/10 dark:bg-amber-950/30
@@ -325,113 +325,10 @@
     </div>
   {% endif %}
 
-  <!-- Loading skeleton -->
-  {% if loading %}
-    <div class="space-y-4">
-      <div class="h-40 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {% for i in range(6) %}
-          <div class="aspect-[3/4] min-h-[220px] rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
-        {% endfor %}
-      </div>
-    </div>
-  {% else %}
-
-  <!-- Assigned lands -->
-  {% if assigned_lands|length == 0 %}
-    <div class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-          <i class="fas fa-inbox text-2xl text-gray-400 dark:text-gray-500"></i>
-        </div>
-        <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">هنوز فایلی برای شما ارسال نشده</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">پس از ارسال فایل‌ها توسط ادمین، در اینجا نمایش داده می‌شوند.</p>
-
-          <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {% if not profile %}
-              <a href="{{ url_for('express_partner.login', next=url_for('express_partner.dashboard')) }}"
-                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-                <i class="fas fa-right-to-bracket text-xs"></i>
-                ورود
-              </a>
-              <a href="{{ url_for('express_partner.apply') }}"
-                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                <i class="fas fa-user-plus text-xs"></i>
-                درخواست همکاری
-              </a>
-            {% else %}
-              {% if not is_approved %}
-                {% if has_pending_app %}
-                  <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200 text-xs border border-amber-100 dark:border-amber-800/40">
-                    <i class="fas fa-clock text-[11px]"></i>
-                    درخواست شما در حال بررسی است
-                  </span>
-                {% else %}
-                  <a href="{{ url_for('express_partner.apply') }}"
-                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-                    <i class="fas fa-user-plus text-xs"></i>
-                    درخواست همکاری
-                  </a>
-                {% endif %}
-              {% endif %}
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-
   <!-- Desktop layout: grid + sticky sidebar (Divar style) -->
   <div class="hidden lg:grid lg:grid-cols-12 gap-6 mt-2">
-    <!-- Main grid -->
     <div class="lg:col-span-8">
-      {% if assigned_lands|length == 0 %}
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <i class="fas fa-inbox text-2xl text-gray-400 dark:text-gray-500"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">هنوز فایلی برای شما ارسال نشده</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">پس از ارسال فایل‌ها توسط ادمین، در اینجا نمایش داده می‌شوند.</p>
-
-              <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-                {% if not profile %}
-                  <a href="{{ url_for('express_partner.login', next=url_for('express_partner.dashboard')) }}"
-                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-                    <i class="fas fa-right-to-bracket text-xs"></i>
-                    ورود
-                  </a>
-                  <a href="{{ url_for('express_partner.apply') }}"
-                     class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                    <i class="fas fa-user-plus text-xs"></i>
-                    درخواست همکاری
-                  </a>
-                {% else %}
-                  {% if not is_approved %}
-                    {% if has_pending_app %}
-                      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200 text-xs border border-amber-100 dark:border-amber-800/40">
-                        <i class="fas fa-clock text-[11px]"></i>
-                        درخواست شما در حال بررسی است
-                      </span>
-                    {% else %}
-                      <a href="{{ url_for('express_partner.apply') }}"
-                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-                        <i class="fas fa-user-plus text-xs"></i>
-                        درخواست همکاری
-                      </a>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        </div>
-      {% else %}
-        {# گرید دسکتاپ کارت‌ها (فایل مجزا) #}
-        {% include 'express_partner/partials/dashboard_cards_desktop.html' %}
-      {% endif %}
+      {% include 'express_partner/partials/dashboard_cards_desktop.html' %}
     </div>
 
     {# سایدبار آمار و میانبرها (فایل مجزا) #}
@@ -442,14 +339,20 @@
   {% include 'express_partner/partials/dashboard_cards_mobile.html' %}
 
   
-  {% endif %} <!-- end loading check -->
-
 </div>
 
 {% include 'express_partner/partials/partner_tab_footer.html' %}
 
-<!-- Small script for accessibility enhancements + share/copy -->
+<!-- Small script for accessibility enhancements -->
 <script>
+  (function () {
+    if (window.__vinorDashAbort) {
+      try { window.__vinorDashAbort.abort(); } catch (_) {}
+    }
+    window.__vinorDashAbort = new AbortController();
+  })();
+  var __vinorDashSig = window.__vinorDashAbort && window.__vinorDashAbort.signal;
+
   // Helper: read cookie value by name
   function __getCookie(name){
     try{
@@ -462,7 +365,7 @@
   // add focus outline for keyboard users
   document.addEventListener('keyup', (e) => {
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
-  });
+  }, __vinorDashSig ? { signal: __vinorDashSig } : false);
 
   /* جمع‌شدن هدر: اسکرول سند + اسکرول داخل #dashboardMobileCardsRoot (موبایل) */
   (function () {
@@ -571,12 +474,14 @@
     }
 
     function bindScrollTargets(fn) {
-      window.addEventListener('scroll', fn, { passive: true });
-      document.addEventListener('scroll', fn, { passive: true, capture: true });
+      const opts = { passive: true };
+      if (__vinorDashSig) opts.signal = __vinorDashSig;
+      window.addEventListener('scroll', fn, opts);
+      document.addEventListener('scroll', fn, Object.assign({ capture: true }, opts));
       const se = document.scrollingElement;
       if (se) {
         try {
-          se.addEventListener('scroll', fn, { passive: true });
+          se.addEventListener('scroll', fn, opts);
         } catch (_) {}
       }
     }
@@ -646,7 +551,7 @@
       rom.observe(main);
     } catch (_) {}
 
-    window.addEventListener('resize', syncMainPadding, { passive: true });
+    window.addEventListener('resize', syncMainPadding, __vinorDashSig ? { passive: true, signal: __vinorDashSig } : { passive: true });
     try {
       if (window.visualViewport) {
         /* فقط ارتفاع کارت‌ها: syncMainPadding روی resize نوار آدرس باعث نوسان می‌شد */
@@ -668,44 +573,11 @@
 
     syncMainPadding();
     updateFromScroll();
+    window.__vinorDashboardSyncChrome = function () {
+      syncMainPadding();
+      updateFromScroll();
+    };
   })();
-
-  // علاقه‌مندی‌ها (محلی)
-  function vinorReadFavs(){
-    try{
-      const a = JSON.parse(localStorage.getItem('vinor_dashboard_favs') || '[]');
-      return Array.isArray(a) ? a.map(String) : [];
-    }catch(_){ return []; }
-  }
-  function vinorWriteFavs(arr){
-    try{ localStorage.setItem('vinor_dashboard_favs', JSON.stringify(arr)); }catch(_){}
-  }
-  function vinorSyncFavButtons(scope){
-    const root = scope || document;
-    const favs = new Set(vinorReadFavs());
-    root.querySelectorAll('[data-fav-code]').forEach((btn) => {
-      const code = String(btn.getAttribute('data-fav-code') || '');
-      const icon = btn.querySelector('.vinor-fav-icon');
-      if (!icon) return;
-      const on = favs.has(code);
-      icon.classList.toggle('far', !on);
-      icon.classList.toggle('fas', on);
-      icon.classList.toggle('text-red-400', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-  }
-  document.addEventListener('click', (ev) => {
-    const btn = ev.target.closest && ev.target.closest('[data-fav-code]');
-    if (!btn || !btn.closest('.vinor-premium-card')) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    const code = String(btn.getAttribute('data-fav-code') || '');
-    let a = vinorReadFavs();
-    const i = a.indexOf(code);
-    if (i >= 0) a.splice(i, 1); else a.push(code);
-    vinorWriteFavs(a);
-    vinorSyncFavButtons();
-  }, true);
 
   // موبایل: ضربهٔ کوتاه روی کارت → باز کردن جزئیات (اسکرول عمودی به‌صورت native با touch-action کار می‌کند)
   (function () {
@@ -832,30 +704,6 @@
     });
   })();
   
-  // Share and copy buttons
-  (function(){
-    function toast(msg){
-      try{
-        const t = document.createElement('div');
-        t.textContent = msg;
-        t.dir = 'rtl';
-        t.className = 'fixed bottom-16 inset-x-0 mx-auto w-fit px-3 py-2 rounded-lg text-sm bg-emerald-600 text-white shadow z-[60]';
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(), 1500);
-      }catch(_){ }
-    }
-    document.querySelectorAll('.share-btn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const url = btn.getAttribute('data-url')||location.href;
-        const title = document.title || 'وینور اکسپرس';
-        try{
-          if (navigator.share) { await navigator.share({ title, url }); }
-          else { await navigator.clipboard.writeText(url); toast('لینک کپی شد'); }
-        }catch(_){ }
-      }, { passive: true });
-    });
-  })();
-
   // Horizontal scroll controls for cards
   (function(){
     const track = document.getElementById('cardsTrack');
@@ -1176,10 +1024,14 @@
     }
 
     vinorSyncFavButtons();
+    if (typeof window.__vinorDashboardSyncChrome === 'function') {
+      window.__vinorDashboardSyncChrome();
+    }
   }
   
   window.performRefresh = performRefresh;
 </script>
+{% include 'express_partner/partials/vinor_favorites_script.html' %}
 {% endblock %}
 
 

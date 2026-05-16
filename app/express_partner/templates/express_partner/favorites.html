@@ -1,0 +1,102 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}علاقه‌مندی‌ها{% endblock %}
+
+{% block content %}
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
+    <div class="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
+      <a href="{{ url_for('express_partner.profile') }}"
+         class="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+         aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
+      </a>
+      <h1 class="pointer-events-none absolute inset-x-0 text-center text-sm font-bold text-white sm:text-base">علاقه‌مندی‌ها</h1>
+      <div class="h-10 w-10" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <div class="min-h-[100dvh] bg-[#050a0e] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-14 text-zinc-100 sm:pt-16 lg:pb-16">
+    <div class="mx-auto max-w-lg px-4 sm:px-6">
+      <p id="favoritesCountHint" class="mb-3 text-center text-xs text-zinc-500 hidden"></p>
+      <div id="favoritesLoading" class="flex justify-center py-16">
+        <div class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500/40 border-t-emerald-400"></div>
+      </div>
+      <div id="favoritesCardsRoot" class="hidden space-y-5"></div>
+    </div>
+
+    {% set bottom_nav_active = 'profile' %}
+    {% include 'express_partner/partials/partner_tab_footer.html' %}
+  </div>
+
+  {% include 'express_partner/partials/vinor_favorites_script.html' %}
+
+<script>
+(function () {
+  var root = document.getElementById('favoritesCardsRoot');
+  var loading = document.getElementById('favoritesLoading');
+  var hint = document.getElementById('favoritesCountHint');
+  var csrf = {{ csrf_token()|tojson }};
+
+  function loadFavorites() {
+    if (!root || !loading) return;
+    var codes = window.vinorReadFavs ? window.vinorReadFavs() : [];
+    loading.classList.remove('hidden');
+    root.classList.add('hidden');
+    if (hint) {
+      if (codes.length) {
+        hint.textContent = codes.length + ' مورد علامت‌گذاری شده';
+        hint.classList.remove('hidden');
+      } else {
+        hint.classList.add('hidden');
+      }
+    }
+    fetch('{{ url_for("express_partner.api_favorites_cards") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ codes: codes })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        loading.classList.add('hidden');
+        root.classList.remove('hidden');
+        if (d && d.ok) {
+          root.innerHTML = d.html || '';
+          if (window.vinorSyncFavButtons) window.vinorSyncFavButtons(root);
+        } else {
+          root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری علاقه‌مندی‌ها</p>';
+        }
+      })
+      .catch(function () {
+        loading.classList.add('hidden');
+        root.classList.remove('hidden');
+        root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری</p>';
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', loadFavorites);
+  document.addEventListener('vinor-favs-changed', loadFavorites);
+
+  document.addEventListener('click', function (e) {
+    var card = e.target.closest && e.target.closest('.vinor-premium-card[data-href]');
+    if (!card || !root.contains(card)) return;
+    if (e.target.closest('[data-fav-code]')) return;
+    var href = card.getAttribute('data-href');
+    if (href) window.location.href = href;
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest && e.target.closest('.vinor-premium-card[data-href]');
+    if (!card || !root.contains(card)) return;
+    e.preventDefault();
+    var href = card.getAttribute('data-href');
+    if (href) window.location.href = href;
+  });
+})();
+</script>
+{% endblock %}

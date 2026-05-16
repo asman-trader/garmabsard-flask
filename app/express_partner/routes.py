@@ -124,6 +124,16 @@ def _attach_commission_txn_labels(my_comms: List[Dict[str, Any]]) -> None:
         except Exception:
             lo = {}
     for c in my_comms:
+        if (c.get('commission_type') or '').strip() == 'referral':
+            name = (str(c.get('referred_name') or '')).strip()
+            phone = (str(c.get('referred_phone') or '')).strip()
+            if name:
+                c['_txn_label'] = f'پورسانت دعوت همکار ({name})'
+            elif phone:
+                c['_txn_label'] = f'پورسانت دعوت همکار ({phone})'
+            else:
+                c['_txn_label'] = 'پورسانت دعوت همکار'
+            continue
         L = lo.get(str(c.get('land_code', '') or ''))
         if L:
             title = (str(L.get('title') or L.get('category') or 'ملک')).strip() or 'ملک'
@@ -217,6 +227,109 @@ def _mark_routine_today(phone: str) -> bool:
     return True
 
 
+def _lands_for_favorite_codes(codes: List[str], me_phone: str) -> List[Dict[str, Any]]:
+    """ساخت لیست کارت‌های علاقه‌مندی بر اساس کدهای ذخیره‌شده در مرورگر."""
+    ordered = [str(c).strip() for c in (codes or []) if str(c).strip()]
+    if not ordered:
+        return []
+    code_set = set(ordered)
+    try:
+        display_lands = load_express_lands_cached() or []
+    except Exception:
+        display_lands = []
+    code_to_land = {
+        str(l.get('code')): l
+        for l in display_lands
+        if str(l.get('code') or '') in code_set
+    }
+    try:
+        assignments = load_express_assignments() or []
+        _maybe_auto_release_expired_transactions(assignments)
+    except Exception:
+        assignments = []
+    code_to_global_status: Dict[str, str] = {}
+    status_priority = {
+        'sold': 5,
+        'in_transaction': 4,
+        'closed': 3,
+        'pending': 2,
+        'approved': 1,
+        'active': 0,
+        '': 0,
+    }
+    for a in assignments:
+        code_key = str(a.get('land_code') or '')
+        if not code_key:
+            continue
+        status = _assignment_display_status(a)
+        current = code_to_global_status.get(code_key, 'active')
+        if status_priority.get(status, 0) > status_priority.get(current, 0):
+            code_to_global_status[code_key] = status
+    my_by_code = {
+        str(a.get('land_code')): a
+        for a in assignments
+        if str(a.get('partner_phone')) == me_phone
+    }
+    try:
+        my_reposts = [r for r in (load_express_reposts() or []) if str(r.get('partner_phone')) == me_phone]
+        my_reposted_codes = {str(r.get('code')) for r in my_reposts}
+    except Exception:
+        my_reposted_codes = set()
+    profile = getattr(g, 'express_partner_profile', None)
+    is_approved = _is_partner_approved(profile)
+    from ..utils.dates import is_ad_expired
+    result: List[Dict[str, Any]] = []
+    for code in ordered:
+        land = code_to_land.get(code)
+        if not land:
+            continue
+        item = dict(land)
+        global_status = code_to_global_status.get(code, 'active')
+        a = my_by_code.get(code)
+        if a and is_approved:
+            item['_assignment_id'] = a.get('id')
+            item['_assignment_status'] = global_status
+            item['_in_transaction'] = global_status == 'in_transaction'
+            item['_commission_pct'] = a.get('commission_pct')
+            item['_is_expired'] = is_ad_expired(land)
+            try:
+                total_price_str = str(item.get('price_total') or item.get('price') or '0').replace(',', '').strip()
+                total_price = int(total_price_str) if total_price_str else 0
+            except Exception:
+                total_price = 0
+            try:
+                pct = float(item.get('_commission_pct') or 0)
+            except Exception:
+                pct = 0.0
+            item['_commission_amount'] = int(round(total_price * (pct / 100.0))) if (total_price and pct) else 0
+            item['_share_url'] = ''
+            item['_share_token'] = ''
+            item['_reposted_by_me'] = code in my_reposted_codes
+        else:
+            item['_assignment_status'] = global_status
+            item['_in_transaction'] = global_status == 'in_transaction'
+            item['_is_expired'] = is_ad_expired(land)
+        item.setdefault('created_at', land.get('created_at') or '1970-01-01')
+        item['_detail_url'] = url_for('express_partner.land_detail', code=code)
+        result.append(item)
+    return result
+
+
+def _assignment_display_status(assignment: Dict[str, Any] | None) -> str:
+    """وضعیت نمایشی اختصاص — transaction_holder همیشه به in_transaction نگاشت می‌شود."""
+    if not assignment or not isinstance(assignment, dict):
+        return 'active'
+    if assignment.get('transaction_holder'):
+        return 'in_transaction'
+    try:
+        st = str(assignment.get('status') or 'active').strip().lower()
+    except Exception:
+        st = 'active'
+    if st in ('in_transaction', 'in-transaction', 'in transaction'):
+        return 'in_transaction'
+    return st or 'active'
+
+
 def _auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> None:
     """رفع خودکار معاملات بعد از ۵ روز بدون تأیید پشتیبان"""
     from datetime import datetime, timedelta
@@ -224,7 +337,7 @@ def _auto_release_expired_transactions(assignments: List[Dict[str, Any]]) -> Non
     updated = False
     
     for a in assignments:
-        if a.get('status') != 'in_transaction':
+        if _assignment_display_status(a) != 'in_transaction':
             continue
         
         started_at_str = a.get('transaction_started_at')
@@ -530,6 +643,11 @@ def apply_step1():
     if not session.get("user_phone"):
         return redirect(url_for("express_partner.login", next=url_for("express_partner.apply_step1")))
     me_phone = (session.get("user_phone") or "").strip()
+    try:
+        from .referrals import stash_referrer_from_request
+        stash_referrer_from_request(me_phone)
+    except Exception:
+        pass
     # اگر قبلاً درخواست ثبت شده، کاربر را به صفحه تشکر ببر
     last_app = _get_my_last_application(me_phone)
     if last_app:
@@ -615,6 +733,12 @@ def apply_step3():
             return redirect(url_for("express_partner.dashboard"))
 
         new_id = (max([int(x.get("id", 0) or 0) for x in apps if isinstance(x, dict)], default=0) or 0) + 1
+        referrer_phone = ''
+        try:
+            from .referrals import pop_referrer_phone, register_referral_on_application
+            referrer_phone = pop_referrer_phone(me_phone)
+        except Exception:
+            referrer_phone = ''
         record = {
             "id": new_id,
             "name": data.get('name',''),
@@ -625,8 +749,20 @@ def apply_step3():
             "status": "new",
             "created_at": datetime.utcnow().isoformat()+"Z",
         }
+        if referrer_phone:
+            record["referred_by_phone"] = referrer_phone
         apps.append(record)
         save_express_partner_apps(apps)
+        if referrer_phone:
+            try:
+                register_referral_on_application(
+                    inviter_phone=referrer_phone,
+                    invitee_phone=me_phone,
+                    invitee_name=record.get('name', ''),
+                    application_id=new_id,
+                )
+            except Exception:
+                pass
         
         # ارسال پیامک "در حال بررسی" به همکار و اطلاع‌رسانی به ادمین
         try:
@@ -830,7 +966,7 @@ def dashboard():
         
         item = dict(land)
         item['_assignment_id'] = a.get('id')
-        item['_assignment_status'] = a.get('status','active')
+        item['_assignment_status'] = _assignment_display_status(a)
         item['_commission_pct'] = a.get('commission_pct')
         item['_is_expired'] = is_expired
         # اطمینان از وجود created_at برای مرتب‌سازی (بر اساس تاریخ ثبت آگهی)
@@ -956,9 +1092,7 @@ def dashboard():
         code_key = str(a.get('land_code') or '')
         if not code_key:
             continue
-        status = str(a.get('status') or 'active').strip()
-        if a.get('transaction_holder'):
-            status = 'in_transaction'
+        status = _assignment_display_status(a)
         current = code_to_global_status.get(code_key, 'active')
         if status_priority.get(status, 0) > status_priority.get(current, 0):
             code_to_global_status[code_key] = status
@@ -971,6 +1105,7 @@ def dashboard():
         if assigned_item and is_approved:
             item['_assignment_id'] = assigned_item.get('_assignment_id')
             item['_assignment_status'] = global_status
+            item['_in_transaction'] = global_status == 'in_transaction'
             item['_commission_pct'] = assigned_item.get('_commission_pct')
             item['_commission_amount'] = assigned_item.get('_commission_amount', 0)
             item['_is_expired'] = assigned_item.get('_is_expired', False)
@@ -981,6 +1116,7 @@ def dashboard():
         else:
             item.setdefault('created_at', land.get('created_at') or '1970-01-01')
             item['_assignment_status'] = global_status
+            item['_in_transaction'] = global_status == 'in_transaction'
             item['_detail_url'] = url_for('express_partner.land_detail', code=code)
         assigned_lands.append(item)
 
@@ -1181,7 +1317,7 @@ def dashboard_data():
             expired_count += 1
         item = dict(land)
         item['_assignment_id'] = a.get('id')
-        item['_assignment_status'] = a.get('status', 'active')
+        item['_assignment_status'] = _assignment_display_status(a)
         item['_commission_pct'] = a.get('commission_pct')
         item['_is_expired'] = is_expired
         if not item.get('created_at'):
@@ -1283,6 +1419,43 @@ def api_repost_remove():
         return jsonify({'ok': True})
     except Exception:
         return jsonify({'ok': False, 'error': 'persist_failed'}), 500
+
+@express_partner_bp.get('/favorites', endpoint='favorites')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def favorites_page():
+    me_phone = (session.get('user_phone') or '').strip()
+    profile = getattr(g, 'express_partner_profile', None)
+    is_approved = _is_partner_approved(profile)
+    resp = make_response(render_template(
+        'express_partner/favorites.html',
+        me_phone=me_phone,
+        is_approved=is_approved,
+        hide_header=True,
+    ))
+    _append_partner_tab_prefetch(resp)
+    return resp
+
+
+@express_partner_bp.post('/api/favorites/cards')
+@require_partner_access(allow_pending=True, allow_guest=True)
+def api_favorites_cards():
+    """HTML کارت‌های علاقه‌مندی برای کدهای ارسالی از localStorage."""
+    me_phone = (session.get('user_phone') or '').strip()
+    profile = getattr(g, 'express_partner_profile', None)
+    is_approved = _is_partner_approved(profile)
+    data = request.get_json(silent=True) or {}
+    codes = data.get('codes') if isinstance(data, dict) else []
+    if not isinstance(codes, list):
+        codes = []
+    codes = [str(c).strip() for c in codes if str(c).strip()][:200]
+    lands = _lands_for_favorite_codes(codes, me_phone)
+    html = render_template(
+        'express_partner/partials/favorites_cards_inner.html',
+        assigned_lands=lands,
+        is_approved=is_approved,
+    )
+    return jsonify({'ok': True, 'html': html, 'count': len(lands), 'requested': len(codes)})
+
 
 @express_partner_bp.get('/notes', endpoint='notes')
 @require_partner_access(allow_pending=True, allow_guest=True)
@@ -1723,9 +1896,19 @@ def _clear_express_partner_auth_session() -> None:
 
 @express_partner_bp.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
+    try:
+        from .referrals import capture_ref_on_login
+        capture_ref_on_login()
+    except Exception:
+        pass
     # اگر از قبل لاگین است، مستقیم به داشبورد (یا مسیر هدف) برود
     if session.get("user_phone"):
         session.permanent = True
+        try:
+            from .referrals import stash_referrer_from_request
+            stash_referrer_from_request((session.get('user_phone') or '').strip())
+        except Exception:
+            pass
         nxt = request.args.get('next') or session.get('next')
         if nxt and nxt.startswith('/'):
             return redirect(nxt)
@@ -1836,6 +2019,43 @@ def training():
 def cooperation_terms():
     """شرایط همکاری برای کاربران عادی و متقاضیان همکاری."""
     return render_template('express_partner/cooperation_terms.html', hide_header=True)
+
+
+@express_partner_bp.route('/invite', methods=['GET'], endpoint='invite_colleagues')
+@require_partner_access(allow_pending=True)
+def invite_colleagues():
+    """صفحهٔ اشتراک لینک دعوت همکار — برای همکاران تأییدشده و سایر کاربران واردشده."""
+    me_phone = (session.get('user_phone') or '').strip()
+    profile = getattr(g, 'express_partner_profile', None) or {}
+    me_name = (profile.get('name') or '').strip()
+    from ..utils.share_tokens import encode_partner_ref
+    ref_token = encode_partner_ref(me_phone)
+    apply_next = url_for('express_partner.apply_step1', ref=ref_token)
+    invite_url = url_for('express_partner.login', next=apply_next, _external=True)
+    inviter = me_name or 'همکار وینور'
+    share_text = f'{inviter} شما را به همکاری در وینور اکسپرس دعوت می‌کند.'
+    try:
+        from .referrals import referral_stats_for_inviter, REFERRAL_BONUS_AMOUNT
+        ref_stats = referral_stats_for_inviter(me_phone)
+        bonus_per_invite = REFERRAL_BONUS_AMOUNT
+    except Exception:
+        ref_stats = {
+            'invite_count': 0,
+            'approved_count': 0,
+            'pending_invites': 0,
+            'pending_commission': 0,
+            'approved_commission': 0,
+            'paid_commission': 0,
+        }
+        bonus_per_invite = 1_000_000
+    return render_template(
+        'express_partner/invite_colleagues.html',
+        invite_url=invite_url,
+        share_text=share_text,
+        me_name=me_name,
+        ref_stats=ref_stats,
+        bonus_per_invite=bonus_per_invite,
+    )
 
 
 @express_partner_bp.route('/routine', methods=['GET'], endpoint='routine')
@@ -3031,7 +3251,7 @@ def check_status():
 
 
 @express_partner_bp.get('/lands/<string:code>', endpoint='land_detail')
-@require_partner_access(allow_pending=True)
+@require_partner_access(allow_pending=True, allow_guest=True)
 def land_detail(code: str):
     """Express land detail page within partner panel."""
     lands = load_ads_cached() or []
@@ -3104,9 +3324,7 @@ def land_detail(code: str):
     for a in assignments:
         if str(a.get('land_code')) != str(code):
             continue
-        status = str(a.get('status') or 'active').strip()
-        if a.get('transaction_holder'):
-            status = 'in_transaction'
+        status = _assignment_display_status(a)
         if status_priority.get(status, 0) > status_priority.get(global_assignment_status, 0):
             global_assignment_status = status
 

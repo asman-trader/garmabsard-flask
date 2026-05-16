@@ -1,0 +1,143 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}دعوت از همکاران{% endblock %}
+
+{% block content %}
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
+    <div class="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
+      <a href="{{ url_for('express_partner.profile') }}"
+         class="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+         aria-label="بازگشت">
+        <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
+      </a>
+      <h1 class="pointer-events-none absolute inset-x-0 text-center text-sm font-bold text-white sm:text-base">دعوت از همکاران</h1>
+      <div class="h-10 w-10" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <div class="min-h-[100dvh] bg-[#050a0e] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-14 text-zinc-100 sm:pt-16 lg:pb-16">
+    <div class="mx-auto max-w-lg space-y-4 px-4 sm:px-6">
+      <section class="rounded-2xl border border-emerald-600/35 bg-gradient-to-br from-emerald-950/90 via-[#12161f] to-[#0f1419] p-5 overflow-hidden relative">
+        <div class="absolute -left-6 -bottom-8 w-28 h-28 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none"></div>
+        <div class="relative flex items-start gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/10 text-2xl text-emerald-400">
+            <i class="fas fa-gift" aria-hidden="true"></i>
+          </div>
+          <div class="min-w-0 flex-1 text-right">
+            <h2 class="text-base font-bold text-white">همکار جدید دعوت کنید</h2>
+            <p class="mt-2 text-sm leading-relaxed text-emerald-100/75">
+              به ازای هر دعوت تأییدشده <span class="font-bold text-emerald-300">{{ bonus_per_invite|toman }}</span> پورسانت دریافت می‌کنید که پس از تأیید ادمین به «پورسانت در انتظار تأیید» اضافه می‌شود.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-2 gap-3">
+        <div class="rounded-2xl border border-white/10 bg-[#12181f] p-4 text-center">
+          <p class="text-[11px] text-zinc-500">تعداد دعوت شما</p>
+          <p class="mt-1 text-2xl font-bold text-white tabular-nums">{{ ref_stats.invite_count or 0 }}</p>
+        </div>
+        <div class="rounded-2xl border border-amber-500/25 bg-amber-950/30 p-4 text-center">
+          <p class="text-[11px] text-amber-200/70">پورسانت دعوت در انتظار تأیید</p>
+          <p class="mt-1 text-lg font-bold text-amber-300 tabular-nums">{{ (ref_stats.pending_commission or 0)|toman }}</p>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-white/10 bg-[#12181f] p-4 sm:p-5">
+        <label for="inviteLinkInput" class="block text-xs font-medium text-zinc-500 mb-2">لینک دعوت شما</label>
+        <div class="flex items-stretch gap-2">
+          <input id="inviteLinkInput"
+                 type="text"
+                 readonly
+                 dir="ltr"
+                 value="{{ invite_url }}"
+                 class="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#0a1018] px-3 py-2.5 text-xs text-zinc-200 sm:text-sm">
+          <button type="button"
+                  id="inviteCopyBtn"
+                  class="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-500">
+            کپی
+          </button>
+        </div>
+        <p id="inviteCopyHint" class="mt-2 hidden text-xs text-emerald-400">لینک کپی شد.</p>
+      </section>
+
+      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button type="button"
+                id="inviteShareBtn"
+                class="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#12181f] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-emerald-500/30 hover:bg-[#161e29]">
+          <i class="fas fa-share-nodes text-emerald-400" aria-hidden="true"></i>
+          اشتراک‌گذاری
+        </button>
+        <a id="inviteWhatsappBtn"
+           href="#"
+           target="_blank"
+           rel="noopener"
+           class="flex items-center justify-center gap-2 rounded-2xl border border-emerald-600/30 bg-emerald-950/50 px-4 py-3.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-900/40">
+          <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i>
+          واتساپ
+        </a>
+      </section>
+
+      <p class="text-center text-xs text-zinc-500 leading-relaxed px-2">
+        پس از ثبت‌نام و تأیید همکاری، دوست دعوت‌شده می‌تواند از مزایای پنل همکاران بهره‌مند شود.
+      </p>
+    </div>
+
+    {% set bottom_nav_active = 'profile' %}
+    {% include 'express_partner/partials/partner_tab_footer.html' %}
+  </div>
+
+<script>
+  (function () {
+    var inviteUrl = {{ invite_url | tojson }};
+    var shareText = {{ share_text | tojson }};
+    var input = document.getElementById('inviteLinkInput');
+    var copyBtn = document.getElementById('inviteCopyBtn');
+    var copyHint = document.getElementById('inviteCopyHint');
+    var shareBtn = document.getElementById('inviteShareBtn');
+    var waBtn = document.getElementById('inviteWhatsappBtn');
+
+    function fullMessage() {
+      return shareText + '\n' + inviteUrl;
+    }
+
+    if (waBtn) {
+      var waUrl = new URL('https://wa.me/');
+      waUrl.searchParams.set('text', fullMessage());
+      waBtn.href = waUrl.toString();
+    }
+
+    async function copyLink() {
+      var text = inviteUrl || (input && input.value) || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else if (input) {
+          input.select();
+          document.execCommand('copy');
+        }
+        if (copyHint) {
+          copyHint.classList.remove('hidden');
+          setTimeout(function () { copyHint.classList.add('hidden'); }, 2000);
+        }
+        if (copyBtn) {
+          var prev = copyBtn.textContent;
+          copyBtn.textContent = 'کپی شد';
+          setTimeout(function () { copyBtn.textContent = prev; }, 2000);
+        }
+      } catch (_) {}
+    }
+
+    copyBtn && copyBtn.addEventListener('click', copyLink);
+    shareBtn && shareBtn.addEventListener('click', async function () {
+      var payload = { title: 'دعوت به وینور اکسپرس', text: shareText, url: inviteUrl };
+      try {
+        if (navigator.share) {
+          await navigator.share(payload);
+          return;
+        }
+      } catch (_) {}
+      copyLink();
+    });
+  })();
+</script>
+{% endblock %}

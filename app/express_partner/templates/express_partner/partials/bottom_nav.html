@@ -200,6 +200,14 @@
   const navContainer = document.getElementById('bottomNavItems');
   if (!navContainer) return;
 
+  navContainer.addEventListener('click', function (e) {
+    const link = e.target.closest && e.target.closest('a.tg-tab-disabled');
+    if (link) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
   function formatBadgeCount(n) {
     const x = Math.max(0, Number(n) || 0);
     if (x <= 0) return '';
@@ -327,6 +335,10 @@
       link.setAttribute('aria-current', isActive ? 'page' : 'false');
       link.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
       link.setAttribute('data-nav-key', item.key);
+      if (isDisabled) {
+        link.setAttribute('tabindex', '-1');
+        link.addEventListener('click', function (e) { e.preventDefault(); }, true);
+      }
 
       const stack = document.createElement('span');
       stack.className = 'tg-tab-stack flex flex-col items-center justify-center gap-0.5 px-2 py-1';

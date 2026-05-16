@@ -75,7 +75,15 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ c.partner_phone }}</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">کد: {{ c.land_code }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {% if c.commission_type == 'referral' %}
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">دعوت همکار</span>
+                        {% if c.referred_name %}{{ c.referred_name }}{% endif %}
+                        {% if c.referred_phone %}<span class="ltr">{{ c.referred_phone }}</span>{% endif %}
+                      {% else %}
+                        کد: {{ c.land_code }}
+                      {% endif %}
+                    </p>
                   </div>
                 </div>
                 

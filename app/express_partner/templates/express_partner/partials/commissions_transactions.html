@@ -15,7 +15,7 @@
         {% if c.created_at %}
         <div class="text-[10px] text-slate-500 tabular-nums jalali-dt" data-dt="{{ c.created_at }}"></div>
         {% endif %}
-        <div class="text-[10px] font-semibold text-slate-300 tabular-nums leading-tight">کد ملک: {{ c.land_code or '—' }}</div>
+        <div class="text-[10px] font-semibold text-slate-300 tabular-nums leading-tight">{% if c.commission_type == 'referral' %}دعوت{% else %}کد ملک: {{ c.land_code or '—' }}{% endif %}</div>
       </div>
       <div class="flex-1 min-w-0 px-1">
         <p class="text-[11px] text-slate-400 leading-snug line-clamp-2 text-center">{{ c._txn_label or 'پورسانت فروش' }}</p>

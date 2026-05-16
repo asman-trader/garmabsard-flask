@@ -1205,6 +1205,7 @@
             var newScripts = doc.getElementById('vinor-express-page-scripts');
             if (!newSwap) throw new Error('swap');
             swapEl.innerHTML = newSwap.innerHTML;
+            swapEl.querySelectorAll('#bottomNavMenu').forEach(function (dup) { dup.remove(); });
             if (scriptsEl && newScripts) {
               scriptsEl.innerHTML = newScripts.innerHTML;
               runScriptsIn(scriptsEl);
