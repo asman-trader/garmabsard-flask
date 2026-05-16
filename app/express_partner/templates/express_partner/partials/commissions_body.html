@@ -4,16 +4,25 @@
       style="padding-top: 5.75rem">
 
   <style>
-    /* موبایل/تبلت: اسکرول داخل main؛ ارتفاع با JS از فاصلهٔ واقعی تا لبهٔ بالای #bottomNavMenu (نه 100dvh) تا با WebView/نوار آدرس نوار تیره زیر منو ایجاد نشود. */
+    /*
+      موبایل: ارتفاع با JS تا لبهٔ منو + پس‌زمینهٔ یکدست (#030712) تا نوار مشکی WebView زیر لیست دیده نشود.
+      transition روی padding-top باعث می‌شود getBoundingClientRect وسط انیمیشن غلط خوانده شود.
+    */
     @media (max-width: 1023px) {
       #commissionsPageMain {
         box-sizing: border-box;
-        min-height: 12rem;
+        min-height: calc(100dvh + 80px);
+        min-height: calc(100vh + 80px);
+        background-color: #030712;
+        transition-property: none !important;
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
         touch-action: pan-y;
+      }
+      #commissionsRefreshMount {
+        background-color: #030712;
       }
     }
     @media (min-width: 1024px) {
@@ -30,7 +39,7 @@
   {% include 'express_partner/partials/commissions_guest.html' %}
 {% else %}
   {% include 'express_partner/partials/commissions_pull_hint.html' %}
-  <div id="commissionsRefreshMount" class="space-y-4 w-full pb-4">
+  <div id="commissionsRefreshMount" class="space-y-4 w-full pb-6">
     {% include 'express_partner/partials/commissions_refresh_inner.html' %}
   </div>
   {% include 'express_partner/partials/commissions_withdraw_modal.html' %}
@@ -44,9 +53,14 @@
   (function () {
     var header = document.getElementById('commissionsPageHeader');
     var main = document.getElementById('commissionsPageMain');
+    var scrollMount = document.getElementById('commissionsRefreshMount');
     if (!header || !main) return;
 
-    function syncCommissionsChrome() {
+    var HEIGHT_SLACK_PX = 10;
+    var HEIGHT_EPS_PX = 8;
+    var chromeRaf = 0;
+
+    function syncCommissionsChromeNow() {
       var hh = Math.ceil(header.getBoundingClientRect().height + 6);
       main.style.paddingTop = hh + 'px';
       var nav = document.getElementById('bottomNavMenu');
@@ -55,50 +69,82 @@
         if (nav) nh = Math.ceil(nav.getBoundingClientRect().height);
       } catch (_) {}
       main.style.setProperty('--vn-comm-nav-h', nh + 'px');
+
       try {
-        if (window.matchMedia('(max-width: 1023px)').matches && nav) {
-          var mainTop = main.getBoundingClientRect().top;
-          var navTop = nav.getBoundingClientRect().top;
+        if (!window.matchMedia('(max-width: 1023px)').matches) {
+          main.style.height = '';
+          main.style.maxHeight = '';
+          return;
+        }
+        /* همکار تأییدنشده: بدون قفل ارتفاع؛ فقط padding پایین برای منو */
+        if (!scrollMount) {
+          main.style.height = '';
+          main.style.maxHeight = '';
+          main.style.paddingBottom = 'calc(5.75rem + env(safe-area-inset-bottom, 0px))';
+          return;
+        }
+        main.style.paddingBottom = '';
+        if (!nav) {
+          main.style.height = '';
+          main.style.maxHeight = '';
+          return;
+        }
+        var mainTop = main.getBoundingClientRect().top;
+        var navTop = nav.getBoundingClientRect().top;
+        try {
           if (window.visualViewport) {
             var lb = window.visualViewport.offsetTop + window.visualViewport.height;
             navTop = Math.min(navTop, lb);
           }
-          var h = Math.max(200, Math.ceil(navTop - mainTop));
-          main.style.height = h + 'px';
-          main.style.maxHeight = h + 'px';
-        } else if (window.matchMedia('(min-width: 1024px)').matches) {
-          main.style.height = '';
-          main.style.maxHeight = '';
-        }
+        } catch (_) {}
+        var available = navTop - mainTop;
+        if (!Number.isFinite(available)) return;
+        available = Math.max(200, Math.ceil(available) + HEIGHT_SLACK_PX);
+        var prev = parseFloat(String(main.style.height || '').replace('px', ''), 10);
+        if (Number.isFinite(prev) && Math.abs(prev - available) < HEIGHT_EPS_PX) return;
+        main.style.height = available + 'px';
+        main.style.maxHeight = available + 'px';
       } catch (_) {
         main.style.height = '';
         main.style.maxHeight = '';
       }
     }
 
+    function scheduleSyncCommissionsChrome() {
+      if (chromeRaf) return;
+      chromeRaf = requestAnimationFrame(function () {
+        chromeRaf = 0;
+        syncCommissionsChromeNow();
+      });
+    }
+
     try {
-      var ro = new ResizeObserver(syncCommissionsChrome);
+      var ro = new ResizeObserver(scheduleSyncCommissionsChrome);
       ro.observe(header);
       var nav0 = document.getElementById('bottomNavMenu');
       if (nav0) ro.observe(nav0);
-    } catch (_) {}
-
-    window.addEventListener('resize', syncCommissionsChrome, { passive: true });
-    try {
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', syncCommissionsChrome, { passive: true });
+      if (scrollMount) {
+        var rom = new ResizeObserver(scheduleSyncCommissionsChrome);
+        rom.observe(main);
       }
     } catch (_) {}
-    syncCommissionsChrome();
+
+    window.addEventListener('resize', scheduleSyncCommissionsChrome, { passive: true });
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', scheduleSyncCommissionsChrome, { passive: true });
+      }
+    } catch (_) {}
+    scheduleSyncCommissionsChrome();
 
     if (!document.getElementById('bottomNavMenu')) {
       document.addEventListener('DOMContentLoaded', function vnCommNavRo() {
         document.removeEventListener('DOMContentLoaded', vnCommNavRo);
-        syncCommissionsChrome();
+        scheduleSyncCommissionsChrome();
         try {
           var nav = document.getElementById('bottomNavMenu');
           if (nav) {
-            var ron = new ResizeObserver(syncCommissionsChrome);
+            var ron = new ResizeObserver(scheduleSyncCommissionsChrome);
             ron.observe(nav);
           }
         } catch (_) {}

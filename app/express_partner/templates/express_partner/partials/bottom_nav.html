@@ -5,39 +5,12 @@
   #bottomNavMenu.tg-tabbar-shell {
     pointer-events: none;
     box-shadow: none !important;
+    background: transparent;
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
     padding-top: 0.65rem;
-    /*
-      safe-area + حاشیهٔ فیزیکی؛ مقدار بزرگ‌تر برای WebView تا شکاف زیر کپسول دیده نشود.
-      لایهٔ ::after زیر کپسول: بدون backdrop-filter (همان ناحیه گاهی پشت خالی مشکی می‌شد) — رنگ تخت = پس‌زمینهٔ پرتال.
-    */
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + max(32px, 6vmin));
-  }
-  /* پر کردن نوار پایین: رنگ تخت مثل html/body تا نوار مشکیِ compositor دیده نشود؛ شیشه فقط روی .tg-tabbar-pill */
-  #bottomNavMenu.tg-tabbar-shell::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: calc(env(safe-area-inset-bottom, 0px) + max(32px, 6vmin));
-    z-index: 0;
-    pointer-events: none;
-    background-color: #f9fafb;
-  }
-  html.dark #bottomNavMenu.tg-tabbar-shell::after {
-    background-color: #030712;
-  }
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    #bottomNavMenu.tg-tabbar-shell::after {
-      background-color: #f9fafb;
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-    html.dark #bottomNavMenu.tg-tabbar-shell::after {
-      background-color: #030712;
-    }
+    /* فقط safe-area زیر کپسول؛ بدون نوار تخت — پس‌زمینهٔ صفحه از شِل شفاف دیده می‌شود */
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   }
   #bottomNavMenu .tg-tabbar-pill {
     position: relative;
