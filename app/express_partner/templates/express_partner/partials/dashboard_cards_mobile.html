@@ -15,6 +15,7 @@
 
   {# موبایل عمودی: همان فرمول صفحهٔ پروفایل (فاصله تا تب پایین + safe-area) تا رفتار زیر فوتر یکسان باشد #}
   <div id="cardsTrack" class="px-3 flex flex-col items-start sm:flex-row sm:flex-nowrap sm:items-stretch gap-5 pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4 overflow-y-visible sm:overflow-x-auto sm:overflow-y-visible sm:snap-x sm:snap-mandatory sm:overscroll-x-contain sm:[-webkit-overflow-scrolling:touch] no-scrollbar">
+    <div id="dashboardCompactSentinel" class="w-full h-px shrink-0 pointer-events-none opacity-0" aria-hidden="true"></div>
     {% if assigned_lands|length == 0 %}
     <div class="snap-start shrink-0 w-full sm:w-[min(340px,92vw)]">
       {% include 'express_partner/partials/dashboard_empty_state.html' %}

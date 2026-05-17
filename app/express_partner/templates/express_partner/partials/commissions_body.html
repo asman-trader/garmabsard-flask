@@ -51,6 +51,12 @@
 
 <script>
   (function () {
+    if (window.__vinorDashAbort) {
+      try { window.__vinorDashAbort.abort(); } catch (_) {}
+    }
+    if (window.__vinorDashboardChrome) {
+      try { window.__vinorDashboardChrome.teardown(); } catch (_) {}
+    }
     var header = document.getElementById('commissionsPageHeader');
     var main = document.getElementById('commissionsPageMain');
     var scrollMount = document.getElementById('commissionsRefreshMount');

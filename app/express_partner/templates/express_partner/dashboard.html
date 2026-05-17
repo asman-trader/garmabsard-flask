@@ -325,6 +325,8 @@
     </div>
   {% endif %}
 
+  <div id="dashboardCompactSentinelDesktop" class="hidden lg:block h-px w-full pointer-events-none opacity-0" aria-hidden="true"></div>
+
   <!-- Desktop layout: grid + sticky sidebar (Divar style) -->
   <div class="hidden lg:grid lg:grid-cols-12 gap-6 mt-2">
     <div class="lg:col-span-8">
@@ -349,6 +351,18 @@
     if (window.__vinorDashAbort) {
       try { window.__vinorDashAbort.abort(); } catch (_) {}
     }
+    if (window.__vinorDashLazyIO) {
+      try {
+        window.__vinorDashLazyIO.forEach(function (io) { io.disconnect(); });
+      } catch (_) {}
+      window.__vinorDashLazyIO = null;
+    }
+    if (window.__vinorDashResizeObs) {
+      try {
+        window.__vinorDashResizeObs.forEach(function (o) { o.disconnect(); });
+      } catch (_) {}
+      window.__vinorDashResizeObs = null;
+    }
     window.__vinorDashAbort = new AbortController();
   })();
   var __vinorDashSig = window.__vinorDashAbort && window.__vinorDashAbort.signal;
@@ -367,217 +381,7 @@
     if (e.key === 'Tab') document.documentElement.classList.add('user-is-tabbing');
   }, __vinorDashSig ? { signal: __vinorDashSig } : false);
 
-  /* جمع‌شدن هدر: اسکرول سند + اسکرول داخل #dashboardMobileCardsRoot (موبایل) */
-  (function () {
-    const header = document.getElementById('expressDashboardHeader');
-    const main = document.getElementById('expressDashboardMain');
-    const filtersStrip = document.getElementById('dashboardFiltersStrip');
-    const mobileCardsRoot = document.getElementById('dashboardMobileCardsRoot');
-    if (!header || !main || !filtersStrip) return;
-
-    const COMPACT_MIN_Y = 24;
-    const EXPAND_MAX_Y = 8;
-
-    function scrollTopDocument() {
-      if (typeof window.scrollY === 'number' && !Number.isNaN(window.scrollY)) return window.scrollY;
-      if (typeof window.pageYOffset === 'number' && !Number.isNaN(window.pageYOffset)) return window.pageYOffset;
-      const se = document.scrollingElement;
-      if (se && typeof se.scrollTop === 'number') return se.scrollTop;
-      return 0;
-    }
-
-    function scrollTopNow() {
-      let y = scrollTopDocument();
-      if (!mobileCardsRoot) return y;
-      try {
-        const cs = window.getComputedStyle(mobileCardsRoot);
-        if (cs.display === 'none' || cs.visibility === 'hidden') return y;
-        const oy = cs.overflowY;
-        if (oy === 'auto' || oy === 'scroll') {
-          y = Math.max(y, mobileCardsRoot.scrollTop);
-        }
-      } catch (_) {}
-      return y;
-    }
-
-    let compact = false;
-
-    let mobileCardsHeightRaf = 0;
-    const HEIGHT_SLACK_PX = 14;
-
-    function updateCompactFromScroll() {
-      const y = scrollTopNow();
-      if (y <= EXPAND_MAX_Y) applyCompact(false);
-      else if (y >= COMPACT_MIN_Y) applyCompact(true);
-    }
-
-    function syncMobileCardsRootHeightNow() {
-      if (!mobileCardsRoot) return;
-      try {
-        if (!window.matchMedia('(max-width: 1023px)').matches) {
-          mobileCardsRoot.style.height = '';
-          return;
-        }
-        let cs;
-        try {
-          cs = window.getComputedStyle(mobileCardsRoot);
-        } catch (_) {
-          return;
-        }
-        if (cs.display === 'none' || cs.visibility === 'hidden') {
-          mobileCardsRoot.style.height = '';
-          return;
-        }
-        const nav = document.getElementById('bottomNavMenu');
-        let navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
-        try {
-          if (window.visualViewport) {
-            const lb = window.visualViewport.offsetTop + window.visualViewport.height;
-            navTop = Math.min(navTop, lb);
-          }
-        } catch (_) {}
-        const rootTop = mobileCardsRoot.getBoundingClientRect().top;
-        let available = navTop - rootTop;
-        if (!Number.isFinite(available)) return;
-        /* ceil + slack؛ آستانهٔ بزرگ‌تر تا حین اسکرول داخلی کارت‌ها لرزش ۱–۳px و چشمک زیر فوتر نباشد */
-        available = Math.max(160, Math.ceil(available) + HEIGHT_SLACK_PX);
-        const prev = parseFloat(String(mobileCardsRoot.style.height || '').replace('px', ''), 10);
-        if (Number.isFinite(prev) && Math.abs(prev - available) < 8) return;
-        mobileCardsRoot.style.height = `${available}px`;
-      } catch (_) {}
-    }
-
-    function scheduleSyncMobileCardsRootHeight() {
-      if (mobileCardsHeightRaf) return;
-      mobileCardsHeightRaf = requestAnimationFrame(function () {
-        mobileCardsHeightRaf = 0;
-        syncMobileCardsRootHeightNow();
-      });
-    }
-
-    function syncMainPadding() {
-      const h = header.getBoundingClientRect().height;
-      main.style.paddingTop = `${Math.ceil(h + 6)}px`;
-      scheduleSyncMobileCardsRootHeight();
-    }
-
-    function applyCompact(on) {
-      if (on === compact) return;
-      compact = on;
-      header.classList.toggle('dash-header--compact', compact);
-      syncMainPadding();
-    }
-
-    function updateFromScroll() {
-      updateCompactFromScroll();
-      scheduleSyncMobileCardsRootHeight();
-    }
-
-    function bindScrollTargets(fn) {
-      const opts = { passive: true };
-      if (__vinorDashSig) opts.signal = __vinorDashSig;
-      window.addEventListener('scroll', fn, opts);
-      document.addEventListener('scroll', fn, Object.assign({ capture: true }, opts));
-      const se = document.scrollingElement;
-      if (se) {
-        try {
-          se.addEventListener('scroll', fn, opts);
-        } catch (_) {}
-      }
-    }
-
-    bindScrollTargets(updateFromScroll);
-    if (mobileCardsRoot) {
-      var cardsScrollEndTimer = 0;
-      mobileCardsRoot.addEventListener(
-        'scroll',
-        function () {
-          updateCompactFromScroll();
-          window.clearTimeout(cardsScrollEndTimer);
-          cardsScrollEndTimer = window.setTimeout(function () {
-            cardsScrollEndTimer = 0;
-            scheduleSyncMobileCardsRootHeight();
-          }, 160);
-        },
-        { passive: true }
-      );
-    }
-    try {
-      if (window.visualViewport) {
-        /* فقط جمع‌شدن هدر: همگام ارتفاع کارت روی visualViewport.scroll با نوار آدرس/ژست باعث نوسان و نوار تیره زیر منو می‌شد */
-        window.visualViewport.addEventListener('scroll', updateCompactFromScroll, { passive: true });
-      }
-    } catch (_) {}
-
-    window.addEventListener('wheel', updateFromScroll, { passive: true });
-
-    let touchScrollQueued = false;
-    function queueScrollUpdate() {
-      if (touchScrollQueued) return;
-      touchScrollQueued = true;
-      requestAnimationFrame(() => {
-        touchScrollQueued = false;
-        updateCompactFromScroll();
-      });
-    }
-    window.addEventListener('touchmove', queueScrollUpdate, { passive: true });
-    window.addEventListener('touchend', queueScrollUpdate, { passive: true });
-    if (mobileCardsRoot) {
-      mobileCardsRoot.addEventListener('touchmove', queueScrollUpdate, { passive: true });
-      mobileCardsRoot.addEventListener('touchend', queueScrollUpdate, { passive: true });
-    }
-
-    try {
-      const ro = new ResizeObserver(function (entries) {
-        try {
-          for (let i = 0; i < entries.length; i++) {
-            if (entries[i].target === header) {
-              const h = header.getBoundingClientRect().height;
-              main.style.paddingTop = `${Math.ceil(h + 6)}px`;
-              break;
-            }
-          }
-        } catch (_) {}
-        scheduleSyncMobileCardsRootHeight();
-      });
-      ro.observe(header);
-    } catch (_) {}
-
-    /* هر تغییر اندازهٔ main (مثلاً padding-top پس از compact هدر) → دوباره ارتفاع کارت‌ها تا لبهٔ فوتر */
-    try {
-      const rom = new ResizeObserver(function () {
-        scheduleSyncMobileCardsRootHeight();
-      });
-      rom.observe(main);
-    } catch (_) {}
-
-    window.addEventListener('resize', syncMainPadding, __vinorDashSig ? { passive: true, signal: __vinorDashSig } : { passive: true });
-    try {
-      if (window.visualViewport) {
-        /* فقط ارتفاع کارت‌ها: syncMainPadding روی resize نوار آدرس باعث نوسان می‌شد */
-        window.visualViewport.addEventListener('resize', scheduleSyncMobileCardsRootHeight, { passive: true });
-        var vvDashT = 0;
-        window.visualViewport.addEventListener(
-          'scroll',
-          function () {
-            window.clearTimeout(vvDashT);
-            vvDashT = window.setTimeout(function () {
-              vvDashT = 0;
-              scheduleSyncMobileCardsRootHeight();
-            }, 100);
-          },
-          { passive: true }
-        );
-      }
-    } catch (_) {}
-
-    syncMainPadding();
-    updateFromScroll();
-    window.__vinorDashboardSyncChrome = function () {
-      syncMainPadding();
-      updateFromScroll();
-    };
-  })();
+  /* جمع‌شدن فیلترها: express-partner/dashboard-chrome.js (پایدار در base.html) */
 
   // موبایل: ضربهٔ کوتاه روی کارت → باز کردن جزئیات (اسکرول عمودی به‌صورت native با touch-action کار می‌کند)
   (function () {
@@ -648,61 +452,197 @@
     );
   })();
 
-  // دسکتاپ و گرید: کلیک روی خود کارت؛ زیر #dashboardMobileCardsRoot از بالا هندل می‌شود
-  document.querySelectorAll('.express-card[data-href]').forEach((card) => {
-    if (card.closest('#dashboardMobileCardsRoot')) return;
-    card.addEventListener('click', (e) => {
+  function formatJalaliDate(dt) {
+    try {
+      const d = new Date(String(dt || '').replace(' ', 'T'));
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('fa-IR', {
+        timeZone: 'Asia/Tehran',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function applyJalaliDates(scope) {
+    (scope || document).querySelectorAll('.jalali-dt[data-dt]').forEach(function (el) {
+      const raw = el.getAttribute('data-dt') || '';
+      el.textContent = formatJalaliDate(raw) || '—';
+    });
+  }
+
+  function bindDashboardDesktopCards() {
+    const grid = document.getElementById('cardsGrid');
+    if (!grid || grid.dataset.vinorNavBound === '1') return;
+    grid.dataset.vinorNavBound = '1';
+    grid.addEventListener('click', function (e) {
       if (e.target.closest && e.target.closest('[data-fav-code]')) return;
+      const card = e.target.closest('.express-card.vinor-premium-card[data-href]');
+      if (!card) return;
       const href = card.getAttribute('data-href');
       if (href) window.location.assign(href);
     });
-    card.addEventListener('keydown', (event) => {
+    grid.addEventListener('keydown', function (event) {
+      const card = event.target.closest && event.target.closest('.express-card.vinor-premium-card[data-href]');
+      if (!card) return;
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         const href = card.getAttribute('data-href');
         if (href) window.location.assign(href);
       }
     });
-  });
-  vinorSyncFavButtons();
-  
-  // Image/video loading for cards (show loader only while loading)
-  (function(){
-    initLazyCardVideos(document);
-    document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
+  }
+
+  function initDashboardCardMedia(scope) {
+    const root = scope || document;
+    root.querySelectorAll('[data-img-wrap]').forEach(function (wrap) {
+      if (wrap.dataset.vinorMediaInit === '1') return;
+      wrap.dataset.vinorMediaInit = '1';
+
       const img = wrap.querySelector('[data-card-img]');
       const vid = wrap.querySelector('video');
       const loader = wrap.querySelector('.card-img-loading');
-      function hideLoader(){
-        if (loader){
-          loader.classList.add('opacity-0','pointer-events-none');
-          setTimeout(()=>loader.remove(),250);
-        }
+
+      function hideLoader() {
+        if (!loader) return;
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(function () {
+          try { loader.remove(); } catch (_) {}
+        }, 250);
       }
-      function showMedia(el){
+
+      function showMedia(el) {
         if (el) el.classList.remove('opacity-0');
         hideLoader();
       }
 
-      if (img){
+      if (!img && !vid) {
+        hideLoader();
+        return;
+      }
+
+      if (img) {
         if (img.complete && img.naturalWidth > 0) showMedia(img);
         else {
-          img.addEventListener('load', ()=>showMedia(img), { once:true });
-          img.addEventListener('error', hideLoader, { once:true });
+          img.addEventListener('load', function () { showMedia(img); }, { once: true });
+          img.addEventListener('error', hideLoader, { once: true });
         }
       }
+
       if (vid && !(vid.hasAttribute('data-vinor-lazy-video') && vid.dataset.vinorLazyLoaded !== '1')) {
-        const ready = () => showMedia(vid);
+        const ready = function () { showMedia(vid); };
         if (vid.readyState >= 2) ready();
         else {
-          vid.addEventListener('loadeddata', ready, { once:true });
-          vid.addEventListener('error', hideLoader, { once:true });
+          vid.addEventListener('loadeddata', ready, { once: true });
+          vid.addEventListener('error', hideLoader, { once: true });
         }
       }
-      // fail-safe to avoid stuck loader
-      setTimeout(hideLoader, 3000);
+
+      setTimeout(hideLoader, 8000);
     });
-  })();
+  }
+
+  function initLazyCardVideos(scope) {
+    const root = scope || document;
+    const videos = root.querySelectorAll('video[data-vinor-lazy-video]');
+    if (!videos.length) return;
+
+    if (window.__vinorDashLazyIO) {
+      try {
+        window.__vinorDashLazyIO.forEach(function (io) { io.disconnect(); });
+      } catch (_) {}
+    }
+    window.__vinorDashLazyIO = [];
+
+    const mobileRoot = document.getElementById('dashboardMobileCardsRoot');
+    const desktopVideos = [];
+    const mobileVideos = [];
+
+    videos.forEach(function (vid) {
+      if (mobileRoot && mobileRoot.contains(vid)) mobileVideos.push(vid);
+      else desktopVideos.push(vid);
+    });
+
+    function loadLazyCardVideo(vid) {
+      if (vid.dataset.vinorLazyLoaded === '1') return;
+      const wrap = vid.closest('[data-img-wrap]');
+      const loader = wrap && wrap.querySelector('.card-img-loading');
+
+      function hideLoader() {
+        if (!loader) return;
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(function () {
+          try { loader.remove(); } catch (_) {}
+        }, 250);
+      }
+
+      function showMedia() {
+        vid.classList.remove('opacity-0');
+        hideLoader();
+      }
+
+      vid.addEventListener('loadeddata', showMedia, { once: true });
+      vid.addEventListener('error', hideLoader, { once: true });
+      const source = vid.querySelector('source[data-src]');
+      if (source && source.dataset.src) {
+        source.src = source.dataset.src;
+        vid.load();
+        vid.play().catch(function () {});
+      }
+      vid.dataset.vinorLazyLoaded = '1';
+    }
+
+    function observeVideos(list, scrollRoot) {
+      if (!list.length) return;
+      if (!('IntersectionObserver' in window)) {
+        list.forEach(loadLazyCardVideo);
+        return;
+      }
+      var ioOpts = { rootMargin: '120px 0px', threshold: 0.01 };
+      if (scrollRoot) ioOpts.root = scrollRoot;
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          loadLazyCardVideo(entry.target);
+          io.unobserve(entry.target);
+        });
+      }, ioOpts);
+      list.forEach(function (v) { io.observe(v); });
+      window.__vinorDashLazyIO.push(io);
+    }
+
+    var mobileScrollRoot = null;
+    if (mobileRoot) {
+      try {
+        const cs = window.getComputedStyle(mobileRoot);
+        const oy = cs.overflowY;
+        if (oy === 'auto' || oy === 'scroll') mobileScrollRoot = mobileRoot;
+      } catch (_) {}
+    }
+
+    observeVideos(desktopVideos, null);
+    observeVideos(mobileVideos, mobileScrollRoot);
+
+    const eager = mobileVideos[0] || desktopVideos[0];
+    if (eager) loadLazyCardVideo(eager);
+  }
+
+  function reinitializeCards() {
+    initLazyCardVideos(document);
+    initDashboardCardMedia(document);
+    applyJalaliDates(document);
+    if (typeof window.vinorSyncFavButtons === 'function') window.vinorSyncFavButtons();
+    if (typeof window.__vinorDashboardSyncChrome === 'function') window.__vinorDashboardSyncChrome();
+    try {
+      if (typeof window.hideVinorPartnerSkeleton === 'function') window.hideVinorPartnerSkeleton();
+    } catch (_) {}
+  }
+
+  bindDashboardDesktopCards();
+  reinitializeCards();
   
   // Horizontal scroll controls for cards
   (function(){
@@ -718,27 +658,6 @@
     }
     prev.addEventListener('click', ()=>scrollByAmount('prev'));
     next.addEventListener('click', ()=>scrollByAmount('next'));
-  })();
-
-  // Convert dates to Persian (Jalali) format
-  (function(){
-    function fmt(dt){
-      try{
-        const d = new Date(String(dt||'').replace(' ','T'));
-        if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('fa-IR', {
-          timeZone: 'Asia/Tehran',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
-      }catch(_){ return ''; }
-    }
-    document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
-      const raw = el.getAttribute('data-dt')||'';
-      const formatted = fmt(raw);
-      el.textContent = formatted || '—';
-    });
   })();
 
   /** رفرش لیست کارت‌ها (ترک موبایل + گرید دسکتاپ) بدون reload کامل صفحه */
@@ -896,140 +815,15 @@
     root.addEventListener('touchcancel', resetGesture, { passive: true });
   })();
   
-  function initLazyCardVideos(root) {
-    const scope = root || document;
-    const videos = scope.querySelectorAll('video[data-vinor-lazy-video]');
-    if (!videos.length) return;
-
-    function loadLazyCardVideo(vid) {
-      if (vid.dataset.vinorLazyLoaded === '1') return;
-      const wrap = vid.closest('[data-img-wrap]');
-      const loader = wrap && wrap.querySelector('.card-img-loading');
-      function hideLoader() {
-        if (loader) {
-          loader.classList.add('opacity-0', 'pointer-events-none');
-          setTimeout(function () { loader.remove(); }, 250);
-        }
-      }
-      function showMedia() {
-        vid.classList.remove('opacity-0');
-        hideLoader();
-      }
-      vid.addEventListener('loadeddata', showMedia, { once: true });
-      vid.addEventListener('error', hideLoader, { once: true });
-      const source = vid.querySelector('source[data-src]');
-      if (source && source.dataset.src) {
-        source.src = source.dataset.src;
-        vid.load();
-        vid.play().catch(function () {});
-      }
-      vid.dataset.vinorLazyLoaded = '1';
-    }
-
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          loadLazyCardVideo(entry.target);
-          io.unobserve(entry.target);
-        });
-      }, { rootMargin: '100px 0px' });
-      videos.forEach(function (v) { io.observe(v); });
-    } else {
-      videos.forEach(loadLazyCardVideo);
-    }
-  }
-
-  // تابع برای re-initialize کردن کارت‌ها بعد از refresh
-  function reinitializeCards() {
-    initLazyCardVideos(document);
-
-    // 1. Image/video loading logic
-    document.querySelectorAll('[data-img-wrap]').forEach((wrap) => {
-      const img = wrap.querySelector('[data-card-img]');
-      const vid = wrap.querySelector('video');
-      const loader = wrap.querySelector('.card-img-loading');
-      
-      function hideLoader(){
-        if (loader){
-          loader.classList.add('opacity-0','pointer-events-none');
-          setTimeout(()=>loader.remove(),250);
-        }
-      }
-      
-      function showMedia(el){
-        if (el) el.classList.remove('opacity-0');
-        hideLoader();
-      }
-
-      if (img){
-        if (img.complete && img.naturalWidth > 0) showMedia(img);
-        else {
-          img.addEventListener('load', ()=>showMedia(img), { once:true });
-          img.addEventListener('error', hideLoader, { once:true });
-        }
-      }
-      if (vid && !(vid.hasAttribute('data-vinor-lazy-video') && vid.dataset.vinorLazyLoaded !== '1')) {
-        const ready = () => showMedia(vid);
-        if (vid.readyState >= 2) ready();
-        else {
-          vid.addEventListener('loadeddata', ready, { once:true });
-          vid.addEventListener('error', hideLoader, { once:true });
-        }
-      }
-      // fail-safe to avoid stuck loader
-      setTimeout(hideLoader, 3000);
-    });
-    
-    // 2. Card handlers (موبایل: کلیک از روی #dashboardMobileCardsRoot دیلیگیت می‌شود)
-    document.querySelectorAll('.express-card[data-href]').forEach((card) => {
-      const newCard = card.cloneNode(true);
-      card.parentNode.replaceChild(newCard, card);
-      const inMobileStrip = !!newCard.closest('#dashboardMobileCardsRoot');
-
-      if (!inMobileStrip) {
-        newCard.addEventListener('click', (e) => {
-          if (e.target.closest && e.target.closest('[data-fav-code]')) return;
-          const href = newCard.getAttribute('data-href');
-          if (href) window.location.assign(href);
-        });
-      }
-      newCard.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          const href = newCard.getAttribute('data-href');
-          if (href) window.location.assign(href);
-        }
-      });
-    });
-    
-    // 3. Jalali date conversion
-    document.querySelectorAll('.jalali-dt[data-dt]').forEach(el=>{
-      const raw = el.getAttribute('data-dt')||'';
-      const formatted = fmt(raw);
-      el.textContent = formatted || '—';
-    });
-    
-    function fmt(dt){
-      try{
-        const d = new Date(String(dt||'').replace(' ','T'));
-        if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('fa-IR', {
-          timeZone: 'Asia/Tehran',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
-      }catch(_){ return ''; }
-    }
-
-    vinorSyncFavButtons();
-    if (typeof window.__vinorDashboardSyncChrome === 'function') {
-      window.__vinorDashboardSyncChrome();
-    }
-  }
-  
   window.performRefresh = performRefresh;
+  window.reinitializeCards = reinitializeCards;
+
+  document.addEventListener('vinor:express-page-swap', function (ev) {
+    if (!ev.detail || ev.detail.navKey !== 'dashboard') return;
+    bindDashboardDesktopCards();
+    reinitializeCards();
+  }, __vinorDashSig ? { signal: __vinorDashSig } : false);
+  /* chrome: dashboard-chrome.js via vinor:express-page-swap */
 </script>
 {% include 'express_partner/partials/vinor_favorites_script.html' %}
 {% endblock %}

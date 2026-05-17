@@ -44,7 +44,7 @@
           {% else %}
             {% set img_src = img %}
           {% endif %}
-          <img src="{{ img_src }}" alt="{{ land.title or '' }}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+          <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
         {% endif %}
       </video>
     {% elif img %}
@@ -59,7 +59,7 @@
       {% else %}
         {% set img_src = img %}
       {% endif %}
-      <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
+      <img src="{{ img_src }}" alt="{{ land.title or '' }}" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-200" data-card-img>
     {% else %}
       <div class="absolute inset-0 grid place-items-center text-neutral-500">
         <i class="fas fa-image text-4xl opacity-60"></i>

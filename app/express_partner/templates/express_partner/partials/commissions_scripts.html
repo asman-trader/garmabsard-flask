@@ -138,11 +138,37 @@
 <script>
   (function () {
     var API = '/express/partner/bank-accounts';
+    var overlay = window.vinorExpressModalOverlay;
     var modal = document.getElementById('vnWithdrawModal');
     if (!modal) return;
 
     var bankModal = document.getElementById('vnBankPickerModal');
     var bankAddModal = document.getElementById('vnBankAddModal');
+
+    function hoistCommissionModals() {
+      if (typeof window.hoistVinorExpressBodyModals === 'function') {
+        window.hoistVinorExpressBodyModals();
+        return;
+      }
+      [modal, bankModal, bankAddModal].forEach(function (el) {
+        if (el && el.parentNode !== document.body) {
+          document.body.appendChild(el);
+        }
+      });
+    }
+
+    function overlayOpen() {
+      if (overlay) overlay.open();
+    }
+
+    function overlayClose() {
+      if (overlay) overlay.close();
+    }
+
+    function overlayCloseAll() {
+      if (overlay && overlay.closeAll) overlay.closeAll();
+      else if (overlay) overlay.close();
+    }
     var bankSummaryEl = document.getElementById('vnWithdrawBankSummary');
     var bankConfirm = document.getElementById('vnBankPickerConfirmBtn');
     var bankListEl = document.getElementById('vnBankAccountList');
@@ -244,43 +270,53 @@
     function closeBankPicker() {
       forceCloseBankAdd();
       if (!bankModal) return;
+      var wasOpen = bankPickerOpen();
       bankModal.classList.remove('vn-bank-picker-modal--open');
       window.setTimeout(function () {
         bankModal.classList.add('hidden');
       }, 280);
       bankModal.setAttribute('aria-hidden', 'true');
+      if (wasOpen) overlayClose();
     }
 
     function forceCloseBankPicker() {
+      var wasOpen = bankPickerOpen();
       forceCloseBankAdd();
       if (!bankModal) return;
       bankModal.classList.remove('vn-bank-picker-modal--open');
       bankModal.classList.add('hidden');
       bankModal.setAttribute('aria-hidden', 'true');
+      if (wasOpen) overlayClose();
     }
 
     function closeBankAdd() {
       if (!bankAddModal) return;
+      var wasOpen = bankAddOpen();
       bankAddModal.classList.remove('vn-bank-add-modal--open');
       window.setTimeout(function () {
         bankAddModal.classList.add('hidden');
       }, 280);
       bankAddModal.setAttribute('aria-hidden', 'true');
+      if (wasOpen) overlayClose();
     }
 
     function forceCloseBankAdd() {
       if (!bankAddModal) return;
+      var wasOpen = bankAddOpen();
       bankAddModal.classList.remove('vn-bank-add-modal--open');
       bankAddModal.classList.add('hidden');
       bankAddModal.setAttribute('aria-hidden', 'true');
+      if (wasOpen) overlayClose();
     }
 
     function openBankPicker() {
       if (!bankModal) return;
+      hoistCommissionModals();
       bankModal.classList.remove('hidden');
       bankModal.setAttribute('aria-hidden', 'false');
       try { void bankModal.offsetWidth; } catch (_) {}
       bankModal.classList.add('vn-bank-picker-modal--open');
+      overlayOpen();
       fetchBankPickerData();
     }
 
@@ -450,6 +486,7 @@
 
     function openBankAdd() {
       if (!bankAddModal) return;
+      hoistCommissionModals();
       if (!bankCatalogCache) {
         fetch(API + '/data', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
           .then(function (r) { return r.json(); })
@@ -466,6 +503,7 @@
       bankAddModal.setAttribute('aria-hidden', 'false');
       try { void bankAddModal.offsetWidth; } catch (_) {}
       bankAddModal.classList.add('vn-bank-add-modal--open');
+      overlayOpen();
     }
 
     function openModal(fromBtn) {
@@ -474,14 +512,12 @@
       if (balanceEl) balanceEl.textContent = formatToman(maxWithdraw);
       setInputFromInt(0);
       syncSubmitHref();
+      hoistCommissionModals();
       modal.classList.remove('hidden');
       modal.setAttribute('aria-hidden', 'false');
       try { void modal.offsetWidth; } catch (_) {}
       modal.classList.add('vn-withdraw-modal--open');
-      try {
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-      } catch (_) {}
+      overlayOpen();
       requestAnimationFrame(function () {
         try { if (input) input.focus(); } catch (_) {}
       });
@@ -495,10 +531,7 @@
         modal.classList.add('hidden');
       }, 280);
       modal.setAttribute('aria-hidden', 'true');
-      try {
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-      } catch (_) {}
+      overlayCloseAll();
     }
 
     document.addEventListener('click', function (e) {
@@ -700,5 +733,7 @@
         syncSubmitHref();
       });
     }
+
+    hoistCommissionModals();
   })();
 </script>

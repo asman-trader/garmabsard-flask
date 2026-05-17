@@ -59,7 +59,8 @@ const LOCAL_ASSETS = [
   '/static/vendor/tailwind/tailwindcdn-3.4.17.js',
   '/static/vendor/alpine/alpine-3.14.1.min.js',
   '/static/js/onboarding.js',
-  '/static/express-partner/city-picker.js'
+  '/static/express-partner/city-picker.js',
+  '/static/express-partner/dashboard-chrome.js'
 ];
 
 // نصب Service Worker

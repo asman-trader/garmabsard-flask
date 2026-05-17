@@ -140,7 +140,6 @@
         <div class="py-1 sm:py-1.5 font-semibold">ج</div>
       </div>
       <div id="routineCalendar" class="grid grid-cols-7 gap-1 sm:gap-1.5 lg:gap-2"></div>
-      <p id="routineStatus" class="text-xs sm:text-sm text-gray-500 dark:text-gray-400"></p>
     </div>
   </div>
 
@@ -174,13 +173,34 @@
 {{ super() }}
 {% if is_approved %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  (function () {
+    if (window.__vinorRoutineAbort) {
+      try { window.__vinorRoutineAbort.abort(); } catch (_) {}
+    }
+    window.__vinorRoutineAbort = new AbortController();
+    var moduleSig = window.__vinorRoutineAbort.signal;
+    var listenersAbort = null;
+    var saveTimer = null;
+
+    function bootRoutine() {
+      var calendarEl = document.getElementById('routineCalendar');
+      if (!calendarEl) return;
+
+      if (listenersAbort) {
+        try { listenersAbort.abort(); } catch (_) {}
+      }
+      listenersAbort = new AbortController();
+      var sig = listenersAbort.signal;
+      var opts = { signal: sig };
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+      }
+
     const steps = Array.from(document.querySelectorAll('.routine-step'));
     const progressBar = document.getElementById('routineProgressBar');
     const progressText = document.getElementById('routineProgressText');
     const resetBtn = document.getElementById('routineReset');
-    const calendarEl = document.getElementById('routineCalendar');
-    const statusEl = document.getElementById('routineStatus');
     const monthLabelEl = document.getElementById('routineMonthLabel');
     const storageKey = 'vinor_routine_steps_v1';
     const csrfToken = "{{ csrf_token() }}";
@@ -198,22 +218,42 @@
     let monthSteps = {};
     let autoMarkedToday = false;
 
+    function applyStepsDetail(detail) {
+      if (!Array.isArray(detail)) return;
+      steps.forEach(function (cb) {
+        cb.checked = detail.includes(cb.dataset.step);
+      });
+      saveState();
+      syncProgress();
+    }
+
     function loadState() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        if (Array.isArray(saved) && saved.length) {
-          steps.forEach(cb => { cb.checked = saved.includes(cb.dataset.step); });
-        } else {
-          fetch(`/express/partner/routine/steps/detail?date=${todayISO}`, { credentials: 'same-origin' })
-            .then(r => r.json()).then(d => {
-              if (d?.success && Array.isArray(d.detail)) {
-                steps.forEach(cb => { cb.checked = d.detail.includes(cb.dataset.step); });
-                saveState();
-                syncProgress();
-              }
-            }).catch(()=>{});
-        }
-      } catch (_) {}
+      steps.forEach(function (cb) { cb.checked = false; });
+      fetch('/express/partner/routine/steps/detail?date=' + encodeURIComponent(todayISO), {
+        credentials: 'same-origin',
+        cache: 'no-store'
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.success && Array.isArray(d.detail)) {
+            applyStepsDetail(d.detail);
+            return;
+          }
+          try {
+            const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (Array.isArray(saved) && saved.length) {
+              applyStepsDetail(saved);
+            }
+          } catch (_) {}
+        })
+        .catch(function () {
+          try {
+            const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (Array.isArray(saved) && saved.length) {
+              applyStepsDetail(saved);
+            }
+          } catch (_) {}
+        });
     }
 
     function saveState() {
@@ -381,17 +421,6 @@
       }
     }
 
-    function setStatus(msg, tone = 'muted') {
-      if (!statusEl) return;
-      const toneClass = tone === 'success'
-        ? 'text-emerald-600 dark:text-emerald-300'
-        : tone === 'error'
-          ? 'text-rose-600 dark:text-rose-300'
-          : 'text-gray-500 dark:text-gray-400';
-      statusEl.className = `text-xs sm:text-sm ${toneClass}`;
-      statusEl.textContent = msg || '';
-    }
-
     async function fetchMonthDays(){
       try {
         // Determine Gregorian month(s) covering current Persian month of the viewDate
@@ -419,7 +448,11 @@
 
         autoMarkedToday = monthDaysDone.includes(todayISO);
         renderCalendar(monthDaysDone);
-        setStatus('روزهای انجام‌شده از سرور بارگذاری شد.', 'muted');
+        try {
+          if (typeof window.hideVinorPartnerSkeleton === 'function') {
+            window.hideVinorPartnerSkeleton();
+          }
+        } catch (_) {}
         if (autoMarkedToday) {
           try {
             const dres = await fetch(`/express/partner/routine/steps/detail?date=${todayISO}`, { credentials: 'same-origin' });
@@ -430,11 +463,14 @@
           } catch(_) {}
           saveState();
           syncProgress();
-          setStatus('امروز قبلاً ثبت شده و تیک‌ها همگام شد.', 'success');
         }
       } catch (err) {
         renderCalendar([]);
-        setStatus('خطا در ارتباط با سرور برای دریافت تقویم.', 'error');
+        try {
+          if (typeof window.hideVinorPartnerSkeleton === 'function') {
+            window.hideVinorPartnerSkeleton();
+          }
+        } catch (_) {}
       }
     }
 
@@ -455,15 +491,14 @@
       viewDate = nextAnchor;
       fetchMonthDays();
     }
-    document.getElementById('routinePrev')?.addEventListener('click', gotoPrevMonth, { passive: true });
-    document.getElementById('routineNext')?.addEventListener('click', gotoNextMonth, { passive: true });
+    document.getElementById('routinePrev')?.addEventListener('click', gotoPrevMonth, Object.assign({ passive: true }, opts));
+    document.getElementById('routineNext')?.addEventListener('click', gotoNextMonth, Object.assign({ passive: true }, opts));
 
     // --- Resilient saving (debounce, retry, offline queue) ---
     const SAVE_DEBOUNCE_MS = 250;
     const MAX_RETRIES = 2;
     const RETRY_DELAY_MS = 800;
     const PENDING_KEY = 'vinor_routine_pending_v1';
-    let saveTimer = null;
     let inflight = false;
     let queued = false;
 
@@ -477,7 +512,6 @@
       if (!payload) return false;
       if (!navigator.onLine) {
         try { localStorage.setItem(PENDING_KEY, JSON.stringify(payload)); } catch(_){}
-        setStatus('آفلاین هستید؛ بعداً ارسال می‌شود.', 'muted');
         return false;
       }
       inflight = true;
@@ -494,7 +528,6 @@
           monthSteps = data.steps || monthSteps;
           monthDaysDone = Array.isArray(data.days) ? data.days : monthDaysDone;
           renderCalendar(monthDaysDone);
-          setStatus('پیشرفت ثبت شد.', 'success');
           return true;
         }
         throw new Error('server_error');
@@ -504,7 +537,6 @@
           return await flushPayload(payload, attempt + 1);
         } else {
           try { localStorage.setItem(PENDING_KEY, JSON.stringify(payload)); } catch(_){}
-          setStatus('ثبت ناموفق؛ بعداً تلاش می‌شود.', 'error');
           return false;
         }
       }finally{
@@ -537,18 +569,17 @@
         const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
         if (pending) { flushPayload(pending); }
       } catch(_) {}
-      window.addEventListener('online', () => {
+      window.addEventListener('online', function () {
         try {
           const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
           if (pending) { flushPayload(pending); }
         } catch(_) {}
-      }, { passive: true });
+      }, Object.assign({ passive: true }, opts));
     })();
 
     function maybeAutoMark(done, total){
       if (done === total && !autoMarkedToday) {
         autoMarkedToday = true;
-        setStatus('امروز ثبت شد (خودکار).', 'success');
       }
       if (done < total && !monthDaysDone.includes(toLocalISODate(today))) {
         autoMarkedToday = false;
@@ -573,19 +604,36 @@
     syncProgress();
     fetchMonthDays();
 
-    steps.forEach(cb => {
-      cb.addEventListener('change', () => {
+    steps.forEach(function (cb) {
+      cb.addEventListener('change', function () {
         saveState();
         syncProgress();
-      });
+      }, opts);
     });
 
-    resetBtn?.addEventListener('click', (e) => {
+    resetBtn?.addEventListener('click', function (e) {
       e.preventDefault();
       resetAll();
-    });
+    }, opts);
 
-  });
+    } /* bootRoutine */
+
+    var bootRaf = 0;
+    function scheduleBootRoutine() {
+      if (bootRaf) cancelAnimationFrame(bootRaf);
+      bootRaf = requestAnimationFrame(function () {
+        bootRaf = 0;
+        bootRoutine();
+      });
+    }
+
+    scheduleBootRoutine();
+
+    document.addEventListener('vinor:express-page-swap', function (ev) {
+      if (!ev.detail || ev.detail.navKey !== 'routine') return;
+      scheduleBootRoutine();
+    }, { signal: moduleSig });
+  })();
 </script>
 {% endif %}
 {% endblock %}

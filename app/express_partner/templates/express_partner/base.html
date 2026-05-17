@@ -237,18 +237,43 @@
   </div>
 
   <script>
-    (function hoistExpressPartnerShell() {
-      /* مودال‌های پرتال: خارج از #tg-page-shell تا z-index بالاتر از نوار پایین باشد (transform روی shell لایهٔ ترکیبی جدا می‌سازد) */
-      var bodyModalRoots = Array.prototype.slice.call(document.querySelectorAll('[data-tg-body-modal]'));
-      function hoistBodyModalsToTail() {
-        bodyModalRoots.forEach(function (el) {
+    window.hoistVinorExpressBodyModals = function () {
+      /* مودال‌های پرتال: خارج از #tg-page-shell تا z-index بالاتر از نوار پایین باشد */
+      var seen = {};
+      document.querySelectorAll('[data-tg-body-modal]').forEach(function (el) {
+        var id = el.id || '';
+        if (id) {
+          if (seen[id]) {
+            try { el.remove(); } catch (_) {}
+            return;
+          }
+          seen[id] = true;
+          document.querySelectorAll('#' + CSS.escape(id)).forEach(function (dup) {
+            if (dup !== el) {
+              try { dup.remove(); } catch (_) {}
+            }
+          });
+        }
+        if (el.parentNode !== document.body) {
           document.body.appendChild(el);
-        });
-      }
+        }
+      });
+    };
 
+    window.removeVinorCommissionModalsFromBody = function () {
+      ['vnWithdrawModal', 'vnBankPickerModal', 'vnBankAddModal'].forEach(function (id) {
+        try {
+          document.querySelectorAll('body > #' + CSS.escape(id)).forEach(function (el) {
+            el.remove();
+          });
+        } catch (_) {}
+      });
+    };
+
+    (function hoistExpressPartnerShell() {
       var nav = document.getElementById('bottomNavMenu');
       if (!nav || nav.getAttribute('data-tg-shell-done') === '1') {
-        hoistBodyModalsToTail();
+        window.hoistVinorExpressBodyModals();
         return;
       }
       nav.setAttribute('data-tg-shell-done', '1');
@@ -259,7 +284,7 @@
         shell.appendChild(document.body.firstChild);
       }
       document.body.insertBefore(shell, nav);
-      hoistBodyModalsToTail();
+      window.hoistVinorExpressBodyModals();
     })();
   </script>
 
@@ -1135,6 +1160,32 @@
       function afterPageSwap(navKey) {
         setBottomNavActive(navKey);
         try {
+          var shell = document.getElementById('tg-page-shell');
+          if (shell) shell.scrollTop = 0;
+          window.scrollTo(0, 0);
+          if (navKey === 'commissions') {
+            var cm = document.getElementById('commissionsPageMain');
+            if (cm) cm.scrollTop = 0;
+          }
+        } catch (_) {}
+        if (navKey === 'dashboard' && window.__vinorDashboardChrome) {
+          window.__vinorDashboardChrome.setup({ resetScroll: true, expandHeader: true });
+        } else if (window.__vinorDashboardChrome) {
+          window.__vinorDashboardChrome.teardown();
+        }
+        try {
+          if (navKey === 'commissions' && typeof window.hoistVinorExpressBodyModals === 'function') {
+            window.hoistVinorExpressBodyModals();
+          } else {
+            if (window.vinorExpressModalOverlay && window.vinorExpressModalOverlay.closeAll) {
+              window.vinorExpressModalOverlay.closeAll();
+            }
+            if (typeof window.removeVinorCommissionModalsFromBody === 'function') {
+              window.removeVinorCommissionModalsFromBody();
+            }
+          }
+        } catch (_) {}
+        try {
           if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             var root = document.getElementById('vinor-express-page-swap');
             if (root) window.Alpine.initTree(root);
@@ -1385,10 +1436,16 @@
             document.documentElement.classList.remove('vinor-express-overlay-modal-open');
             document.body.style.overflow = '';
           }
+        },
+        closeAll: function () {
+          depth = 0;
+          document.documentElement.classList.remove('vinor-express-overlay-modal-open');
+          document.body.style.overflow = '';
         }
       };
     })(window);
   </script>
+  <script src="{{ 'express-partner/dashboard-chrome.js'|static_version }}"></script>
   <script src="{{ 'express-partner/city-picker.js'|static_version }}" defer></script>
 
   <!-- Onboarding Tour System -->
