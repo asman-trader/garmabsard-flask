@@ -430,7 +430,8 @@
         const href = card.getAttribute('data-href');
         if (!href) return;
         suppressClickUntil = Date.now() + 450;
-        window.location.assign(href);
+        if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+        else window.location.assign(href);
       },
       { passive: true }
     );
@@ -446,7 +447,8 @@
         if (!card) return;
         const href = card.getAttribute('data-href');
         if (!href) return;
-        window.location.assign(href);
+        if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+        else window.location.assign(href);
       },
       false
     );
@@ -483,7 +485,10 @@
       const card = e.target.closest('.express-card.vinor-premium-card[data-href]');
       if (!card) return;
       const href = card.getAttribute('data-href');
-      if (href) window.location.assign(href);
+      if (href) {
+        if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+        else window.location.assign(href);
+      }
     });
     grid.addEventListener('keydown', function (event) {
       const card = event.target.closest && event.target.closest('.express-card.vinor-premium-card[data-href]');
@@ -491,7 +496,10 @@
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         const href = card.getAttribute('data-href');
-        if (href) window.location.assign(href);
+        if (href) {
+          if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+          else window.location.assign(href);
+        }
       }
     });
   }

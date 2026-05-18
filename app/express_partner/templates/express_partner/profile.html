@@ -398,7 +398,9 @@
     card.addEventListener('click', function(e) {
       if (avatarBtn && avatarBtn.contains(e.target)) return;
       if (logoutForm && logoutForm.contains(e.target)) return;
-      window.location.href = "{{ url_for('express_partner.profile_edit') }}";
+      var editUrl = "{{ url_for('express_partner.profile_edit') }}";
+      if (window.vinorExpressNavigate) window.vinorExpressNavigate(editUrl, { forward: true });
+      else window.location.href = editUrl;
     });
   })();
 </script>

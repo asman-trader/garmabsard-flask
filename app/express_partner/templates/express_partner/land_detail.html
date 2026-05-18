@@ -1,0 +1,26 @@
+{% extends 'express_partner/base.html' %}
+{% block title %}{{ land.title or 'جزئیات فایل' }} | وینور اکسپرس{% endblock %}
+
+{% block styles %}
+  <style>
+    .progressive-img {
+      filter: blur(12px);
+      background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      transition: filter 0.25s ease, opacity 0.2s ease;
+    }
+    html.dark .progressive-img {
+      background: linear-gradient(90deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+    }
+    .progressive-img.is-loaded {
+      filter: blur(0);
+    }
+    #landGallery, #landGallery * { touch-action: pan-y; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {% set is_partner_context = true %}
+  {% include 'express/land_detail_body.html' %}
+  {% set bottom_nav_active = 'dashboard' %}
+  {% include 'express_partner/partials/partner_tab_footer.html' %}
+{% endblock %}

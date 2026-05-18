@@ -3355,7 +3355,7 @@ def land_detail(code: str):
     share_url = ''
 
     return render_template(
-        'express/detail.html',
+        'express_partner/land_detail.html',
         land=land,
         share_url=share_url,
         share_token=share_token,

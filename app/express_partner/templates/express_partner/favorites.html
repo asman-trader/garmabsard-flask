@@ -86,7 +86,10 @@
     if (!card || !root.contains(card)) return;
     if (e.target.closest('[data-fav-code]')) return;
     var href = card.getAttribute('data-href');
-    if (href) window.location.href = href;
+    if (href) {
+      if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+      else window.location.href = href;
+    }
   });
 
   document.addEventListener('keydown', function (e) {
@@ -95,7 +98,14 @@
     if (!card || !root.contains(card)) return;
     e.preventDefault();
     var href = card.getAttribute('data-href');
-    if (href) window.location.href = href;
+    if (href) {
+      if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
+      else window.location.href = href;
+    }
+  });
+
+  document.addEventListener('vinor:express-page-swap', function () {
+    if (document.getElementById('favoritesCardsRoot')) loadFavorites();
   });
 })();
 </script>
