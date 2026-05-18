@@ -66,7 +66,7 @@
       var p = normPath(parseUrl(url).pathname);
       if (TAB_PATHS[p]) return TAB_PATHS[p];
       if (STACK_PARENT_TAB[p]) return STACK_PARENT_TAB[p];
-      if (/^\/express\/partner\/lands\/[^/]+$/.test(p)) return 'dashboard';
+      if (/^\/express\/partner\/lands\/[^/]+$/.test(p)) return '';
       return '';
     } catch (_) {
       return '';
@@ -78,7 +78,7 @@
       var p = normPath(parseUrl(url).pathname);
       if (TAB_PATHS[p]) return 0;
       if (STACK_PARENT_TAB[p]) return 1;
-      if (/^\/express\/partner\/lands\/[^/]+$/.test(p)) return 1;
+      if (/^\/express\/partner\/lands\/[^/]+$/.test(p)) return 2;
       return 0;
     } catch (_) {
       return 0;
@@ -147,6 +147,24 @@
     });
   }
 
+  function isLandDetailPath(pathname) {
+    return /^\/express\/partner\/lands\/[^/]+$/.test(normPath(pathname || ''));
+  }
+
+  function setBottomNavVisible(show) {
+    var nav = document.getElementById('bottomNavMenu');
+    if (!nav) return;
+    if (show) {
+      nav.removeAttribute('hidden');
+      nav.style.removeProperty('display');
+      nav.setAttribute('aria-hidden', 'false');
+    } else {
+      nav.setAttribute('hidden', 'hidden');
+      nav.style.display = 'none';
+      nav.setAttribute('aria-hidden', 'true');
+    }
+  }
+
   function setBottomNavActive(navKey) {
     var nav = document.getElementById('bottomNavMenu');
     if (!nav || !navKey) return;
@@ -158,7 +176,9 @@
   }
 
   function afterPageSwap(navKey) {
-    setBottomNavActive(navKey);
+    var showNav = !isLandDetailPath(window.location.pathname);
+    setBottomNavVisible(showNav);
+    if (showNav) setBottomNavActive(navKey);
     try {
       var shell = document.getElementById('tg-page-shell');
       if (shell) shell.scrollTop = 0;

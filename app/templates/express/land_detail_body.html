@@ -1,78 +1,34 @@
-﻿  <div class="min-h-screen bg-white dark:bg-gray-950 pb-20">
+﻿  <div class="min-h-screen {% if is_partner_context %}land-detail-partner-page max-lg:bg-black{% else %}bg-white dark:bg-gray-950{% endif %} {% if is_partner_context %}max-sm:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8{% else %}pb-20{% endif %}">
+    {% set images = land.images or [] %}
+    {% set video = land.video %}
+    {% set has_video = video and video.strip() %}
+    {% set total_items = (1 if has_video else 0) + images|length %}
+    {% set primary_image = images[0] if images else None %}
+    {% set images_v2 = land.images_v2 or [] %}
+    {% set primary_image_v2 = images_v2[0] if images_v2 else None %}
+
     {% if is_partner_context %}
-    <!-- Header (Partner context) -->
-    <header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 w-full">
-      <div class="w-full px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
-        <a href="{{ url_for('express_partner.dashboard') }}"
-           data-vinor-express-nav="back"
-           class="w-9 h-9 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-           aria-label="بازگشت">
-          <i class="fas fa-arrow-right text-gray-700 dark:text-gray-200 text-sm"></i>
-        </a>
-        <div class="flex-1 min-w-0 flex flex-col items-center">
-          <h1 class="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-full">
-            {{ land.title or 'جزئیات فایل' }}
-          </h1>
-          {% if land.code %}
-          <span class="text-[11px] text-gray-500 dark:text-gray-400 font-mono">
-            کد {{ land.code }}
-          </span>
-          {% endif %}
-        </div>
-        <div class="w-9 h-9"></div>
-      </div>
-    </header>
-    {% else %}
-    <!-- Header (Public context) -->
-    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
-      <div class="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-1 sm:gap-2">
-        <button type="button"
-                onclick="goToExplore()"
-                class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors"
-                aria-label="بازگشت">
-          <i class="fas fa-arrow-right text-sm"></i>
-        </button>
-        <nav aria-label="breadcrumb" class="flex-1 min-w-0 overflow-hidden">
-          <ol class="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 overflow-hidden">
-            <li class="flex-shrink-0">
-              <a href="{{ url_for('main.index') }}" class="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">خانه</a>
-            </li>
-            <li class="text-gray-400 flex-shrink-0">/</li>
-            <li class="flex-shrink-0">
-              <a href="{{ url_for('express_partner.dashboard') }}" class="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">فایل‌ها</a>
-            </li>
-            <li class="text-gray-400 flex-shrink-0">/</li>
-            <li class="text-gray-900 dark:text-gray-100 min-w-0 flex-1">
-              <span class="block truncate">{{ land.title or 'جزئیات فایل' }}</span>
-            </li>
-          </ol>
-        </nav>
-        <button type="button"
-                class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 copy-public-link transition-colors"
-                data-url="{{ request.url }}"
-                aria-label="کپی لینک">
-          <i class="fas fa-share-nodes text-sm"></i>
-        </button>
-      </div>
-    </header>
-    {% endif %}
-
-    <!-- Gallery -->
-    <div class="max-w-6xl mx-auto px-3 sm:px-4">
-      <!-- Desktop layout: main + sidebar -->
-      <div class="lg:grid lg:grid-cols-12 lg:gap-6">
-        <!-- Main Column -->
-        <div class="lg:col-span-8">
-          <div class="relative -mt-px mb-4 bg-black/5 dark:bg-black/20 w-full">
-      {% set images = land.images or [] %}
-      {% set video = land.video %}
-      {% set has_video = video and video.strip() %}
-      {% set total_items = (1 if has_video else 0) + images|length %}
-      {% set primary_image = images[0] if images else None %}
-      {% set images_v2 = land.images_v2 or [] %}
-      {% set primary_image_v2 = images_v2[0] if images_v2 else None %}
-
-      <div class="w-full pt-0 pb-2 lg:pb-4">
+    <section class="land-detail-partner-gallery-hero w-full max-lg:mb-4">
+      <div class="land-detail-partner-gallery-top relative w-full">
+        <header id="landDetailPartnerHeader" class="fixed top-0 left-0 right-0 z-[55] w-full bg-transparent">
+          <div class="land-detail-partner-header-inner mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 sm:px-4">
+            <a href="{{ url_for('express_partner.dashboard') }}"
+               data-vinor-express-nav="back"
+               class="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)] transition active:opacity-70 sm:h-10 sm:w-10"
+               aria-label="بازگشت">
+              <i class="fas fa-arrow-right text-sm" aria-hidden="true"></i>
+            </a>
+            <div class="flex min-w-0 flex-1 flex-col items-center px-2">
+              {% if land.code %}
+              <span class="font-mono text-[11px] text-white/75 drop-shadow-[0_1px_3px_rgba(0,0,0,0.65)]">
+                کد {{ land.code }}
+              </span>
+              {% endif %}
+            </div>
+            <div class="h-9 w-9 shrink-0 sm:h-10 sm:w-10" aria-hidden="true"></div>
+          </div>
+        </header>
+      <div class="w-full pt-0 pb-0 max-lg:pb-0">
         {% if has_video or primary_image %}
           {% if video and ("://" in (video|string)) %}
             {% set video_src = video %}
@@ -93,7 +49,7 @@
                data-prev-code="{{ prev_land.code if prev_land else '' }}"
                {% endif %}>
             <style>
-              #landGallery, #landGallery * { touch-action: pan-y; }
+              #landGallery, #landGallery *:not(#landVideoSoundToggle):not(#landVideoSoundIcon) { touch-action: pan-y; }
             </style>
 
             <div id="landMediaLoading"
@@ -107,10 +63,16 @@
 
             {% if has_video %}
             <video id="landVideo"
-                   class="w-full h-full object-cover block"
+                   class="absolute inset-0 z-0 h-full w-full object-cover block"
+                   {% if is_partner_context %}
+                   autoplay loop playsinline
+                   disablepictureinpicture
+                   controlslist="nodownload nofullscreen noremoteplayback"
+                   preload="auto"
+                   {% else %}
                    controls
-                   {% if is_partner_context %}autoplay muted playsinline{% endif %}
-                   onclick="openLightbox('{{ video_src }}')">
+                   onclick="openLightbox('{{ video_src }}')"
+                   {% endif %}>
               <source src="{{ video_src }}" type="video/mp4">
               مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
             </video>
@@ -167,6 +129,20 @@
             </div>
             {% endif %}
           </div>
+
+          {% if is_partner_context and has_video %}
+          <div class="pointer-events-none absolute inset-0 z-[35] flex items-center justify-center rounded-none sm:rounded-xl">
+            <button type="button"
+                    id="landVideoSoundToggle"
+                    class="land-video-sound-btn pointer-events-auto relative z-[36] grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
+                    aria-label="بی‌صدا — برای پخش با صدا بزنید"
+                    aria-pressed="true"
+                    data-muted="true"
+                    title="بی‌صدا">
+              <i id="landVideoSoundIcon" class="fas fa-volume-xmark text-base" aria-hidden="true"></i>
+            </button>
+          </div>
+          {% endif %}
         {% else %}
           <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
             <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
@@ -174,14 +150,195 @@
         {% endif %}
       </div>
 
+
       {% if land._assignment_status == 'in_transaction' %}
-      <div class="absolute top-3 left-5">
+      <div class="absolute top-3 left-5 z-20">
         <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-orange-500 text-white shadow-sm">
           در حال معامله
         </span>
       </div>
       {% endif %}
-    </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if not is_partner_context %}
+    <!-- Header (Public context) -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 border-b border-gray-200 dark:border-gray-800 backdrop-blur w-full">
+      <div class="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-1 sm:gap-2">
+        <button type="button"
+                onclick="goToExplore()"
+                class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors"
+                aria-label="بازگشت">
+          <i class="fas fa-arrow-right text-sm"></i>
+        </button>
+        <nav aria-label="breadcrumb" class="flex-1 min-w-0 overflow-hidden">
+          <ol class="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 overflow-hidden">
+            <li class="flex-shrink-0">
+              <a href="{{ url_for('main.index') }}" class="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">خانه</a>
+            </li>
+            <li class="text-gray-400 flex-shrink-0">/</li>
+            <li class="flex-shrink-0">
+              <a href="{{ url_for('express_partner.dashboard') }}" class="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">فایل‌ها</a>
+            </li>
+            <li class="text-gray-400 flex-shrink-0">/</li>
+            <li class="text-gray-900 dark:text-gray-100 min-w-0 flex-1">
+              <span class="block truncate">{{ land.title or 'جزئیات فایل' }}</span>
+            </li>
+          </ol>
+        </nav>
+        <button type="button"
+                class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 copy-public-link transition-colors"
+                data-url="{{ request.url }}"
+                aria-label="کپی لینک">
+          <i class="fas fa-share-nodes text-sm"></i>
+        </button>
+      </div>
+    </header>
+    {% endif %}
+
+    <!-- Gallery -->
+    <div class="max-w-6xl mx-auto {% if is_partner_context %}px-0 sm:px-4{% else %}px-3 sm:px-4{% endif %}">
+      <!-- Desktop layout: main + sidebar -->
+      <div class="lg:grid lg:grid-cols-12 lg:gap-6">
+        <!-- Main Column -->
+        <div class="lg:col-span-8">
+          {% if not is_partner_context %}
+          <div class="relative -mt-px mb-4 bg-black/5 dark:bg-black/20 w-full">
+      <div class="w-full pt-0 pb-2 lg:pb-4">
+        {% if has_video or primary_image %}
+          {% if video and ("://" in (video|string)) %}
+            {% set video_src = video %}
+          {% elif video and (video|string).startswith('/uploads/') %}
+            {% set video_src = video %}
+          {% elif video and (video|string).startswith('uploads/') %}
+            {% set video_src = '/uploads/' + (video|string)[8:] %}
+          {% elif video and not (video|string).startswith('/') %}
+            {% set video_src = '/uploads/' + (video|string) %}
+          {% else %}
+            {% set video_src = video %}
+          {% endif %}
+
+          <div id="landGallery"
+               class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 relative overflow-hidden rounded-none sm:rounded-xl select-none"
+               {% if not is_partner_context %}
+               data-next-code="{{ next_land.code if next_land else '' }}"
+               data-prev-code="{{ prev_land.code if prev_land else '' }}"
+               {% endif %}>
+            <style>
+              #landGallery, #landGallery *:not(#landVideoSoundToggle):not(#landVideoSoundIcon) { touch-action: pan-y; }
+            </style>
+
+            <div id="landMediaLoading"
+                 class="absolute inset-0 z-40 flex items-center justify-center bg-black/35 backdrop-blur-[1px] text-white transition-opacity duration-200 opacity-0 pointer-events-none"
+                 aria-hidden="true">
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
+                <div class="text-xs font-medium drop-shadow">در حال بارگذاری…</div>
+              </div>
+            </div>
+
+            {% if has_video %}
+            <video id="landVideo"
+                   class="absolute inset-0 z-0 h-full w-full object-cover block"
+                   {% if is_partner_context %}
+                   autoplay loop playsinline
+                   disablepictureinpicture
+                   controlslist="nodownload nofullscreen noremoteplayback"
+                   preload="auto"
+                   {% else %}
+                   controls
+                   onclick="openLightbox('{{ video_src }}')"
+                   {% endif %}>
+              <source src="{{ video_src }}" type="video/mp4">
+              مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+            </video>
+            {% endif %}
+
+            {% if primary_image %}
+              {% if images_v2 and primary_image_v2 %}
+                {% set thumb_src = primary_image_v2.thumb or (primary_image_v2.full or primary_image) %}
+                {% set full_src = primary_image_v2.full or (primary_image_v2.raw or primary_image) %}
+              {% else %}
+                {% if "://" in (primary_image|string) %}
+                  {% set full_src = primary_image %}
+                {% elif (primary_image|string).startswith('/uploads/') %}
+                  {% set full_src = primary_image %}
+                {% elif (primary_image|string).startswith('uploads/') %}
+                  {% set full_src = '/uploads/' + (primary_image|string)[8:] %}
+                {% elif not (primary_image|string).startswith('/') %}
+                  {% set full_src = '/uploads/' + (primary_image|string) %}
+                {% else %}
+                  {% set full_src = primary_image %}
+                {% endif %}
+                {% set thumb_src = full_src %}
+              {% endif %}
+              <img id="landMainImage"
+                   src="{{ thumb_src }}"
+                   data-full="{{ full_src }}"
+                   alt="{{ land.title }}"
+                   class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %} {% if images_v2 %}progressive-img{% endif %}"
+                   fetchpriority="high" decoding="async"
+                   onclick="openLightbox(this.dataset.full || this.src)">
+            {% endif %}
+
+            {% if total_items > 1 %}
+            {% if not is_partner_context %}
+            <button type="button"
+                    id="landPrev"
+                    class="absolute inset-y-0 right-0 w-12 flex items-center justify-center bg-gradient-to-l from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
+              <i class="fas fa-chevron-right drop-shadow"></i>
+            </button>
+            <button type="button"
+                    id="landNext"
+                    class="absolute inset-y-0 left-0 w-12 flex items-center justify-center bg-gradient-to-r from-black/35 to-transparent text-white text-lg focus:outline-none active:scale-95 z-30">
+              <i class="fas fa-chevron-left drop-shadow"></i>
+            </button>
+            {% endif %}
+
+            <div class="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 z-30">
+              {% if has_video %}
+              <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 active"></span>
+              {% endif %}
+              {% for _ in images %}
+              <span class="land-dot w-1.5 h-1.5 rounded-full bg-white/40 {% if not has_video and loop.first %}active{% endif %}"></span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          {% if is_partner_context and has_video %}
+          <div class="pointer-events-none absolute inset-0 z-[35] flex items-center justify-center rounded-none sm:rounded-xl">
+            <button type="button"
+                    id="landVideoSoundToggle"
+                    class="land-video-sound-btn pointer-events-auto relative z-[36] grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
+                    aria-label="بی‌صدا — برای پخش با صدا بزنید"
+                    aria-pressed="true"
+                    data-muted="true"
+                    title="بی‌صدا">
+              <i id="landVideoSoundIcon" class="fas fa-volume-xmark text-base" aria-hidden="true"></i>
+            </button>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
+            <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
+          </div>
+        {% endif %}
+      </div>
+
+
+
+      {% if land._assignment_status == 'in_transaction' %}
+      <div class="absolute top-3 left-5 z-20">
+        <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-orange-500 text-white shadow-sm">
+          در حال معامله
+        </span>
+      </div>
+      {% endif %}
+          </div>
+          {% endif %}
+
 
           <!-- Desktop thumbnail strip -->
           {% if total_items > 1 %}
@@ -691,10 +848,7 @@
       {% endif %}
       {% endif %}
 
-      <!-- فضای خالی برای دکمه ثابت پایین در موبایل (Partner) -->
-      {% if is_partner_context %}
-      <div class="h-20 sm:hidden"></div>
-      {% endif %}
+
     </div>
   </div>
 
@@ -703,7 +857,7 @@
   {% if is_partner_context %}
   <!-- دکمه‌های ثابت پایین (Partner - فقط موبایل) -->
   {% set _st = (land._assignment_status|default('active')) %}
-  <div class="fixed bottom-0 inset-x-0 p-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 sm:hidden z-50">
+  <div id="landPartnerActionBar" class="fixed bottom-0 inset-x-0 p-4 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 sm:hidden z-50">
     <div class="grid {{ 'grid-cols-2' if is_approved else 'grid-cols-1' }} gap-3">
       {% if contact_phone %}
       <button type="button" onclick="openContactModal()"
