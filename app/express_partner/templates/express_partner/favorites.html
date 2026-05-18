@@ -5,6 +5,7 @@
   <header class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#050a0e]/95 backdrop-blur-md">
     <div class="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
       <a href="{{ url_for('express_partner.profile') }}"
+         data-vinor-express-nav="back"
          class="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-white"
          aria-label="بازگشت">
         <i class="fas fa-arrow-right text-sm sm:text-base" aria-hidden="true"></i>
@@ -16,7 +17,7 @@
 
   <div class="min-h-[100dvh] bg-[#050a0e] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] pt-14 text-zinc-100 sm:pt-16 lg:pb-16">
     <div class="mx-auto max-w-lg px-4 sm:px-6">
-      <p id="favoritesCountHint" class="mb-3 text-center text-xs text-zinc-500 hidden"></p>
+      <p id="favoritesCountHint" class="mb-3 hidden text-center text-xs text-zinc-500"></p>
       <div id="favoritesLoading" class="flex justify-center py-16">
         <div class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500/40 border-t-emerald-400"></div>
       </div>
@@ -26,87 +27,99 @@
     {% set bottom_nav_active = 'profile' %}
     {% include 'express_partner/partials/partner_tab_footer.html' %}
   </div>
+{% endblock %}
 
+{% block scripts %}
+  {{ super() }}
   {% include 'express_partner/partials/vinor_favorites_script.html' %}
+  <script>
+  (function () {
+    var root = document.getElementById('favoritesCardsRoot');
+    var loading = document.getElementById('favoritesLoading');
+    var hint = document.getElementById('favoritesCountHint');
+    var csrf = {{ csrf_token()|tojson }};
+    var apiUrl = {{ url_for('express_partner.api_favorites_cards')|tojson }};
 
-<script>
-(function () {
-  var root = document.getElementById('favoritesCardsRoot');
-  var loading = document.getElementById('favoritesLoading');
-  var hint = document.getElementById('favoritesCountHint');
-  var csrf = {{ csrf_token()|tojson }};
+    function afterCardsRendered() {
+      if (window.vinorSyncFavButtons) window.vinorSyncFavButtons(root);
+      if (window.vinorInitPremiumCards) window.vinorInitPremiumCards(root, null);
+    }
 
-  function loadFavorites() {
-    if (!root || !loading) return;
-    var codes = window.vinorReadFavs ? window.vinorReadFavs() : [];
-    loading.classList.remove('hidden');
-    root.classList.add('hidden');
-    if (hint) {
-      if (codes.length) {
-        hint.textContent = codes.length + ' مورد علامت‌گذاری شده';
+    function updateHint(requested, shown) {
+      if (!hint) return;
+      if (!requested) {
+        hint.classList.add('hidden');
+        return;
+      }
+      if (shown < requested) {
+        hint.textContent = shown + ' مورد نمایش داده شد — ' + (requested - shown) + ' فایل دیگر در دسترس نیست';
+        hint.classList.remove('hidden');
+      } else if (shown) {
+        hint.textContent = shown + ' مورد علامت‌گذاری شده';
         hint.classList.remove('hidden');
       } else {
         hint.classList.add('hidden');
       }
     }
-    fetch('{{ url_for("express_partner.api_favorites_cards") }}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRFToken': csrf,
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify({ codes: codes })
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        loading.classList.add('hidden');
-        root.classList.remove('hidden');
-        if (d && d.ok) {
-          root.innerHTML = d.html || '';
-          if (window.vinorSyncFavButtons) window.vinorSyncFavButtons(root);
-        } else {
-          root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری علاقه‌مندی‌ها</p>';
-        }
+
+    function loadFavorites() {
+      if (!root || !loading) return;
+      var codes = window.vinorReadFavs ? window.vinorReadFavs() : [];
+      loading.classList.remove('hidden');
+      root.classList.add('hidden');
+      root.innerHTML = '';
+      updateHint(0, 0);
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRFToken': csrf,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ codes: codes })
       })
-      .catch(function () {
-        loading.classList.add('hidden');
-        root.classList.remove('hidden');
-        root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری</p>';
+        .then(function (r) {
+          if (!r.ok) throw new Error('http');
+          return r.json();
+        })
+        .then(function (d) {
+          loading.classList.add('hidden');
+          root.classList.remove('hidden');
+          if (d && d.ok) {
+            root.innerHTML = d.html || '';
+            var shown = typeof d.count === 'number' ? d.count : 0;
+            var requested = typeof d.requested === 'number' ? d.requested : codes.length;
+            updateHint(requested, shown);
+            if (d.valid_codes && window.vinorWriteFavs && requested > shown) {
+              var curKey = codes.slice().sort().join('\0');
+              var valKey = d.valid_codes.slice().sort().join('\0');
+              if (curKey !== valKey) window.vinorWriteFavs(d.valid_codes);
+            }
+            afterCardsRendered();
+          } else {
+            root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری علاقه‌مندی‌ها</p>';
+          }
+        })
+        .catch(function () {
+          loading.classList.add('hidden');
+          root.classList.remove('hidden');
+          root.innerHTML = '<p class="text-center text-sm text-red-400">خطا در بارگذاری — اتصال را بررسی کنید</p>';
+        });
+    }
+
+    window.vinorFavoritesPageLoad = loadFavorites;
+
+    if (!window.__vinorFavoritesPageBound) {
+      window.__vinorFavoritesPageBound = true;
+      document.addEventListener('vinor-favs-changed', function () {
+        if (document.getElementById('favoritesCardsRoot')) loadFavorites();
       });
-  }
-
-  document.addEventListener('DOMContentLoaded', loadFavorites);
-  document.addEventListener('vinor-favs-changed', loadFavorites);
-
-  document.addEventListener('click', function (e) {
-    var card = e.target.closest && e.target.closest('.vinor-premium-card[data-href]');
-    if (!card || !root.contains(card)) return;
-    if (e.target.closest('[data-fav-code]')) return;
-    var href = card.getAttribute('data-href');
-    if (href) {
-      if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
-      else window.location.href = href;
     }
-  });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    var card = e.target.closest && e.target.closest('.vinor-premium-card[data-href]');
-    if (!card || !root.contains(card)) return;
-    e.preventDefault();
-    var href = card.getAttribute('data-href');
-    if (href) {
-      if (window.vinorExpressNavigate) window.vinorExpressNavigate(href, { forward: true });
-      else window.location.href = href;
-    }
-  });
-
-  document.addEventListener('vinor:express-page-swap', function () {
     if (document.getElementById('favoritesCardsRoot')) loadFavorites();
-  });
-})();
-</script>
+  })();
+  </script>
 {% endblock %}

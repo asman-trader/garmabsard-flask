@@ -35,25 +35,28 @@
     });
   }
 
-  document.addEventListener('click', function (ev) {
-    var btn = ev.target.closest && ev.target.closest('[data-fav-code]');
-    if (!btn || !btn.closest('.vinor-premium-card')) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    var code = String(btn.getAttribute('data-fav-code') || '');
-    var a = readFavs();
-    var i = a.indexOf(code);
-    if (i >= 0) a.splice(i, 1);
-    else a.push(code);
-    writeFavs(a);
-    syncFavButtons();
-  }, true);
+  if (!window.__vinorFavGlobalBound) {
+    window.__vinorFavGlobalBound = true;
+    document.addEventListener('click', function (ev) {
+      var btn = ev.target.closest && ev.target.closest('[data-fav-code]');
+      if (!btn || !btn.closest('.vinor-premium-card')) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var code = String(btn.getAttribute('data-fav-code') || '');
+      var a = readFavs();
+      var i = a.indexOf(code);
+      if (i >= 0) a.splice(i, 1);
+      else a.push(code);
+      writeFavs(a);
+      syncFavButtons();
+    }, true);
+    document.addEventListener('DOMContentLoaded', function () {
+      syncFavButtons();
+    });
+  }
 
   window.vinorReadFavs = readFavs;
   window.vinorWriteFavs = writeFavs;
   window.vinorSyncFavButtons = syncFavButtons;
-  document.addEventListener('DOMContentLoaded', function () {
-    syncFavButtons();
-  });
 })();
 </script>

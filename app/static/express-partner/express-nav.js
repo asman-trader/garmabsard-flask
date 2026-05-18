@@ -174,9 +174,10 @@
       window.__vinorDashboardChrome.teardown();
     }
     try {
-      if (navKey === 'commissions' && typeof window.hoistVinorExpressBodyModals === 'function') {
+      if (typeof window.hoistVinorExpressBodyModals === 'function') {
         window.hoistVinorExpressBodyModals();
-      } else {
+      }
+      if (navKey !== 'commissions') {
         if (window.vinorExpressModalOverlay && window.vinorExpressModalOverlay.closeAll) {
           window.vinorExpressModalOverlay.closeAll();
         }

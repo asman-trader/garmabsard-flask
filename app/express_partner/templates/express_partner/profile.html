@@ -258,7 +258,7 @@
 
   <div id="logoutConfirmModal"
        data-tg-body-modal
-       class="fixed inset-0 z-[100] hidden items-end justify-center sm:items-center"
+       class="fixed inset-0 z-[200] hidden items-end justify-center sm:items-center"
        role="dialog"
        aria-modal="true"
        aria-labelledby="logoutConfirmTitle">
@@ -289,20 +289,34 @@
 <script>
   (function() {
     const modal = document.getElementById('logoutConfirmModal');
+    if (typeof window.hoistVinorExpressBodyModals === 'function') {
+      window.hoistVinorExpressBodyModals();
+    }
     function disableScroll() { document.documentElement.classList.add('overflow-hidden'); document.body.classList.add('overflow-hidden'); }
     function enableScroll() { document.documentElement.classList.remove('overflow-hidden'); document.body.classList.remove('overflow-hidden'); }
     window.showLogoutConfirm = function(formId) {
       if (!modal) return;
+      if (typeof window.hoistVinorExpressBodyModals === 'function') {
+        window.hoistVinorExpressBodyModals();
+      }
       modal.dataset.targetForm = formId || '';
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      disableScroll();
+      if (window.vinorExpressModalOverlay) {
+        window.vinorExpressModalOverlay.open();
+      } else {
+        disableScroll();
+      }
     };
     window.hideLogoutConfirm = function() {
       if (!modal) return;
       modal.classList.add('hidden');
       modal.classList.remove('flex');
-      enableScroll();
+      if (window.vinorExpressModalOverlay) {
+        window.vinorExpressModalOverlay.close();
+      } else {
+        enableScroll();
+      }
     };
     const loginUrlFallback = "{{ url_for('express_partner.login') }}";
     let logoutBusy = false;

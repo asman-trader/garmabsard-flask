@@ -216,6 +216,9 @@
       opacity: 0 !important;
       pointer-events: none !important;
     }
+    body > [data-tg-body-modal] {
+      z-index: 200;
+    }
     [id$="Search"] {
       -webkit-appearance: none;
       appearance: none;
@@ -1111,6 +1114,7 @@
     })();
   </script>
 
+  <script src="{{ 'express-partner/premium-card-media.js'|static_version }}"></script>
   <script src="{{ 'express-partner/express-nav.js'|static_version }}"></script>
 
   <script>

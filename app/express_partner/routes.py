@@ -1449,12 +1449,19 @@ def api_favorites_cards():
         codes = []
     codes = [str(c).strip() for c in codes if str(c).strip()][:200]
     lands = _lands_for_favorite_codes(codes, me_phone)
+    valid_codes = [str(item.get('code') or '').strip() for item in lands if str(item.get('code') or '').strip()]
     html = render_template(
         'express_partner/partials/favorites_cards_inner.html',
         assigned_lands=lands,
         is_approved=is_approved,
     )
-    return jsonify({'ok': True, 'html': html, 'count': len(lands), 'requested': len(codes)})
+    return jsonify({
+        'ok': True,
+        'html': html,
+        'count': len(lands),
+        'requested': len(codes),
+        'valid_codes': valid_codes,
+    })
 
 
 @express_partner_bp.get('/notes', endpoint='notes')

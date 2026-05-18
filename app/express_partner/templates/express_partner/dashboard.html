@@ -267,6 +267,24 @@
       #dashboardMobileCardsRoot {
         height: calc(100dvh - 212px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         min-height: 12rem;
+        width: 100%;
+        margin-inline: 0;
+        box-sizing: border-box;
+      }
+      #dashboardMobileCardsRoot #cardsTrack {
+        align-items: center;
+        width: 100%;
+        padding-inline: max(1rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+        box-sizing: border-box;
+      }
+      #dashboardMobileCardsRoot .vinor-dash-card-slot,
+      #dashboardMobileCardsRoot .vinor-dash-card-tail {
+        box-sizing: border-box;
+        width: min(100%, 28rem);
+        max-width: 28rem;
+        margin-inline: auto !important;
+        align-self: center;
+        scroll-snap-align: none;
       }
     }
     #dashboardMobileCardsRoot #cardsTrack {
@@ -276,12 +294,16 @@
     html.dark #dashboardMobileCardsRoot #cardsTrack {
       background-color: #030712;
     }
-    /* تبلت (عرض مثل ۷۲۶px): ارتفاع با JS از navTop-rootTop؛ height ثابت 100dvh-120px با هدر جمع‌شده کارت را زیر نوار تیره می‌برد */
+    /* تبلت: اسکرول افقی فقط روی #cardsTrack؛ root فقط viewport ثابت می‌دهد */
     @media (min-width: 640px) and (max-width: 1023px) {
       #dashboardMobileCardsRoot {
         min-height: 12rem;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+      #dashboardMobileCardsRoot #cardsTrack {
+        flex: 1 1 auto;
+        min-height: 0;
         touch-action: pan-x;
       }
     }
@@ -640,7 +662,11 @@
 
   function reinitializeCards() {
     initLazyCardVideos(document);
-    initDashboardCardMedia(document);
+    if (typeof window.vinorInitPremiumCards === 'function') {
+      window.vinorInitPremiumCards(document.getElementById('cardsTrack') || document);
+    } else {
+      initDashboardCardMedia(document);
+    }
     applyJalaliDates(document);
     if (typeof window.vinorSyncFavButtons === 'function') window.vinorSyncFavButtons();
     if (typeof window.__vinorDashboardSyncChrome === 'function') window.__vinorDashboardSyncChrome();
