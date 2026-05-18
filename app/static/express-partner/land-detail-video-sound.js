@@ -4,6 +4,8 @@
 (function (g) {
   'use strict';
 
+  var suppressNextClickUntil = 0;
+
   function $(id) {
     return document.getElementById(id);
   }
@@ -46,6 +48,12 @@
   function toggleSound(e) {
     var btn = e.target && e.target.closest ? e.target.closest('#landVideoSoundToggle') : null;
     if (!btn) return;
+    if (e.type === 'click' && Date.now() < suppressNextClickUntil) {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      return;
+    }
 
     var video = $('landVideo');
     var icon = $('landVideoSoundIcon');
@@ -93,6 +101,7 @@
     if (!e.target || !e.target.closest) return;
     if (!e.target.closest('#landVideoSoundToggle')) return;
     if (e.pointerType === 'mouse') return;
+    suppressNextClickUntil = Date.now() + 500;
     toggleSound(e);
   }, true);
 

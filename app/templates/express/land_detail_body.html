@@ -1,4 +1,4 @@
-﻿  <div class="min-h-screen {% if is_partner_context %}land-detail-partner-page max-lg:bg-black{% else %}bg-white dark:bg-gray-950{% endif %} {% if is_partner_context %}max-sm:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8{% else %}pb-20{% endif %}">
+﻿  <div class="min-h-screen {% if is_partner_context %}land-detail-partner-page{% endif %} bg-white dark:bg-gray-950 {% if is_partner_context %}max-sm:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8{% else %}pb-20{% endif %}">
     {% set images = land.images or [] %}
     {% set video = land.video %}
     {% set has_video = video and video.strip() %}
@@ -8,27 +8,9 @@
     {% set primary_image_v2 = images_v2[0] if images_v2 else None %}
 
     {% if is_partner_context %}
-    <section class="land-detail-partner-gallery-hero w-full max-lg:mb-4">
+    <section class="land-detail-partner-gallery-hero w-full max-lg:mb-4 max-lg:bg-black">
       <div class="land-detail-partner-gallery-top relative w-full">
-        <header id="landDetailPartnerHeader" class="fixed top-0 left-0 right-0 z-[55] w-full bg-transparent">
-          <div class="land-detail-partner-header-inner mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 sm:px-4">
-            <a href="{{ url_for('express_partner.dashboard') }}"
-               data-vinor-express-nav="back"
-               class="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)] transition active:opacity-70 sm:h-10 sm:w-10"
-               aria-label="بازگشت">
-              <i class="fas fa-arrow-right text-sm" aria-hidden="true"></i>
-            </a>
-            <div class="flex min-w-0 flex-1 flex-col items-center px-2">
-              {% if land.code %}
-              <span class="font-mono text-[11px] text-white/75 drop-shadow-[0_1px_3px_rgba(0,0,0,0.65)]">
-                کد {{ land.code }}
-              </span>
-              {% endif %}
-            </div>
-            <div class="h-9 w-9 shrink-0 sm:h-10 sm:w-10" aria-hidden="true"></div>
-          </div>
-        </header>
-      <div class="w-full pt-0 pb-0 max-lg:pb-0">
+      <div class="relative w-full pt-0 pb-0 max-lg:pb-0">
         {% if has_video or primary_image %}
           {% if video and ("://" in (video|string)) %}
             {% set video_src = video %}
@@ -100,9 +82,8 @@
                    src="{{ thumb_src }}"
                    data-full="{{ full_src }}"
                    alt="{{ land.title }}"
-                   class="w-full h-full object-cover cursor-pointer {% if has_video %}hidden{% else %}block{% endif %} {% if images_v2 %}progressive-img{% endif %}"
-                   fetchpriority="high" decoding="async"
-                   onclick="openLightbox(this.dataset.full || this.src)">
+                   class="w-full h-full object-cover {% if has_video %}hidden{% else %}block{% endif %} {% if images_v2 %}progressive-img{% endif %}"
+                   fetchpriority="high" decoding="async">
             {% endif %}
 
             {% if total_items > 1 %}
@@ -128,21 +109,22 @@
               {% endfor %}
             </div>
             {% endif %}
+
+            {% if has_video %}
+            <div class="pointer-events-none absolute inset-0 z-[35] flex items-center justify-center">
+              <button type="button"
+                      id="landVideoSoundToggle"
+                      class="land-video-sound-btn pointer-events-auto relative z-[36] grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
+                      aria-label="بی‌صدا — برای پخش با صدا بزنید"
+                      aria-pressed="true"
+                      data-muted="true"
+                      title="بی‌صدا">
+                <i id="landVideoSoundIcon" class="fas fa-volume-xmark text-base" aria-hidden="true"></i>
+              </button>
+            </div>
+            {% endif %}
           </div>
 
-          {% if is_partner_context and has_video %}
-          <div class="pointer-events-none absolute inset-0 z-[35] flex items-center justify-center rounded-none sm:rounded-xl">
-            <button type="button"
-                    id="landVideoSoundToggle"
-                    class="land-video-sound-btn pointer-events-auto relative z-[36] grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
-                    aria-label="بی‌صدا — برای پخش با صدا بزنید"
-                    aria-pressed="true"
-                    data-muted="true"
-                    title="بی‌صدا">
-              <i id="landVideoSoundIcon" class="fas fa-volume-xmark text-base" aria-hidden="true"></i>
-            </button>
-          </div>
-          {% endif %}
         {% else %}
           <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
             <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
@@ -158,6 +140,24 @@
         </span>
       </div>
       {% endif %}
+      <header id="landDetailPartnerHeader" class="fixed top-0 left-0 right-0 z-[55] w-full bg-transparent pointer-events-none">
+        <div class="land-detail-partner-header-inner pointer-events-auto mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 sm:px-4">
+          <a href="{{ url_for('express_partner.dashboard') }}"
+             data-vinor-express-nav="back"
+             class="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)] transition active:opacity-70 sm:h-10 sm:w-10"
+             aria-label="بازگشت">
+            <i class="fas fa-arrow-right text-sm" aria-hidden="true"></i>
+          </a>
+          <div class="flex min-w-0 flex-1 flex-col items-center px-2">
+            {% if land.code %}
+            <span class="font-mono text-[11px] text-white/75 drop-shadow-[0_1px_3px_rgba(0,0,0,0.65)]">
+              کد {{ land.code }}
+            </span>
+            {% endif %}
+          </div>
+          <div class="h-9 w-9 shrink-0 sm:h-10 sm:w-10" aria-hidden="true"></div>
+        </div>
+      </header>
       </div>
     </section>
     {% endif %}
@@ -307,27 +307,12 @@
             {% endif %}
           </div>
 
-          {% if is_partner_context and has_video %}
-          <div class="pointer-events-none absolute inset-0 z-[35] flex items-center justify-center rounded-none sm:rounded-xl">
-            <button type="button"
-                    id="landVideoSoundToggle"
-                    class="land-video-sound-btn pointer-events-auto relative z-[36] grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
-                    aria-label="بی‌صدا — برای پخش با صدا بزنید"
-                    aria-pressed="true"
-                    data-muted="true"
-                    title="بی‌صدا">
-              <i id="landVideoSoundIcon" class="fas fa-volume-xmark text-base" aria-hidden="true"></i>
-            </button>
-          </div>
-          {% endif %}
         {% else %}
           <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-900 flex items-center justify-center rounded-xl">
             <i class="fas fa-image text-4xl text-gray-300 dark:text-gray-700"></i>
           </div>
         {% endif %}
       </div>
-
-
 
       {% if land._assignment_status == 'in_transaction' %}
       <div class="absolute top-3 left-5 z-20">
@@ -338,7 +323,6 @@
       {% endif %}
           </div>
           {% endif %}
-
 
           <!-- Desktop thumbnail strip -->
           {% if total_items > 1 %}
@@ -989,8 +973,16 @@
 
         function partnerTryPlayVideo() {
           if (!partnerDetailAutoplay || !mainVideo) return;
+          const soundBtn = document.getElementById('landVideoSoundToggle');
+          const wantMuted = !soundBtn || soundBtn.getAttribute('data-muted') !== 'false';
           try {
-            mainVideo.muted = true;
+            mainVideo.muted = wantMuted;
+            if (wantMuted) {
+              mainVideo.setAttribute('muted', '');
+            } else {
+              mainVideo.removeAttribute('muted');
+              mainVideo.volume = 1;
+            }
           } catch (_) {}
           try {
             const p = mainVideo.play();
@@ -1152,6 +1144,11 @@
           showItem(currentIndex + 1);
         }, { passive: false });
 
+        function isLandVideoSoundTarget(node) {
+          if (!node || !node.closest) return false;
+          return !!(node.closest('#landVideoSoundToggle') || node.closest('#landVideoSoundIcon'));
+        }
+
         function bindSwipeListeners(el) {
           if (!el) return;
           let touchStartX = null;
@@ -1160,6 +1157,7 @@
           const SWIPE_THRESHOLD = 20;
 
           el.addEventListener('touchstart', function(e){
+            if (isLandVideoSoundTarget(e.target)) return;
             const t = e.touches && e.touches[0];
             if (!t) return;
             touchStartX = t.clientX;
@@ -1171,6 +1169,7 @@
             touchEndX = t.clientX;
           }, { passive: true });
           el.addEventListener('touchend', function(e){
+            if (isLandVideoSoundTarget(e.target)) return;
             if (touchStartX === null) return;
             const t = (e.changedTouches && e.changedTouches[0]) || null;
             const endX = (touchEndX !== null) ? touchEndX : (t ? t.clientX : null);
@@ -1185,6 +1184,7 @@
           }, { passive: true });
 
           el.addEventListener('pointerdown', function(e){
+            if (isLandVideoSoundTarget(e.target)) return;
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             isPointerDown = true;
             touchStartX = e.clientX;
@@ -1196,6 +1196,7 @@
             touchEndX = e.clientX;
           });
           el.addEventListener('pointerup', function(e){
+            if (isLandVideoSoundTarget(e.target)) return;
             if (!isPointerDown || touchStartX === null) return;
             isPointerDown = false;
             const endX = (touchEndX !== null) ? touchEndX : e.clientX;
@@ -1216,8 +1217,13 @@
         }
 
         bindSwipeListeners(galleryEl);
-        bindSwipeListeners(mainImg);
-        bindSwipeListeners(mainVideo);
+
+        Array.from(document.querySelectorAll('.land-thumb')).forEach(function(btn, thumbIdx) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showItem(thumbIdx);
+          });
+        });
 
         if (partnerDetailAutoplay && mainVideo) {
           mainVideo.addEventListener('loadeddata', partnerTryPlayVideo, { once: true });

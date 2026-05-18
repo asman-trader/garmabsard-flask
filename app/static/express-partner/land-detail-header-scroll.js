@@ -1,5 +1,5 @@
 /**
- * جزئیات فایل همکار — مخفی شدن هدر شفاف هنگام اسکرول به پایین
+ * جزئیات فایل همکار — مخفی شدن هدر شفاف + چسباندن گالری به لبهٔ بالای viewport
  */
 (function () {
   'use strict';
@@ -21,6 +21,16 @@
     if (shell && shell.scrollTop) return shell.scrollTop;
     var se = document.scrollingElement;
     return se && se.scrollTop ? se.scrollTop : 0;
+  }
+
+  function resetScrollTop() {
+    try {
+      window.scrollTo(0, 0);
+      var shell = document.getElementById('tg-page-shell');
+      if (shell) shell.scrollTop = 0;
+      var se = document.scrollingElement;
+      if (se) se.scrollTop = 0;
+    } catch (_) {}
   }
 
   function setHeaderHidden(header, on) {
@@ -58,28 +68,51 @@
     });
   }
 
-  function unbind() {
-    if (!abort) return;
-    try { abort.abort(); } catch (_) {}
-    abort = null;
+  function clearGalleryPull() {
+    var gallery = document.getElementById('landGallery');
+    if (gallery) gallery.style.removeProperty('margin-top');
   }
 
   function flushPartnerGalleryTop() {
     var gallery = document.getElementById('landGallery');
-    var slot = document.querySelector('.land-detail-partner-gallery-hero') || document.querySelector('.land-detail-partner-gallery-top');
-    if (!gallery || !slot) return;
-    slot.style.marginTop = '';
+    if (!gallery) return;
+
     var top = gallery.getBoundingClientRect().top;
-    if (top > 0.5) {
-      slot.style.marginTop = (-Math.ceil(top)) + 'px';
+    var safe = 'env(safe-area-inset-top, 0px)';
+    if (top <= 0.5) {
+      gallery.style.setProperty('margin-top', 'calc(-1 * ' + safe + ')', 'important');
+      return;
     }
+
+    var pull = Math.ceil(top);
+    gallery.style.setProperty('margin-top', 'calc(-1 * ' + safe + ' - ' + pull + 'px)', 'important');
   }
 
   function scheduleGalleryFlush() {
     flushPartnerGalleryTop();
     requestAnimationFrame(flushPartnerGalleryTop);
-    window.setTimeout(flushPartnerGalleryTop, 60);
-    window.setTimeout(flushPartnerGalleryTop, 280);
+    window.setTimeout(flushPartnerGalleryTop, 50);
+    window.setTimeout(flushPartnerGalleryTop, 200);
+  }
+
+  function bindMediaFlush() {
+    var video = document.getElementById('landVideo');
+    var img = document.getElementById('landMainImage');
+    if (video) {
+      video.addEventListener('loadeddata', scheduleGalleryFlush, { once: true });
+      video.addEventListener('loadedmetadata', scheduleGalleryFlush, { once: true });
+    }
+    if (img) {
+      if (img.complete) scheduleGalleryFlush();
+      else img.addEventListener('load', scheduleGalleryFlush, { once: true });
+    }
+  }
+
+  function unbind() {
+    if (!abort) return;
+    try { abort.abort(); } catch (_) {}
+    abort = null;
+    clearGalleryPull();
   }
 
   function bind() {
@@ -92,6 +125,7 @@
     var opts = { passive: true, signal: signal };
 
     hidden = false;
+    resetScrollTop();
     lastY = scrollYNow();
     header.classList.remove('is-header-hidden');
     header.removeAttribute('aria-hidden');
@@ -99,10 +133,17 @@
     window.addEventListener('scroll', queueUpdate, opts);
     document.addEventListener('scroll', queueUpdate, Object.assign({ capture: true }, opts));
     window.addEventListener('resize', scheduleGalleryFlush, opts);
+    window.addEventListener('orientationchange', scheduleGalleryFlush, opts);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', scheduleGalleryFlush, opts);
+      window.visualViewport.addEventListener('scroll', scheduleGalleryFlush, opts);
+    }
     var shell = document.getElementById('tg-page-shell');
     if (shell) shell.addEventListener('scroll', queueUpdate, opts);
+
     queueUpdate();
     scheduleGalleryFlush();
+    bindMediaFlush();
   }
 
   function scheduleBind() {
